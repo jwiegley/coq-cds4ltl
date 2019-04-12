@@ -236,10 +236,7 @@ Ltac ltl_prep :=
   | _ => idtac
   end.
 
-Ltac ltl :=
-  ltl_prep;
-  auto;
-  intuition.
+Ltac ltl := ltl_prep; auto; intuition.
 
 (* These properties are proven to hold in up to three conditions:
 
@@ -357,3 +354,32 @@ Lemma or_next_eventually (φ : LTL) : φ ∨ X(◇ φ) ≈ ◇ φ.
 Proof. ltl. Qed.
 
 End LTL.
+
+Arguments Top {a b}.
+Arguments Bottom {a b}.
+Arguments Query {a b} v.
+Arguments Not {a b} p.
+Arguments And {a b}.
+Arguments Or {a b}.
+Arguments Impl {a b}.
+Arguments Next {a b} p.
+Arguments Until {a b} p q.
+Arguments Eventually {a b} p.
+Arguments Always {a b} p.
+Arguments release {a b} φ ψ.
+Arguments weakUntil {a b} φ ψ.
+Arguments strongRelease {a b} φ ψ.
+
+Notation "⊤"       := Top                 (at level 50) : ltl_scope.
+Notation "⊥"       := Bottom              (at level 50) : ltl_scope.
+Notation "¬ x"     := (Not x)             (at level 0)  : ltl_scope.
+Infix    "∧"       := And                 (at level 50) : ltl_scope.
+Infix    "∨"       := Or                  (at level 50) : ltl_scope.
+Infix    "→"       := Impl                (at level 50) : ltl_scope.
+Notation "'X' x"   := (Next x)            (at level 0)  : ltl_scope.
+Notation "p 'U' q" := (Until p q)         (at level 50) : ltl_scope.
+Notation "◇ x"     := (Eventually x)      (at level 0)  : ltl_scope.
+Notation "□ x"     := (Always x)          (at level 0)  : ltl_scope.
+Notation "p 'R' q" := (release p q)       (at level 50) : ltl_scope.
+Notation "p 'W' q" := (weakUntil p q)     (at level 50) : ltl_scope.
+Notation "p 'M' q" := (strongRelease p q) (at level 50) : ltl_scope.
