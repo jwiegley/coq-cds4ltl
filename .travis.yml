@@ -1,0 +1,38 @@
+os:
+- linux
+- osx
+
+language: nix
+
+sudo: required
+
+git:
+  depth: 1
+
+env:
+  global:
+  - secure: "xPUEJ8m1CdFIAA/y4ZDwhDGFQ95sKuRX3PeFWy17alD+0nfHaawnTvdg6dxmamd1s6aCC/BSR2dja5Forho3Ax0CYZ0yRLtd19if1MxRwdam80qsJVjCdtcQIU5J5OHgXsddp+rtGoDQ4oLZeNTy7KA6HVaNcuXK+JGxpLkDwQqYQE3UwNkJd+4AzrWWAv2Y+0h/goZtgmzvVNS3X0YftwdhgxUTS/e8E//V9t5TOCzsaf2nhK70B7KAM/UoRXj3ZQvX1WwpB3r1kQodsrNCpdMKD+5PIkkRwNgNarD861oUSt+PK+0qoByLXTRpzk9hqAVf75eoV0rF918fhr0jBHebdMOVwVFlRs7mVL1FsUmGjf7u/+3/pnJX0Xz7mRIRq64Dff5Mvf/RR+drrar9yjk98jjXnnEr5si/E0Zt7yHfMsGLMZtNNI8WeMmm1CFDI9SAcuWjMQ/azDhX0MNyXmb2+eoToQH8d6J3KLDYNNRUZbfE1JpWIidkOqflcLofvaaDAP1nSm7Cq1uMbNDRRJY0LO+Nir969YqgFNrnsigjM+dbiURWtNtG0cEdugjWjIgk79J4dFISAq2HjDKxUvPBV+V3NaO7/Tongb4kw0NFVNlwHC2/OzLHc+FBZX8Ihp/ydHiV71Q+OVYUjqbr9Q36TF5nIAAjK++IY9hwhUU="
+  matrix:
+  - COQVERSION=coq_8_6
+  - COQVERSION=coq_8_7
+  - COQVERSION=coq_8_8
+
+matrix:
+  allow_failures:
+  - env: COQVERSION=coq_8_8
+
+before_script:
+  - sudo mount -o remount,exec,size=4G,mode=755 /run/user || true
+  - sudo mkdir -p /etc/nix
+  - echo "trusted-users = root $USER" | sudo tee -a /etc/nix/nix.conf
+  - sudo launchctl kickstart -k system/org.nixos.nix-daemon || true
+
+script:
+- nix-env -iA cachix -f https://github.com/NixOS/nixpkgs/tarball/db557aab7b690f5e0e3348459f2e4dc8fd0d9298
+- cachix use constructive-ltl
+- if [ ! "$CACHIX_SIGNING_KEY" = "" ]; then cachix push constructive-ltl --watch-store& fi
+- if [ ! "$CACHIX_SIGNING_KEY" = "" ]; then nix-build --argstr compiler $COQVERSION | cachix push constructive-ltl; else nix-build --argstr compiler $COQVERSION; fi
+
+branches:
+  only:
+  - master
