@@ -29,7 +29,9 @@ Inductive LTL : Type :=
   (* Boolean layer *)
   | Top
   | Bottom
-  | Query (v : a -> option b)
+    (* Use a final encoding of [option] as the result, to allow scoping by the
+       user of [Query]. *)
+  | Query (v : forall r, a -> (b -> r) -> r -> r)
   | Not (p : LTL)
   | And (p q : LTL)
   | Or (p q : LTL)
@@ -84,7 +86,7 @@ Fixpoint matches (l : LTL) (s : Stream) {struct l} : Prop :=
   | Query v =>
     match s with
     | []     => term
-    | x :: _ => exists b, v x = Some b
+    | x :: _ => v Prop x (const True) False
     end
 
   | ¬ p => ~ matches p s
