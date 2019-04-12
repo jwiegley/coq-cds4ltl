@@ -241,6 +241,20 @@ Ltac ltl :=
   auto;
   intuition.
 
+(* These properties are proven to hold in up to three conditions:
+
+   ≈ (Weak)
+     The property holds, even if early terminate of the finite input causes a
+     match to be incomplete. For example, a proposition against an empty
+     input.
+
+   ≈[strong]
+     The property holds only if it matches some infix of the finite input
+     exactly. Partial matches are not allowed.
+
+   ≈[infinite]
+     The property holds only against infinite inputs. *)
+
 (* eventually ψ becomes true *)
 Lemma eventually_until (ψ : LTL) : ◇ ψ ≈ ⊤ U ψ.
 Proof. ltl. Qed.
