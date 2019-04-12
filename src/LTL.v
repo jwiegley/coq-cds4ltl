@@ -216,7 +216,7 @@ Qed.
 
 Infix "≈" := equiv (at level 70).
 
-Ltac ltl :=
+Ltac ltl_prep :=
   split;
   repeat intro;
   repeat unfold In, release, weakUntil, strongRelease in *;
@@ -232,7 +232,10 @@ Ltac ltl :=
   | [ H : ?P |- ?P \/ _ ] => left
   | [ H : ?P |- _ \/ ?P ] => right
   | _ => idtac
-  end;
+  end.
+
+Ltac ltl :=
+  ltl_prep;
   auto;
   intuition.
 
@@ -256,14 +259,14 @@ Proof. ltl. Qed.
 Lemma until_eventually_or (φ ψ : LTL) : φ U ψ ≈ ◇ ψ ∧ (φ W ψ).
 Proof. ltl. Qed.
 
-Lemma release_weakUntil (φ ψ : LTL) : φ R ψ ≈[strong] ψ W (ψ ∧ φ).
-Proof. Abort.
+Lemma release_weakUntil (φ ψ : LTL) : φ R ψ ≈[infinite] ψ W (ψ ∧ φ).
+Proof. ltl_prep; inversion H; intuition. Qed.
 
-Lemma strongRelease_not_weakUntil (φ ψ : LTL) : φ M ψ ≈[strong] ¬(¬φ W ¬ψ).
-Proof. Abort.
+Lemma strongRelease_not_weakUntil (φ ψ : LTL) : φ M ψ ≈[infinite] ¬(¬φ W ¬ψ).
+Proof. ltl_prep; inversion H; intuition. Qed.
 
-Lemma strongRelease_release_or (φ ψ : LTL) : φ M ψ ≈[strong] (φ R ψ) ∧ ◇ φ.
-Proof. Abort.
+Lemma strongRelease_release_or (φ ψ : LTL) : φ M ψ ≈[infinite] (φ R ψ) ∧ ◇ φ.
+Proof. ltl_prep; inversion H; intuition. Qed.
 
 Lemma strongRelease_release (φ ψ : LTL) : φ M ψ ≈[infinite] φ R (ψ ∧ ◇ φ).
 Proof. ltl. Qed.
