@@ -37,20 +37,20 @@ Inductive LTL : Type :=
 
   (* Temporal layer *)
   | Next (p : LTL)
-  | Eventually (p : LTL)
   | Until (p q : LTL)
+  | Eventually (p : LTL)
   | Always (p : LTL).
 
 Notation "⊤"       := Top             (at level 50).
 Notation "⊥"       := Bottom          (at level 50).
-Notation "¬ x"     := (Not x)         (at level 50).
+Notation "¬ x"     := (Not x)         (at level 0).
 Infix    "∧"       := And             (at level 50).
 Infix    "∨"       := Or              (at level 50).
 Infix    "→"       := Impl            (at level 50).
-Notation "'X' x"   := (Next x)        (at level 50).
-Notation "◇ x"     := (Eventually x)  (at level 50).
+Notation "'X' x"   := (Next x)        (at level 0).
 Notation "p 'U' q" := (Until p q)     (at level 50).
-Notation "□ x"     := (Always x)      (at level 50).
+Notation "◇ x"     := (Eventually x)  (at level 0).
+Notation "□ x"     := (Always x)      (at level 0).
 
 Fixpoint LTL_size (p : LTL) : nat :=
   match p with
@@ -62,8 +62,8 @@ Fixpoint LTL_size (p : LTL) : nat :=
   | Or p q       => 1 + LTL_size p + LTL_size q
   | Impl p q     => 1 + LTL_size p + LTL_size q
   | Next p       => 1 + LTL_size p
-  | Eventually p => 1 + LTL_size p
   | Until p q    => 1 + LTL_size p + LTL_size q
+  | Eventually p => 1 + LTL_size p
   | Always p     => 1 + LTL_size p
   end.
 
@@ -76,123 +76,92 @@ Local Obligation Tactic := program_simpl; unfold remaining; simpl; try omega.
    trace. *)
 Variable term : Prop.
 
-(* This define the set of sentences matched by a given LTL formula. *)
-Equations matches (l : LTL) (s : Stream) : Prop by wf (remaining l s) lt :=
-  matches (⊤)       _         := True;
-  matches (⊥)       _         := False;
-  matches (Query v) []        := term;
-  matches (Query v) (x :: _)  := exists b, v x = Some b;
-  matches (¬ p)     s         := ~ matches p s;
-  matches (p ∧ q)   s         := matches p s /\ matches q s;
-  matches (p ∨ q)   s         := matches p s \/ matches q s;
-  matches (p → q)   s         := matches p s -> matches q s;
-  matches (X p)     []        := term;
-  matches (X p)     (_ :: xs) := matches p xs;
-  matches (◇ p)     []        := term;
-  matches (◇ p)     (x :: xs) := matches p (x :: xs) \/ matches (◇ p) xs;
-  matches (p U q)   []        := term;
-  matches (p U q)   (x :: xs) := matches q (x :: xs) \/
-                                 (matches p (x :: xs) /\ matches (p U q) xs);
-  matches (□ p)     []        := True;
-  matches (□ p)     (x :: xs) := matches p (x :: xs) /\ matches (□ p) xs.
+Fixpoint matches (l : LTL) (s : Stream) {struct l} : Prop :=
+  match l with
+  | ⊤ => True
+  | ⊥ => False
 
-Notation matches_equation_top             := matches_equation_1.
-Notation matches_equation_bottom          := matches_equation_2.
-Notation matches_equation_query_nil       := matches_equation_3.
-Notation matches_equation_query_cons      := matches_equation_4.
-Notation matches_equation_not             := matches_equation_5.
-Notation matches_equation_and             := matches_equation_6.
-Notation matches_equation_or              := matches_equation_7.
-Notation matches_equation_impl            := matches_equation_8.
-Notation matches_equation_fwd_nil         := matches_equation_9.
-Notation matches_equation_fwd_cons        := matches_equation_10.
-Notation matches_equation_eventually_nil  := matches_equation_11.
-Notation matches_equation_eventually_cons := matches_equation_12.
-Notation matches_equation_until_nil       := matches_equation_13.
-Notation matches_equation_until_cons      := matches_equation_14.
-Notation matches_equation_always_nil      := matches_equation_15.
-Notation matches_equation_always_cons     := matches_equation_16.
+  | Query v =>
+    match s with
+    | []     => term
+    | x :: _ => exists b, v x = Some b
+    end
 
-Ltac simplify_matches :=
-  repeat rewrite
-    ?matches_equation_1,
-    ?matches_equation_2,
-    ?matches_equation_3,
-    ?matches_equation_4,
-    ?matches_equation_5,
-    ?matches_equation_6,
-    ?matches_equation_7,
-    ?matches_equation_8,
-    ?matches_equation_9,
-    ?matches_equation_10,
-    ?matches_equation_11,
-    ?matches_equation_12,
-    ?matches_equation_13,
-    ?matches_equation_14,
-    ?matches_equation_15,
-    ?matches_equation_16.
+  | ¬ p => ~ matches p s
 
-Ltac simplify_matches_in H :=
-  repeat rewrite
-    ?matches_equation_1,
-    ?matches_equation_2,
-    ?matches_equation_3,
-    ?matches_equation_4,
-    ?matches_equation_5,
-    ?matches_equation_6,
-    ?matches_equation_7,
-    ?matches_equation_8,
-    ?matches_equation_9,
-    ?matches_equation_10,
-    ?matches_equation_11,
-    ?matches_equation_12,
-    ?matches_equation_13,
-    ?matches_equation_14,
-    ?matches_equation_15,
-    ?matches_equation_16
-    in H.
+  | p ∧ q => matches p s /\ matches q s
+  | p ∨ q => matches p s \/ matches q s
+  | p → q => matches p s -> matches q s
+
+  | X p =>
+    match s with
+    | []      => term
+    | _ :: xs => matches p xs
+    end
+
+  | p U q =>
+    let fix go s :=
+        match s with
+        | []      => term
+        | x :: xs => matches q (x :: xs) \/ (matches p (x :: xs) /\ go xs)
+        end in go s
+
+  | ◇ p =>
+    let fix go s :=
+        match s with
+        | []      => term
+        | x :: xs => matches p (x :: xs) \/ go xs
+        end in go s
+
+  | □ p =>
+    let fix go s :=
+        match s with
+        | []      => True
+        | x :: xs => matches p (x :: xs) /\ go xs
+        end in go s
+  end.
 
 Lemma matches_bottom T :
   matches (⊥) T <-> False.
-Proof. induction T; simplify_matches; split; auto. Qed.
+Proof. simpl; intuition auto. Qed.
 
 Lemma matches_not L T :
   matches (¬ L) T <-> ~ matches L T.
-Proof. induction T; simplify_matches; split; auto. Qed.
+Proof. simpl; intuition auto. Qed.
 
 Lemma matches_contradiction L T :
   matches L T -> matches (¬ L) T -> False.
-Proof. induction T; simplify_matches; auto. Qed.
+Proof. simpl; intuition auto. Qed.
 
 Lemma matches_and L1 L2 T :
   matches (L1 ∧ L2) T <-> matches L1 T /\ matches L2 T.
-Proof. induction T; simplify_matches; split; auto. Qed.
+Proof. simpl; intuition auto. Qed.
 
 Lemma matches_or L1 L2 T :
   matches (L1 ∨ L2) T <-> matches L1 T \/ matches L2 T.
-Proof. induction T; simplify_matches; split; auto. Qed.
+Proof. simpl; intuition auto. Qed.
 
 Lemma matches_impl L1 L2 T :
   matches (L1 → L2) T <-> (matches L1 T -> matches L2 T).
-Proof. induction T; simplify_matches; split; auto. Qed.
+Proof. simpl; intuition auto. Qed.
 
 Lemma matches_next L T x :
   matches (X L) (x :: T) <-> matches L T.
-Proof. induction T; simplify_matches; split; auto. Qed.
+Proof. simpl; intuition auto. Qed.
 
 Lemma matches_eventually L T x :
   matches (◇ L) (x :: T) <-> matches L (x :: T) \/ matches (◇ L) T.
-Proof. induction T; simplify_matches; split; auto. Qed.
+Proof. simpl; intuition auto. Qed.
 
 Lemma matches_until L1 L2 T x :
   matches (L1 U L2) (x :: T) <->
   matches L2 (x :: T) \/
     (matches L1 (x :: T) /\ matches (L1 U L2) T).
-Proof. induction T; simplify_matches; split; auto. Qed.
+Proof. simpl; intuition auto. Qed.
 
 Lemma matches_always L T x :
   matches (□ L) (x :: T) <-> matches L (x :: T) /\ matches (□ L) T.
-Proof. induction T; simplify_matches; split; auto. Qed.
+Proof. simpl; intuition auto. Qed.
 
 Definition impl (φ ψ : LTL) := ¬φ ∨ ψ.
 
@@ -203,6 +172,12 @@ Infix "↔" := iff (at level 50).
    If φ never become true, ψ must remain true forever.) *)
 Definition release (φ ψ : LTL) := ¬(¬φ U ¬ψ).
 Notation "p 'R' q" := (release p q) (at level 50).
+
+Definition weakUntil (φ ψ : LTL) := (φ U ψ) ∨ □ φ.
+Notation "p 'W' q" := (weakUntil p q) (at level 50).
+
+Definition strongRelease (φ ψ : LTL) := ψ U (φ ∧ ψ).
+Notation "p 'M' q" := (strongRelease p q) (at level 50).
 
 Definition ltl_weak_equiv (p q : LTL) : Prop :=
   term -> Same_set _ (matches p) (matches q).
@@ -222,8 +197,6 @@ Arguments ltl_infinite_equiv p q /.
 
 Infix "≈[infinite]" := ltl_infinite_equiv (at level 70).
 
-Infix "≈" := equiv (at level 70).
-
 Program Instance Equivalence_ltl_equiv : Equivalence ltl_weak_equiv.
 Next Obligation.
   unfold ltl_weak_equiv.
@@ -241,146 +214,130 @@ Next Obligation.
   now transitivity (matches y).
 Qed.
 
-Ltac prep :=
-  split; repeat intro; unfold In in *;
+Infix "≈" := equiv (at level 70).
+
+Ltac ltl :=
+  split;
+  repeat intro;
+  repeat unfold In, release, weakUntil, strongRelease in *;
   match goal with
-    [ T : Stream |- _ ] =>
-      induction T;
-      repeat
-        match goal with
-        | [ H : matches _ _ |- _ ] => simplify_matches_in H
-        | [ |- matches _ _ ] => simplify_matches
-        end
+  | [ T : Stream |- _ ] => induction T
+  | [ T : list a |- _ ] => induction T
   end;
+  simpl in *;
   intuition auto;
-  try discriminate.
+  try discriminate;
+  repeat match goal with
+  | [ H : (_ -> False) -> False |- _ ] => apply NNPP in H
+  | [ H : ?P |- ?P \/ _ ] => left
+  | [ H : ?P |- _ \/ ?P ] => right
+  | _ => idtac
+  end;
+  auto;
+  intuition.
 
 (* eventually ψ becomes true *)
 Lemma eventually_until (ψ : LTL) : ◇ ψ ≈ ⊤ U ψ.
-Proof. prep. Qed.
+Proof. ltl. Qed.
 
 (* ψ always remains true *)
 Lemma always_remains (ψ : LTL) : □ ψ ≈[strong] ⊥ R ψ.
-Proof.
-  prep.
-  - unfold release in H.
-    now apply matches_contradiction in H4.
-  - now apply NNPP in H1.
-  - apply IHx.
-    now apply matches_not.
-Qed.
+Proof. ltl. Qed.
 
 Lemma always_not_eventually (ψ : LTL) : □ ψ ≈[strong] ¬◇ ¬ψ.
-Proof.
-  prep.
-  - now apply matches_contradiction in H0.
-  - now apply NNPP in H1.
-  - apply IHx.
-    now apply matches_not.
-Qed.
+Proof. ltl. Qed.
 
-Definition weakUntil (φ ψ : LTL) := (φ U ψ) ∨ □ φ.
-Notation "p 'W' q" := (weakUntil p q) (at level 50).
+Lemma weakUntil_until (φ ψ : LTL) : φ W ψ ≈ φ U (ψ ∨ □ φ).
+Proof. ltl. Qed.
 
-Definition strongRelease (φ ψ : LTL) := ψ U (φ ∧ ψ).
-Notation "p 'M' q" := (strongRelease p q) (at level 50).
+Lemma weakUntil_release (φ ψ : LTL) : φ W ψ ≈[infinite] ψ R (ψ ∨ φ).
+Proof. ltl. Qed.
 
-Lemma foo2 (φ ψ : LTL) : φ W ψ ≈ φ U (ψ ∨ □ φ).
-Proof. prep. Abort.
+Lemma until_eventually_or (φ ψ : LTL) : φ U ψ ≈ ◇ ψ ∧ (φ W ψ).
+Proof. ltl. Qed.
 
-Lemma foo3 (φ ψ : LTL) : φ W ψ ≈ ψ R (ψ ∨ φ).
-Proof. prep. Abort.
+Lemma release_weakUntil (φ ψ : LTL) : φ R ψ ≈[strong] ψ W (ψ ∧ φ).
+Proof. Abort.
 
-Lemma foo4 (φ ψ : LTL) : φ U ψ ≈ ◇ ψ ∧ (φ W ψ).
-Proof. prep. Abort.
+Lemma strongRelease_not_weakUntil (φ ψ : LTL) : φ M ψ ≈[strong] ¬(¬φ W ¬ψ).
+Proof. Abort.
 
-Lemma foo5 (φ ψ : LTL) : φ R ψ ≈ ψ W (ψ ∧ φ).
-Proof. prep. Abort.
+Lemma strongRelease_release_or (φ ψ : LTL) : φ M ψ ≈[strong] (φ R ψ) ∧ ◇ φ.
+Proof. Abort.
 
-Lemma foo6 (φ ψ : LTL) : φ M ψ ≈ ¬(¬φ W ¬ψ).
-Proof. prep. Abort.
-
-Lemma foo7 (φ ψ : LTL) : φ M ψ ≈ (φ R ψ) ∧ ◇ φ.
-Proof. prep. Abort.
-
-Lemma foo8 (φ ψ : LTL) : φ M ψ ≈ φ R (ψ ∧ ◇ φ).
-Proof. prep. Abort.
+Lemma strongRelease_release (φ ψ : LTL) : φ M ψ ≈[infinite] φ R (ψ ∧ ◇ φ).
+Proof. ltl. Qed.
 
 (** Distributivity *)
 
-Lemma foo10 (φ ψ : LTL) : X (φ ∨ ψ) ≈ (X φ) ∨ (X ψ).
-Proof. prep. Qed.
+Lemma next_or (φ ψ : LTL) : X (φ ∨ ψ) ≈ (X φ) ∨ (X ψ).
+Proof. ltl. Qed.
 
-Lemma foo11 (φ ψ : LTL) : X (φ ∧ ψ) ≈ (X φ) ∧ (X ψ).
-Proof. prep. Qed.
+Lemma next_and (φ ψ : LTL) : X (φ ∧ ψ) ≈ (X φ) ∧ (X ψ).
+Proof. ltl. Qed.
 
-Lemma foo12 (φ ψ : LTL) : X (φ U ψ) ≈ (X φ) U (X ψ).
-Proof. prep. Abort.
+Lemma next_until (φ ψ : LTL) : X (φ U ψ) ≈[infinite] (X φ) U (X ψ).
+Proof. ltl. Qed.
 
-Lemma foo13 (φ ψ : LTL) : ◇ (φ ∨ ψ) ≈ (◇ φ) ∨ (◇ ψ).
-Proof. prep. Abort.
+Lemma eventually_or (φ ψ : LTL) : ◇ (φ ∨ ψ) ≈ (◇ φ) ∨ (◇ ψ).
+Proof. ltl. Qed.
 
-Lemma foo14 (φ ψ : LTL) : □ (φ ∧ ψ) ≈ (□ φ) ∧ (□ ψ).
-Proof. prep. Abort.
+Lemma always_and (φ ψ : LTL) : □ (φ ∧ ψ) ≈ (□ φ) ∧ (□ ψ).
+Proof. ltl. Qed.
 
-Lemma foo15 (ρ φ ψ : LTL) : ρ U (φ ∨ ψ) ≈ (ρ U φ) ∨ (ρ U ψ).
-Proof. prep. Abort.
+Lemma until_or (ρ φ ψ : LTL) : ρ U (φ ∨ ψ) ≈ (ρ U φ) ∨ (ρ U ψ).
+Proof. ltl. Qed.
 
-Lemma foo16 (ρ φ ψ : LTL) : (φ ∧ ψ) U ρ ≈ (φ U ρ) ∧ (ψ U ρ).
-Proof. prep. Abort.
+Lemma and_until (ρ φ ψ : LTL) : (φ ∧ ψ) U ρ ≈ (φ U ρ) ∧ (ψ U ρ).
+Proof. ltl. Qed.
 
 (** Negation propagation *)
 
-Lemma foo18 (φ : LTL) : ¬(X φ) ≈[infinite] X ¬φ.
-Proof. prep. Qed.
+Lemma not_next (φ : LTL) : ¬(X φ) ≈[infinite] X ¬φ.
+Proof. ltl. Qed.
 
-Lemma foo19 (φ : LTL) : ¬(◇ φ) ≈[strong] □ ¬φ.
-Proof.
-  prep.
-  - apply IHx.
-    now apply matches_not.
-  - now apply matches_contradiction in H0.
-Qed.
+Lemma not_eventually (φ : LTL) : ¬(◇ φ) ≈[strong] □ ¬φ.
+Proof. ltl. Qed.
 
-Lemma foo20 (φ ψ : LTL) : ¬ (φ U ψ) ≈ (¬φ R ¬ψ).
-Proof. prep. Abort.
+Lemma not_until (φ ψ : LTL) : ¬ (φ U ψ) ≈ (¬φ R ¬ψ).
+Proof. ltl. Qed.
 
-Lemma foo21 (φ ψ : LTL) : ¬ (φ W ψ) ≈ (¬φ M ¬ψ).
-Proof. prep. Abort.
+Lemma not_weakUntil (φ ψ : LTL) : ¬ (φ W ψ) ≈[infinite] (¬φ M ¬ψ).
+Proof. ltl. Qed.
 
-Lemma foo22 (φ : LTL) : ¬(□ φ) ≈ ◇ ¬φ.
-Proof. prep. Abort.
+Lemma not_always (φ : LTL) : ¬(□ φ) ≈[infinite] ◇ ¬φ.
+Proof. ltl. Qed.
 
-Lemma foo23 (φ ψ : LTL) : ¬ (φ R ψ) ≈ (¬φ U ¬ψ).
-Proof. prep. Abort.
+Lemma not_release (φ ψ : LTL) : ¬ (φ R ψ) ≈ (¬φ U ¬ψ).
+Proof. ltl. Qed.
 
-Lemma foo24 (φ ψ : LTL) : ¬ (φ M ψ) ≈ (¬φ W ¬ψ).
-Proof. prep. Abort.
+Lemma not_strongRelease (φ ψ : LTL) : ¬ (φ M ψ) ≈[infinite] (¬φ W ¬ψ).
+Proof. ltl. Qed.
 
 (** Special Temporal properties *)
 
-Lemma foo25 (φ : LTL) :   ◇ φ ≈ ◇ ◇ φ.
-Proof. prep. Qed.
+Lemma not_not_eventually (φ : LTL) : ◇ ◇ φ ≈ ◇ φ.
+Proof. ltl. Qed.
 
-Lemma foo26 (φ : LTL) :   □ φ ≈ □ □ φ.
-Proof. prep. Qed.
+Lemma not_not_always (φ : LTL) : □ □ φ ≈ □ φ.
+Proof. ltl. Qed.
 
-Lemma foo27 (φ ψ : LTL) : φ U ψ ≈ φ U (φ U ψ).
-Proof. prep. Qed.
+Lemma until_until (φ ψ : LTL) : φ U (φ U ψ) ≈ φ U ψ.
+Proof. ltl. Qed.
 
-Lemma foo28 (φ ψ : LTL) : φ U ψ ≈[infinite] ψ ∨ (φ ∧ X(φ U ψ)).
-Proof. prep. Qed.
+Lemma or_and_next_until (φ ψ : LTL) : ψ ∨ (φ ∧ X(φ U ψ)) ≈[infinite] φ U ψ.
+Proof. ltl. Qed.
 
-Lemma foo29 (φ ψ : LTL) : φ W ψ ≈[infinite] ψ ∨ (φ ∧ X(φ W ψ)).
-Proof. prep. Qed.
+Lemma or_and_next_weakUntil (φ ψ : LTL) : ψ ∨ (φ ∧ X(φ W ψ)) ≈[infinite] φ W ψ.
+Proof. ltl. Qed.
 
-Lemma foo30 (φ ψ : LTL) : φ R ψ ≈ ψ ∧ (φ ∨ X(φ R ψ)).
-Proof. prep. Abort.
+Lemma and_or_next_release (φ ψ : LTL) : ψ ∧ (φ ∨ X(φ R ψ)) ≈[infinite] φ R ψ.
+Proof. ltl. Qed.
 
-Lemma foo31 (φ : LTL) :   □ φ ≈[infinite] φ ∧ X(□ φ).
-Proof. prep. Qed.
+Lemma or_next_always (φ : LTL) : φ ∧ X(□ φ) ≈[infinite] □ φ.
+Proof. ltl. Qed.
 
-Lemma foo32 (φ : LTL) :   ◇ φ ≈ φ ∨ X(◇ φ).
-Proof. prep. Qed.
+Lemma or_next_eventually (φ : LTL) : φ ∨ X(◇ φ) ≈ ◇ φ.
+Proof. ltl. Qed.
 
 End LTL.
