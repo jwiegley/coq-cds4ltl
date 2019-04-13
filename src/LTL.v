@@ -73,47 +73,42 @@ Variable term : Prop.
 
 Fixpoint matches (l : LTL) (s : Stream) {struct l} : Prop :=
   match l with
-  | ⊤ => True
-  | ⊥ => False
+  | ⊤       => True
+  | ⊥       => False
 
-  | Query v =>
-    match s with
-    | []     => term
-    | x :: _ => matches (v x) s
-    end
+  | Query v => match s with
+               | []     => term
+               | x :: _ => matches (v x) s
+               end
 
-  | ¬ p => ~ matches p s
+  | ¬ p     => ~ matches p s
 
-  | p ∧ q => matches p s /\ matches q s
-  | p ∨ q => matches p s \/ matches q s
-  | p → q => matches p s -> matches q s
+  | p ∧ q   => matches p s /\ matches q s
+  | p ∨ q   => matches p s \/ matches q s
+  | p → q   => matches p s -> matches q s
 
-  | X p =>
-    match s with
-    | []      => term
-    | _ :: xs => matches p xs
-    end
+  | X p     => match s with
+               | []      => term
+               | _ :: xs => matches p xs
+               end
 
-  | p U q =>
-    let fix go s :=
-        match s with
-        | []      => term
-        | x :: xs => matches q (x :: xs) \/ (matches p (x :: xs) /\ go xs)
-        end in go s
+  | p U q   => let fix go s :=
+                   match s with
+                   | []      => term
+                   | _ :: xs => matches q s \/ (matches p s /\ go xs)
+                   end in go s
 
-  | ◇ p =>
-    let fix go s :=
-        match s with
-        | []      => term
-        | x :: xs => matches p (x :: xs) \/ go xs
-        end in go s
+  | ◇ p     => let fix go s :=
+                   match s with
+                   | []      => term
+                   | _ :: xs => matches p s \/ go xs
+                   end in go s
 
-  | □ p =>
-    let fix go s :=
-        match s with
-        | []      => True
-        | x :: xs => matches p (x :: xs) /\ go xs
-        end in go s
+  | □ p     => let fix go s :=
+                   match s with
+                   | []      => True
+                   | _ :: xs => matches p s /\ go xs
+                   end in go s
   end.
 
 Definition iff (φ ψ : LTL) := (φ → ψ) ∧ (ψ → φ).
@@ -185,7 +180,7 @@ Ltac ltl_prep :=
   | _ => idtac
   end.
 
-Ltac ltl := ltl_prep; auto; intuition.
+Ltac ltl := ltl_prep; auto; intuition; inversion H; intuition.
 
 (* These properties are proven to hold in up to three conditions:
 
@@ -219,13 +214,13 @@ Lemma until_eventually_or (φ ψ : LTL) : φ U ψ ≈ ◇ ψ ∧ (φ W ψ).
 Proof. ltl. Qed.
 
 Lemma release_weakUntil (φ ψ : LTL) : φ R ψ ≈[infinite] ψ W (ψ ∧ φ).
-Proof. ltl_prep; inversion H; intuition. Qed.
+Proof. ltl. Qed.
 
 Lemma strongRelease_not_weakUntil (φ ψ : LTL) : φ M ψ ≈[infinite] ¬(¬φ W ¬ψ).
-Proof. ltl_prep; inversion H; intuition. Qed.
+Proof. ltl. Qed.
 
 Lemma strongRelease_release_or (φ ψ : LTL) : φ M ψ ≈[infinite] (φ R ψ) ∧ ◇ φ.
-Proof. ltl_prep; inversion H; intuition. Qed.
+Proof. ltl. Qed.
 
 Lemma strongRelease_release (φ ψ : LTL) : φ M ψ ≈[infinite] φ R (ψ ∧ ◇ φ).
 Proof. ltl. Qed.
@@ -332,3 +327,41 @@ Notation "□ x"     := (Always x)          (at level 0)  : ltl_scope.
 Notation "p 'R' q" := (release p q)       (at level 50) : ltl_scope.
 Notation "p 'W' q" := (weakUntil p q)     (at level 50) : ltl_scope.
 Notation "p 'M' q" := (strongRelease p q) (at level 50) : ltl_scope.
+
+Bind Scope ltl_scope with LTL.
+Delimit Scope ltl_scope with LTL.
+
+Definition bind `(p : a -> bool) (f : a -> LTL a) :=
+  Query (fun x => if p x then f x else ⊤)%LTL.
+
+Definition series {a} :=
+  fold_right (fun x rest => x ∧ @Next a rest)%LTL (⊤)%LTL.
+
+Section Examples.
+
+Open Scope ltl_scope.
+
+Definition num (n : nat) := Query (fun x => if x =? n then ⊤ else ⊥).
+
+Example ex_match_query :
+  matches nat False (num 1 ∧ (X (num 2)))
+          [1; 2].
+Proof. simpl; auto. Qed.
+
+Example ex_match_series :
+  matches nat False (series [num 1; num 2])
+          [1; 2].
+Proof. simpl; auto. Qed.
+
+Example ex_match_sample1 :
+  matches nat False (□ (num 3 → X (◇ (num 8))))
+          [1; 2; 3; 4; 5; 6; 7; 8; 9].
+Proof. simpl; intuition auto. Qed.
+
+Example ex_match_sample2 :
+  matches nat False (□ (bind (fun n => n =? 3)
+                             (fun n => X (◇ (num (n + 5))))))
+          [1; 2; 3; 4; 5; 6; 7; 8; 9].
+Proof. simpl; intuition auto. Qed.
+
+End Examples.
