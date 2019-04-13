@@ -35,9 +35,8 @@ Inductive Match : Type :=
   | NextFwd        (p : Match)
   | EventuallyStop (p : Match)
   | EventuallyFwd  (p : Match)
-  | UntilPrf1      (q : Match)
-  | UntilPrf2      (p : Match)
-  | UntilPrf3      (p : Match) (ps : Match)
+  | UntilPrf1      (p : Match) (ps : Match)
+  | UntilPrf2      (q : Match)
   | AlwaysPrf1     (p : Match) (ps : Match)
   | AlwaysPrf2.
 
@@ -95,6 +94,10 @@ Proof.
   - destruct H, H; discriminate.
 Qed.
 
+Lemma fmap_endo_none {c} (f : c -> c) (m : option c) :
+  f <$> m = None <-> m = None.
+Proof. induction m; simpl; intuition auto; discriminate. Qed.
+
 Lemma ap_endo_some {c} (f : c -> c -> c) (m n : option c) (x : c) :
   f <$> m <*> n = Some x
     <-> exists y z, x = f y z /\ m = Some y /\ n = Some z.
@@ -113,6 +116,47 @@ Proof.
   - destruct H, H, H, H0; discriminate.
 Qed.
 
+Lemma ap_endo_none {c} (f : c -> c -> c) (m n : option c) :
+  f <$> m <*> n = None <-> m = None \/ n = None.
+Proof. induction m, n; simpl; intuition auto; discriminate. Qed.
+
+Lemma bind_endo_some {c} (f : c -> option c) (m : option c) (x : c) :
+  m >>= f = Some x <-> exists y, f y = Some x /\ m = Some y.
+Proof.
+  unfold option_bind.
+  induction m; simpl; split; intros.
+  - now firstorder eauto.
+  - destruct H, H.
+    now inversion_clear H0.
+  - discriminate.
+  - destruct H, H.
+    discriminate.
+Qed.
+
+Lemma bind_endo_none {c} (f : c -> option c) (m : option c) :
+  m >>= f = None <-> m = None \/ exists y, f y = None /\ m = Some y.
+Proof.
+  induction m; simpl; split; intros.
+  - now right; eauto.
+  - destruct H.
+      discriminate.
+    firstorder eauto.
+    now inversion_clear H0.
+  - now left.
+  - reflexivity.
+Qed.
+
+Lemma alt_endo_some {c} (m n : option c) (x : c) :
+  m <|> n = Some x <-> m = Some x \/ (m = None /\ n = Some x).
+Proof.
+  unfold option_alt.
+  induction m; simpl; intuition auto; discriminate.
+Qed.
+
+Lemma alt_endo_none {c} (m n : option c) :
+  m <|> n = None <-> m = None /\ n = None.
+Proof. induction m, n; simpl; intuition auto; discriminate. Qed.
+
 Fixpoint compare (t : option term) (l : LTL a) (s : Stream a) :=
   match l return option Match with
   | ⊤       => Some IsTrue
@@ -130,7 +174,7 @@ Fixpoint compare (t : option term) (l : LTL a) (s : Stream a) :=
 
   | p ∧ q   => Both    <$> compare t p s <*> compare t q s
   | p ∨ q   => InLeft  <$> compare t p s
-                       <|> InRight <$> compare t q s
+           <|> InRight <$> compare t q s
 
   | p → q   => match compare t p s with
                | None   => Some NotImplied
@@ -145,26 +189,23 @@ Fixpoint compare (t : option term) (l : LTL a) (s : Stream a) :=
   | p U q   => let fix go s :=
                    match s with
                    | []      => EndOfTrace (p U q) <$> t
-                   | x :: xs => UntilPrf1 <$> compare t q (x :: xs)
-                            <|> compare t p (x :: xs) >>=
-                                  (fun P => UntilPrf3 P <$> go xs
-                                        <|> Some (UntilPrf2 P))
+                   | x :: xs => UntilPrf2 <$> compare t q (x :: xs)
+                            <|> UntilPrf1 <$> compare t p (x :: xs)
+                                          <*> go xs
                    end in go s
 
   | ◇ p     => let fix go s :=
                    match s with
                    | []      => EndOfTrace (◇ p) <$> t
-                   | x :: xs => EventuallyStop
-                                  <$> compare t p (x :: xs)
-                                  <|> EventuallyFwd  <$> go xs
+                   | x :: xs => EventuallyStop <$> compare t p (x :: xs)
+                            <|> EventuallyFwd  <$> go xs
                    end in go s
 
   | □ p     => let fix go s :=
                    match s with
                    | []      => Some AlwaysPrf2
-                   | x :: xs => AlwaysPrf1
-                                  <$> compare t p (x :: xs)
-                                  <*> go xs
+                   | x :: xs => AlwaysPrf1 <$> compare t p (x :: xs)
+                                           <*> go xs
                    end in go s
   end.
 
@@ -212,14 +253,11 @@ Proof.
     destruct t; simpl in *;
     intuition eauto.
   - split; intros.
-    + destruct H, T, t; simpl in *; auto.
-      * discriminate.
-      * apply IHL; clear IHL.
-        apply fmap_endo_some in H.
-        firstorder eauto.
-      * apply IHL; clear IHL.
-        apply fmap_endo_some in H.
-        firstorder eauto.
+    + destruct H, T; simpl in *; auto.
+        destruct t; auto; discriminate.
+      apply IHL; clear IHL.
+      apply fmap_endo_some in H.
+      now firstorder eauto.
     + destruct T, t; simpl in *; auto;
       [ eexists; eauto | contradiction | .. ];
       apply IHL in H;
@@ -227,11 +265,96 @@ Proof.
       exists (NextFwd x);
       apply fmap_endo_some;
       exists x; auto.
-  - admit.
-  - admit.
-  - split; intros.
+  - split; intros;
+    induction T; simpl in *; auto.
+    + destruct H, t; auto; discriminate.
     + destruct H.
-Abort.
+      apply alt_endo_some in H.
+      destruct H; intuition auto.
+      * apply fmap_endo_some in H.
+        destruct H, H; subst.
+        left.
+        apply IHL2.
+        now firstorder eauto.
+      * apply fmap_endo_none in H0.
+        apply ap_endo_some in H1.
+        destruct H1, H, H, H1; subst.
+        rewrite H2 in IHT; clear H2.
+        right.
+        split.
+          apply IHL1.
+          now firstorder eauto.
+        apply IHT.
+        now eexists; eauto.
+    + destruct t; auto; simpl.
+        now eexists; eauto.
+      contradiction.
+    + destruct H.
+        apply IHL2 in H.
+        destruct H.
+        rewrite H; simpl.
+        now eexists; eauto.
+      destruct H.
+      apply IHL1 in H.
+      destruct H.
+      rewrite H; simpl.
+      intuition auto.
+      destruct H1.
+      rewrite H1; clear H1.
+      destruct (compare t L2 (a0 :: T)) eqn:?; simpl;
+      now eexists; eauto.
+  - split; intros;
+    induction T; simpl in *; auto.
+    + destruct t; auto.
+      destruct H; discriminate.
+    + destruct H.
+      apply alt_endo_some in H.
+      destruct H.
+      * apply fmap_endo_some in H.
+        destruct H, H; subst.
+        now firstorder eauto.
+      * destruct H.
+        apply fmap_endo_some in H0.
+        destruct H0, H0; subst.
+        now firstorder eauto.
+    + destruct t; auto; simpl.
+        now eexists; eauto.
+      contradiction.
+    + destruct H.
+        apply IHL in H.
+        destruct H.
+        eexists.
+        apply alt_endo_some.
+        left.
+        apply fmap_endo_some.
+        now firstorder eauto.
+      intuition.
+      destruct H0.
+      rewrite H0; clear H0.
+      destruct (compare t L (a0 :: T)) eqn:?.
+        eexists.
+        apply alt_endo_some.
+        now left; simpl; auto.
+      eexists.
+      apply alt_endo_some.
+      now right; split; auto.
+  - split; intros;
+    induction T; simpl in *; auto.
+    + destruct H.
+      apply ap_endo_some in H.
+      destruct H, H, H, H0.
+      now firstorder eauto.
+    + now eexists; eauto.
+    + destruct H.
+      intuition.
+      destruct H1.
+      apply IHL in H.
+      destruct H.
+      eexists.
+      apply ap_endo_some.
+      do 2 eexists.
+      now firstorder eauto.
+Qed.
 
 (*
 Inductive MatchDep : LTL -> Type :=
@@ -246,9 +369,8 @@ Inductive MatchDep : LTL -> Type :=
   | DepNextFwd        `(P : MatchDep p)                          : MatchDep (X p)
   | DepEventuallyStop `(P : MatchDep p)                          : MatchDep (◇ p)
   | DepEventuallyFwd  `(P : MatchDep p)                          : MatchDep (◇ p)
-  | DepUntilPrf1      p `(Q : MatchDep q)                        : MatchDep (p U q)
-  | DepUntilPrf2      `(P : MatchDep p) `(PS : MatchDep (p U q)) : MatchDep (p U q)
-  | DepUntilPrf3      `(P : MatchDep p) q                        : MatchDep (p U q)
+  | DepUntilPrf1      `(P : MatchDep p) `(PS : MatchDep (p U q)) : MatchDep (p U q)
+  | DepUntilPrf2      p `(Q : MatchDep q)                        : MatchDep (p U q)
   | DepAlwaysPrf1     `(P : MatchDep p) `(PS : MatchDep (□ p))   : MatchDep (□ p)
   | DepAlwaysPrf2     p                                          : MatchDep (□ p).
 *)
@@ -266,3 +388,32 @@ Proof.
 Abort.
 
 End Match.
+
+Section Examples.
+
+Open Scope ltl_scope.
+
+Example ex_compare_sample :
+  compare nat () None (□ (ifThen (fun n => n =? 3)
+                                 (fun n => X (◇ (num (n + 5))))))
+          [1; 2; 3; 4; 5; 6; 7; 8; 9]
+    = Some
+        (AlwaysPrf1 nat () (IsTrue nat ())
+           (AlwaysPrf1 nat () (IsTrue nat ())
+              (AlwaysPrf1 nat ()
+                 (NextFwd nat ()
+                    (EventuallyFwd nat ()
+                       (EventuallyFwd nat ()
+                          (EventuallyFwd nat ()
+                             (EventuallyFwd nat ()
+                                (EventuallyStop nat () (IsTrue nat ())))))))
+                 (AlwaysPrf1 nat () (IsTrue nat ())
+                    (AlwaysPrf1 nat () (IsTrue nat ())
+                       (AlwaysPrf1 nat () (IsTrue nat ())
+                          (AlwaysPrf1 nat () (IsTrue nat ())
+                             (AlwaysPrf1 nat () (IsTrue nat ())
+                                (AlwaysPrf1 nat () (IsTrue nat ())
+                                   (AlwaysPrf2 nat ())))))))))).
+Proof. reflexivity. Qed.
+
+End Examples.

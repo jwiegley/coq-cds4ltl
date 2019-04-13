@@ -331,7 +331,7 @@ Notation "p 'M' q" := (strongRelease p q) (at level 50) : ltl_scope.
 Bind Scope ltl_scope with LTL.
 Delimit Scope ltl_scope with LTL.
 
-Definition bind `(p : a -> bool) (f : a -> LTL a) :=
+Definition ifThen `(p : a -> bool) (f : a -> LTL a) :=
   Query (fun x => if p x then f x else ⊤)%LTL.
 
 Definition series {a} :=
@@ -359,8 +359,8 @@ Example ex_match_sample1 :
 Proof. simpl; intuition auto. Qed.
 
 Example ex_match_sample2 :
-  matches nat False (□ (bind (fun n => n =? 3)
-                             (fun n => X (◇ (num (n + 5))))))
+  matches nat False (□ (ifThen (fun n => n =? 3)
+                              (fun n => X (◇ (num (n + 5))))))
           [1; 2; 3; 4; 5; 6; 7; 8; 9].
 Proof. simpl; intuition auto. Qed.
 
