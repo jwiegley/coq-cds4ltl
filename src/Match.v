@@ -83,62 +83,89 @@ Definition option_alt {a} (mx : option a) (my : option a) : option a :=
 
 Infix "<|>" := option_alt (at level 50).
 
-Fixpoint compare (t : option term) (l : LTL a) (s : Stream a) : option Match :=
-  match l with
-  | ⊤ => Some IsTrue
-  | ⊥ => None
+Lemma fmap_endo_some {c} (f : c -> c) (m : option c) (x : c) :
+  f <$> m = Some x <-> exists y, x = f y /\ m = Some y.
+Proof.
+  induction m; simpl; split; intros.
+  - inversion_clear H.
+    eexists; eauto.
+  - destruct H, H; subst.
+    now inversion_clear H0.
+  - discriminate.
+  - destruct H, H; discriminate.
+Qed.
 
-  | Query v =>
-    match s with
-    | []     => EndOfTrace (Query v) <$> t
-    | x :: _ => compare t (v x) s
-    end
+Lemma ap_endo_some {c} (f : c -> c -> c) (m n : option c) (x : c) :
+  f <$> m <*> n = Some x
+    <-> exists y z, x = f y z /\ m = Some y /\ n = Some z.
+Proof.
+  induction m, n; simpl; split; intros.
+  - inversion_clear H.
+    eexists; eauto.
+  - destruct H, H, H, H0; subst.
+    inversion_clear H0.
+    now inversion_clear H1.
+  - discriminate.
+  - destruct H, H, H, H0; discriminate.
+  - discriminate.
+  - destruct H, H, H, H0; discriminate.
+  - discriminate.
+  - destruct H, H, H, H0; discriminate.
+Qed.
 
-  | ¬ p =>
-    match compare t p s with
-    | None   => Some Negated
-    | Some _ => None
-    end
+Fixpoint compare (t : option term) (l : LTL a) (s : Stream a) :=
+  match l return option Match with
+  | ⊤       => Some IsTrue
+  | ⊥       => None
 
-  | p ∧ q => Both    <$> compare t p s <*> compare t q s
-  | p ∨ q => InLeft  <$> compare t p s
-         <|> InRight <$> compare t q s
+  | Query v => match s with
+               | []     => EndOfTrace (Query v) <$> t
+               | x :: _ => compare t (v x) s
+               end
 
-  | p → q =>
-    match compare t p s with
-    | None   => Some NotImplied
-    | Some P => Implied P <$> compare t q s
-    end
+  | ¬ p     => match compare t p s with
+               | None   => Some Negated
+               | Some _ => None
+               end
 
-  | X p =>
-    match s with
-    | []      => EndOfTrace (X p) <$> t
-    | _ :: xs => NextFwd <$> compare t p xs
-    end
+  | p ∧ q   => Both    <$> compare t p s <*> compare t q s
+  | p ∨ q   => InLeft  <$> compare t p s
+                       <|> InRight <$> compare t q s
 
-  | p U q =>
-    let fix go s :=
-        match s with
-        | []      => EndOfTrace (p U q) <$> t
-        | x :: xs => UntilPrf1 <$> compare t q (x :: xs)
-                 <|> compare t p (x :: xs) >>=
-                     (fun P => UntilPrf3 P <$> go xs <|> Some (UntilPrf2 P))
-        end in go s
+  | p → q   => match compare t p s with
+               | None   => Some NotImplied
+               | Some P => Implied P <$> compare t q s
+               end
 
-  | ◇ p =>
-    let fix go s :=
-        match s with
-        | []      => EndOfTrace (◇ p) <$> t
-        | x :: xs => EventuallyStop <$> compare t p (x :: xs)
-                 <|> EventuallyFwd  <$> go xs
-        end in go s
+  | X p     => match s with
+               | []      => EndOfTrace (X p) <$> t
+               | _ :: xs => NextFwd <$> compare t p xs
+               end
 
-  | □ p =>
-    let fix go s :=
-        match s with
-        | []      => Some AlwaysPrf2
-        | x :: xs => AlwaysPrf1 <$> compare t p (x :: xs) <*> go xs
-        end in go s
+  | p U q   => let fix go s :=
+                   match s with
+                   | []      => EndOfTrace (p U q) <$> t
+                   | x :: xs => UntilPrf1 <$> compare t q (x :: xs)
+                            <|> compare t p (x :: xs) >>=
+                                  (fun P => UntilPrf3 P <$> go xs
+                                        <|> Some (UntilPrf2 P))
+                   end in go s
+
+  | ◇ p     => let fix go s :=
+                   match s with
+                   | []      => EndOfTrace (◇ p) <$> t
+                   | x :: xs => EventuallyStop
+                                  <$> compare t p (x :: xs)
+                                  <|> EventuallyFwd  <$> go xs
+                   end in go s
+
+  | □ p     => let fix go s :=
+                   match s with
+                   | []      => Some AlwaysPrf2
+                   | x :: xs => AlwaysPrf1
+                                  <$> compare t p (x :: xs)
+                                  <*> go xs
+                   end in go s
   end.
 
 Lemma compare_correct (L : LTL a) (T : Stream a) :
@@ -147,46 +174,63 @@ Lemma compare_correct (L : LTL a) (T : Stream a) :
       <-> matches a (match t with None => False | _ => True end) L T.
 Proof.
   intros.
-  induction L; simpl;
-  intros; auto;
-  try discriminate;
-  try contradiction.
-  - intuition.
-    eexists; eauto.
-  - intuition.
-    destruct H; discriminate.
+  generalize dependent T;
+  induction L;
+  intros; auto.
+  - now simpl; firstorder eauto.
+  - simpl; firstorder eauto; discriminate.
   - destruct T, t; simpl in *;
-    auto; intuition.
-      eexists; eauto.
-    destruct H0; discriminate.
-  - split; intro.
-      destruct H.
-      destruct (compare t L T) eqn:?.
-        discriminate.
-      intro.
-      apply IHL in H0.
-      destruct H0; discriminate.
+    firstorder eauto.
+    discriminate.
+  - specialize (IHL T);
+    simpl; firstorder eauto;
     destruct (compare t L T) eqn:?.
-      firstorder.
-    eexists; eauto.
-  - destruct (compare t L1 T) eqn:?;
+    + discriminate.
+    + intuition; firstorder eauto; discriminate.
+    + contradiction H1.
+      eapply H; eauto.
+    + now eexists; eauto.
+  - specialize (IHL1 T);
+    specialize (IHL2 T);
+    simpl;
+    destruct (compare t L1 T) eqn:?;
     destruct (compare t L2 T) eqn:?;
     destruct t; simpl in *;
-    split; intros; firstorder;
-    eexists; eauto.
-  - destruct (compare t L1 T) eqn:?;
+    firstorder eauto.
+  - specialize (IHL1 T);
+    specialize (IHL2 T);
+    simpl;
+    destruct (compare t L1 T) eqn:?;
     destruct (compare t L2 T) eqn:?;
     destruct t; simpl in *;
-    split; intros; firstorder;
-    eexists; eauto.
-  - destruct (compare t L1 T) eqn:?;
+    firstorder eauto.
+  - specialize (IHL1 T);
+    specialize (IHL2 T);
+    simpl;
+    destruct (compare t L1 T) eqn:?;
     destruct (compare t L2 T) eqn:?;
     destruct t; simpl in *;
-    split; intros; firstorder;
-    eexists; eauto.
-  - destruct (compare t L T) eqn:?;
-    destruct t; simpl in *;
-    split; intros; firstorder.
+    intuition eauto.
+  - split; intros.
+    + destruct H, T, t; simpl in *; auto.
+      * discriminate.
+      * apply IHL; clear IHL.
+        apply fmap_endo_some in H.
+        firstorder eauto.
+      * apply IHL; clear IHL.
+        apply fmap_endo_some in H.
+        firstorder eauto.
+    + destruct T, t; simpl in *; auto;
+      [ eexists; eauto | contradiction | .. ];
+      apply IHL in H;
+      destruct H;
+      exists (NextFwd x);
+      apply fmap_endo_some;
+      exists x; auto.
+  - admit.
+  - admit.
+  - split; intros.
+    + destruct H.
 Abort.
 
 (*
