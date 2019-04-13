@@ -29,16 +29,16 @@ Inductive LTL : Type :=
   | Top
   | Bottom
   | Query (v : a -> LTL)
-  | Not (p : LTL)
-  | And (p q : LTL)
-  | Or (p q : LTL)
-  | Impl (p q : LTL)
+  | Not   (p : LTL)
+  | And   (p q : LTL)
+  | Or    (p q : LTL)
+  | Impl  (p q : LTL)
 
   (* Temporal layer *)
-  | Next (p : LTL)
-  | Until (p q : LTL)
+  | Next       (p : LTL)
+  | Until      (p q : LTL)
   | Eventually (p : LTL)
-  | Always (p : LTL).
+  | Always     (p : LTL).
 
 Notation "⊤"       := Top             (at level 50).
 Notation "⊥"       := Bottom          (at level 50).
@@ -65,10 +65,6 @@ Fixpoint LTL_size (p : LTL) : nat :=
   | Eventually p => 1 + LTL_size p
   | Always p     => 1 + LTL_size p
   end.
-
-Definition remaining (p : LTL) (s : Stream) := LTL_size p + length s.
-
-Local Obligation Tactic := program_simpl; unfold remaining; simpl; try omega.
 
 (* [term] is a type that is found at the end of a partial trace match. By
    choosing [False], one can express that formula must exactly match within a
