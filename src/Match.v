@@ -20,13 +20,12 @@ Set Decidable Equality Schemes.
 Section Match.
 
 Variable a : Type.              (* The type of entries in the trace *)
-Variable b : Type.              (* The type of data derived from each entry *)
 Variable term : Type.
 
 Inductive Match : Type :=
-  | EndOfTrace     (l : LTL a b) (t : term)
+  | EndOfTrace     (l : LTL a) (t : term)
   | IsTrue
-  | Base           (x : b)
+  | Base           (x : a)
   | Negated
   | Both           (p q : Match)
   | InLeft         (p : Match)
@@ -84,7 +83,7 @@ Definition option_alt {a} (mx : option a) (my : option a) : option a :=
 
 Infix "<|>" := option_alt (at level 50).
 
-Fixpoint compare (t : option term) (l : LTL a b) (s : Stream a) : option Match :=
+Fixpoint compare (t : option term) (l : LTL a) (s : Stream a) : option Match :=
   match l with
   | ⊤ => Some IsTrue
   | ⊥ => None
@@ -92,12 +91,12 @@ Fixpoint compare (t : option term) (l : LTL a b) (s : Stream a) : option Match :
   | Query v =>
     match s with
     | []     => EndOfTrace (Query v) <$> t
-    | x :: _ => Base <$> v (option b) x Some None
+    | x :: _ => compare t (v x) s
     end
 
   | ¬ p =>
     match compare t p s with
-    | None => Some Negated
+    | None   => Some Negated
     | Some _ => None
     end
 
@@ -142,25 +141,52 @@ Fixpoint compare (t : option term) (l : LTL a b) (s : Stream a) : option Match :
         end in go s
   end.
 
-Lemma compare_correct (L : LTL a b) (T : Stream a) :
-  forall (t : option term),
-    (forall x b' v,
-                L = Query v ->
-                v (option b) x Some None = Some b' ->
-                v Prop x (const True) False) ->
-    (exists (P : Match), compare t L T = Some P)
-      <-> matches a b (match t with None => False | _ => True end) L T.
+Lemma compare_correct (L : LTL a) (T : Stream a) :
+  forall t,
+    (exists P, compare t L T = Some P)
+      <-> matches a (match t with None => False | _ => True end) L T.
 Proof.
-  split;
-  induction L;
-  simpl; intros;
-  try destruct H0;
-  auto; try discriminate;
-  destruct T, t;
-  simpl in *;
-  auto; try discriminate.
-  admit.
-  admit.
+  intros.
+  induction L; simpl;
+  intros; auto;
+  try discriminate;
+  try contradiction.
+  - intuition.
+    eexists; eauto.
+  - intuition.
+    destruct H; discriminate.
+  - destruct T, t; simpl in *;
+    auto; intuition.
+      eexists; eauto.
+    destruct H0; discriminate.
+  - split; intro.
+      destruct H.
+      destruct (compare t L T) eqn:?.
+        discriminate.
+      intro.
+      apply IHL in H0.
+      destruct H0; discriminate.
+    destruct (compare t L T) eqn:?.
+      firstorder.
+    eexists; eauto.
+  - destruct (compare t L1 T) eqn:?;
+    destruct (compare t L2 T) eqn:?;
+    destruct t; simpl in *;
+    split; intros; firstorder;
+    eexists; eauto.
+  - destruct (compare t L1 T) eqn:?;
+    destruct (compare t L2 T) eqn:?;
+    destruct t; simpl in *;
+    split; intros; firstorder;
+    eexists; eauto.
+  - destruct (compare t L1 T) eqn:?;
+    destruct (compare t L2 T) eqn:?;
+    destruct t; simpl in *;
+    split; intros; firstorder;
+    eexists; eauto.
+  - destruct (compare t L T) eqn:?;
+    destruct t; simpl in *;
+    split; intros; firstorder.
 Abort.
 
 (*

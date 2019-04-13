@@ -21,7 +21,6 @@ Set Decidable Equality Schemes.
 Section LTL.
 
 Variable a : Type.              (* The type of entries in the trace *)
-Variable b : Type.              (* The type of data derived from each entry *)
 
 Definition Stream := list a.
 
@@ -29,9 +28,7 @@ Inductive LTL : Type :=
   (* Boolean layer *)
   | Top
   | Bottom
-    (* Use a final encoding of [option] as the result, to allow scoping by the
-       user of [Query]. *)
-  | Query (v : forall r, a -> (b -> r) -> r -> r)
+  | Query (v : a -> LTL)
   | Not (p : LTL)
   | And (p q : LTL)
   | Or (p q : LTL)
@@ -86,7 +83,7 @@ Fixpoint matches (l : LTL) (s : Stream) {struct l} : Prop :=
   | Query v =>
     match s with
     | []     => term
-    | x :: _ => v Prop x (const True) False
+    | x :: _ => matches (v x) s
     end
 
   | ¬ p => ~ matches p s
@@ -122,50 +119,6 @@ Fixpoint matches (l : LTL) (s : Stream) {struct l} : Prop :=
         | x :: xs => matches p (x :: xs) /\ go xs
         end in go s
   end.
-
-Lemma matches_bottom T :
-  matches (⊥) T <-> False.
-Proof. simpl; intuition auto. Qed.
-
-Lemma matches_not L T :
-  matches (¬ L) T <-> ~ matches L T.
-Proof. simpl; intuition auto. Qed.
-
-Lemma matches_contradiction L T :
-  matches L T -> matches (¬ L) T -> False.
-Proof. simpl; intuition auto. Qed.
-
-Lemma matches_and L1 L2 T :
-  matches (L1 ∧ L2) T <-> matches L1 T /\ matches L2 T.
-Proof. simpl; intuition auto. Qed.
-
-Lemma matches_or L1 L2 T :
-  matches (L1 ∨ L2) T <-> matches L1 T \/ matches L2 T.
-Proof. simpl; intuition auto. Qed.
-
-Lemma matches_impl L1 L2 T :
-  matches (L1 → L2) T <-> (matches L1 T -> matches L2 T).
-Proof. simpl; intuition auto. Qed.
-
-Lemma matches_next L T x :
-  matches (X L) (x :: T) <-> matches L T.
-Proof. simpl; intuition auto. Qed.
-
-Lemma matches_eventually L T x :
-  matches (◇ L) (x :: T) <-> matches L (x :: T) \/ matches (◇ L) T.
-Proof. simpl; intuition auto. Qed.
-
-Lemma matches_until L1 L2 T x :
-  matches (L1 U L2) (x :: T) <->
-  matches L2 (x :: T) \/
-    (matches L1 (x :: T) /\ matches (L1 U L2) T).
-Proof. simpl; intuition auto. Qed.
-
-Lemma matches_always L T x :
-  matches (□ L) (x :: T) <-> matches L (x :: T) /\ matches (□ L) T.
-Proof. simpl; intuition auto. Qed.
-
-Definition impl (φ ψ : LTL) := ¬φ ∨ ψ.
 
 Definition iff (φ ψ : LTL) := (φ → ψ) ∧ (ψ → φ).
 Infix "↔" := iff (at level 50).
@@ -355,20 +308,20 @@ Proof. ltl. Qed.
 
 End LTL.
 
-Arguments Top {a b}.
-Arguments Bottom {a b}.
-Arguments Query {a b} v.
-Arguments Not {a b} p.
-Arguments And {a b}.
-Arguments Or {a b}.
-Arguments Impl {a b}.
-Arguments Next {a b} p.
-Arguments Until {a b} p q.
-Arguments Eventually {a b} p.
-Arguments Always {a b} p.
-Arguments release {a b} φ ψ.
-Arguments weakUntil {a b} φ ψ.
-Arguments strongRelease {a b} φ ψ.
+Arguments Top {a}.
+Arguments Bottom {a}.
+Arguments Query {a} v.
+Arguments Not {a} p.
+Arguments And {a}.
+Arguments Or {a}.
+Arguments Impl {a}.
+Arguments Next {a} p.
+Arguments Until {a} p q.
+Arguments Eventually {a} p.
+Arguments Always {a} p.
+Arguments release {a} φ ψ.
+Arguments weakUntil {a} φ ψ.
+Arguments strongRelease {a} φ ψ.
 
 Notation "⊤"       := Top                 (at level 50) : ltl_scope.
 Notation "⊥"       := Bottom              (at level 50) : ltl_scope.
