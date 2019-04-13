@@ -32,7 +32,6 @@ Inductive LTL : Type :=
   | Not   (p : LTL)
   | And   (p q : LTL)
   | Or    (p q : LTL)
-  | Impl  (p q : LTL)
 
   (* Temporal layer *)
   | Next       (p : LTL)
@@ -45,7 +44,7 @@ Notation "⊥"       := Bottom          (at level 50).
 Notation "¬ x"     := (Not x)         (at level 0).
 Infix    "∧"       := And             (at level 50).
 Infix    "∨"       := Or              (at level 50).
-Infix    "→"       := Impl            (at level 50).
+Notation "p → q"   := (¬ p ∨ (p ∧ q)) (at level 50).
 Notation "'X' x"   := (Next x)        (at level 0).
 Notation "p 'U' q" := (Until p q)     (at level 50).
 Notation "◇ x"     := (Eventually x)  (at level 0).
@@ -59,7 +58,6 @@ Fixpoint LTL_size (p : LTL) : nat :=
   | Not p        => 1 + LTL_size p
   | And p q      => 1 + LTL_size p + LTL_size q
   | Or p q       => 1 + LTL_size p + LTL_size q
-  | Impl p q     => 1 + LTL_size p + LTL_size q
   | Next p       => 1 + LTL_size p
   | Until p q    => 1 + LTL_size p + LTL_size q
   | Eventually p => 1 + LTL_size p
@@ -85,7 +83,6 @@ Fixpoint matches (l : LTL) (s : Stream) {struct l} : Prop :=
 
   | p ∧ q   => matches p s /\ matches q s
   | p ∨ q   => matches p s \/ matches q s
-  | p → q   => matches p s -> matches q s
 
   | X p     => match s with
                | []      => term
@@ -305,7 +302,6 @@ Arguments Query {a} v.
 Arguments Not {a} p.
 Arguments And {a}.
 Arguments Or {a}.
-Arguments Impl {a}.
 Arguments Next {a} p.
 Arguments Until {a} p q.
 Arguments Eventually {a} p.
@@ -314,12 +310,15 @@ Arguments release {a} φ ψ.
 Arguments weakUntil {a} φ ψ.
 Arguments strongRelease {a} φ ψ.
 
+Bind Scope ltl_scope with LTL.
+Delimit Scope ltl_scope with LTL.
+
 Notation "⊤"       := Top                 (at level 50) : ltl_scope.
 Notation "⊥"       := Bottom              (at level 50) : ltl_scope.
 Notation "¬ x"     := (Not x)             (at level 0)  : ltl_scope.
 Infix    "∧"       := And                 (at level 50) : ltl_scope.
 Infix    "∨"       := Or                  (at level 50) : ltl_scope.
-Infix    "→"       := Impl                (at level 50) : ltl_scope.
+Notation "p → q"   := (¬ p ∨ (p ∧ q))%LTL (at level 50) : ltl_scope.
 Notation "'X' x"   := (Next x)            (at level 0)  : ltl_scope.
 Notation "p 'U' q" := (Until p q)         (at level 50) : ltl_scope.
 Notation "◇ x"     := (Eventually x)      (at level 0)  : ltl_scope.
@@ -327,9 +326,6 @@ Notation "□ x"     := (Always x)          (at level 0)  : ltl_scope.
 Notation "p 'R' q" := (release p q)       (at level 50) : ltl_scope.
 Notation "p 'W' q" := (weakUntil p q)     (at level 50) : ltl_scope.
 Notation "p 'M' q" := (strongRelease p q) (at level 50) : ltl_scope.
-
-Bind Scope ltl_scope with LTL.
-Delimit Scope ltl_scope with LTL.
 
 Definition ifThen `(p : a -> bool) (f : a -> LTL a) :=
   Query (fun x => if p x then f x else ⊤)%LTL.

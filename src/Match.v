@@ -30,8 +30,6 @@ Inductive Match : Type :=
   | Both           (p q : Match)
   | InLeft         (p : Match)
   | InRight        (q : Match)
-  | NotImplied
-  | Implied        (p q : Match)
   | NextFwd        (p : Match)
   | EventuallyStop (p : Match)
   | EventuallyFwd  (p : Match)
@@ -176,11 +174,6 @@ Fixpoint compare (t : option term) (l : LTL a) (s : Stream a) :=
   | p ∨ q   => InLeft  <$> compare t p s
            <|> InRight <$> compare t q s
 
-  | p → q   => match compare t p s with
-               | None   => Some NotImplied
-               | Some P => Implied P <$> compare t q s
-               end
-
   | X p     => match s with
                | []      => EndOfTrace (X p) <$> t
                | _ :: xs => NextFwd <$> compare t p xs
@@ -245,13 +238,6 @@ Proof.
     destruct (compare t L2 T) eqn:?;
     destruct t; simpl in *;
     firstorder eauto.
-  - specialize (IHL1 T);
-    specialize (IHL2 T);
-    simpl;
-    destruct (compare t L1 T) eqn:?;
-    destruct (compare t L2 T) eqn:?;
-    destruct t; simpl in *;
-    intuition eauto.
   - split; intros.
     + destruct H, T; simpl in *; auto.
         destruct t; auto; discriminate.
