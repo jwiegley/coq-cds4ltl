@@ -403,3 +403,103 @@ Example ex_compare_sample :
 Proof. reflexivity. Qed.
 
 End Examples.
+
+CoInductive PMealy (a b : Type) : Type :=
+  mkPMealy : (a -> (option b * PMealy a b)) -> PMealy a b.
+
+Arguments mkPMealy {a b} _.
+
+Open Scope ltl_scope.
+
+Definition Engine (a : Type) := PMealy a (() + Match a ()).
+
+Arguments EndOfTrace {a term} _ _.
+Arguments IsTrue {a term}.
+Arguments Base {a term} x.
+Arguments Negated {a term}.
+Arguments Both {a term} p q.
+Arguments InLeft {a term} p.
+Arguments InRight {a term} q.
+Arguments NextFwd {a term} p.
+Arguments EventuallyStop {a term} p.
+Arguments EventuallyFwd {a term} p.
+Arguments UntilPrf1 {a term} p ps.
+Arguments UntilPrf2 {a term} q.
+Arguments AlwaysPrf1 {a term} p ps.
+Arguments AlwaysPrf2 {a term}.
+
+Class Semigroup (a : Type) := {
+  mappend : a -> a -> a;
+
+  mappend_assoc : forall x y z,
+    mappend x (mappend y z) = mappend (mappend x y) z
+}.
+
+Arguments mappend {a _} _ _.
+
+Infix "⨂" := mappend (at level 40).
+
+Class Monoid (a : Type) := {
+  is_semigroup :> Semigroup a;
+  mempty : a;
+
+  mempty_left : forall x, mempty ⨂ x = x;
+  mempty_right : forall x, x ⨂ mempty = x
+}.
+
+Program Instance Semigroup_option `{Semigroup a} : Semigroup (option a) := {
+  mappend := fun x y =>
+    match x, y with
+    | None, x => x
+    | x, None => x
+    | Some x, Some y => Some (mappend x y)
+    end
+}.
+Next Obligation.
+  destruct x, y, z; auto.
+  now rewrite mappend_assoc.
+Qed.
+
+Program Instance Monoid_option `{Monoid a} : Monoid (option a) := {
+  mempty := None
+}.
+Next Obligation. destruct x; auto. Qed.
+
+Definition runMealy `(f : PMealy a b) : a -> (option b * PMealy a b) :=
+  match f with mkPMealy x => x end.
+
+CoFixpoint combine {a} `{Semigroup b} (f g : PMealy a b) : PMealy a b :=
+    mkPMealy (fun x => match runMealy f x, runMealy g x with
+                       | (x1, x2), (y1, y2) => (x1 ⨂ y1, combine x2 y2)
+                       end).
+
+CoInductive pmealy_eq {a b} : PMealy a b -> PMealy a b -> Prop :=
+  | PMealy_eq : forall x f g x' f' y' g',
+      f x = (x', f') -> g x = (y', g') -> x' = y' ->
+      pmealy_eq f' g' ->
+      pmealy_eq (mkPMealy f) (mkPMealy g).
+
+Definition frob {a b} (f : PMealy a b) : PMealy a b :=
+  match f with
+  | mkPMealy f' => mkPMealy f'
+  end.
+
+Theorem frob_eq : forall a b (f : PMealy a b), f = frob f.
+Proof. destruct f; reflexivity. Qed.
+
+CoFixpoint emptyMachine {a} : Engine a :=
+  mkPMealy (fun a => (Some (inl ()), emptyMachine)).
+
+CoFixpoint pmealy `(l : LTL a) : Engine a :=
+  match l with
+  | ⊤       => let cofix go := mkPMealy (fun a => (Some (inr IsTrue), go)) in go
+  | ⊥       => emptyMachine
+  | Query v => emptyMachine
+  | ¬ p     => emptyMachine
+  | p ∧ q   => emptyMachine
+  | p ∨ q   => emptyMachine
+  | X p     => emptyMachine
+  | p U q   => emptyMachine
+  | ◇ p     => emptyMachine
+  | □ p     => emptyMachine
+  end.
