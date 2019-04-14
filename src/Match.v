@@ -3,7 +3,10 @@ Require Import
   Coq.Lists.List
   Coq.Classes.Equivalence
   Coq.omega.Omega
-  Coq.Sets.Ensembles.
+  Coq.Sets.Ensembles
+  Hask.Control.Monad
+  Hask.Data.Monoid
+  Hask.Data.Maybe.
 
 Require Import Equations.Equations.
 Require Import Equations.EqDec.
@@ -40,125 +43,10 @@ Inductive Match : Type :=
 
 Open Scope ltl_scope.
 
-Definition option_map {a b} (f : a -> b) (mx : option a) : option b :=
-  match mx with
-  | None => None
-  | Some x => Some (f x)
-  end.
-
-Infix "<$>" := option_map (at level 40).
-
-Definition option_ap {a b} (mf : option (a -> b)) (mx : option a) : option b :=
-  match mf, mx with
-  | None, _        => None
-  | _, None        => None
-  | Some f, Some x => Some (f x)
-  end.
-
-Infix "<*>" := option_ap (at level 40).
-
-Definition option_join {a} (mx : option (option a)) : option a :=
-  match mx with
-  | None => None
-  | Some None => None
-  | Some (Some x) => Some x
-  end.
-
-Definition option_bind {a b} (mx : option a) (f : a -> option b) : option b :=
-  match mx with
-  | None => None
-  | Some x => f x
-  end.
-
-Infix ">>=" := option_bind (at level 50).
-
-Definition option_alt {a} (mx : option a) (my : option a) : option a :=
-  match mx with
-  | None => my
-  | _    => mx
-  end.
-
-Infix "<|>" := option_alt (at level 50).
-
-Lemma fmap_endo_some {c} (f : c -> c) (m : option c) (x : c) :
-  f <$> m = Some x <-> exists y, x = f y /\ m = Some y.
-Proof.
-  induction m; simpl; split; intros.
-  - inversion_clear H.
-    eexists; eauto.
-  - destruct H, H; subst.
-    now inversion_clear H0.
-  - discriminate.
-  - destruct H, H; discriminate.
-Qed.
-
-Lemma fmap_endo_none {c} (f : c -> c) (m : option c) :
-  f <$> m = None <-> m = None.
-Proof. induction m; simpl; intuition auto; discriminate. Qed.
-
-Lemma ap_endo_some {c} (f : c -> c -> c) (m n : option c) (x : c) :
-  f <$> m <*> n = Some x
-    <-> exists y z, x = f y z /\ m = Some y /\ n = Some z.
-Proof.
-  induction m, n; simpl; split; intros.
-  - inversion_clear H.
-    eexists; eauto.
-  - destruct H, H, H, H0; subst.
-    inversion_clear H0.
-    now inversion_clear H1.
-  - discriminate.
-  - destruct H, H, H, H0; discriminate.
-  - discriminate.
-  - destruct H, H, H, H0; discriminate.
-  - discriminate.
-  - destruct H, H, H, H0; discriminate.
-Qed.
-
-Lemma ap_endo_none {c} (f : c -> c -> c) (m n : option c) :
-  f <$> m <*> n = None <-> m = None \/ n = None.
-Proof. induction m, n; simpl; intuition auto; discriminate. Qed.
-
-Lemma bind_endo_some {c} (f : c -> option c) (m : option c) (x : c) :
-  m >>= f = Some x <-> exists y, f y = Some x /\ m = Some y.
-Proof.
-  unfold option_bind.
-  induction m; simpl; split; intros.
-  - now firstorder eauto.
-  - destruct H, H.
-    now inversion_clear H0.
-  - discriminate.
-  - destruct H, H.
-    discriminate.
-Qed.
-
-Lemma bind_endo_none {c} (f : c -> option c) (m : option c) :
-  m >>= f = None <-> m = None \/ exists y, f y = None /\ m = Some y.
-Proof.
-  induction m; simpl; split; intros.
-  - now right; eauto.
-  - destruct H.
-      discriminate.
-    firstorder eauto.
-    now inversion_clear H0.
-  - now left.
-  - reflexivity.
-Qed.
-
-Lemma alt_endo_some {c} (m n : option c) (x : c) :
-  m <|> n = Some x <-> m = Some x \/ (m = None /\ n = Some x).
-Proof.
-  unfold option_alt.
-  induction m; simpl; intuition auto; discriminate.
-Qed.
-
-Lemma alt_endo_none {c} (m n : option c) :
-  m <|> n = None <-> m = None /\ n = None.
-Proof. induction m, n; simpl; intuition auto; discriminate. Qed.
-
-Fixpoint compare (t : option term) (l : LTL a) (s : Stream a) :=
-  match l return option Match with
-  | ⊤       => Some IsTrue
-  | ⊥       => None
+Fixpoint compare (t : Maybe term) (l : LTL a) (s : Stream a) :=
+  match l return Maybe Match with
+  | ⊤       => Just IsTrue
+  | ⊥       => Nothing
 
   | Query v => match s with
                | []     => EndOfTrace (Query v) <$> t
@@ -166,8 +54,8 @@ Fixpoint compare (t : option term) (l : LTL a) (s : Stream a) :=
                end
 
   | ¬ p     => match compare t p s with
-               | None   => Some Negated
-               | Some _ => None
+               | Nothing   => Just Negated
+               | Just _ => Nothing
                end
 
   | p ∧ q   => Both    <$> compare t p s <*> compare t q s
@@ -196,7 +84,7 @@ Fixpoint compare (t : option term) (l : LTL a) (s : Stream a) :=
 
   | □ p     => let fix go s :=
                    match s with
-                   | []      => Some AlwaysPrf2
+                   | []      => Just AlwaysPrf2
                    | x :: xs => AlwaysPrf1 <$> compare t p (x :: xs)
                                            <*> go xs
                    end in go s
@@ -204,8 +92,8 @@ Fixpoint compare (t : option term) (l : LTL a) (s : Stream a) :=
 
 Lemma compare_correct (L : LTL a) (T : Stream a) :
   forall t,
-    (exists P, compare t L T = Some P)
-      <-> matches a (match t with None => False | _ => True end) L T.
+    (exists P, compare t L T = Just P)
+      <-> matches a (match t with Nothing => False | _ => True end) L T.
 Proof.
   intros.
   generalize dependent T;
@@ -242,28 +130,28 @@ Proof.
     + destruct H, T; simpl in *; auto.
         destruct t; auto; discriminate.
       apply IHL; clear IHL.
-      apply fmap_endo_some in H.
+      apply fmap_endo_just in H.
       now firstorder eauto.
     + destruct T, t; simpl in *; auto;
       [ eexists; eauto | contradiction | .. ];
       apply IHL in H;
       destruct H;
       exists (NextFwd x);
-      apply fmap_endo_some;
+      apply fmap_endo_just;
       exists x; auto.
   - split; intros;
     induction T; simpl in *; auto.
     + destruct H, t; auto; discriminate.
     + destruct H.
-      apply alt_endo_some in H.
+      apply alt_endo_just in H.
       destruct H; intuition auto.
-      * apply fmap_endo_some in H.
+      * apply fmap_endo_just in H.
         destruct H, H; subst.
         left.
         apply IHL2.
         now firstorder eauto.
-      * apply fmap_endo_none in H0.
-        apply ap_endo_some in H1.
+      * apply fmap_endo_nothing in H0.
+        apply ap_endo_just in H1.
         destruct H1, H, H, H1; subst.
         rewrite H2 in IHT; clear H2.
         right.
@@ -294,13 +182,13 @@ Proof.
     + destruct t; auto.
       destruct H; discriminate.
     + destruct H.
-      apply alt_endo_some in H.
+      apply alt_endo_just in H.
       destruct H.
-      * apply fmap_endo_some in H.
+      * apply fmap_endo_just in H.
         destruct H, H; subst.
         now firstorder eauto.
       * destruct H.
-        apply fmap_endo_some in H0.
+        apply fmap_endo_just in H0.
         destruct H0, H0; subst.
         now firstorder eauto.
     + destruct t; auto; simpl.
@@ -310,24 +198,24 @@ Proof.
         apply IHL in H.
         destruct H.
         eexists.
-        apply alt_endo_some.
+        apply alt_endo_just.
         left.
-        apply fmap_endo_some.
+        apply fmap_endo_just.
         now firstorder eauto.
       intuition.
       destruct H0.
       rewrite H0; clear H0.
       destruct (compare t L (a0 :: T)) eqn:?.
         eexists.
-        apply alt_endo_some.
+        apply alt_endo_just.
         now left; simpl; auto.
       eexists.
-      apply alt_endo_some.
+      apply alt_endo_just.
       now right; split; auto.
   - split; intros;
     induction T; simpl in *; auto.
     + destruct H.
-      apply ap_endo_some in H.
+      apply ap_endo_just in H.
       destruct H, H, H, H0.
       now firstorder eauto.
     + now eexists; eauto.
@@ -337,7 +225,7 @@ Proof.
       apply IHL in H.
       destruct H.
       eexists.
-      apply ap_endo_some.
+      apply ap_endo_just.
       do 2 eexists.
       now firstorder eauto.
 Qed.
@@ -361,9 +249,9 @@ Inductive MatchDep : LTL -> Type :=
   | DepAlwaysPrf2     p                                          : MatchDep (□ p).
 *)
 
-Variable t : option term.
+Variable t : Maybe term.
 
-Notation "T ⊢ L ⟿ P" := (compare t L T = Some P) (at level 80).
+Notation "T ⊢ L ⟿ P" := (compare t L T = Just P) (at level 80).
 
 Definition Match_equiv (p q : Match) : Prop := p = q.
 
@@ -374,44 +262,6 @@ Proof.
 Abort.
 
 End Match.
-
-Section Examples.
-
-Open Scope ltl_scope.
-
-Example ex_compare_sample :
-  compare nat () None (□ (ifThen (fun n => n =? 3)
-                                 (fun n => X (◇ (num (n + 5))))))
-          [1; 2; 3; 4; 5; 6; 7; 8; 9]
-    = Some
-        (AlwaysPrf1 nat () (IsTrue nat ())
-           (AlwaysPrf1 nat () (IsTrue nat ())
-              (AlwaysPrf1 nat ()
-                 (NextFwd nat ()
-                    (EventuallyFwd nat ()
-                       (EventuallyFwd nat ()
-                          (EventuallyFwd nat ()
-                             (EventuallyFwd nat ()
-                                (EventuallyStop nat () (IsTrue nat ())))))))
-                 (AlwaysPrf1 nat () (IsTrue nat ())
-                    (AlwaysPrf1 nat () (IsTrue nat ())
-                       (AlwaysPrf1 nat () (IsTrue nat ())
-                          (AlwaysPrf1 nat () (IsTrue nat ())
-                             (AlwaysPrf1 nat () (IsTrue nat ())
-                                (AlwaysPrf1 nat () (IsTrue nat ())
-                                   (AlwaysPrf2 nat ())))))))))).
-Proof. reflexivity. Qed.
-
-End Examples.
-
-CoInductive PMealy (a b : Type) : Type :=
-  mkPMealy : (a -> (option b * PMealy a b)) -> PMealy a b.
-
-Arguments mkPMealy {a b} _.
-
-Open Scope ltl_scope.
-
-Definition Engine (a : Type) := PMealy a (() + Match a ()).
 
 Arguments EndOfTrace {a term} _ _.
 Arguments IsTrue {a term}.
@@ -428,78 +278,148 @@ Arguments UntilPrf2 {a term} q.
 Arguments AlwaysPrf1 {a term} p ps.
 Arguments AlwaysPrf2 {a term}.
 
-Class Semigroup (a : Type) := {
-  mappend : a -> a -> a;
+Section Examples.
 
-  mappend_assoc : forall x y z,
-    mappend x (mappend y z) = mappend (mappend x y) z
-}.
+Open Scope ltl_scope.
 
-Arguments mappend {a _} _ _.
+Example ex_compare_sample :
+  compare nat () Nothing (□ (ifThen (fun n => n =? 3)
+                                 (fun n => X (◇ (num (n + 5))))))
+          [1; 2; 3; 4; 5; 6; 7; 8; 9]
+    = Just
+        (AlwaysPrf1 IsTrue
+           (AlwaysPrf1 IsTrue
+              (AlwaysPrf1
+                 (NextFwd
+                    (EventuallyFwd
+                       (EventuallyFwd
+                          (EventuallyFwd
+                             (EventuallyFwd
+                                (EventuallyStop IsTrue))))))
+                 (AlwaysPrf1 IsTrue
+                    (AlwaysPrf1 IsTrue
+                       (AlwaysPrf1 IsTrue
+                          (AlwaysPrf1 IsTrue
+                             (AlwaysPrf1 IsTrue
+                                (AlwaysPrf1 IsTrue
+                                   (AlwaysPrf2)))))))))).
+Proof. reflexivity. Qed.
 
-Infix "⨂" := mappend (at level 40).
+End Examples.
 
-Class Monoid (a : Type) := {
-  is_semigroup :> Semigroup a;
-  mempty : a;
+CoInductive Pipe (m : Type -> Type) (i o : Type) : Type :=
+  | HaveOutput (x : o) (p : Pipe m i o)
+  | NeedInput (k : i -> Pipe m i o)
+  | Effect t (e : m t) (k : t -> Pipe m i o)
+  | Done (x : o).
 
-  mempty_left : forall x, mempty ⨂ x = x;
-  mempty_right : forall x, x ⨂ mempty = x
-}.
+Arguments HaveOutput {m i o} _ _.
+Arguments NeedInput {m i o} _.
+Arguments Effect {m i o} _ _.
+Arguments Done {m i o} _.
 
-Program Instance Semigroup_option `{Semigroup a} : Semigroup (option a) := {
+CoInductive pipe_eq {m i o} (m_eq : forall t, m t -> m t -> Prop) :
+  Pipe m i o -> Pipe m i o -> Prop :=
+  | HaveOutput_eq : forall f g x y,
+      x = y -> pipe_eq m_eq f g ->
+      pipe_eq m_eq (HaveOutput x f) (HaveOutput y g)
+  | NeedInput_eq : forall f g,
+      (forall x, pipe_eq m_eq (f x) (g x)) ->
+      pipe_eq m_eq (NeedInput f) (NeedInput g)
+  | Effect_eq : forall t f g u v,
+      m_eq t u v ->
+      (forall x, pipe_eq m_eq (f x) (g x)) ->
+      pipe_eq m_eq (Effect t u f) (Effect t v g)
+  | Done_eq : forall x y,
+      x = y -> pipe_eq m_eq (Done x) (Done y).
+
+Definition frob `(f : Pipe m i o) : Pipe m i o :=
+  match f with
+  | HaveOutput x f => HaveOutput x f
+  | NeedInput k    => NeedInput k
+  | Effect t e k   => Effect t e k
+  | Done x         => Done x
+  end.
+
+Theorem frob_eq : forall `(f : Pipe m i o), f = frob f.
+Proof. destruct f; reflexivity. Qed.
+
+Inductive Result (a b : Type) := Success (s : b) | Failure (f : a).
+
+Arguments Success {_ _} _.
+Arguments Failure {_ _} _.
+
+Program Instance Semigroup_Result `{Semigroup a} `{Semigroup b} :
+  Semigroup (Result a b) := {
   mappend := fun x y =>
     match x, y with
-    | None, x => x
-    | x, None => x
-    | Some x, Some y => Some (mappend x y)
+    | Failure x, Failure y => Failure (x ⨂ y)
+    | Success _, Failure y => Failure y
+    | Failure x, Success _ => Failure x
+    | Success x, Success y => Success (x ⨂ y)
     end
 }.
 Next Obligation.
-  destruct x, y, z; auto.
+  destruct a0, b0, c; simpl; auto.
   now rewrite mappend_assoc.
 Qed.
 
-Program Instance Monoid_option `{Monoid a} : Monoid (option a) := {
-  mempty := None
+Program Instance Semigroup_unit : Semigroup () := {
+  mappend := fun _ _ => ()
 }.
-Next Obligation. destruct x; auto. Qed.
 
-Definition runMealy `(f : PMealy a b) : a -> (option b * PMealy a b) :=
-  match f with mkPMealy x => x end.
+Definition Engine (m : Type -> Type) (a : Type) :=
+  Pipe m a (Result () (Match a ())).
 
-CoFixpoint combine {a} `{Semigroup b} (f g : PMealy a b) : PMealy a b :=
-    mkPMealy (fun x => match runMealy f x, runMealy g x with
-                       | (x1, x2), (y1, y2) => (x1 ⨂ y1, combine x2 y2)
-                       end).
-
-CoInductive pmealy_eq {a b} : PMealy a b -> PMealy a b -> Prop :=
-  | PMealy_eq : forall x f g x' f' y' g',
-      f x = (x', f') -> g x = (y', g') -> x' = y' ->
-      pmealy_eq f' g' ->
-      pmealy_eq (mkPMealy f) (mkPMealy g).
-
-Definition frob {a b} (f : PMealy a b) : PMealy a b :=
+CoFixpoint combine `{Monad m} {i o} (f g : Pipe m i o) : Pipe m i o :=
   match f with
-  | mkPMealy f' => mkPMealy f'
+  | HaveOutput x p => HaveOutput x (combine p g)
+  | NeedInput k    => NeedInput (fun a => combine (k a) g)
+  | Effect t e k   => Effect t e (fun a => combine (k a) g)
+  | Done x         => HaveOutput x g
   end.
 
-Theorem frob_eq : forall a b (f : PMealy a b), f = frob f.
-Proof. destruct f; reflexivity. Qed.
+Lemma pipe_eq_refl `{Monad m} {i o} :
+  forall (f : Pipe m i o) (m_eq : forall t, m t -> m t -> Prop),
+  (forall t e, m_eq t e e) -> pipe_eq m_eq f f.
+Proof.
+  cofix Heq.
+  intros.
+  rewrite (frob_eq f).
+  destruct f;
+  simpl; constructor; auto.
+Qed.
 
-CoFixpoint emptyMachine {a} : Engine a :=
-  mkPMealy (fun a => (Some (inl ()), emptyMachine)).
+Lemma combine_assoc `{Monad m} {i o} :
+  forall (f g h : Pipe m i o) (m_eq : forall t, m t -> m t -> Prop),
+  (forall t e, m_eq t e e) ->
+  pipe_eq m_eq (combine f (combine g h)) (combine (combine f g) h).
+Proof.
+  cofix Heq.
+  intros.
+  rewrite (frob_eq (combine f (combine g h))).
+  rewrite (frob_eq (combine (combine f g) h)).
+  simpl.
+  destruct f; simpl; constructor; auto.
+  now apply pipe_eq_refl.
+Qed.
 
-CoFixpoint pmealy `(l : LTL a) : Engine a :=
+Program Instance Semigroup_Pipe `{Monad m} {i o} : Semigroup (Pipe m i o) := {
+  mappend := combine
+}.
+
+Open Scope ltl_scope.
+
+Fixpoint toPipe `{Monad m} {i} (l : LTL i) {struct l} : Engine m i :=
   match l with
-  | ⊤       => let cofix go := mkPMealy (fun a => (Some (inr IsTrue), go)) in go
-  | ⊥       => emptyMachine
-  | Query v => emptyMachine
-  | ¬ p     => emptyMachine
-  | p ∧ q   => emptyMachine
-  | p ∨ q   => emptyMachine
-  | X p     => emptyMachine
-  | p U q   => emptyMachine
-  | ◇ p     => emptyMachine
-  | □ p     => emptyMachine
+  | ⊤       => let cofix go := HaveOutput (Success IsTrue) go in go
+  | ⊥       => let cofix go := HaveOutput (Failure ()) go in go
+  | Query v => NeedInput (toPipe ∘ v)
+  | ¬ p     => Done (Failure ()) (* map over outputs, flipping success/failure *)
+  | p ∧ q   => combine (toPipe p) (toPipe q)
+  | p ∨ q   => Done (Failure ())
+  | X p     => Done (Failure ())
+  | p U q   => Done (Failure ())
+  | ◇ p     => Done (Failure ())
+  | □ p     => Done (Failure ())
   end.
