@@ -1,12 +1,16 @@
 Require Import
   Program
   Coq.Lists.List
+  Coq.Relations.Relation_Definitions
   Coq.Classes.Equivalence
+  Coq.Classes.Morphisms
+  Coq.Classes.RelationClasses
   Coq.omega.Omega
   Coq.Sets.Ensembles
   Hask.Control.Monad
   Hask.Data.Monoid
-  Hask.Data.Maybe.
+  Hask.Data.Maybe
+  Hask.Prelude.
 
 Require Import Equations.Equations.
 Require Import Equations.EqDec.
@@ -307,119 +311,302 @@ Proof. reflexivity. Qed.
 
 End Examples.
 
-CoInductive Pipe (m : Type -> Type) (i o : Type) : Type :=
-  | HaveOutput (x : o) (p : Pipe m i o)
-  | NeedInput (k : i -> Pipe m i o)
-  | Effect t (e : m t) (k : t -> Pipe m i o)
-  | Done (x : o).
+Section Pipe.
 
-Arguments HaveOutput {m i o} _ _.
-Arguments NeedInput {m i o} _.
-Arguments Effect {m i o} _ _.
-Arguments Done {m i o} _.
+Variable m : Type -> Type.
+Variable i : Type.
+Variable o : Type.
+Context `{Equivalence o}.
 
-CoInductive pipe_eq {m i o} (m_eq : forall t, m t -> m t -> Prop) :
-  Pipe m i o -> Pipe m i o -> Prop :=
-  | HaveOutput_eq : forall f g x y,
-      x = y -> pipe_eq m_eq f g ->
-      pipe_eq m_eq (HaveOutput x f) (HaveOutput y g)
-  | NeedInput_eq : forall f g,
-      (forall x, pipe_eq m_eq (f x) (g x)) ->
-      pipe_eq m_eq (NeedInput f) (NeedInput g)
-  | Effect_eq : forall t f g u v,
-      m_eq t u v ->
-      (forall x, pipe_eq m_eq (f x) (g x)) ->
-      pipe_eq m_eq (Effect t u f) (Effect t v g)
-  | Done_eq : forall x y,
-      x = y -> pipe_eq m_eq (Done x) (Done y).
+CoInductive Pipe : Type :=
+  | HaveOutput (x : o) (p : Pipe)
+  | NeedInput (k : i -> Pipe)
+  | Effect t (e : m t) (k : t -> Pipe)
+  | Done.
 
-Definition frob `(f : Pipe m i o) : Pipe m i o :=
+Arguments HaveOutput _ _.
+Arguments NeedInput _.
+Arguments Effect _ _.
+Arguments Done.
+
+Definition frob `(f : Pipe) : Pipe :=
   match f with
   | HaveOutput x f => HaveOutput x f
   | NeedInput k    => NeedInput k
   | Effect t e k   => Effect t e k
-  | Done x         => Done x
+  | Done           => Done
   end.
 
-Theorem frob_eq : forall `(f : Pipe m i o), f = frob f.
+Theorem frob_eq : forall f : Pipe, f = frob f.
 Proof. destruct f; reflexivity. Qed.
 
-Inductive Result (a b : Type) := Success (s : b) | Failure (f : a).
+CoInductive pipe_equiv : Pipe -> Pipe -> Prop :=
+  | HaveOutput_eq : forall f g x y,
+      x ≈ y -> pipe_equiv f g ->
+      pipe_equiv (HaveOutput x f) (HaveOutput y g)
+  | NeedInput_eq : forall f g : i -> Pipe,
+      (forall x, pipe_equiv (f x) (g x)) ->
+      pipe_equiv (NeedInput f) (NeedInput g)
+  | Effect_eq : forall t (u v : m t) (f g : t -> Pipe),
+      (forall x, pipe_equiv (f x) (g x)) ->
+      pipe_equiv (Effect t u f) (Effect t v g)
+  | Done_eq : pipe_equiv Done Done.
 
-Arguments Success {_ _} _.
-Arguments Failure {_ _} _.
-
-Program Instance Semigroup_Result `{Semigroup a} `{Semigroup b} :
-  Semigroup (Result a b) := {
-  mappend := fun x y =>
-    match x, y with
-    | Failure x, Failure y => Failure (x ⨂ y)
-    | Success _, Failure y => Failure y
-    | Failure x, Success _ => Failure x
-    | Success x, Success y => Success (x ⨂ y)
-    end
-}.
-Next Obligation.
-  destruct a0, b0, c; simpl; auto.
-  now rewrite mappend_assoc.
-Qed.
-
-Program Instance Semigroup_unit : Semigroup () := {
-  mappend := fun _ _ => ()
-}.
-
-Definition Engine (m : Type -> Type) (a : Type) :=
-  Pipe m a (Result () (Match a ())).
-
-CoFixpoint combine `{Monad m} {i o} (f g : Pipe m i o) : Pipe m i o :=
-  match f with
-  | HaveOutput x p => HaveOutput x (combine p g)
-  | NeedInput k    => NeedInput (fun a => combine (k a) g)
-  | Effect t e k   => Effect t e (fun a => combine (k a) g)
-  | Done x         => HaveOutput x g
-  end.
-
-Lemma pipe_eq_refl `{Monad m} {i o} :
-  forall (f : Pipe m i o) (m_eq : forall t, m t -> m t -> Prop),
-  (forall t e, m_eq t e e) -> pipe_eq m_eq f f.
+Lemma pipe_equiv_refl : forall f : Pipe, pipe_equiv f f.
 Proof.
   cofix Heq.
   intros.
   rewrite (frob_eq f).
-  destruct f;
-  simpl; constructor; auto.
+  destruct f; simpl;
+  constructor; auto;
+  reflexivity.
 Qed.
 
-Lemma combine_assoc `{Monad m} {i o} :
-  forall (f g h : Pipe m i o) (m_eq : forall t, m t -> m t -> Prop),
-  (forall t e, m_eq t e e) ->
-  pipe_eq m_eq (combine f (combine g h)) (combine (combine f g) h).
+Ltac existence :=
+  repeat match goal with
+         | [ H : existT _ _ _ = existT _ _ _ |- _ ] =>
+           apply inj_pair2 in H; subst
+         end.
+
+Lemma pipe_equiv_sym : forall f g : Pipe, pipe_equiv f g -> pipe_equiv g f.
+Proof.
+  cofix Heq.
+  intros f g.
+  rewrite (frob_eq f).
+  rewrite (frob_eq g).
+  destruct f, g; simpl; intros;
+  inversion H0; subst; clear H0;
+  try (constructor; auto; now symmetry).
+  existence.
+  constructor; auto.
+Qed.
+
+Lemma pipe_equiv_trans :
+  forall f g h : Pipe, pipe_equiv f g -> pipe_equiv g h -> pipe_equiv f h.
+Proof.
+  cofix Heq.
+  intros f g h.
+  rewrite (frob_eq f).
+  rewrite (frob_eq g).
+  rewrite (frob_eq h).
+  destruct f, g, h; simpl; intros;
+  inversion H0; subst; clear H0;
+  inversion H1; subst; clear H1.
+  - constructor; [ now transitivity x0 | intuition ].
+  - constructor; intros; now intuition.
+  - constructor; existence.
+    intros.
+    now eapply Heq; eauto.
+  - constructor; now transitivity x0.
+Qed.
+
+Global Program Instance pipe_equiv_Equivalence :
+  Equivalence pipe_equiv.
+Next Obligation. repeat intro; now apply pipe_equiv_refl. Qed.
+Next Obligation. repeat intro; now apply pipe_equiv_sym. Qed.
+Next Obligation. repeat intro; now eapply pipe_equiv_trans; eauto. Qed.
+
+CoFixpoint feedInput (input : i) (p : Pipe) : Pipe :=
+  match p with
+  | HaveOutput x p => HaveOutput x (feedInput input p)
+  | NeedInput k    => k input
+  | Effect t e k   => Effect t e (feedInput input ∘ k)
+  | Done           => Done
+  end.
+
+Global Program Instance feedInput_Proper :
+  Proper (eq ==> pipe_equiv ==> pipe_equiv) feedInput.
+Next Obligation.
+  cofix Heq.
+  repeat intro.
+  rewrite (frob_eq (feedInput x x0)).
+  rewrite (frob_eq (feedInput y y0)).
+  simpl.
+  destruct x0, y0; simpl in *; intros;
+  try constructor;
+  inversion H1; subst; clear H1;
+  existence; auto.
+  - apply Heq; auto.
+  - specialize (H4 y).
+    destruct (k y), (k0 y); auto.
+  - constructor; intros.
+    unfold Basics.compose.
+    apply Heq; auto.
+Qed.
+
+CoFixpoint combine (f g : Pipe) : Pipe :=
+  match f with
+  | HaveOutput x p => HaveOutput x (combine p g)
+  | NeedInput k    => NeedInput (fun a => combine (k a) (feedInput a g))
+  | Effect t e k   => Effect t e (fun a => combine (k a) g)
+  | Done           => g
+  end.
+
+Global Program Instance combine_Proper :
+  Proper (pipe_equiv ==> pipe_equiv ==> pipe_equiv) combine.
+Next Obligation.
+  cofix Heq.
+  repeat intro.
+  rewrite (frob_eq (combine x x0)).
+  rewrite (frob_eq (combine y y0)).
+  simpl.
+  destruct x, y, x0, y0; simpl in *; intros;
+  try constructor;
+  inversion H0; subst; clear H0;
+  inversion H1; subst; clear H1;
+  existence;
+  repeat (try constructor; auto; try apply Heq; intros);
+  apply feedInput_Proper;
+  first [ reflexivity | now constructor ].
+Qed.
+
+Lemma feedInput_combine (input : i) (f g : Pipe) :
+  pipe_equiv (feedInput input (combine f g))
+             (combine (feedInput input f) (feedInput input g)).
+Proof.
+  revert input f g.
+  cofix Heq.
+  intros.
+  rewrite (frob_eq (feedInput input (combine f g))).
+  rewrite (frob_eq (combine (feedInput input f) (feedInput input g))).
+  simpl.
+  destruct f; simpl;
+  try constructor;
+  try reflexivity;
+  intros; apply Heq.
+Qed.
+
+End Pipe.
+
+Arguments combine {m i o} _ _.
+Arguments frob_eq {m i o} _.
+Arguments pipe_equiv {m i o _ _} _ _.
+
+Lemma combine_assoc :
+  forall {m i o} `{Ho : @Equivalence o Ro} {f g h : Pipe m i o},
+    pipe_equiv (combine f (combine g h)) (combine (combine f g) h).
 Proof.
   cofix Heq.
   intros.
   rewrite (frob_eq (combine f (combine g h))).
   rewrite (frob_eq (combine (combine f g) h)).
   simpl.
-  destruct f; simpl; constructor; auto.
-  now apply pipe_eq_refl.
+  destruct f; try constructor; intros;
+  try reflexivity;
+  fold (combine (m:=m) (i:=i) (o:=o)).
+  - apply Heq.
+  - rewrite feedInput_combine.
+    admit.
+  - apply Heq.
+Admitted.
+
+Instance Semigroup_Pipe {m i o} `{Equivalence o} : Semigroup (Pipe m i o) := {
+  mappend          := combine;
+  mappend_respects := combine_Proper _ _ _;
+  mappend_assoc    := fun _ _ _ => combine_assoc
+}.
+
+CoFixpoint Pipe_map {m i} `{Equivalence a} `{Equivalence b}
+           (f : a -> b) (x : Pipe m i a) : Pipe m i b :=
+  match x with
+  | HaveOutput x p => HaveOutput x (Pipe_map f p)
+  | NeedInput k    => NeedInput (Pipe_map f ∘ k)
+  | Effect t e k   => Effect t e (Pipe_map f ∘ k)
+  | Done x         => Done (f x)
+  end.
+
+Fixpoint Pipe_bind `{Equivalence a} `{Equivalence b}
+  (f : a -> Pipe b) (p : Pipe a) : Pipe b :=
+  match p with
+  | NeedInput  fa     => NeedInput (Pipe_bind f ∘ fa)
+  | HaveOutput a  fa  => Pipe_bind (fun b => HaveOutput b (Pipe_bind f fa)) (f a)
+  | Effect     _ t k  => Effect _ t (Pipe_bind f ∘ k)
+  | Done       r      => f r
+  end.
+
+Inductive Result (a : Type) := Success (s : a) | Failure (f : a).
+
+Arguments Success {_} _.
+Arguments Failure {_} _.
+
+Definition result_equiv `{Equivalence a} (x y : Result a) : Prop :=
+  match x, y with
+  | Success s1, Success s2 => s1 ≈ s2
+  | Failure f1, Failure f2 => f1 ≈ f2
+  | _, _ => False
+  end.
+
+Program Instance Result_Equivalence `{Equivalence a} :
+  Equivalence result_equiv.
+Next Obligation.
+  repeat intro.
+  destruct x; simpl; reflexivity.
+Qed.
+Next Obligation.
+  repeat intro.
+  destruct x, y; simpl in *;
+  first [ now symmetry | contradiction ].
+Qed.
+Next Obligation.
+  repeat intro.
+  destruct x, y, z; simpl in *;
+  first [ now rewrite H1 | contradiction ].
 Qed.
 
-Program Instance Semigroup_Pipe `{Monad m} {i o} : Semigroup (Pipe m i o) := {
-  mappend := combine
+Program Instance Semigroup_Result `{@Semigroup a RA HA} :
+  @Semigroup (Result a) result_equiv Result_Equiv := {
+  mappend := fun x y =>
+    match x, y with
+    | Failure x, Failure y => Failure (x ⨂ y)
+    | Success _, Failure y => Failure y
+    | Failure x, Success _ => Failure x
+    | Success x, Success y => Success (x ⨂ y)
+    end;
+  mappend_respects := _
 }.
+Next Obligation.
+  repeat intro.
+  destruct x, y, x0, y0; simpl;
+  simpl; auto;
+  try contradiction;
+  apply mappend_respects;
+  first [ apply H1 | apply H2 ].
+Qed.
+Next Obligation.
+  destruct a0, b, c; simpl; try reflexivity;
+  apply mappend_assoc.
+Qed.
+
+Definition Result_map `(f : a -> b) `(x : Result a) : Result b :=
+  match x with
+  | Success x => Success (f x)
+  | Failure x => Failure (f x)
+  end.
+
+Definition Engine := Pipe (Result (Match i ())).
+
+Instance Semigroup_Engine : Semigroup Engine := Semigroup_Pipe.
 
 Open Scope ltl_scope.
 
-Fixpoint toPipe `{Monad m} {i} (l : LTL i) {struct l} : Engine m i :=
+Fixpoint toPipe (l : LTL i) : Engine :=
   match l with
   | ⊤       => let cofix go := HaveOutput (Success IsTrue) go in go
-  | ⊥       => let cofix go := HaveOutput (Failure ()) go in go
+  | ⊥       => let cofix go := HaveOutput (Failure IsTrue) go in go
   | Query v => NeedInput (toPipe ∘ v)
-  | ¬ p     => Done (Failure ()) (* map over outputs, flipping success/failure *)
-  | p ∧ q   => combine (toPipe p) (toPipe q)
-  | p ∨ q   => Done (Failure ())
-  | X p     => Done (Failure ())
-  | p U q   => Done (Failure ())
-  | ◇ p     => Done (Failure ())
-  | □ p     => Done (Failure ())
+  | ¬ p     => Pipe_map (fun x =>
+                           match x with
+                           | Success s => Failure s
+                           | Failure f => Success f
+                           end)
+                        (toPipe p)
+  | p ∧ q   => toPipe p ⨂ toPipe q
+  | p ∨ q   => Done (Failure IsTrue)
+  | X p     => Pipe_map (Result_map NextFwd) (NeedInput (const (toPipe p)))
+  | p U q   => Done (Failure IsTrue)
+  | ◇ p     => Done (Failure IsTrue)
+  (* | □ p     => let cofix go := fmap AlwaysPrf1 <$> p <*> go in go *)
+  | □ p     => Done (Failure IsTrue)
   end.
+
+End Pipe.
