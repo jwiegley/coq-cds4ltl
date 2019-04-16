@@ -1,5 +1,6 @@
 Require Import
   Program
+  FunInd
   Coq.Lists.List
   Coq.Relations.Relation_Definitions
   Coq.Classes.Equivalence
@@ -7,7 +8,6 @@ Require Import
   Coq.Classes.RelationClasses
   Coq.Logic.Classical
   Coq.omega.Omega
-  Coq.Sets.Ensembles
   Hask.Prelude
   Hask.Control.Monad
   Hask.Data.Maybe.
@@ -17,8 +17,6 @@ Require Import Equations.EqDec.
 
 Open Scope program_scope.
 Open Scope list_scope.
-
-Require Import Same_set.
 
 Generalizable All Variables.
 Set Transparent Obligations.
@@ -89,8 +87,11 @@ Variable term : Prop.
 
 Fixpoint matches (l : LTL) (s : Stream) {struct l} : Prop :=
   match l with
-  | ⊤       => True
-  | ⊥       => False
+  | ⊤        => match s with
+                | []     => term
+                | _ :: _ => True
+                end
+  | ⊥        => False
 
   | Accept v => match s with
                 | []     => term
@@ -136,7 +137,7 @@ Fixpoint matches (l : LTL) (s : Stream) {struct l} : Prop :=
                    end in go s
   end.
 
-Fixpoint pnf (l : LTL) : LTL :=
+Function pnf (l : LTL) : LTL :=
   match l with
   | ⊤        => l
   | ⊥        => l
@@ -184,29 +185,20 @@ Fixpoint positive (l : LTL) : Prop :=
   | □ p      => positive p
   end.
 
-Lemma pnf_complete (l : LTL) : positive (pnf l).
-Proof. induction l; simpl in *; intuition auto. Qed.
+Functional Scheme pnf_ind2 := Induction for pnf Sort Prop
+  with negate_ind2 := Induction for negate Sort Prop.
 
-Local Hint Resolve negate_complete.
-
-Fixpoint pnf (l : LTL) : LTL :=
-  match l with
-  | ⊤        => l
-  | ⊥        => l
-  | Accept v => l
-  | Reject v => l
-  | ¬ p      => negate p
-  | p ∧ q    => pnf p ∧ pnf q
-  | p ∨ q    => pnf p ∨ pnf q
-  | X p      => X (pnf p)
-  | p U q    => pnf p U pnf q
-  | p R q    => pnf p R pnf q
-  | ◇ p      => ◇ (pnf p)
-  | □ p      => □ (pnf p)
-  end.
+Lemma negate_complete (l : LTL) : positive (negate l).
+Proof.
+  apply negate_ind2 with (P:=fun _ y : LTL => positive y);
+  intros; subst; simpl; auto.
+Qed.
 
 Lemma pnf_complete (l : LTL) : positive (pnf l).
-Proof. induction l; simpl in *; intuition auto. Qed.
+Proof.
+  apply pnf_ind2 with (P0:=fun _ y : LTL => positive y);
+  intros; subst; simpl; auto.
+Qed.
 
 Fixpoint expand (l : LTL) : LTL :=
   match l with
@@ -408,24 +400,12 @@ Definition strongRelease (φ ψ : LTL) := ψ U (φ ∧ ψ).
 Notation "p 'M' q" := (strongRelease p q) (at level 45).
 
 Definition ltl_weak_equiv (p q : LTL) : Prop :=
-  term -> matches p ≈ matches q.
+  term -> forall T, matches p T <-> matches q T.
 Arguments ltl_weak_equiv p q /.
 
 Infix "≈[weak]" := ltl_weak_equiv (at level 70).
 
-Definition ltl_strong_equiv (p q : LTL) : Prop :=
-  (term -> False) -> matches p ≈ matches q.
-Arguments ltl_strong_equiv p q /.
-
-Infix "≈[strong]" := ltl_strong_equiv (at level 70).
-
-Definition ltl_infinite_equiv (p q : LTL) : Prop :=
-  forall T : Stream, length T > 0 -> matches p T <-> matches q T.
-Arguments ltl_infinite_equiv p q /.
-
-Infix "≈[infinite]" := ltl_infinite_equiv (at level 70).
-
-Program Instance Equivalence_ltl_equiv : Equivalence ltl_weak_equiv.
+Program Instance Equivalence_ltl_weak_equiv : Equivalence ltl_weak_equiv.
 Next Obligation.
   unfold ltl_weak_equiv.
   repeat intro; auto.
@@ -433,21 +413,234 @@ Next Obligation.
 Qed.
 Next Obligation.
   unfold ltl_weak_equiv.
-  repeat intro; intuition auto.
-  now symmetry.
+  repeat intro; intuition.
 Qed.
 Next Obligation.
   unfold ltl_weak_equiv.
-  repeat intro; intuition auto.
-  now transitivity (matches y).
+  repeat intro; firstorder.
+Qed.
+
+Definition ltl_strong_equiv (p q : LTL) : Prop :=
+  (term -> False) -> forall T, matches p T <-> matches q T.
+Arguments ltl_strong_equiv p q /.
+
+Infix "≈[strong]" := ltl_strong_equiv (at level 70).
+
+Program Instance Equivalence_ltl_strong_equiv :
+  Equivalence ltl_strong_equiv | 8.
+Next Obligation.
+  unfold ltl_strong_equiv.
+  repeat intro; auto.
+  reflexivity.
+Qed.
+Next Obligation.
+  unfold ltl_strong_equiv.
+  repeat intro; intuition.
+Qed.
+Next Obligation.
+  unfold ltl_strong_equiv.
+  repeat intro; firstorder.
+Qed.
+
+Definition ltl_infinite_equiv (p q : LTL) : Prop :=
+  forall T : Stream, 0 < length T -> matches p T <-> matches q T.
+Arguments ltl_infinite_equiv p q /.
+
+Infix "≈[infinite]" := ltl_infinite_equiv (at level 70).
+
+Program Instance Equivalence_ltl_infinite_equiv :
+  Equivalence ltl_infinite_equiv | 9.
+Next Obligation.
+  unfold ltl_infinite_equiv.
+  repeat intro; auto.
+  reflexivity.
+Qed.
+Next Obligation.
+  unfold ltl_infinite_equiv.
+  repeat intro; intuition.
+Qed.
+Next Obligation.
+  unfold ltl_infinite_equiv.
+  repeat intro; firstorder.
+Qed.
+
+Program Instance Weak_Not_Proper :
+  Proper (ltl_weak_equiv ==> ltl_weak_equiv) Not.
+Next Obligation.
+  repeat intro; simpl.
+  unfold ltl_weak_equiv in *.
+  firstorder.
+Qed.
+
+Program Instance Weak_And_Proper :
+  Proper (ltl_weak_equiv ==> ltl_weak_equiv ==> ltl_weak_equiv) And.
+Next Obligation.
+  repeat intro; simpl.
+  unfold ltl_weak_equiv in *.
+  firstorder.
+Qed.
+
+Program Instance Weak_Or_Proper :
+  Proper (ltl_weak_equiv ==> ltl_weak_equiv ==> ltl_weak_equiv) Or.
+Next Obligation.
+  repeat intro; simpl.
+  unfold ltl_weak_equiv in *.
+  firstorder.
+Qed.
+
+Program Instance Weak_Next_Proper :
+  Proper (ltl_weak_equiv ==> ltl_weak_equiv) Next.
+Next Obligation.
+  repeat intro; simpl.
+  unfold ltl_weak_equiv in *.
+  destruct T; firstorder.
+Qed.
+
+Program Instance Weak_Until_Proper :
+  Proper (ltl_weak_equiv ==> ltl_weak_equiv ==> ltl_weak_equiv) Until.
+Next Obligation.
+  repeat intro; simpl.
+  unfold ltl_weak_equiv in *.
+  induction T; firstorder.
+Qed.
+
+Program Instance Weak_Release_Proper :
+  Proper (ltl_weak_equiv ==> ltl_weak_equiv ==> ltl_weak_equiv) Release.
+Next Obligation.
+  repeat intro; simpl.
+  unfold ltl_weak_equiv in *.
+  induction T; firstorder.
+Qed.
+
+Program Instance Weak_Eventually_Proper :
+  Proper (ltl_weak_equiv ==> ltl_weak_equiv) Eventually.
+Next Obligation.
+  repeat intro; simpl.
+  unfold ltl_weak_equiv in *.
+  induction T; firstorder.
+Qed.
+
+Program Instance Weak_Always_Proper :
+  Proper (ltl_weak_equiv ==> ltl_weak_equiv) Always.
+Next Obligation.
+  repeat intro; simpl.
+  unfold ltl_weak_equiv in *.
+  induction T; firstorder.
+Qed.
+
+Program Instance Strong_Not_Proper :
+  Proper (ltl_strong_equiv ==> ltl_strong_equiv) Not.
+Next Obligation.
+  repeat intro; simpl.
+  unfold ltl_strong_equiv in *.
+  firstorder.
+Qed.
+
+Program Instance Strong_And_Proper :
+  Proper (ltl_strong_equiv ==> ltl_strong_equiv ==> ltl_strong_equiv) And.
+Next Obligation.
+  repeat intro; simpl.
+  unfold ltl_strong_equiv in *.
+  firstorder.
+Qed.
+
+Program Instance Strong_Or_Proper :
+  Proper (ltl_strong_equiv ==> ltl_strong_equiv ==> ltl_strong_equiv) Or.
+Next Obligation.
+  repeat intro; simpl.
+  unfold ltl_strong_equiv in *.
+  firstorder.
+Qed.
+
+Program Instance Strong_Next_Proper :
+  Proper (ltl_strong_equiv ==> ltl_strong_equiv) Next.
+Next Obligation.
+  repeat intro; simpl.
+  unfold ltl_strong_equiv in *.
+  destruct T; firstorder.
+Qed.
+
+Program Instance Strong_Until_Proper :
+  Proper (ltl_strong_equiv ==> ltl_strong_equiv ==> ltl_strong_equiv) Until.
+Next Obligation.
+  repeat intro; simpl.
+  unfold ltl_strong_equiv in *.
+  induction T; firstorder.
+Qed.
+
+Program Instance Strong_Release_Proper :
+  Proper (ltl_strong_equiv ==> ltl_strong_equiv ==> ltl_strong_equiv) Release.
+Next Obligation.
+  repeat intro; simpl.
+  unfold ltl_strong_equiv in *.
+  induction T; firstorder.
+Qed.
+
+Program Instance Strong_Eventually_Proper :
+  Proper (ltl_strong_equiv ==> ltl_strong_equiv) Eventually.
+Next Obligation.
+  repeat intro; simpl.
+  unfold ltl_strong_equiv in *.
+  induction T; firstorder.
+Qed.
+
+Program Instance Strong_Always_Proper :
+  Proper (ltl_strong_equiv ==> ltl_strong_equiv) Always.
+Next Obligation.
+  repeat intro; simpl.
+  unfold ltl_strong_equiv in *.
+  induction T; firstorder.
+Qed.
+
+Program Instance Infinite_Not_Proper :
+  Proper (ltl_infinite_equiv ==> ltl_infinite_equiv) Not.
+Next Obligation.
+  repeat intro; simpl.
+  unfold ltl_infinite_equiv in *.
+  firstorder.
+Qed.
+
+Program Instance Infinite_And_Proper :
+  Proper (ltl_infinite_equiv ==> ltl_infinite_equiv ==> ltl_infinite_equiv) And.
+Next Obligation.
+  repeat intro; simpl.
+  unfold ltl_infinite_equiv in *.
+  firstorder.
+Qed.
+
+Program Instance Infinite_Or_Proper :
+  Proper (ltl_infinite_equiv ==> ltl_infinite_equiv ==> ltl_infinite_equiv) Or.
+Next Obligation.
+  repeat intro; simpl.
+  unfold ltl_infinite_equiv in *.
+  firstorder.
 Qed.
 
 (* Infix "≈" := equiv (at level 70). *)
 
+Lemma pnf_correct l : l ≈ pnf l.
+Proof.
+  apply pnf_ind2 with (P0:=fun l m : LTL => m ≈ pnf m);
+  unfold equiv, ltl_weak_equiv; simpl;
+  intros; subst; split; intros;
+  firstorder auto.
+Admitted.
+
+Lemma negate_correct l : ¬ l ≈ negate l.
+Admitted.
+
+Lemma expand_correct l : l ≈ expand l.
+Proof.
+Admitted.
+
+Lemma prune_correct l : l ≈ prune l.
+Proof.
+Admitted.
+
 Ltac ltl_prep :=
   split;
   repeat intro;
-  repeat unfold In, weakUntil, strongRelease in *;
+  repeat unfold weakUntil, strongRelease in *;
   match goal with
   | [ T : Stream |- _ ] => induction T
   | [ T : list a |- _ ] => induction T
@@ -464,6 +657,10 @@ Ltac ltl_prep :=
 
 Ltac ltl := ltl_prep; auto; intuition; try (inversion H; intuition).
 
+Ltac negated :=
+  rewrite negate_correct; simpl;
+  rewrite pnf_correct; simpl.
+
 (* These properties are proven to hold in up to three conditions:
 
    ≈ (Weak) The property holds, even if early termination of a finite input
@@ -474,26 +671,6 @@ Ltac ltl := ltl_prep; auto; intuition; try (inversion H; intuition).
      input exactly. Partial matches are not allowed.
 
    ≈[infinite] The property holds only against infinite inputs. *)
-
-Lemma negate_correct l : l ≈ negate (¬ l).
-Proof.
-  ltl_prep.
-  induction l; simpl in *; auto.
-
-Lemma negate_correct l : ¬ l ≈ negate l.
-Proof.
-  unfold negate.
-  ltl_prep.
-Qed.
-
-Lemma pnf_correct l : l ≈ pnf l.
-Proof. ltl. Qed.
-
-Lemma expand_correct l : l ≈ expand l.
-Proof. ltl. Qed.
-
-Lemma prune_correct l : l ≈ prune l.
-Proof. ltl. Qed.
 
 (* eventually ψ becomes true *)
 Lemma eventually_until (ψ : LTL) : ◇ ψ ≈ ⊤ U ψ.
@@ -519,16 +696,16 @@ Lemma release_weakUntil (φ ψ : LTL) : φ R ψ ≈ ψ W (ψ ∧ φ).
 Proof. ltl. Qed.
 
 Lemma release_until (φ ψ : LTL) : φ R ψ ≈ ¬(¬φ U ¬ψ).
-Proof. ltl. Qed.
+Proof. now negated. Qed.
 
 Lemma strongRelease_not_weakUntil (φ ψ : LTL) : φ M ψ ≈ ¬(¬φ W ¬ψ).
-Proof. ltl. Qed.
+Proof. Abort.
 
 Lemma strongRelease_release_or (φ ψ : LTL) : φ M ψ ≈ (φ R ψ) ∧ ◇ φ.
 Proof. ltl. Qed.
 
 Lemma strongRelease_release (φ ψ : LTL) : φ M ψ ≈ φ R (ψ ∧ ◇ φ).
-Proof. ltl. Qed.
+Proof. ltl. Abort.
 
 (** Distributivity *)
 
@@ -539,7 +716,7 @@ Lemma next_and (φ ψ : LTL) : X (φ ∧ ψ) ≈ (X φ) ∧ (X ψ).
 Proof. ltl. Qed.
 
 Lemma next_until (φ ψ : LTL) : X (φ U ψ) ≈ (X φ) U (X ψ).
-Proof. ltl. Qed.
+Proof. Abort.
 
 Lemma eventually_or (φ ψ : LTL) : ◇ (φ ∨ ψ) ≈ (◇ φ) ∨ (◇ ψ).
 Proof. ltl. Qed.
@@ -556,33 +733,59 @@ Proof. ltl. Qed.
 (** Negation propagation *)
 
 Lemma not_next (φ : LTL) : ¬(X φ) ≈ X ¬φ.
-Proof. ltl. Qed.
+Proof.
+  negated.
+  rewrite <- pnf_correct.
+  rewrite <- negate_correct.
+  reflexivity.
+Qed.
 
-Lemma not_eventually (φ : LTL) : ¬(◇ φ) ≈[strong] □ ¬φ.
-Proof. ltl. Qed.
+Lemma not_eventually (φ : LTL) : ¬(◇ φ) ≈ □ ¬φ.
+Proof.
+  negated.
+  rewrite <- pnf_correct.
+  rewrite <- negate_correct.
+  reflexivity.
+Qed.
 
 Lemma not_until (φ ψ : LTL) : ¬ (φ U ψ) ≈ (¬φ R ¬ψ).
-Proof. ltl. Qed.
+Proof.
+  negated.
+  rewrite <- !pnf_correct.
+  rewrite <- !negate_correct.
+  reflexivity.
+Qed.
 
 Lemma not_weakUntil (φ ψ : LTL) : ¬ (φ W ψ) ≈ (¬φ M ¬ψ).
-Proof. ltl. Qed.
+Proof.
+Abort.
 
 Lemma not_always (φ : LTL) : ¬(□ φ) ≈ ◇ ¬φ.
-Proof. ltl. Qed.
+Proof.
+  negated.
+  rewrite <- pnf_correct.
+  rewrite <- negate_correct.
+  reflexivity.
+Qed.
 
 Lemma not_release (φ ψ : LTL) : ¬ (φ R ψ) ≈ (¬φ U ¬ψ).
-Proof. ltl. Qed.
+Proof.
+  negated.
+  rewrite <- !pnf_correct.
+  rewrite <- !negate_correct.
+  reflexivity.
+Qed.
 
 Lemma not_strongRelease (φ ψ : LTL) : ¬ (φ M ψ) ≈ (¬φ W ¬ψ).
-Proof. ltl. Qed.
+Abort.
 
 (** Absorption laws *)
 
 Lemma asborb_eventually (φ : LTL) : ◇ □ ◇ φ ≈ □ ◇ φ.
-Proof. ltl. Qed.
+Proof. ltl. Abort.
 
 Lemma asborb_always (φ : LTL) : □ ◇ □ φ ≈ ◇ □ φ.
-Proof. ltl. Qed.
+Proof. ltl. Abort.
 
 (** Special Temporal properties *)
 
@@ -600,16 +803,16 @@ Proof. ltl. Qed.
 
 (** Expansion laws *)
 
-Lemma expand_until      (φ ψ : LTL) : φ U ψ ≈ ψ ∨ (φ ∧ X(φ U ψ)).
+Lemma expand_until      (φ ψ : LTL) : φ U ψ ≈[infinite] ψ ∨ (φ ∧ X(φ U ψ)).
 Proof. ltl. Qed.
 
-Lemma expand_weakUntil  (φ ψ : LTL) : φ W ψ ≈ ψ ∨ (φ ∧ X(φ W ψ)).
+Lemma expand_weakUntil  (φ ψ : LTL) : φ W ψ ≈[infinite] ψ ∨ (φ ∧ X(φ W ψ)).
 Proof. ltl. Qed.
 
-Lemma expand_release    (φ ψ : LTL) : φ R ψ ≈ ψ ∧ (φ ∨ X(φ R ψ)).
+Lemma expand_release    (φ ψ : LTL) : φ R ψ ≈[infinite] ψ ∧ (φ ∨ X(φ R ψ)).
 Proof. ltl. Qed.
 
-Lemma expand_always     (φ : LTL)   :   □ φ ≈ φ ∧ X(□ φ).
+Lemma expand_always     (φ : LTL)   :   □ φ ≈[infinite] φ ∧ X(□ φ).
 Proof. ltl. Qed.
 
 Lemma expand_eventually (φ : LTL)   :   ◇ φ ≈ φ ∨ X(◇ φ).
@@ -653,8 +856,12 @@ Notation "p 'M' q" := (strongRelease p q) (at level 45) : ltl_scope.
 Definition ifThen `(p : a -> bool) (f : a -> LTL a) :=
   Accept (fun x => if p x then f x else ⊤)%LTL.
 
-Definition series {a} :=
-  fold_right (fun x rest => x ∧ @Next a rest)%LTL (⊤)%LTL.
+Fixpoint series {a} (l : list (LTL a)) : LTL a :=
+  match l with
+  | nil => ⊤
+  | [x] => x
+  | cons x xs => x ∧ Next (series xs)
+  end.
 
 Section Examples.
 

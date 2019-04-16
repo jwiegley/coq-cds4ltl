@@ -94,7 +94,7 @@ Fixpoint step (i : a) (l : LTL a) : option Failed * LTL a :=
   end.
 
 Lemma step_correct (l : LTL a) (T : Stream a) :
-  length T = S (length T) ->
+  0 < length T ->
   matches a False l T
     <-> fst (fold_left (fun '(mf, acc) x =>
                           match mf with
