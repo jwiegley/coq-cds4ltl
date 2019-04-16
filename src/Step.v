@@ -7,6 +7,7 @@ Require Import
   Coq.Classes.RelationClasses
   Coq.Logic.Classical
   Coq.Sets.Ensembles
+  Hask.Control.Monad
   Hask.Prelude.
 
 Open Scope program_scope.
@@ -21,6 +22,65 @@ Set Decidable Equality Schemes.
 Section Step.
 
 Variable a : Type.              (* The type of entries in the trace *)
+
+Open Scope ltl_scope.
+
+Fixpoint fuel_needed (l : LTL a) : option nat :=
+  match l with
+  | ⊤        => Some 0
+  | ⊥        => Some 0
+  | Accept v => Some 1
+  | Reject v => Some 1
+  | ¬ p      => fuel_needed p
+  | p ∧ q    => liftA2 max (fuel_needed p) (fuel_needed q)
+  | p ∨ q    => liftA2 min (fuel_needed p) (fuel_needed q)
+  | X p      => liftA2 plus (Some 1) (fuel_needed p)
+  | p U q    => fuel_needed q
+  | p R q    => fuel_needed q
+  | ◇ p      => fuel_needed p
+  | □ p      => None
+  end.
+
+Ltac fromJust :=
+  match goal with
+    [ H : Just _ = Just _ |- _ ] =>
+    inversion H; subst; clear H
+  end.
+
+Lemma fuel_needed_by_expand l : forall n m,
+  fuel_needed (expand a l) = Some n ->
+  fuel_needed l = Some m ->
+  n <= m.
+Proof.
+  induction l; simpl in *; intros;
+  unfold Maybe_map, Maybe_apply in *;
+  repeat fromJust;
+  try destruct (fuel_needed (expand a l1)) eqn:?;
+  try destruct (fuel_needed (expand a l2)) eqn:?;
+  try destruct (fuel_needed l1) eqn:?;
+  try destruct (fuel_needed l2) eqn:?;
+  repeat fromJust;
+  try discriminate; auto;
+  try apply Nat.max_le_compat; auto;
+  try apply Nat.min_le_compat; auto.
+  - destruct (fuel_needed (expand a l)) eqn:?;
+    destruct (fuel_needed l) eqn:?;
+    try discriminate;
+    repeat fromJust.
+    apply le_n_S.
+    now apply IHl.
+  - now apply Nat.min_le_iff; auto.
+  - now apply Nat.min_le_iff; auto.
+  - apply Nat.max_lub_iff; auto.
+    intuition auto.
+    admit.
+  - admit.
+  - destruct (fuel_needed (expand a l)) eqn:?;
+    destruct (fuel_needed l) eqn:?;
+    try discriminate;
+    repeat fromJust.
+    now apply Nat.min_le_iff; auto.
+Admitted.
 
 Inductive Failed : Type :=
   | HitBottom
@@ -93,17 +153,107 @@ Fixpoint step (i : a) (l : LTL a) : option Failed * LTL a :=
     end
   end.
 
-Lemma step_correct (l : LTL a) (T : Stream a) :
-  0 < length T ->
-  matches a False l T
-    <-> fst (fold_left (fun '(mf, acc) x =>
-                          match mf with
-                          | Some f => (Some f, acc)
-                          | None   => step x acc
-                          end) T (None, l)) = None.
+Fixpoint stream_fold {A B : Type}
+         (f : A -> B -> A) (s : Stream B) (z : A) : A :=
+  match s with
+  | Cons _ x xs => stream_fold f xs (f z x)
+  end.
+
+Lemma step_correct (l : LTL a) (x : a) (xs : Stream a) :
+  IF matches a l (Cons _ x xs)
+  then fst (step x l) = None
+  else exists f, fst (step x l) = Some f.
 Proof.
-  induction T; simpl; split; intros; auto.
-  - discriminate.
+  induction l.
+  - simpl; left; intuition.
+  - simpl; right; eauto.
+  - simpl; intuition; discriminate.
+  - simpl.
+    destruct (H x), H0.
+      right; intuition.
+      destruct (step x (v x)) eqn:?.
+      destruct o; simpl in *.
+        discriminate.
+      eauto.
+    left; intuition.
+    destruct H1.
+    destruct (step x (v x)) eqn:?.
+    destruct o; simpl in *; auto.
+    discriminate.
+  - admit.
+  - destruct IHl1, IHl2.
+    + left; simpl; intuition.
+      destruct (step x l1) eqn:?, o;
+      destruct (step x l2) eqn:?, o;
+      try discriminate; auto.
+    + right; simpl; intuition.
+      destruct (step x l1) eqn:?, o;
+      destruct (step x l2) eqn:?, o;
+      try discriminate; auto.
+      simpl; eexists; eauto.
+    + right; simpl; intuition.
+      destruct (step x l1) eqn:?, o;
+      destruct (step x l2) eqn:?, o;
+      try discriminate; auto.
+      simpl; eexists; eauto.
+    + right; simpl; intuition.
+      destruct (step x l1) eqn:?, o;
+      destruct (step x l2) eqn:?, o;
+      try discriminate; auto;
+      simpl; eexists; eauto.
+  - destruct IHl1, IHl2.
+    + left; simpl; intuition.
+      destruct (step x l1) eqn:?, o;
+      destruct (step x l2) eqn:?, o;
+      try discriminate; auto.
+    + left; simpl; intuition.
+      destruct (step x l1) eqn:?, o;
+      destruct (step x l2) eqn:?, o;
+      try discriminate; auto.
+    + left; simpl; intuition.
+      destruct (step x l1) eqn:?, o;
+      destruct (step x l2) eqn:?, o;
+      try discriminate; auto.
+    + right; simpl; intuition.
+      destruct (step x l1) eqn:?, o;
+      destruct (step x l2) eqn:?, o;
+      try discriminate; auto;
+      simpl; eexists; eauto.
+  - destruct IHl.
+    + left; simpl; intuition.
+      admit.
+    + right; simpl; intuition.
+        admit.
+      admit.
+  - destruct IHl2.
+      left; simpl; intuition.
+      destruct (step x l1) eqn:?, o;
+      destruct (step x l2) eqn:?, o;
+      try discriminate; auto.
+    destruct IHl1.
+      left; simpl; intuition auto.
+      right; intuition.
+      destruct (step x l1) eqn:?, o;
+      destruct (step x l2) eqn:?, o;
+      try discriminate; auto.
+      simpl; eexists; eauto.
+    + right; simpl; intuition.
+      destruct (step x l1) eqn:?, o;
+      destruct (step x l2) eqn:?, o;
+      try discriminate; auto.
+      simpl; eexists; eauto.
+    + right; simpl; intuition.
+      destruct (step x l1) eqn:?, o;
+      destruct (step x l2) eqn:?, o;
+      try discriminate; auto;
+      simpl; eexists; eauto.
+  - admit.
+  - admit.
+  - admit.
+  try discriminate; intuition auto.
+  intuition.
+    destruct T; simpl in *; intuition.
+    simpl.
   - inversion H.
     specialize (IHT H2).
     clear H.
