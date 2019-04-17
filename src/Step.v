@@ -31,14 +31,11 @@ Fixpoint fuel_needed (l : LTL a) : option nat :=
   | ⊥        => Some 0
   | Accept v => Some 1
   | Reject v => Some 1
-  | ¬ p      => fuel_needed p
   | p ∧ q    => liftA2 max (fuel_needed p) (fuel_needed q)
   | p ∨ q    => liftA2 min (fuel_needed p) (fuel_needed q)
   | X p      => liftA2 plus (Some 1) (fuel_needed p)
   | p U q    => fuel_needed q
   | p R q    => fuel_needed q
-  | ◇ p      => fuel_needed p
-  | □ p      => None
   end.
 
 Ltac fromJust :=
@@ -73,22 +70,14 @@ Proof.
   - now apply Nat.min_le_iff; auto.
   - apply Nat.max_lub_iff; auto.
     intuition auto.
-    admit.
-  - admit.
-  - destruct (fuel_needed (expand a l)) eqn:?;
-    destruct (fuel_needed l) eqn:?;
-    try discriminate;
-    repeat fromJust.
-    now apply Nat.min_le_iff; auto.
-Admitted.
+Abort.
 
 Inductive Failed : Type :=
   | HitBottom
   | Rejected    (x : a)
   | BothFailed  (p q : Failed)
   | LeftFailed  (p : Failed)
-  | RightFailed (q : Failed)
-  | Unexpected  (l : LTL a).
+  | RightFailed (q : Failed).
 
 Open Scope ltl_scope.
 
@@ -96,8 +85,6 @@ Fixpoint step (i : a) (l : LTL a) : option Failed * LTL a :=
   match l with
   | ⊤ => (None, l)
   | ⊥ => (Some HitBottom, l)
-
-  | ¬ p => (Some (Unexpected p), p)
 
   | Accept v => step i (v i)
   | Reject v =>
@@ -137,30 +124,10 @@ Fixpoint step (i : a) (l : LTL a) : option Failed * LTL a :=
     | (None, l1),    (Some f2, l2) => (Some (LeftFailed f2), l2 R l1)
     | (None, l1),    (None, l2)    => (None, l2 R l1)
     end
-
-  | ◇ p =>
-    (* ◇ φ ≈ φ ∨ X(◇ φ) *)
-    match step i p with
-    | (Some f, _) => (None, ◇ p)
-    | (None,   l) => (None, ⊤)
-    end
-
-  | □ p =>
-    (* □ φ ≈ φ ∧ X(□ φ) *)
-    match step i p with
-    | (Some f, _) => (Some f, ⊥)
-    | (None,   l) => (None, □ p)
-    end
-  end.
-
-Fixpoint stream_fold {A B : Type}
-         (f : A -> B -> A) (s : Stream B) (z : A) : A :=
-  match s with
-  | Cons _ x xs => stream_fold f xs (f z x)
   end.
 
 Lemma step_correct (l : LTL a) (x : a) (xs : Stream a) :
-  IF matches a l (Cons _ x xs)
+  IF matches a l (x :: xs)
   then fst (step x l) = None
   else exists f, fst (step x l) = Some f.
 Proof.
@@ -180,7 +147,6 @@ Proof.
     destruct (step x (v x)) eqn:?.
     destruct o; simpl in *; auto.
     discriminate.
-  - admit.
   - destruct IHl1, IHl2.
     + left; simpl; intuition.
       destruct (step x l1) eqn:?, o;
@@ -219,51 +185,17 @@ Proof.
       destruct (step x l2) eqn:?, o;
       try discriminate; auto;
       simpl; eexists; eauto.
-  - destruct IHl.
-    + left; simpl; intuition.
-      admit.
-    + right; simpl; intuition.
-        admit.
-      admit.
+  -
+    admit.                      (* Next *)
   - destruct IHl2.
       left; simpl; intuition.
       destruct (step x l1) eqn:?, o;
       destruct (step x l2) eqn:?, o;
       try discriminate; auto.
     destruct IHl1.
-      left; simpl; intuition auto.
-      right; intuition.
-      destruct (step x l1) eqn:?, o;
-      destruct (step x l2) eqn:?, o;
-      try discriminate; auto.
-      simpl; eexists; eauto.
-    + right; simpl; intuition.
-      destruct (step x l1) eqn:?, o;
-      destruct (step x l2) eqn:?, o;
-      try discriminate; auto.
-      simpl; eexists; eauto.
-    + right; simpl; intuition.
-      destruct (step x l1) eqn:?, o;
-      destruct (step x l2) eqn:?, o;
-      try discriminate; auto;
-      simpl; eexists; eauto.
+      admit.
+    admit.
   - admit.
-  - admit.
-  - admit.
-  try discriminate; intuition auto.
-  intuition.
-    destruct T; simpl in *; intuition.
-    simpl.
-  - inversion H.
-    specialize (IHT H2).
-    clear H.
-    clear -H2.
-    clear H H2.
-    intuition auto.
-    intuition.
-    apply IHT.
-    inversion H; clear H; intuition.
-  - inversion H; clear H; intuition.
 Qed.
 
 End Step.

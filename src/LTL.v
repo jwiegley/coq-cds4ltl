@@ -311,55 +311,6 @@ Proof.
   try (now rewrite IHφ).
 Qed.
 
-Lemma not_and (φ ψ : LTL) : ¬ (φ ∧ ψ) ≈ ¬ φ ∨ ¬ ψ.
-Proof.
-  induction φ; simpl; intuition;
-  try (now rewrite IHφ1, IHφ2);
-  try (now rewrite IHφ).
-Qed.
-
-Lemma not_or (φ ψ : LTL) : ¬ (φ ∨ ψ) ≈ ¬ φ ∧ ¬ ψ.
-Proof.
-  induction φ; simpl; intuition;
-  try (now rewrite IHφ1, IHφ2);
-  try (now rewrite IHφ).
-Qed.
-
-Lemma not_next (φ : LTL) : ¬(X φ) ≈ X ¬φ.
-Proof.
-  induction φ; simpl; intuition;
-  try (now rewrite IHφ1, IHφ2);
-  try (now rewrite IHφ).
-Qed.
-
-Lemma not_until (φ ψ : LTL) : ¬ (φ U ψ) ≈ ¬φ R ¬ψ.
-Proof.
-  induction φ; simpl; intuition;
-  try (now rewrite IHφ1, IHφ2);
-  try (now rewrite IHφ).
-Qed.
-
-Lemma not_release (φ ψ : LTL) : ¬ (φ R ψ) ≈ (¬φ U ¬ψ).
-Proof.
-  induction φ; simpl; intuition;
-  try (now rewrite IHφ1, IHφ2);
-  try (now rewrite IHφ).
-Qed.
-
-Lemma not_always (φ : LTL) : ¬(□ φ) ≈ ◇ ¬φ.
-Proof.
-  induction φ; simpl; intuition;
-  try (now rewrite IHφ1, IHφ2);
-  try (now rewrite IHφ).
-Qed.
-
-Lemma not_eventually (φ : LTL) : ¬(◇ φ) ≈ □ ¬φ.
-Proof.
-  induction φ; simpl; intuition;
-  try (now rewrite IHφ1, IHφ2);
-  try (now rewrite IHφ).
-Qed.
-
 Ltac ltl :=
   split;
   repeat intro;
@@ -385,7 +336,36 @@ Ltac ltl :=
   rewrite ?not_not in * |- *;
   firstorder.
 
-(** Logical equivalences *)
+(** Principles of negation *)
+
+Lemma not_and (φ ψ : LTL) : ¬ (φ ∧ ψ) ≈ ¬ φ ∨ ¬ ψ.
+Proof. now ltl. Qed.
+
+Lemma not_or (φ ψ : LTL) : ¬ (φ ∨ ψ) ≈ ¬ φ ∧ ¬ ψ.
+Proof. now ltl. Qed.
+
+Lemma not_next (φ : LTL) : ¬(X φ) ≈ X ¬φ.
+Proof. now ltl. Qed.
+
+Lemma not_until (φ ψ : LTL) : ¬ (φ U ψ) ≈ ¬φ R ¬ψ.
+Proof. now ltl. Qed.
+
+Lemma not_release (φ ψ : LTL) : ¬ (φ R ψ) ≈ (¬φ U ¬ψ).
+Proof. now ltl. Qed.
+
+Lemma not_eventually (φ : LTL) : ¬(◇ φ) ≈ □ ¬φ.
+Proof. now ltl. Qed.
+
+Lemma not_always (φ : LTL) : ¬(□ φ) ≈ ◇ ¬φ.
+Proof. now ltl. Qed.
+
+Lemma not_weakUntil (φ ψ : LTL) : ¬ (φ W ψ) ≈ (¬φ M ¬ψ).
+Proof. now ltl. Qed.
+
+Lemma not_strongRelease (φ ψ : LTL) : ¬ (φ M ψ) ≈ (¬φ W ¬ψ).
+Proof. now ltl. Qed.
+
+(** Boolean equivalences *)
 
 Lemma or_comm (φ ψ : LTL) : φ ∨ ψ ≈ ψ ∨ φ.
 Proof. now ltl. Qed.
@@ -486,14 +466,6 @@ Proof. now ltl. Qed.
 Lemma and_until (ρ φ ψ : LTL) : (φ ∧ ψ) U ρ ≈ (φ U ρ) ∧ (ψ U ρ).
 Proof. now ltl. Qed.
 
-(** More negation propagation *)
-
-Lemma not_weakUntil (φ ψ : LTL) : ¬ (φ W ψ) ≈ (¬φ M ¬ψ).
-Proof. now ltl. Qed.
-
-Lemma not_strongRelease (φ ψ : LTL) : ¬ (φ M ψ) ≈ (¬φ W ¬ψ).
-Proof. now ltl. Qed.
-
 (** Special Temporal properties *)
 
 Lemma eventually_idempotent (φ : LTL) : ◇ ◇ φ ≈ ◇ φ.
@@ -517,29 +489,13 @@ Lemma expand_release    (φ ψ : LTL) : φ R ψ ≈ ψ ∧ (φ ∨ X(φ R ψ)).
 Proof. now ltl. Qed.
 
 Lemma expand_always     (φ : LTL)   :   □ φ ≈ φ ∧ X(□ φ).
-Proof.
-  rewrite expand_release at 1.
-  now rewrite bottom_or.
-Qed.
+Proof. now ltl. Qed.
 
 Lemma expand_eventually (φ : LTL)   :   ◇ φ ≈ φ ∨ X(◇ φ).
-Proof.
-  rewrite expand_until at 1.
-  now rewrite top_and.
-Qed.
+Proof. now ltl. Qed.
 
 Lemma expand_weakUntil  (φ ψ : LTL) : φ W ψ ≈ ψ ∨ (φ ∧ X(φ W ψ)).
-Proof.
-  unfold weakUntil.
-  rewrite expand_until at 1.
-  rewrite <- or_assoc.
-  apply Or_Proper.
-    reflexivity.
-  rewrite next_or.
-  rewrite and_or.
-  rewrite <- expand_always.
-  reflexivity.
-Qed.
+Proof. now ltl. Qed.
 
 (** Absorption laws *)
 
@@ -548,6 +504,8 @@ Proof. now ltl. Qed.
 
 Lemma asborb_always (φ : LTL) : □ ◇ □ φ ≈ ◇ □ φ.
 Proof. now ltl. Qed.
+
+(** Correctness of transformations *)
 
 Lemma expand_correct l : expand l ≈ l.
 Proof.
