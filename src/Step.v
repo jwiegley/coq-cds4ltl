@@ -23,55 +23,6 @@ Section Step.
 
 Variable a : Type.              (* The type of entries in the trace *)
 
-Open Scope ltl_scope.
-
-Fixpoint fuel_needed (l : LTL a) : option nat :=
-  match l with
-  | ⊤        => Some 0
-  | ⊥        => Some 0
-  | Accept v => Some 1
-  | Reject v => Some 1
-  | p ∧ q    => liftA2 max (fuel_needed p) (fuel_needed q)
-  | p ∨ q    => liftA2 min (fuel_needed p) (fuel_needed q)
-  | X p      => liftA2 plus (Some 1) (fuel_needed p)
-  | p U q    => fuel_needed q
-  | p R q    => fuel_needed q
-  end.
-
-Ltac fromJust :=
-  match goal with
-    [ H : Just _ = Just _ |- _ ] =>
-    inversion H; subst; clear H
-  end.
-
-Lemma fuel_needed_by_expand l : forall n m,
-  fuel_needed (expand a l) = Some n ->
-  fuel_needed l = Some m ->
-  n <= m.
-Proof.
-  induction l; simpl in *; intros;
-  unfold Maybe_map, Maybe_apply in *;
-  repeat fromJust;
-  try destruct (fuel_needed (expand a l1)) eqn:?;
-  try destruct (fuel_needed (expand a l2)) eqn:?;
-  try destruct (fuel_needed l1) eqn:?;
-  try destruct (fuel_needed l2) eqn:?;
-  repeat fromJust;
-  try discriminate; auto;
-  try apply Nat.max_le_compat; auto;
-  try apply Nat.min_le_compat; auto.
-  - destruct (fuel_needed (expand a l)) eqn:?;
-    destruct (fuel_needed l) eqn:?;
-    try discriminate;
-    repeat fromJust.
-    apply le_n_S.
-    now apply IHl.
-  - now apply Nat.min_le_iff; auto.
-  - now apply Nat.min_le_iff; auto.
-  - apply Nat.max_lub_iff; auto.
-    intuition auto.
-Abort.
-
 Inductive Failed : Type :=
   | HitBottom
   | Rejected    (x : a)
@@ -103,8 +54,9 @@ Fixpoint step (i : a) (l : LTL a) : option Failed * LTL a :=
   | p ∨ q =>
     match step i p, step i q with
     | (Some f1, l1), (Some f2, l2) => (Some (BothFailed f1 f2), l1 ∨ l2)
-    | (Some f1, l1), (None, l2)    => (None, l1 ∨ l2)
-    | (None, l1),    (_, l2)       => (None, l1 ∨ l2)
+    | (Some f1, l1), (None, l2)    => (None, l2)
+    | (None, l1),    (Some f2, l2) => (None, l1)
+    | (None, l1),    (None, l2)    => (None, l1 ∨ l2)
     end
 
   | X p => (None, p)
@@ -113,90 +65,25 @@ Fixpoint step (i : a) (l : LTL a) : option Failed * LTL a :=
     (* φ U ψ ≈ ψ ∨ (φ ∧ X(φ U ψ)) *)
     match step i q, step i p with
     | (Some f1, l1), (Some f2, l2) => (Some (BothFailed f1 f2), l2 U l1)
-    | (Some f1, l1), (None, l2)    => (None, l2 U l1)
-    | (None, l1),    (_, l2)       => (None, l2 U l1)
+    | (Some f1, l1), (None, l2)    => (None, l2 U q)
+    | (None, l1),    (Some f2, l2) => (None, p  U l1)
+    | (None, l1),    (None, l2)    => (None, l2 U l1)
     end
 
   | p R q =>
     (* φ R ψ ≈ ψ ∧ (φ ∨ X(φ R ψ)) *)
     match step i q, step i p with
-    | (Some f1, l1), (_, l2)       => (Some (RightFailed f1), l2 R l1)
-    | (None, l1),    (Some f2, l2) => (Some (LeftFailed f2), l2 R l1)
+    | (None, l1),    (Some f2, l2) => (None, p  R l1)
     | (None, l1),    (None, l2)    => (None, l2 R l1)
+    | (Some f1, l1), (None, l2)    => (Some (RightFailed f1), l2 R l1)
+    | (Some f1, l1), (Some f2, l2) => (None, p  R q)
     end
   end.
 
 Lemma step_correct (l : LTL a) (x : a) (xs : Stream a) :
-  IF matches a l (x :: xs)
-  then fst (step x l) = None
-  else exists f, fst (step x l) = Some f.
+  matches a l (x :: xs) <-> fst (step x l) = None.
 Proof.
-  induction l.
-  - simpl; left; intuition.
-  - simpl; right; eauto.
-  - simpl; intuition; discriminate.
-  - simpl.
-    destruct (H x), H0.
-      right; intuition.
-      destruct (step x (v x)) eqn:?.
-      destruct o; simpl in *.
-        discriminate.
-      eauto.
-    left; intuition.
-    destruct H1.
-    destruct (step x (v x)) eqn:?.
-    destruct o; simpl in *; auto.
-    discriminate.
-  - destruct IHl1, IHl2.
-    + left; simpl; intuition.
-      destruct (step x l1) eqn:?, o;
-      destruct (step x l2) eqn:?, o;
-      try discriminate; auto.
-    + right; simpl; intuition.
-      destruct (step x l1) eqn:?, o;
-      destruct (step x l2) eqn:?, o;
-      try discriminate; auto.
-      simpl; eexists; eauto.
-    + right; simpl; intuition.
-      destruct (step x l1) eqn:?, o;
-      destruct (step x l2) eqn:?, o;
-      try discriminate; auto.
-      simpl; eexists; eauto.
-    + right; simpl; intuition.
-      destruct (step x l1) eqn:?, o;
-      destruct (step x l2) eqn:?, o;
-      try discriminate; auto;
-      simpl; eexists; eauto.
-  - destruct IHl1, IHl2.
-    + left; simpl; intuition.
-      destruct (step x l1) eqn:?, o;
-      destruct (step x l2) eqn:?, o;
-      try discriminate; auto.
-    + left; simpl; intuition.
-      destruct (step x l1) eqn:?, o;
-      destruct (step x l2) eqn:?, o;
-      try discriminate; auto.
-    + left; simpl; intuition.
-      destruct (step x l1) eqn:?, o;
-      destruct (step x l2) eqn:?, o;
-      try discriminate; auto.
-    + right; simpl; intuition.
-      destruct (step x l1) eqn:?, o;
-      destruct (step x l2) eqn:?, o;
-      try discriminate; auto;
-      simpl; eexists; eauto.
-  -
-    admit.                      (* Next *)
-  - destruct IHl2.
-      left; simpl; intuition.
-      destruct (step x l1) eqn:?, o;
-      destruct (step x l2) eqn:?, o;
-      try discriminate; auto.
-    destruct IHl1.
-      admit.
-    admit.
-  - admit.
-Qed.
+Admitted.
 
 End Step.
 
@@ -208,26 +95,18 @@ Open Scope ltl_scope.
 Definition sample :=
   let formula :=
       □ (ifThen (fun n => n =? 3) (fun n => ◇ (num (n + 5)))) in
-  let f0 := pnf _ formula in
-  let (r1, f1) := step nat 1 (expand _ f0) in
-  let (r2, f2) := step nat 2 (expand _ f1) in
-  let (r3, f3) := step nat 3 (expand _ f2) in
-  let (r4, f4) := step nat 4 (expand _ f3) in
-  let (r5, f5) := step nat 5 (expand _ f4) in
-  let (r6, f6) := step nat 6 (expand _ f5) in
-  let (r7, f7) := step nat 7 (expand _ f6) in
-  let (r8, f8) := step nat 8 (expand _ f7) in
-  let (r9, _)  := step nat 9 (expand _ f8) in
+  let f0 := formula in
+  let (r1, f1) := step nat 1 f0 in
+  let (r2, f2) := step nat 2 f1 in
+  let (r3, f3) := step nat 3 f2 in
+  let (r4, f4) := step nat 4 f3 in
+  let (r5, f5) := step nat 5 f4 in
+  let (r6, f6) := step nat 6 f5 in
+  let (r7, f7) := step nat 7 f6 in
+  let (r8, f8) := step nat 8 f7 in
+  let (r9, _)  := step nat 9 f8 in
   ([r1; r2; r3; r4; r5; r6; r7; r8; r9],
-   [expand _ f0;
-    expand _ f1;
-    expand _ f2;
-    expand _ f3;
-    expand _ f4;
-    expand _ f5;
-    expand _ f6;
-    expand _ f7;
-    expand _ f8]).
+   [f0; f1; f2; f3; f4; f5; f6; f7; f8]).
 
 Goal True.
   pose (fst sample).
