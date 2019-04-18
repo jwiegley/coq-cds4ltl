@@ -32,16 +32,16 @@ Inductive Failed : Type :=
 
 Section Eff.
   CoInductive Eff (T : Type) : Type :=
-    | Pure : T -> Eff T
-    | Delay : Eff T -> Eff T
+    | Pure     : T -> Eff T
+    | Delay    : Eff T -> Eff T
     | Interact : (a -> Eff T) -> Eff T.
 
   Context {A B} (k : A -> Eff B).
 
   CoFixpoint bind' (c : Eff A) : Eff B :=
     match c with
-    | Pure _ v => k v
-    | Delay _ d => Delay _ (bind' d)
+    | Pure _ v      => k v
+    | Delay _ d     => Delay _ (bind' d)
     | Interact _ k' => Interact _ (fun x => bind' (k' x))
     end.
 
@@ -133,32 +133,9 @@ Ltac follows :=
     induction H; simpl in *; eexists; eauto; try reflexivity
   end.
 
-CoFixpoint compile' (l : LTL a) : Machine :=
-  match l with
-  | ⊤ => Pure Success
-  | ⊥ => Pure (Failure HitBottom)
-
-  | Accept v => Interact (fun x => compile' (v x))
-  | Reject v =>
-    Interact (fun x =>
-                fmap (fun m =>
-                        match m with
-                        | Failure e => Success
-                        | Success   => Failure (Rejected x)
-                        end) (compile' (v x)))
-
-  | p ∧ q => combine (compile' p) (compile' q)
-  | p ∨ q => select (compile' p) (compile' q)
-  | X p   => Delay (compile' (expand p))
-  | p U q => Pure Success       (* is never called due to expand *)
-  | p R q => Pure Success       (* is never called due to expand *)
-  end.
-
-CoFixpoint compile (l : LTL a) : Machine := compile (expand l).
-
 Definition step (m : Machine) (x : a) : Machine :=
   match m with
-  | Pure x     => x
+  | Pure x     => Pure x
   | Delay m    => m
   | Interact f => f x
   end.
@@ -168,10 +145,32 @@ Fixpoint run (m : Machine) (l : list a) : Machine :=
   | [] => m
   | x :: xs => run (step m x) xs
   end.
-  | Pure x     => x
-  | Delay m    => m
-  | Interact f => f x
+
+CoFixpoint compile' (l : LTL a) : Machine :=
+  match l with
+  | ⊤ => Pure Success
+  | ⊥ => Pure (Failure HitBottom)
+
+  | Accept v => Interact (compile' ∘ expand ∘ v)
+  | Reject v =>
+    Interact (fun x =>
+                fmap (fun m =>
+                        match m with
+                        | Failure _ => Success
+                        | Success   => Failure (Rejected x)
+                        end)
+                     (compile' (expand (v x))))
+
+  | p ∧ q => combine (compile' p) (compile' q)
+  | p ∨ q => select (compile' p) (compile' q)
+
+  | X p   => Delay (compile' (expand p))
+
+  | p U q => Pure Success       (* is never called due to expand *)
+  | p R q => Pure Success       (* is never called due to expand *)
   end.
+
+Definition compile (l : LTL a) : Machine := compile' (expand l).
 
 Lemma run_correct (l : LTL a) (s : Stream a) :
   (* Because matches may be partial on finite input, we only ensure that a
