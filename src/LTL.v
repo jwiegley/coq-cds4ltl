@@ -83,23 +83,23 @@ Fixpoint matches (l : LTL) (s : Stream) {struct l} : Prop :=
     | x :: xs => ~ matches (v x) s
     end
 
-  | p ∧ q    => matches p s /\ matches q s
-  | p ∨ q    => matches p s \/ matches q s
+  | p ∧ q => matches p s /\ matches q s
+  | p ∨ q => matches p s \/ matches q s
 
-  | X p      =>
+  | X p =>
     match s with
     | []      => False
     | x :: xs => matches p xs
     end
 
-  | p U q    =>
+  | p U q =>
     let fix go s :=
         match s with
         | [] => matches q s
         | _ :: xs => matches q s \/ (matches p s /\ go xs)
         end in go s
 
-  | p R q    =>
+  | p R q =>
     let fix go s :=
         match s with
         | [] => matches q s /\ matches p s
@@ -109,15 +109,15 @@ Fixpoint matches (l : LTL) (s : Stream) {struct l} : Prop :=
 
 Function negate (l : LTL) : LTL :=
   match l with
-  | ⊤         => ⊥
-  | ⊥         => ⊤
-  | Accept v  => Reject v
-  | Reject v  => Accept v
-  | p ∧ q     => negate p ∨ negate q
-  | p ∨ q     => negate p ∧ negate q
-  | X p       => X (negate p)
-  | p U q     => negate p R negate q
-  | p R q     => negate p U negate q
+  | ⊤        => ⊥
+  | ⊥        => ⊤
+  | Accept v => Reject v
+  | Reject v => Accept v
+  | p ∧ q    => negate p ∨ negate q
+  | p ∨ q    => negate p ∧ negate q
+  | X p      => X (negate p)
+  | p U q    => negate p R negate q
+  | p R q    => negate p U negate q
   end.
 
 Notation "¬ x"     := (negate x)         (at level 0).
@@ -482,16 +482,16 @@ Proof. now ltl. Qed.
 
 (** Expansion laws *)
 
-Lemma expand_until      (φ ψ : LTL) : φ U ψ ≈ ψ ∨ (φ ∧ X(φ U ψ)).
+Lemma expand_until (φ ψ : LTL) : φ U ψ ≈ ψ ∨ (φ ∧ X(φ U ψ)).
 Proof. now ltl. Qed.
 
-Lemma expand_release    (φ ψ : LTL) : φ R ψ ≈ ψ ∧ (φ ∨ X(φ R ψ)).
+Lemma expand_release (φ ψ : LTL) : φ R ψ ≈ ψ ∧ (φ ∨ X(φ R ψ)).
 Proof. now ltl. Qed.
 
-Lemma expand_always     (φ : LTL)   :   □ φ ≈ φ ∧ X(□ φ).
+Lemma expand_always (φ : LTL) : □ φ ≈ φ ∧ X(□ φ).
 Proof. now ltl. Qed.
 
-Lemma expand_eventually (φ : LTL)   :   ◇ φ ≈ φ ∨ X(◇ φ).
+Lemma expand_eventually (φ : LTL) : ◇ φ ≈ φ ∨ X(◇ φ).
 Proof. now ltl. Qed.
 
 Lemma expand_weakUntil  (φ ψ : LTL) : φ W ψ ≈ ψ ∨ (φ ∧ X(φ W ψ)).

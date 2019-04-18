@@ -30,60 +30,144 @@ Inductive Failed : Type :=
   | LeftFailed  (p : Failed)
   | RightFailed (q : Failed).
 
-Open Scope ltl_scope.
+Section Eff.
+  CoInductive Eff (T : Type) : Type :=
+    | Pure : T -> Eff T
+    | Delay : Eff T -> Eff T
+    | Interact : (a -> Eff T) -> Eff T.
 
-Fixpoint step (i : a) (l : LTL a) : option Failed * LTL a :=
-  match l with
-  | ⊤ => (None, l)
-  | ⊥ => (Some HitBottom, l)
+  Context {A B} (k : A -> Eff B).
 
-  | Accept v => step i (v i)
-  | Reject v =>
-    match step i (v i) with
-    | (None, l)   => (Some (Rejected i), l)
-    | (Some _, l) => (None, l)
-    end
+  CoFixpoint bind' (c : Eff A) : Eff B :=
+    match c with
+    | Pure _ v => k v
+    | Delay _ d => Delay _ (bind' d)
+    | Interact _ k' => Interact _ (fun x => bind' (k' x))
+    end.
 
-  | p ∧ q =>
-    match step i p, step i q with
-    | (Some f1, l1), (_, l2)       => (Some (LeftFailed f1), l1 ∧ l2)
-    | (None, l1),    (Some f2, l2) => (Some (RightFailed f2), l1 ∧ l2)
-    | (None, l1),    (None, l2)    => (None, l1 ∧ l2)
-    end
+  Context (f : A -> B).
 
-  | p ∨ q =>
-    match step i p, step i q with
-    | (Some f1, l1), (Some f2, l2) => (Some (BothFailed f1 f2), l1 ∨ l2)
-    | (Some f1, l1), (None, l2)    => (None, l2)
-    | (None, l1),    (Some f2, l2) => (None, l1)
-    | (None, l1),    (None, l2)    => (None, l1 ∨ l2)
-    end
+  CoFixpoint fmap' (m : Eff A) : Eff B :=
+    match m with
+    | Pure _ x     => Pure _ (f x)
+    | Delay _ m    => Delay _ (fmap' m)
+    | Interact _ k => Interact _ (fmap' ∘ k)
+    end.
+End Eff.
 
-  | X p => (None, p)
+Arguments Pure {T} _.
+Arguments Delay {T} _.
+Arguments Interact {T} _.
 
-  | p U q =>
-    (* φ U ψ ≈ ψ ∨ (φ ∧ X(φ U ψ)) *)
-    match step i q, step i p with
-    | (Some f1, l1), (Some f2, l2) => (Some (BothFailed f1 f2), l2 U l1)
-    | (Some f1, l1), (None, l2)    => (None, l2 U q)
-    | (None, l1),    (Some f2, l2) => (None, p  U l1)
-    | (None, l1),    (None, l2)    => (None, l2 U l1)
-    end
+Definition bind {A B} c k := @bind' A B k c.
+Definition fmap {A B} := @fmap' A B.
 
-  | p R q =>
-    (* φ R ψ ≈ ψ ∧ (φ ∨ X(φ R ψ)) *)
-    match step i q, step i p with
-    | (None, l1),    (Some f2, l2) => (None, p  R l1)
-    | (None, l1),    (None, l2)    => (None, l2 R l1)
-    | (Some f1, l1), (None, l2)    => (Some (RightFailed f1), l2 R l1)
-    | (Some f1, l1), (Some f2, l2) => (None, p  R q)
-    end
+CoInductive Result : Type :=
+  | Failure (e : Failed)
+  | Success.
+
+Definition frob `(f : Eff A) : Eff A :=
+  match f with
+  | Interact k => Interact k
+  | Delay m    => Delay m
+  | Pure x     => Pure x
   end.
 
-Lemma step_correct (l : LTL a) (x : a) (xs : Stream a) :
-  matches a l (x :: xs) <-> fst (step x l) = None.
+Theorem frob_eq : forall A (f : Eff A), f = frob f.
+Proof. destruct f; reflexivity. Qed.
+
+Open Scope ltl_scope.
+
+Arguments expand {_} _.
+
+Definition Machine := Eff Result.
+
+CoFixpoint feedInput (input : a) (p : Machine) : Machine :=
+  match p with
+  | Interact k => k input
+  | Delay m    => m
+  | Pure x     => Pure x
+  end.
+
+(* Implements "and" behavior *)
+CoFixpoint combine (f g : Machine) : Machine :=
+  match f, g with
+  | Pure (Failure e), _      => Pure (Failure (LeftFailed e))
+  | _, Pure (Failure e)      => Pure (Failure (RightFailed e))
+  | f', Pure Success         => f'
+  | Pure Success, g'         => g'
+  | Delay f', Delay g'       => Delay (combine f' g')
+  | Delay f', Interact g'    => Interact (fun a => combine (Delay f') (g' a))
+  | Interact f', Delay g'    => Interact (fun a => combine (f' a) (Delay g'))
+  | Interact f', Interact g' => Interact (fun a => combine (f' a) (g' a))
+  end.
+
+(* Implements "or" behavior *)
+CoFixpoint select (f g : Machine) : Machine :=
+  match f, g with
+  | Pure (Failure e1),
+    Pure (Failure e2)        => Pure (Failure (BothFailed e1 e2))
+  | Pure Success, _          => Pure Success
+  | _, Pure Success          => Pure Success
+  | Pure (Failure _), g'     => g'
+  | f', Pure (Failure _)     => f'
+  | Delay f', Delay g'       => Delay (combine f' g')
+  | Delay f', Interact g'    => Interact (fun a => combine (Delay f') (g' a))
+  | Interact f', Delay g'    => Interact (fun a => combine (f' a) (Delay g'))
+  | Interact f', Interact g' => Interact (fun a => select (f' a) (g' a))
+  end.
+
+Definition not_complex (l : LTL a) : Prop :=
+  match l with
+  | p U q => False
+  | p R q => False
+  | _     => True
+  end.
+
+Lemma not_complex_expand : forall l, not_complex (expand l).
+Proof. induction l; simpl; auto. Qed.
+
+Ltac follows :=
+  match goal with
+    [ H : LTL a |- _ ] =>
+    induction H; simpl in *; eexists; eauto; try reflexivity
+  end.
+
+CoFixpoint compile' (l : LTL a) : Machine :=
+  match l with
+  | ⊤ => Pure Success
+  | ⊥ => Pure (Failure HitBottom)
+
+  | Accept v => Interact (fun x => compile' (v x))
+  | Reject v =>
+    Interact (fun x =>
+                fmap (fun m =>
+                        match m with
+                        | Failure e => Success
+                        | Success   => Failure (Rejected x)
+                        end) (compile' (v x)))
+
+  | p ∧ q => combine (compile' p) (compile' q)
+  | p ∨ q => select (compile' p) (compile' q)
+  | X p   => Delay (compile' (expand p))
+  | p U q => Pure Success       (* is never called due to expand *)
+  | p R q => Pure Success       (* is never called due to expand *)
+  end.
+
+CoFixpoint compile (l : LTL a) : Machine := compile (expand l).
+
+Fixpoint runMachine (m : Machine) (x : a) : Machine :=
+  match m with
+  | Pure x     => x
+  | Delay m    => m
+  | Interact f => f x
+  end.
+
+Lemma step_correct (l : LTL a) (s : Stream a) :
+  matches a l s
+    <-> forall e, runMachine (compile l) s <> Pure (Failure e).
 Proof.
-Admitted.
+Abort.
 
 End Step.
 
