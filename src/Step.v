@@ -156,16 +156,28 @@ CoFixpoint compile' (l : LTL a) : Machine :=
 
 CoFixpoint compile (l : LTL a) : Machine := compile (expand l).
 
-Fixpoint runMachine (m : Machine) (x : a) : Machine :=
+Definition step (m : Machine) (x : a) : Machine :=
   match m with
   | Pure x     => x
   | Delay m    => m
   | Interact f => f x
   end.
 
-Lemma step_correct (l : LTL a) (s : Stream a) :
+Fixpoint run (m : Machine) (l : list a) : Machine :=
+  match l with
+  | [] => m
+  | x :: xs => run (step m x) xs
+  end.
+  | Pure x     => x
+  | Delay m    => m
+  | Interact f => f x
+  end.
+
+Lemma run_correct (l : LTL a) (s : Stream a) :
+  (* Because matches may be partial on finite input, we only ensure that a
+     non-failing match is never a failure, and vice versa. *)
   matches a l s
-    <-> forall e, runMachine (compile l) s <> Pure (Failure e).
+    <-> forall e, run (compile l) s <> Pure (Failure e).
 Proof.
 Abort.
 
