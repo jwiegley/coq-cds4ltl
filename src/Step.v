@@ -32,34 +32,24 @@ Inductive Failed : Type :=
 
 Section Eff.
   CoInductive Eff (T : Type) : Type :=
-    | Pure     : T -> Eff T
-    | Delay    : Eff T -> Eff T
-    | Interact : (a -> Eff T) -> Eff T.
+    | Stop  : T -> Eff T
+    | Delay : Eff T -> Eff T
+    | Query : (a -> Eff T) -> Eff T.
 
-  Context {A B} (k : A -> Eff B).
-
-  CoFixpoint bind' (c : Eff A) : Eff B :=
-    match c with
-    | Pure _ v      => k v
-    | Delay _ d     => Delay _ (bind' d)
-    | Interact _ k' => Interact _ (fun x => bind' (k' x))
-    end.
-
-  Context (f : A -> B).
+  Context {A B} (f : A -> B).
 
   CoFixpoint fmap' (m : Eff A) : Eff B :=
     match m with
-    | Pure _ x     => Pure _ (f x)
-    | Delay _ m    => Delay _ (fmap' m)
-    | Interact _ k => Interact _ (fmap' ∘ k)
+    | Stop _ x  => Stop _ (f x)
+    | Delay _ m => Delay _ (fmap' m)
+    | Query _ k => Query _ (fmap' ∘ k)
     end.
 End Eff.
 
-Arguments Pure {T} _.
+Arguments Stop {T} _.
 Arguments Delay {T} _.
-Arguments Interact {T} _.
+Arguments Query {T} _.
 
-Definition bind {A B} c k := @bind' A B k c.
 Definition fmap {A B} := @fmap' A B.
 
 CoInductive Result : Type :=
@@ -68,9 +58,9 @@ CoInductive Result : Type :=
 
 Definition frob `(f : Eff A) : Eff A :=
   match f with
-  | Interact k => Interact k
+  | Query k => Query k
   | Delay m    => Delay m
-  | Pure x     => Pure x
+  | Stop x     => Stop x
   end.
 
 Theorem frob_eq : forall A (f : Eff A), f = frob f.
@@ -84,37 +74,37 @@ Definition Machine := Eff Result.
 
 CoFixpoint feedInput (input : a) (p : Machine) : Machine :=
   match p with
-  | Interact k => k input
+  | Query k => k input
   | Delay m    => m
-  | Pure x     => Pure x
+  | Stop x     => Stop x
   end.
 
 (* Implements "and" behavior *)
 CoFixpoint combine (f g : Machine) : Machine :=
   match f, g with
-  | Pure (Failure e), _      => Pure (Failure (LeftFailed e))
-  | _, Pure (Failure e)      => Pure (Failure (RightFailed e))
-  | Delay f', Delay g'       => Delay (combine f' g')
-  | Interact f', Interact g' => Interact (fun a => combine (f' a) (g' a))
-  | f', Interact g'          => Interact (fun a => combine f' (g' a))
-  | Interact f', g'          => Interact (fun a => combine (f' a) g')
-  | f', Pure Success         => f'
-  | Pure Success, g'         => g'
+  | Stop (Failure e), _ => Stop (Failure (LeftFailed e))
+  | _, Stop (Failure e) => Stop (Failure (RightFailed e))
+  | Delay f', Delay g'  => Delay (combine f' g')
+  | Query f', Query g'  => Query (fun a => combine (f' a) (g' a))
+  | f', Query g'        => Query (fun a => combine f' (g' a))
+  | Query f', g'        => Query (fun a => combine (f' a) g')
+  | f', Stop Success    => f'
+  | Stop Success, g'    => g'
   end.
 
 (* Implements "or" behavior *)
 CoFixpoint select (f g : Machine) : Machine :=
   match f, g with
-  | Pure (Failure e1),
-    Pure (Failure e2)        => Pure (Failure (BothFailed e1 e2))
-  | Pure Success, _          => Pure Success
-  | _, Pure Success          => Pure Success
-  | Delay f', Delay g'       => Delay (select f' g')
-  | Interact f', Interact g' => Interact (fun a => select (f' a) (g' a))
-  | f', Interact g'          => Interact (fun a => select f' (g' a))
-  | Interact f', g'          => Interact (fun a => select (f' a) g')
-  | Pure (Failure _), g'     => g'
-  | f', Pure (Failure _)     => f'
+  | Stop (Failure e1),
+    Stop (Failure e2)    => Stop (Failure (BothFailed e1 e2))
+  | Stop Success, _      => Stop Success
+  | _, Stop Success      => Stop Success
+  | Delay f', Delay g'   => Delay (select f' g')
+  | Query f', Query g'   => Query (fun a => select (f' a) (g' a))
+  | f', Query g'         => Query (fun a => select f' (g' a))
+  | Query f', g'         => Query (fun a => select (f' a) g')
+  | Stop (Failure _), g' => g'
+  | f', Stop (Failure _) => f'
   end.
 
 Definition not_complex (l : LTL a) : Prop :=
@@ -135,9 +125,9 @@ Ltac follows :=
 
 Definition step (m : Machine) (x : a) : Machine :=
   match m with
-  | Pure x     => Pure x
-  | Delay m    => m
-  | Interact f => f x
+  | Stop x  => Stop x
+  | Delay m => m
+  | Query f => f x
   end.
 
 Fixpoint run (m : Machine) (l : list a) : Machine :=
@@ -146,38 +136,40 @@ Fixpoint run (m : Machine) (l : list a) : Machine :=
   | x :: xs => run (step m x) xs
   end.
 
-CoFixpoint compile' (l : LTL a) : Machine :=
-  match l with
-  | ⊤ => Pure Success
-  | ⊥ => Pure (Failure HitBottom)
+Definition until' pq (p q : Machine) : Machine := select q (combine p pq).
 
-  | Accept v => Interact (compile' ∘ expand ∘ v)
+(* CoFixpoint until (p q : Machine) : Machine := until' (until p q) p q. *)
+
+Fixpoint compile (l : LTL a) : Machine :=
+  match l with
+  | ⊤ => Stop Success
+  | ⊥ => Stop (Failure HitBottom)
+
+  | Accept v => Query (compile ∘ v)
   | Reject v =>
-    Interact (fun x =>
+    Query (fun x =>
                 let cofix go m :=
                     match m with
-                    | Pure (Failure _) => Pure Success
-                    | Pure Success     => Pure (Failure (Rejected x))
+                    | Stop (Failure _) => Stop Success
+                    | Stop Success     => Stop (Failure (Rejected x))
                     | Delay m          => Delay (go m)
-                    | Interact k       => Interact (go ∘ k)
-                    end in go (compile' (expand (v x))))
+                    | Query k       => Query (go ∘ k)
+                    end in go (compile (v x)))
 
-  | p ∧ q => combine (compile' p) (compile' q)
-  | p ∨ q => select (compile' p) (compile' q)
+  | p ∧ q => combine (compile p) (compile q)
+  | p ∨ q => select (compile p) (compile q)
 
-  | X p   => Delay (compile' (expand p))
+  | X p   => Delay (compile p)
 
-  | p U q => Pure Success       (* is never called due to expand *)
-  | p R q => Pure Success       (* is never called due to expand *)
+  | p U q => select (compile q) (combine (compile p) (Delay (compile (p U q))))
+  | p R q => combine (compile q) (select (compile p) (Delay (compile (p R q))))
   end.
-
-Definition compile (l : LTL a) : Machine := compile' (expand l).
 
 Lemma run_correct (l : LTL a) (s : Stream a) :
   (* Because matches may be partial on finite input, we only ensure that a
      non-failing match is never a failure, and vice versa. *)
   matches a l s
-    <-> forall e, run (compile l) s <> Pure (Failure e).
+    <-> forall e, run (compile l) s <> Stop (Failure e).
 Proof.
 Abort.
 
