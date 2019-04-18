@@ -94,12 +94,12 @@ CoFixpoint combine (f g : Machine) : Machine :=
   match f, g with
   | Pure (Failure e), _      => Pure (Failure (LeftFailed e))
   | _, Pure (Failure e)      => Pure (Failure (RightFailed e))
+  | Delay f', Delay g'       => Delay (combine f' g')
+  | Interact f', Interact g' => Interact (fun a => combine (f' a) (g' a))
+  | f', Interact g'          => Interact (fun a => combine f' (g' a))
+  | Interact f', g'          => Interact (fun a => combine (f' a) g')
   | f', Pure Success         => f'
   | Pure Success, g'         => g'
-  | Delay f', Delay g'       => Delay (combine f' g')
-  | Delay f', Interact g'    => Interact (fun a => combine (Delay f') (g' a))
-  | Interact f', Delay g'    => Interact (fun a => combine (f' a) (Delay g'))
-  | Interact f', Interact g' => Interact (fun a => combine (f' a) (g' a))
   end.
 
 (* Implements "or" behavior *)
@@ -109,12 +109,12 @@ CoFixpoint select (f g : Machine) : Machine :=
     Pure (Failure e2)        => Pure (Failure (BothFailed e1 e2))
   | Pure Success, _          => Pure Success
   | _, Pure Success          => Pure Success
+  | Delay f', Delay g'       => Delay (select f' g')
+  | Interact f', Interact g' => Interact (fun a => select (f' a) (g' a))
+  | f', Interact g'          => Interact (fun a => select f' (g' a))
+  | Interact f', g'          => Interact (fun a => select (f' a) g')
   | Pure (Failure _), g'     => g'
   | f', Pure (Failure _)     => f'
-  | Delay f', Delay g'       => Delay (combine f' g')
-  | Delay f', Interact g'    => Interact (fun a => combine (Delay f') (g' a))
-  | Interact f', Delay g'    => Interact (fun a => combine (f' a) (Delay g'))
-  | Interact f', Interact g' => Interact (fun a => select (f' a) (g' a))
   end.
 
 Definition not_complex (l : LTL a) : Prop :=
@@ -154,12 +154,13 @@ CoFixpoint compile' (l : LTL a) : Machine :=
   | Accept v => Interact (compile' ∘ expand ∘ v)
   | Reject v =>
     Interact (fun x =>
-                fmap (fun m =>
-                        match m with
-                        | Failure _ => Success
-                        | Success   => Failure (Rejected x)
-                        end)
-                     (compile' (expand (v x))))
+                let cofix go m :=
+                    match m with
+                    | Pure (Failure _) => Pure Success
+                    | Pure Success     => Pure (Failure (Rejected x))
+                    | Delay m          => Delay (go m)
+                    | Interact k       => Interact (go ∘ k)
+                    end in go (compile' (expand (v x))))
 
   | p ∧ q => combine (compile' p) (compile' q)
   | p ∨ q => select (compile' p) (compile' q)
