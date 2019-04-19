@@ -147,6 +147,16 @@ Fixpoint expand (l : LTL) : LTL :=
   | p R q    => expand q ∧ (expand p ∨ X (p R q))
   end.
 
+Definition not_complex (l : LTL) : Prop :=
+  match l with
+  | p U q => False
+  | p R q => False
+  | _     => True
+  end.
+
+Lemma not_complex_expand : forall l, not_complex (expand l).
+Proof. induction l; simpl; auto. Qed.
+
 Fixpoint shallow (l : LTL) : Prop :=
   match l with
   | ⊤        => True

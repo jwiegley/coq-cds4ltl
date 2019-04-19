@@ -157,24 +157,13 @@ Definition select (f g : Machine) : Machine :=
   | Waiting f', Waiting g'     => Waiting (selectQuery f' g')
   end.
 
-Definition not_complex (l : LTL a) : Prop :=
-  match l with
-  | p U q => False
-  | p R q => False
-  | _     => True
-  end.
-
-Lemma not_complex_expand : forall l, not_complex (expand l).
-Proof. induction l; simpl; auto. Qed.
-
-Ltac follows :=
-  match goal with
-    [ H : LTL a |- _ ] =>
-    induction H; simpl in *; eexists; eauto; try reflexivity
+Definition answer (m : Query Result) (x : a) : Eff Result :=
+  match m with
+  | Ask k => k x
   end.
 
 (* Resolve any queries the machine may have, reducing it to an [Eff]. *)
-Fixpoint resolve (m : Machine) (x : a) : Eff Result :=
+Definition resolve (m : Machine) (x : a) : Eff Result :=
   match m with
   | Ready (Stop x)     => Stop x
   | Ready (Delay m)    => Delay m
@@ -182,13 +171,13 @@ Fixpoint resolve (m : Machine) (x : a) : Eff Result :=
   | Waiting (Ask k)    => k x
   end.
 
-Fixpoint defer (m : Machine) : Eff Result :=
+Definition defer (m : Machine) : Eff Result :=
   match m with
   | Ready m   => Delay m
   | Waiting q => DelayAsk q
   end.
 
-Fixpoint step (m : Machine) (x : a) : Machine :=
+Definition step (m : Machine) (x : a) : Machine :=
   match m with
   | Ready (Stop x)     => Ready (Stop x)
   | Ready (Delay m)    => Ready m
@@ -196,14 +185,8 @@ Fixpoint step (m : Machine) (x : a) : Machine :=
   | Waiting (Ask k)    => Ready (k x)
   end.
 
-Fixpoint run (m : Machine) (l : list a) : Machine :=
-  match l with
-  | [] => m
-  | x :: xs => run (step m x) xs
-  end.
-
-CoFixpoint until (p q : Eff Result) : Eff Result :=
-  selectEff q (combineEff p (Delay (until p q))).
+Definition run (m : Machine) (xs : list a) : Machine :=
+  fold_left step xs m.
 
 Fixpoint compile (l : LTL a) : Machine :=
   match l with
