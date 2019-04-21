@@ -131,7 +131,7 @@ Infix "↔" := iff (at level 45).
 Definition weakUntil (φ ψ : LTL) := (φ U ψ) ∨ □ φ.
 Notation "p 'W' q" := (weakUntil p q) (at level 45).
 
-Definition strongRelease (φ ψ : LTL) := ψ U (φ ∧ ψ).
+Definition strongRelease (φ ψ : LTL) := (φ R ψ) ∧ ◇ φ.
 Notation "p 'M' q" := (strongRelease p q) (at level 45).
 
 Fixpoint expand (l : LTL) : LTL :=

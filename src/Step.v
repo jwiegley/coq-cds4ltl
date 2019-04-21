@@ -31,158 +31,100 @@ Inductive Failed : Type :=
   | RightFailed (q : Failed).
 
 Section Eff.
-  CoInductive Eff (T : Type) : Type :=
-    | Stop     : T -> Eff T
-    | Delay    : Eff T -> Eff T
-    | DelayAsk : Query T -> Eff T
+  Inductive Eff (T : Type) : Type :=
+    | Stop   : T -> Eff T
+    | Delay  : Eff T -> Eff T
+    | Until  : Eff T -> Eff T -> Eff T -> Eff T
+    | Ask    : (a -> Eff T) -> Eff T.
 
-  with Query (T : Type) : Type :=
-    | Ask : (a -> Eff T) -> Query T.
-
+(*
   Context {A B} (f : A -> B).
 
-  CoFixpoint fmap' (m : Eff A) : Eff B :=
+  Fixpoint fmap' (m : Eff A) : Eff B :=
     match m with
-    | Stop _ x     => Stop _ (f x)
-    | Delay _ m    => Delay _ (fmap' m)
-    | DelayAsk _ m => DelayAsk _ (fmapQuery m)
-    end
-
-  with fmapQuery (m : Query A) : Query B :=
-    match m with
-    | Ask _ k => Ask _ (fmap' ∘ k)
+    | Stop _ x  => Stop _ (f x)
+    | Delay _ m => Delay _ (fmap' m)
+    | Repeat _  => Repeat _
+    | Ask _ k   => Ask _ (fmap' ∘ k)
     end.
+*)
 End Eff.
 
 Arguments Stop {T} _.
 Arguments Delay {T} _.
-Arguments DelayAsk {T} _.
+Arguments Until {T} _ _ _.
 Arguments Ask {T} _.
 
-Definition fmap {A B} := @fmap' A B.
+(* Definition fmap {A B} := @fmap' A B. *)
 
-CoInductive Result : Type :=
+Inductive Result : Type :=
   | Failure (e : Failed)
   | Success.
 
+(*
 Definition frob `(f : Eff A) : Eff A :=
   match f with
-  | Stop x     => Stop x
-  | Delay  m   => Delay m
-  | DelayAsk x => DelayAsk x
-  end.
-
-Definition frobQuery `(f : Query A) : Query A :=
-  match f with
-  | Ask k    => Ask k
+  | Stop x  => Stop x
+  | Delay m => Delay m
+  | Repeat  => Repeat
+  | Ask k   => Ask k
   end.
 
 Theorem frob_eq : forall A (f : Eff A), f = frob f.
 Proof. destruct f; reflexivity. Qed.
-
-Theorem frobQuery_eq : forall A (f : Query A), f = frobQuery f.
-Proof. destruct f; reflexivity. Qed.
+*)
 
 Open Scope ltl_scope.
 
 Arguments expand {_} _.
 
-Inductive Machine :=
-  | Ready (e : Eff Result)
-  | Waiting (q : Query Result).
+Definition Machine := Eff Result.
+
+Lemma and_until (ρ φ ψ τ : LTL a) : (φ ∧ ψ) U ρ ≈ (φ U ρ) ∧ (ψ U τ).
+Proof.
+  symmetry.
+  rewrite expand_until.
+  rewrite (expand_until _ ψ τ).
+  rewrite !and_or.
 
 (* Implements "and" behavior *)
-CoFixpoint combineEff (f g : Eff Result) : Eff Result :=
+Fixpoint combine (f g : Eff Result) : Eff Result :=
   match f, g with
-  | Stop (Failure e), _ => Stop (Failure (LeftFailed e))
-  | _, Stop (Failure e) => Stop (Failure (RightFailed e))
-  | Delay f', Delay g'  => Delay (combineEff f' g')
-
-  | DelayAsk f', DelayAsk g' => DelayAsk (combineQuery f' g')
-
-  | Delay f', DelayAsk (Ask g')    =>
-    DelayAsk (Ask (fun a => combineEff f' (g' a)))
-
-  | DelayAsk (Ask f'), Delay g'    =>
-    DelayAsk (Ask (fun a => combineEff (f' a) g'))
-
-  | f', Stop Success         => f'
-  | Stop Success, g'         => g'
-  end
-
-with combineQuery (f g : Query Result) : Query Result :=
-  match f, g with
-  | Ask f', Ask g' => Ask (fun a => combineEff (f' a) (g' a))
-  end.
-
-Definition combine (f g : Machine) : Machine :=
-  match f, g with
-  | Ready f', Ready g'         => Ready (combineEff f' g')
-  | Ready f', Waiting (Ask g') => Waiting (Ask (fun a => combineEff f' (g' a)))
-  | Waiting (Ask f'), Ready g' => Waiting (Ask (fun a => combineEff (f' a) g'))
-  | Waiting f', Waiting g'     => Waiting (combineQuery f' g')
+  | Stop (Failure e), _     => Stop (Failure (LeftFailed e))
+  | _, Stop (Failure e)     => Stop (Failure (RightFailed e))
+  | Delay f', Delay g'      => Delay (combine f' g')
+  | Delay f', Until q' p' r => Until (combine (Delay f') q') (combine (Delay f') p') r
+  | Until q' p' r, Delay g' => Until (combine q' (Delay g')) (combine p' (Delay g')) r
+  | Until q1' p1' r1,
+    Until q2' p2' r2        => Until (combine q1' q2') (combine p1' p2') (combine r1 r2)
+  | Ask f', Ask g'          => Ask (fun a => combine (f' a) (g' a))
+  | Delay f', Ask g'        => Ask (fun a => combine (Delay f') (g' a))
+  | Ask f', Delay g'        => Ask (fun a => combine (f' a) (Delay g'))
+  | f', Stop Success        => f'
+  | Stop Success, g'        => g'
   end.
 
 (* Implements "or" behavior *)
-CoFixpoint selectEff (f g : Eff Result) : Eff Result :=
+Fixpoint select (f g : Eff Result) : Eff Result :=
   match f, g with
   | Stop (Failure e1),
     Stop (Failure e2)    => Stop (Failure (BothFailed e1 e2))
   | Stop Success, _      => Stop Success
   | _, Stop Success      => Stop Success
-  | Delay f', Delay g'   => Delay (selectEff f' g')
-
-  | DelayAsk f', DelayAsk g' => DelayAsk (selectQuery f' g')
-
-  | Delay f', DelayAsk (Ask g') =>
-    DelayAsk (Ask (fun a => selectEff f' (g' a)))
-
-  | DelayAsk (Ask f'), Delay g' =>
-    DelayAsk (Ask (fun a => selectEff (f' a) g'))
-
+  | Delay f', Delay g'   => Delay (select f' g')
+  | Ask f', Ask g'       => Ask (fun a => selectQuery (f' a) (g' a))
+  | Delay f', Ask g'     => Ask (fun a => select (Delay f') (g' a))
+  | Ask f', Delay g'     => Ask (fun a => select (f' a) (Delay g'))
   | Stop (Failure _), g' => g'
   | f', Stop (Failure _) => f'
-  end
-
-with selectQuery (f g : Query Result) : Query Result :=
-  match f, g with
-  | Ask f', Ask g' => Ask (fun a => selectEff (f' a) (g' a))
   end.
 
-Definition select (f g : Machine) : Machine :=
-  match f, g with
-  | Ready f', Ready g'         => Ready (selectEff f' g')
-  | Ready f', Waiting (Ask g') => Waiting (Ask (fun a => selectEff f' (g' a)))
-  | Waiting (Ask f'), Ready g' => Waiting (Ask (fun a => selectEff (f' a) g'))
-  | Waiting f', Waiting g'     => Waiting (selectQuery f' g')
-  end.
-
-Definition answer (m : Query Result) (x : a) : Eff Result :=
+Fixpoint step (m : Machine) (x : a) : Machine :=
   match m with
-  | Ask k => k x
-  end.
-
-(* Resolve any queries the machine may have, reducing it to an [Eff]. *)
-Definition resolve (m : Machine) (x : a) : Eff Result :=
-  match m with
-  | Ready (Stop x)     => Stop x
-  | Ready (Delay m)    => Delay m
-  | Ready (DelayAsk m) => DelayAsk m
-  | Waiting (Ask k)    => k x
-  end.
-
-Definition defer (m : Machine) : Eff Result :=
-  match m with
-  | Ready m   => Delay m
-  | Waiting q => DelayAsk q
-  end.
-
-Definition step (m : Machine) (x : a) : Machine :=
-  match m with
-  | Ready (Stop x)     => Ready (Stop x)
-  | Ready (Delay m)    => Ready m
-  | Ready (DelayAsk m) => Waiting m
-  | Waiting (Ask k)    => Ready (k x)
+  | Stop x    => Stop x
+  | Delay m   => m
+  | Until p q => select (step q x) (combine (step p x) (Delay m))
+  | Ask k     => step (k x) x
   end.
 
 Definition run (m : Machine) (xs : list a) : Machine :=
