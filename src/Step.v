@@ -84,6 +84,13 @@ Definition or (f g : Result) : Result :=
 
 Definition Machine := option a -> Result.
 
+Definition invert (r : Result) (e : Failed) :=
+  match r with
+  | Failure _  => Success
+  | Success    => Failure e
+  | Continue p => Continue (negate _ p)
+  end.
+
 Fixpoint compile (l : LTL a) : Machine := fun mx =>
   match l with
   | ⊤ => Success
@@ -97,12 +104,7 @@ Fixpoint compile (l : LTL a) : Machine := fun mx =>
   | Reject v =>
     match mx with
     | None   => Success
-    | Some x =>
-      match compile (v x) (Some x) with
-      | Failure _  => Success
-      | Success    => Failure (Rejected x)
-      | Continue p => Continue (negate _ p)
-      end
+    | Some x => invert (compile (v x) (Some x)) (Rejected x)
     end
 
   | p ∧ q => and (compile p mx) (compile q mx)
@@ -133,16 +135,14 @@ Definition step (m : Result) (x : a) : Result :=
   | r => r
   end.
 
-Definition and_then (r : Result) (s : LTL a -> Result) : Result :=
-  match r with
-  | Continue l => s l
-  | r => r
-  end.
-
 Fixpoint run (m : LTL a) (xs : list a) : Result :=
   match xs with
   | []      => compile m None
-  | x :: xs => and_then (compile m (Some x)) (fun l => run l xs)
+  | x :: xs =>
+    match compile m (Some x) with
+    | Continue l => run l xs
+    | r => r
+    end
   end.
 
 Definition passes (r : Result) : Prop :=
@@ -186,27 +186,15 @@ Proof.
   simpl in *; now intuition.
 Qed.
 
-Lemma run_reject p xs :
-  passes (run (¬ p) xs) <->
-  passes (match run p xs with
-          | Failure _  => Success
-          | Success    => Failure HitBottom
-          | Continue p => Continue (negate _ p)
-          end).
+Lemma run_invert p s e :
+  passes (run p s) <-> passes (invert (run (negate _ p) s) e).
 Proof.
-  generalize dependent p.
-  induction xs; simpl; intros;
-  unfold and_then, Basics.compose;
-  intuition auto;
-  try destruct (compile (p a0) Nothing) eqn:?;
-  try destruct (compile (p a0) (Just a0)) eqn:?;
-  try specialize (proj1 (IHxs _ _) H); intros;
-  intuition.
-  - induction p; intuition.
-  - admit.
-  - admit.
-  -
-Abort.
+  generalize dependent e.
+  generalize dependent s.
+  induction s, p; simpl in *; intuition auto.
+  simpl in H |- *; auto.
+  (* destruct (compile (v x) (Just x)); simpl; auto. *)
+Admitted.
 
 Lemma run_or p q xs :
   passes (run (p ∨ q) xs) <-> passes (run p xs) \/ passes (run q xs).
@@ -284,7 +272,7 @@ Proof.
       now apply run_and.
     pose (run_and q p []).
     simpl in *; intuition.
-  - simpl; unfold and_then; split; intros;
+  - simpl; split; intros;
     destruct (compile p (Some a0)) eqn:?;
     destruct (compile q (Some a0)) eqn:?; simpl in *;
     intuition auto.
@@ -330,6 +318,11 @@ Proof.
     now specialize (proj1 (H _ _) H2).
   - induction s.
       now intuition.
+    pose proof (run_invert (Reject v) a0 s).
+    simpl in *.
+    split; intros.
+      apply H0.
+
     admit.
   - split; intros.
       destruct H.
