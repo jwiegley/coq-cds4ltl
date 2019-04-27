@@ -73,7 +73,7 @@ Fixpoint matches (l : LTL) (s : Stream) {struct l} : Prop :=
 
   | Accept v =>
     match s with
-    | []      => False
+    | []      => True
     | x :: xs => matches (v x) s
     end
 
@@ -293,7 +293,7 @@ Proof.
   generalize dependent T.
   induction l; simpl; intros; auto;
   induction T; firstorder auto.
-Qed.
+Abort.
 
 Lemma not_neg (l : LTL) (T : Stream) :
   matches (¬ l) T -> ~ matches l T.
@@ -301,7 +301,7 @@ Proof.
   generalize dependent T.
   induction l; simpl in *; intro;
   induction T; firstorder auto.
-Qed.
+Abort.
 
 (* If this were true, we could show that negate respects ltl_equiv. *)
 Lemma neg_not (l : LTL) (T : Stream) :
@@ -596,7 +596,7 @@ Fixpoint series {a} (l : list (LTL a)) : LTL a :=
   match l with
   | nil => ⊤
   | [x] => x
-  | cons x xs => x ∧ Next (series xs)
+  | x :: xs => x ∧ Next (series xs)
   end.
 
 Section Examples.

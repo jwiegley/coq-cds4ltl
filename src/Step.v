@@ -91,7 +91,7 @@ Fixpoint compile (l : LTL a) : Machine := fun mx =>
 
   | Accept v =>
     match mx with
-    | None   => Failure EndOfTrace
+    | None   => Success
     | Some x => compile (v x) (Some x)
     end
   | Reject v =>
@@ -292,63 +292,22 @@ Proof.
       now intuition.
 Qed.
 
-Lemma foo l s :
-  matches a l s <-> passes (compile l (match s with
-                                       | [] => None
-                                       | x :: _ => Some x
-                                       end)).
-Proof.
-  generalize dependent s.
-  induction l; simpl in *; intros;
-  try specialize (H x); intuition auto.
-(*
-  - now apply (H s).
-  - now apply (H x xs).
-  - destruct (compile (v x) (Just x)) eqn:?;
-    simpl in *; intuition.
-    pose proof (proj2 (H x xs)).
-    setoid_rewrite Heqr in H1; simpl in *.
-    specialize (H1 I).
-    contradiction.
-  - destruct (compile (v x) (Just x)) eqn:?;
-    simpl in *; intuition.
-      pose proof (proj1 (H x xs)).
-      setoid_rewrite Heqr in H2; simpl in *.
-      intuition.
-    pose proof (proj2 (H x xs)).
-    setoid_rewrite Heqr in H2; simpl in *.
-    intuition.
-*)
-Admitted.
-
 Lemma run_correct (l : LTL a) (s : Stream a) :
   matches a l s <-> passes (run l s).
 Proof.
-(*
-  apply run_ind; simpl; split; intros; subst.
-  induction l, s using run_ind.
-  generalize dependent s.
-  induction l; simpl; intros.
-  induction
-  split; intros.
-    pose proof (proj1 (foo _ _) H).
-    generalize dependent l.
-    induction s; simpl in *; intros; auto.
-    destruct (compile l (Just a0)); simpl in *; auto.
-    admit.
-    admit.
-  destruct (compile l (Just a0)); simpl in *; auto.
-  apply IHs.
-  apply H.
-*)
   generalize dependent s.
   induction l; simpl; intros.
   - now induction s.
   - now induction s.
   - induction s; intuition.
     now specialize (proj1 (H _ _) H2).
-  - induction s.
-      now intuition.
+  - induction s; simpl in *; intuition.
+      destruct (compile (v a0) (Just a0)) eqn:?; simpl in *; auto.
+        admit.
+      apply H2, H; simpl.
+      now rewrite Heqr.
+    destruct (compile (v a0) (Just a0)) eqn:?; simpl in *; auto.
+      admit.
     admit.
   - split; intros.
       destruct H.
@@ -391,7 +350,7 @@ Section Examples.
 Open Scope list_scope.
 Open Scope ltl_scope.
 
-Goal passes _ (run _ (□ (num 3 → num 4)) [2; 3]).
+Goal passes _ (run _ (□ (num 3 → X (num 4))) [2; 3; 4]).
   simpl.
 Abort.
 
