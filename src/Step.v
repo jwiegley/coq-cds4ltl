@@ -84,13 +84,6 @@ Definition or (f g : Result) : Result :=
 
 Definition Machine := option a -> Result.
 
-Definition invert (r : Result) (e : Failed) :=
-  match r with
-  | Failure _  => Success
-  | Success    => Failure e
-  | Continue p => Continue (negate _ p)
-  end.
-
 Fixpoint compile (l : LTL a) : Machine := fun mx =>
   match l with
   | ⊤ => Success
@@ -104,7 +97,12 @@ Fixpoint compile (l : LTL a) : Machine := fun mx =>
   | Reject v =>
     match mx with
     | None   => Success
-    | Some x => invert (compile (v x) (Some x)) (Rejected x)
+    | Some x =>
+      match compile (v x) (Some x) with
+      | Failure _  => Success
+      | Success    => Failure (Rejected x)
+      | Continue p => Continue (negate _ p)
+      end
     end
 
   | p ∧ q => and (compile p mx) (compile q mx)
@@ -112,7 +110,7 @@ Fixpoint compile (l : LTL a) : Machine := fun mx =>
 
   | X p   =>
     match mx with
-    | None   => Failure EndOfTrace
+    | None   => compile p None
     | Some _ => Continue p
     end
 
@@ -124,7 +122,7 @@ Fixpoint compile (l : LTL a) : Machine := fun mx =>
 
   | p R q =>
     match mx with
-    | None   => and (compile q None) (compile p None)
+    | None   => compile q None
     | Some x => and (compile q mx) (or (compile p mx) (Continue (p R q)))
     end
   end.
@@ -135,7 +133,7 @@ Definition step (m : Result) (x : a) : Result :=
   | r => r
   end.
 
-Fixpoint run (m : LTL a) (xs : list a) : Result :=
+Function run (m : LTL a) (xs : list a) : Result :=
   match xs with
   | []      => compile m None
   | x :: xs =>
@@ -185,16 +183,6 @@ Proof.
   try specialize (proj1 (IHxs _ _) H); intros;
   simpl in *; now intuition.
 Qed.
-
-Lemma run_invert p s e :
-  passes (run p s) <-> passes (invert (run (negate _ p) s) e).
-Proof.
-  generalize dependent e.
-  generalize dependent s.
-  induction s, p; simpl in *; intuition auto.
-  simpl in H |- *; auto.
-  (* destruct (compile (v x) (Just x)); simpl; auto. *)
-Admitted.
 
 Lemma run_or p q xs :
   passes (run (p ∨ q) xs) <-> passes (run p xs) \/ passes (run q xs).
@@ -261,17 +249,14 @@ Lemma run_release p q s :
   passes (run (p R q) s) <->
   let fix go s :=
       match s with
-      | [] => passes (run q s) /\ passes (run p s)
+      | [] => passes (run q s)
       | _ :: xs => passes (run q s) /\ (passes (run p s) \/ go xs)
       end in go s.
 Proof.
   generalize dependent p.
   generalize dependent q.
   induction s; intros.
-  - split; intros.
-      now apply run_and.
-    pose (run_and q p []).
-    simpl in *; intuition.
+  - now intuition.
   - simpl; split; intros;
     destruct (compile p (Some a0)) eqn:?;
     destruct (compile q (Some a0)) eqn:?; simpl in *;
@@ -307,9 +292,55 @@ Proof.
       now intuition.
 Qed.
 
+Lemma foo l s :
+  matches a l s <-> passes (compile l (match s with
+                                       | [] => None
+                                       | x :: _ => Some x
+                                       end)).
+Proof.
+  generalize dependent s.
+  induction l; simpl in *; intros;
+  try specialize (H x); intuition auto.
+(*
+  - now apply (H s).
+  - now apply (H x xs).
+  - destruct (compile (v x) (Just x)) eqn:?;
+    simpl in *; intuition.
+    pose proof (proj2 (H x xs)).
+    setoid_rewrite Heqr in H1; simpl in *.
+    specialize (H1 I).
+    contradiction.
+  - destruct (compile (v x) (Just x)) eqn:?;
+    simpl in *; intuition.
+      pose proof (proj1 (H x xs)).
+      setoid_rewrite Heqr in H2; simpl in *.
+      intuition.
+    pose proof (proj2 (H x xs)).
+    setoid_rewrite Heqr in H2; simpl in *.
+    intuition.
+*)
+Admitted.
+
 Lemma run_correct (l : LTL a) (s : Stream a) :
   matches a l s <-> passes (run l s).
 Proof.
+(*
+  apply run_ind; simpl; split; intros; subst.
+  induction l, s using run_ind.
+  generalize dependent s.
+  induction l; simpl; intros.
+  induction
+  split; intros.
+    pose proof (proj1 (foo _ _) H).
+    generalize dependent l.
+    induction s; simpl in *; intros; auto.
+    destruct (compile l (Just a0)); simpl in *; auto.
+    admit.
+    admit.
+  destruct (compile l (Just a0)); simpl in *; auto.
+  apply IHs.
+  apply H.
+*)
   generalize dependent s.
   induction l; simpl; intros.
   - now induction s.
@@ -318,11 +349,6 @@ Proof.
     now specialize (proj1 (H _ _) H2).
   - induction s.
       now intuition.
-    pose proof (run_invert (Reject v) a0 s).
-    simpl in *.
-    split; intros.
-      apply H0.
-
     admit.
   - split; intros.
       destruct H.
@@ -341,7 +367,9 @@ Proof.
       now right.
     apply run_or in H.
     now intuition.
-  - now induction s; intuition.
+  - split; intros;
+    induction s; intuition.
+    now apply IHl in H.
   - split; intros.
       apply run_until.
       simpl.
@@ -363,27 +391,13 @@ Section Examples.
 Open Scope list_scope.
 Open Scope ltl_scope.
 
-Definition sample :=
-  let formula :=
-      □ (ifThen (fun n => n =? 3) (fun n => ◇ (num (n + 5)))) in
-  let f0 := formula in
-  let (r1, f1) := step nat 1 f0 in
-  let (r2, f2) := step nat 2 f1 in
-  let (r3, f3) := step nat 3 f2 in
-  let (r4, f4) := step nat 4 f3 in
-  let (r5, f5) := step nat 5 f4 in
-  let (r6, f6) := step nat 6 f5 in
-  let (r7, f7) := step nat 7 f6 in
-  let (r8, f8) := step nat 8 f7 in
-  let (r9, _)  := step nat 9 f8 in
-  ([r1; r2; r3; r4; r5; r6; r7; r8; r9],
-   [f0; f1; f2; f3; f4; f5; f6; f7; f8]).
+Goal passes _ (run _ (□ (num 3 → num 4)) [2; 3]).
+  simpl.
+Abort.
 
-Goal True.
-  pose (fst sample).
-  pose (map (prune _) (snd sample)).
-  unfold sample in l, l0.
-  simpl in l, l0.
+Goal passes _ (run _ (□ (num 3 → ◇ (num 8)))
+                     [1; 2; 3; 4; 5; 6; 7; 8; 9]).
+  simpl.
 Abort.
 
 End Examples.

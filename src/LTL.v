@@ -88,7 +88,7 @@ Fixpoint matches (l : LTL) (s : Stream) {struct l} : Prop :=
 
   | X p =>
     match s with
-    | []      => False
+    | []      => matches p []
     | x :: xs => matches p xs
     end
 
@@ -102,7 +102,7 @@ Fixpoint matches (l : LTL) (s : Stream) {struct l} : Prop :=
   | p R q =>
     let fix go s :=
         match s with
-        | [] => matches q s /\ matches p s
+        | [] => matches q s
         | _ :: xs => matches q s /\ (matches p s \/ go xs)
         end in go s
   end.
