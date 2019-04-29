@@ -32,7 +32,6 @@ Inductive LTL : Type :=
   | Bottom
 
   | Accept (v : a -> LTL)
-  | Reject (v : a -> LTL)
 
   | And   (p q : LTL)
   | Or    (p q : LTL)
@@ -58,7 +57,6 @@ Fixpoint LTL_size (p : LTL) : nat :=
   | Top          => 1
   | Bottom       => 1
   | Accept v     => 1
-  | Reject v     => 1
   | And p q      => 1 + LTL_size p + LTL_size q
   | Or p q       => 1 + LTL_size p + LTL_size q
   | Next p       => 1 + LTL_size p
@@ -75,12 +73,6 @@ Fixpoint matches (l : LTL) (s : Stream) {struct l} : Prop :=
     match s with
     | []      => True
     | x :: xs => matches (v x) s
-    end
-
-  | Reject v =>
-    match s with
-    | []      => True
-    | x :: xs => ~ matches (v x) s
     end
 
   | p ∧ q => matches p s /\ matches q s
@@ -111,8 +103,7 @@ Function negate (l : LTL) : LTL :=
   match l with
   | ⊤        => ⊥
   | ⊥        => ⊤
-  | Accept v => Reject v
-  | Reject v => Accept v
+  | Accept v => Accept (negate ∘ v)
   | p ∧ q    => negate p ∨ negate q
   | p ∨ q    => negate p ∧ negate q
   | X p      => X (negate p)
@@ -139,7 +130,6 @@ Fixpoint expand (l : LTL) : LTL :=
   | ⊤        => l
   | ⊥        => l
   | Accept v => Accept (expand ∘ v)
-  | Reject v => Reject (expand ∘ v)
   | p ∧ q    => expand p ∧ expand q
   | p ∨ q    => expand p ∨ expand q
   | X p      => X (expand p)
@@ -162,7 +152,6 @@ Fixpoint shallow (l : LTL) : Prop :=
   | ⊤        => True
   | ⊥        => True
   | Accept v => True
-  | Reject v => True
   | p ∧ q    => shallow p /\ shallow q
   | p ∨ q    => shallow p /\ shallow q
   | X p      => True
@@ -178,7 +167,6 @@ Function prune (l : LTL) : LTL :=
   | ⊤        => l
   | ⊥        => l
   | Accept v => l
-  | Reject v => l
   | p ∧ q    => match prune p with
                 | ⊤ => prune q
                 | p => match prune q with
@@ -219,15 +207,6 @@ Qed.
 
 Global Program Instance Accept_Proper :
   Proper ((eq ==> ltl_equiv) ==> ltl_equiv) Accept.
-Next Obligation.
-  repeat intro; simpl.
-  unfold ltl_equiv in *.
-  destruct T; intuition;
-  constructor.
-Qed.
-
-Global Program Instance Reject_Proper :
-  Proper ((eq ==> ltl_equiv) ==> ltl_equiv) Reject.
 Next Obligation.
   repeat intro; simpl.
   unfold ltl_equiv in *.
@@ -287,31 +266,6 @@ Next Obligation.
   apply H; intros.
 Qed.
 
-Lemma not_contra (l : LTL) (T : Stream) :
-  matches l T -> matches (¬ l) T -> False.
-Proof.
-  generalize dependent T.
-  induction l; simpl; intros; auto;
-  induction T; firstorder auto.
-Abort.
-
-Lemma not_neg (l : LTL) (T : Stream) :
-  matches (¬ l) T -> ~ matches l T.
-Proof.
-  generalize dependent T.
-  induction l; simpl in *; intro;
-  induction T; firstorder auto.
-Abort.
-
-(* If this were true, we could show that negate respects ltl_equiv. *)
-Lemma neg_not (l : LTL) (T : Stream) :
-  ~ matches l T -> matches (¬ l) T.
-Proof.
-  generalize dependent T.
-  induction l; simpl in *; intro;
-  induction T; firstorder auto.
-Abort.
-
 Infix "≈" := equiv (at level 48).
 
 Lemma not_not (φ : LTL) : ¬¬ φ ≈ φ.
@@ -319,6 +273,9 @@ Proof.
   induction φ; simpl; intuition;
   try (now rewrite IHφ1, IHφ2);
   try (now rewrite IHφ).
+  apply Accept_Proper; repeat intro.
+  subst.
+  apply H.
 Qed.
 
 Ltac ltl :=
@@ -525,10 +482,6 @@ Proof.
     apply Accept_Proper.
     repeat intro; subst.
     now rewrite H.
-  - unfold Basics.compose.
-    apply Reject_Proper.
-    repeat intro; subst.
-    now rewrite H.
   - symmetry; apply expand_until.
   - symmetry; apply expand_release.
 Qed.
@@ -560,7 +513,6 @@ End LTL.
 Arguments Top {a}.
 Arguments Bottom {a}.
 Arguments Accept {a} v.
-Arguments Reject {a} v.
 Arguments And {a}.
 Arguments Or {a}.
 Arguments Next {a} p.

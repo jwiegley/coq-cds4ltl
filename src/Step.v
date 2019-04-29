@@ -94,16 +94,6 @@ Fixpoint compile (l : LTL a) : Machine := fun mx =>
     | None   => Success
     | Some x => compile (v x) (Some x)
     end
-  | Reject v =>
-    match mx with
-    | None   => Success
-    | Some x =>
-      match compile (v x) (Some x) with
-      | Failure _  => Success
-      | Success    => Failure (Rejected x)
-      | Continue p => Continue (negate _ p)
-      end
-    end
 
   | p ∧ q => and (compile p mx) (compile q mx)
   | p ∨ q => or  (compile p mx) (compile q mx)
@@ -301,14 +291,6 @@ Proof.
   - now induction s.
   - induction s; intuition.
     now specialize (proj1 (H _ _) H2).
-  - induction s; simpl in *; intuition.
-      destruct (compile (v a0) (Just a0)) eqn:?; simpl in *; auto.
-        admit.
-      apply H2, H; simpl.
-      now rewrite Heqr.
-    destruct (compile (v a0) (Just a0)) eqn:?; simpl in *; auto.
-      admit.
-    admit.
   - split; intros.
       destruct H.
       specialize (proj1 (IHl1 _) H); intros; clear IHl1 H.
@@ -341,7 +323,7 @@ Proof.
       induction s; intuition.
     apply run_release in H.
     induction s; intuition.
-Admitted.
+Qed.
 
 End Step.
 
