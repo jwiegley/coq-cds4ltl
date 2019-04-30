@@ -82,9 +82,7 @@ Definition or (f g : Result) : Result :=
   (* | Ask f', g'     => Ask (fun a => and (f' a) g') *)
   end.
 
-Definition Machine := option a -> Result.
-
-Fixpoint compile (l : LTL a) : Machine := fun mx =>
+Fixpoint compile (l : LTL a) : option a -> Result := fun mx =>
   match l with
   | ⊤ => Success
   | ⊥ => Failure HitBottom
