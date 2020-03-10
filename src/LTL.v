@@ -11,7 +11,7 @@ Require Import
   Hask.Data.Maybe.
 
 Require Import Equations.Equations.
-Require Import Equations.EqDec.
+(*Require Import Equations.EqDec.*)
 
 Open Scope program_scope.
 Open Scope list_scope.
