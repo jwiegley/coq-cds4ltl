@@ -1,4 +1,3 @@
 -R src Top
-src/Same_set.v
 src/LTL.v
-src/Match.v
+src/Step.v
