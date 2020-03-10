@@ -1,74 +1,130 @@
-args@{ packages ? "coqPackages_8_9"
+args@{ packages ? "coqPackages_8_10"
 
-, rev      ? "d73f16d6767e99675682f822dac3017bf9af1e83"
-, sha256   ? "1b5wix9kr5s3hscpl425si0zw00zzijc9xrcph6l2myh4n5nvcm0"
+, rev      ? "1fe82110febdf005d97b2927610ee854a38a8f26"
+, sha256   ? "08x6saa7iljyq2m0j6p9phy0v17r3p8l7vklv7y7gvhdc7a85ppi"
 
 , pkgs     ? import (builtins.fetchTarball {
     url = "https://github.com/NixOS/nixpkgs/archive/${rev}.tar.gz";
     inherit sha256; }) {
     config.allowUnfree = true;
     config.allowBroken = false;
+    overlays = [
+      (self: super:
+       let
+         nixpkgs = { rev, sha256 }:
+           import (super.fetchFromGitHub {
+             owner = "NixOS";
+             repo  = "nixpkgs";
+             inherit rev sha256;
+           }) { config.allowUnfree = true; };
+
+         known-good-20191113_070954 = nixpkgs {
+           rev    = "620124b130c9e678b9fe9dd4a98750968b1f749a";
+           sha256 = "0xgy2rn2pxii3axa0d9y4s25lsq7d9ykq30gvg2nzgmdkmy375rr";
+         };
+       in
+       {
+         inherit (known-good-20191113_070954) shared-mime-info;
+       })
+    ];
   }
 }:
 
 with pkgs.${packages};
 
 let
-  coq-haskell = import ../coq-haskell args;
-  # coq-haskell = pkgs.stdenv.mkDerivation rec {
-  #   name = "coq${coq.coq-version}-haskell-${version}";
-  #   version = "1.0";
+  coq-haskell = pkgs.stdenv.mkDerivation rec {
+    name = "coq${coq.coq-version}-haskell-${version}";
+    version = "1.0";
 
-  #   src = pkgs.fetchFromGitHub {
-  #     owner = "jwiegley";
-  #     repo = "coq-haskell";
-  #     rev = "83a5db4b5741745ec9d522543d3616c308dfb542";
-  #     sha256 = "0310sbf6i8zfvrw5mqaifnh4rdl0j64gj3j20ak533xpq1fpbd4v";
-  #     # date = 2018-10-04T18:17:03-07:00;
-  #   };
+    src = pkgs.fetchFromGitHub {
+      owner = "jwiegley";
+      repo = "coq-haskell";
+      rev = "e68b56e938f134865c837b5c090eb316867451fa";
+      sha256 = "00ybvx42pax5h3s5bg623zvbh8lix7ccc6nmfzb7awsqwdcg9aan";
+      # date = 2020-02-10T15:47:15-08:00;
+    };
 
-  #   buildInputs = [ coq.ocaml coq.camlp5 coq.findlib coq ssreflect ];
+    buildInputs = [ coq.ocaml coq.camlp5 coq.findlib coq ];
 
-  #   preBuild = "coq_makefile -f _CoqProject -o Makefile";
+    preBuild = "coq_makefile -f _CoqProject -o Makefile";
 
-  #   installFlags = "COQLIB=$(out)/lib/coq/${coq.coq-version}/";
+    installFlags = "COQLIB=$(out)/lib/coq/${coq.coq-version}/";
 
-  #   meta = with pkgs.stdenv.lib; {
-  #     homepage = https://github.com/jwiegley/coq-haskell;
-  #     description = "A library for Haskell users writing Coq programs";
-  #     maintainers = with maintainers; [ jwiegley ];
-  #     platforms = coq.meta.platforms;
-  #   };
+    meta = with pkgs.stdenv.lib; {
+      homepage = https://github.com/jwiegley/coq-haskell;
+      description = "A library for Haskell users writing Coq programs";
+      maintainers = with maintainers; [ jwiegley ];
+      platforms = coq.meta.platforms;
+    };
 
-  #   passthru = {
-  #     compatibleCoqVersions = v: builtins.elem v [ "8.5" "8.6" "8.7" "8.8" ];
-  #   };
-  # };
+    passthru = {
+      compatibleCoqVersions = v: builtins.elem v [ "8.5" "8.6" "8.7" "8.8" "8.9" "8.10" "8.11" ];
+    };
+  };
 
-  category-theory = import ../category-theory args;
-  # category-theory = pkgs.stdenv.mkDerivation rec {
-  #   name = "category-theory";
-  #   version = "1.0";
+  equations = pkgs.stdenv.mkDerivation rec {
 
-  #   src = pkgs.fetchFromGitHub {
-  #     owner = "jwiegley";
-  #     repo = "category-theory";
-  #     rev = "e204fee5b8662e414ecca13ca543fae3b19bd72a";
-  #     sha256 = "15hi0vmvm42qzsh5zzw78q2l5c8bf4nis2mjbannm0m96dpmszk0";
-  #     # date = 2018-10-05T10:50:15-07:00;
-  #   };
+    name = "coq${coq.coq-version}-equations-${version}";
+    version = "1.2.2pre";
 
-  #   buildInputs = [ coq coq.ocaml coq.camlp5 coq.findlib equations ];
-  #   enableParallelBuilding = true;
+    src =
+      if coq.coq-version == "8.11" then
+        pkgs.fetchFromGitHub {
+          owner = "mattam82";
+          repo = "Coq-Equations";
+          rev = "refs/heads/8.11";
+          sha256 = "1jywfhnxrjwzdsm52ys7db080cci98wjyv74kd78nc4i7d7niqgv";
+        }
+      else
+        pkgs.fetchFromGitHub {
+          owner = "mattam82";
+          repo = "Coq-Equations";
+          rev = "refs/heads/8.10";
+          sha256 = "0j3z4l5nrbyi9zbbyqkc6kassjanwld2188mwmrbqspaypm2ys68";
+        };
 
-  #   buildPhase = "make JOBS=$NIX_BUILD_CORES";
-  #   preBuild = "coq_makefile -f _CoqProject -o Makefile";
-  #   installFlags = "COQLIB=$(out)/lib/coq/${coq.coq-version}/";
+    buildInputs = with coq.ocamlPackages; [ ocaml camlp5 findlib coq ];
 
-  #   passthru = {
-  #     compatibleCoqVersions = v: builtins.elem v [ "8.6" "8.7" "8.8" ];
-  #  };
-  # };
+    configurePhase = "./configure.sh";
+
+    installFlags = "COQLIB=$(out)/lib/coq/${coq.coq-version}/";
+
+    meta = with pkgs.stdenv.lib; {
+      homepage = https://mattam82.github.io/Coq-Equations/;
+      description = "A plugin for Coq to add dependent pattern-matching";
+      maintainers = with maintainers; [ jwiegley ];
+      platforms = coq.meta.platforms;
+    };
+
+    passthru = {
+      compatibleCoqVersions = v: builtins.hasAttr v params;
+    };
+  };
+
+  category-theory = pkgs.stdenv.mkDerivation rec {
+    name = "category-theory";
+    version = "1.0";
+
+    src = pkgs.fetchFromGitHub {
+      owner = "jwiegley";
+      repo = "category-theory";
+      rev = "380ff60d34c306f7005babc3dade1d96b5eeb935";
+      sha256 = "1r4v5lm090i23kqa1ad39sgfph7pfl458kh8rahsh1mr6yl1cbv9";
+      # date = 2020-01-12T15:09:07-08:00;
+    };
+
+    buildInputs = [ coq coq.ocaml coq.camlp5 coq.findlib equations ];
+    enableParallelBuilding = true;
+
+    buildPhase = "make JOBS=$NIX_BUILD_CORES";
+    preBuild = "coq_makefile -f _CoqProject -o Makefile";
+    installFlags = "COQLIB=$(out)/lib/coq/${coq.coq-version}/";
+
+    passthru = {
+      compatibleCoqVersions = v: builtins.elem v [ "8.6" "8.7" "8.8" "8.9" "8.10" "8.11" ];
+   };
+  };
 
 in pkgs.stdenv.mkDerivation rec {
   name = "coq${coq.coq-version}-constructive-ltl-${version}";
@@ -81,7 +137,7 @@ in pkgs.stdenv.mkDerivation rec {
 
   buildInputs = [
     coq coq.ocaml coq.camlp5 coq.findlib
-    equations coq-haskell category-theory
+    coq-haskell category-theory equations
   ];
   enableParallelBuilding = true;
 
@@ -91,6 +147,6 @@ in pkgs.stdenv.mkDerivation rec {
 
   env = pkgs.buildEnv { name = name; paths = buildInputs; };
   passthru = {
-    compatibleCoqVersions = v: builtins.elem v [ "8.6" "8.7" "8.8" "8.9" ];
+    compatibleCoqVersions = v: builtins.elem v [ "8.6" "8.7" "8.8" "8.9" "8.10" "8.11" ];
  };
 }
