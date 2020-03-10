@@ -535,7 +535,7 @@ Delimit Scope ltl_scope with LTL.
 
 Notation "⊤"       := Top                 (at level 45) : ltl_scope.
 Notation "⊥"       := Bottom              (at level 45) : ltl_scope.
-Notation "¬ x"     := (negate _ x)          (at level 0)  : ltl_scope.
+Notation "¬ x"     := (negate _ x)        (at level 0)  : ltl_scope.
 Infix    "∧"       := And                 (at level 45) : ltl_scope.
 Infix    "∨"       := Or                  (at level 45) : ltl_scope.
 Notation "p → q"   := (¬ p ∨ (p ∧ q))%LTL (at level 45) : ltl_scope.
