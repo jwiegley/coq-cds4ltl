@@ -433,6 +433,14 @@ Proof. now ltl. Qed.
 Lemma and_until (ρ φ ψ : LTL) : (φ ∧ ψ) U ρ ≈ (φ U ρ) ∧ (ψ U ρ).
 Proof. now ltl. Qed.
 
+(*
+Lemma release_or (ρ φ ψ : LTL) : ρ R (φ ∨ ψ) ≈ (ρ R φ) ∨ (ρ R ψ).
+Proof. now ltl. Qed.
+
+Lemma and_release (ρ φ ψ : LTL) : (φ ∧ ψ) R ρ ≈ (φ R ρ) ∧ (ψ R ρ).
+Proof. now ltl. Qed.
+*)
+
 (** Special Temporal properties *)
 
 Lemma eventually_idempotent (φ : LTL) : ◇ ◇ φ ≈ ◇ φ.
