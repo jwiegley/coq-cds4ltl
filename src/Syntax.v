@@ -52,6 +52,7 @@ Notation "p 'R' q" := (Release p q)      (at level 45).
 Notation "◇ x"     := (⊤ U x)            (at level 0).
 Notation "□ x"     := (⊥ R x)            (at level 0).
 
+
 Fixpoint LTL_size (p : LTL) : nat :=
   match p with
   | Top          => 1

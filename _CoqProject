@@ -1,3 +1,5 @@
 -R src Top
-src/LTL.v
+src/Model.v
+src/Syntax.v
 src/Step.v
+src/Same_set.v
