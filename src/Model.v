@@ -1,7 +1,6 @@
 Require Import
   Program
   FunInd
-  Coq.Lists.List
   Coq.Relations.Relation_Definitions
   Coq.Classes.Equivalence
   Coq.Classes.Morphisms
@@ -26,75 +25,105 @@ Set Decidable Equality Schemes.
 
 Section LTL.
 
-Variable a : Type.              (* The type of entries in the trace *)
+Variable a : Type.
 
-(* jww (2021-01-15): What if this were simply f a for any Representable f? *)
-Definition Stream := nat -> a.
+CoInductive Stream := Cons : a -> Stream -> Stream.
 
-Definition stream_eq (s t : Stream) : Prop := forall n, s n = t n.
+CoInductive stream_eq : Stream -> Stream -> Prop :=
+  | Stream_eq : forall h t1 t2,
+      stream_eq t1 t2 -> stream_eq (Cons h t1) (Cons h t2).
+
+Definition frob (s : Stream) : Stream :=
+  match s with Cons h t => Cons h t end.
+
+Theorem frob_eq : forall (s : Stream), s = frob s.
+  destruct s; reflexivity.
+Qed.
+
+Definition head (s : Stream) : a :=
+  match s with Cons x _ => x end.
+
+Definition tail (s : Stream) : Stream :=
+  match s with Cons _ xs => xs end.
+
+Section stream_eq_coind.
+  Variable R : Stream -> Stream -> Prop.
+
+  Hypothesis Cons_case_hd : forall s1 s2, R s1 s2 -> head s1 = head s2.
+  Hypothesis Cons_case_tl : forall s1 s2, R s1 s2 -> R (tail s1) (tail s2).
+
+  Theorem stream_eq_coind : forall s1 s2, R s1 s2 -> stream_eq s1 s2.
+    cofix stream_eq_coind; destruct s1; destruct s2; intro.
+    generalize (Cons_case_hd _ _ H); intro Heq; simpl in Heq; rewrite Heq.
+    constructor.
+    apply stream_eq_coind.
+    apply (Cons_case_tl _ _ H).
+  Qed.
+End stream_eq_coind.
+
+Section stream_eq_onequant.
+  Variables B : Type.
+
+  Variables f g : B -> Stream.
+
+  Hypothesis Cons_case_hd : forall x, head (f x) = head (g x).
+  Hypothesis Cons_case_tl : forall x,
+    exists y, tail (f x) = f y /\ tail (g x) = g y.
+
+  Theorem stream_eq_onequant : forall x, stream_eq (f x) (g x).
+    intro.
+    apply (stream_eq_coind (fun s1 s2 => exists x, s1 = f x /\ s2 = g x));
+    firstorder; subst; auto.
+    now exists x.
+  Qed.
+End stream_eq_onequant.
 
 Program Instance stream_eq_Equivalence : Equivalence stream_eq.
 Next Obligation.
-  specialize (H n).
-  specialize (H0 n).
-  now rewrite H, H0.
+  apply (stream_eq_coind (fun x y => x = y)); intuition; now subst.
 Qed.
+Next Obligation.
+Admitted.
+Next Obligation.
+Admitted.
 
-Definition head (s : Stream) : a := s 0.
-
-Lemma head_Proper : Proper (stream_eq ==> eq) head.
-Proof.
-  repeat intro.
-  f_equal.
-  extensionality n.
-  apply H.
+Program Instance head_Proper : Proper (stream_eq ==> eq) head.
+Next Obligation.
+  unfold head.
+  destruct x, y.
+  inversion H; subst.
+  reflexivity.
 Qed.
-
-Definition tail (s : Stream) : Stream := fun n => s (S n).
 
 Program Instance tail_Proper : Proper (stream_eq ==> stream_eq) tail.
 Next Obligation.
-  repeat intro.
-  f_equal.
-  extensionality m.
-  apply H.
+  unfold tail.
+  destruct x, y.
+  inversion H; subst.
+  assumption.
 Qed.
 
-Definition cons (x : a) (s : Stream) : Stream := fun n =>
-  match n with
-  | O => x
-  | S n' => s n'
-  end.
-
-Program Instance cons_Proper : Proper (eq ==> stream_eq ==> stream_eq) cons.
+Program Instance Cons_Proper : Proper (eq ==> stream_eq ==> stream_eq) Cons.
 Next Obligation.
-  repeat intro.
-  f_equal; auto.
-  extensionality m.
-  apply H.
+  now constructor.
 Qed.
 
-Lemma cons_inj x s y u : cons x s = cons y u -> x = y /\ s = u.
+Lemma cons_inj x s y u : Cons x s = Cons y u -> x = y /\ s = u.
 Proof.
-  unfold cons, stream_eq.
   intros.
-  split.
-  - now apply equal_f with (x0:=0) in H.
-  - extensionality n.
-    now apply equal_f with (x0:=S n) in H.
+  split; inversion H; subst; auto.
 Qed.
 
-Lemma head_cons x s : head (cons x s) = x.
-Proof. now unfold head, cons. Qed.
+Lemma head_cons x s : head (Cons x s) = x.
+Proof. now unfold head. Qed.
 
-Lemma tail_cons x s : tail (cons x s) = s.
-Proof. now unfold tail, cons. Qed.
+Lemma tail_cons x s : tail (Cons x s) = s.
+Proof. now unfold tail. Qed.
 
-Lemma cons_head_tail s : cons (head s) (tail s) = s.
+Lemma cons_head_tail s : Cons (head s) (tail s) = s.
 Proof.
-  unfold head, tail, cons.
-  extensionality n.
-  induction n; intuition.
+  unfold head, tail.
+  now destruct s.
 Qed.
 
 Definition LTL := Ensemble Stream.
@@ -118,23 +147,23 @@ Next Obligation.
     now setoid_rewrite H0.
 Qed.
 
-Lemma next_cons_inv (p : LTL) x s : next p (cons x s) <-> p s.
-Proof. now unfold next, tail, cons. Qed.
+Lemma next_cons_inv (p : LTL) x s : next p (Cons x s) <-> p s.
+Proof. now unfold next, tail. Qed.
 
 Lemma next_inv (p : LTL) (s : Stream) :
-  next p s -> exists x s', stream_eq s (cons x s') /\ p s'.
+  next p s -> exists x s', stream_eq s (Cons x s') /\ p s'.
 Proof.
   unfold next, tail.
   intros.
   exists (head s).
   exists (tail s).
   split.
-  - unfold stream_eq, cons, head, tail; intros.
-    now induction n.
+  - unfold head, tail; intros.
+    now destruct s.
   - exact H.
 Qed.
 
-Definition examine (P : a -> LTL) : LTL := fun s => P (s O) s.
+Definition examine (P : a -> LTL) : LTL := fun s => P (head s) s.
 
 Program Instance examine_Same_set :
   Proper ((@eq a ==> Same_set Stream) ==> Same_set Stream) examine.
@@ -142,13 +171,13 @@ Next Obligation.
   intros.
   unfold respectful in H.
   split; repeat intro; unfold In, examine in *;
-  specialize (H (x0 0) (x0 0) (reflexivity _));
+  specialize (H (head x0) (head x0) (reflexivity _));
   now apply H.
 Qed.
 
 Inductive until (p q : LTL) : LTL :=
   | until_hd s : q s -> until p q s
-  | until_tl x s : p (cons x s) -> until p q s -> until p q (cons x s).
+  | until_tl x s : p (Cons x s) -> until p q s -> until p q (Cons x s).
 
 Program Instance until_Same_set :
   Proper (Same_set Stream ==> Same_set Stream ==> Same_set Stream) until.
@@ -180,18 +209,15 @@ Proof.
 Qed.
 
 Lemma until_cons_inv (p q : LTL) x s :
-  until p q (cons x s) -> q (cons x s) \/ (p (cons x s) /\ until p q s).
+  until p q (Cons x s) -> q (Cons x s) \/ (p (Cons x s) /\ until p q s).
 Proof.
   intros.
   dependent induction H; intuition.
-  apply cons_inj in x.
-  destruct x; subst.
-  intuition.
 Qed.
 
 Inductive release (p q : LTL) : LTL :=
   | release_hd s : q s -> p s -> release p q s
-  | release_tl x s : q (cons x s) -> release p q s -> release p q (cons x s).
+  | release_tl x s : q (Cons x s) -> release p q s -> release p q (Cons x s).
 
 Program Instance release_Same_set :
   Proper (Same_set Stream ==> Same_set Stream ==> Same_set Stream) release.
@@ -220,7 +246,7 @@ Proof.
 Qed.
 
 Lemma release_cons_inv (p q : LTL) x s :
-  release p q (cons x s) -> q (cons x s) /\ (p (cons x s) \/ release p q s).
+  release p q (Cons x s) -> q (Cons x s) /\ (p (Cons x s) \/ release p q s).
 Proof.
   intros.
   dependent induction H; intuition;
@@ -329,6 +355,14 @@ Proof.
 Qed.
 
 Lemma not_until (φ ψ : LTL) : ¬ (φ U ψ) ≈ ¬φ R ¬ψ.
+Proof.
+  split; repeat intro; unfold In in *.
+  - destruct x.
+    right.
+    + intro.
+      apply H.
+      now left.
+    + admit.
 Admitted.
 
 Lemma not_release (φ ψ : LTL) : ¬ (φ R ψ) ≈ (¬φ U ¬ψ).
