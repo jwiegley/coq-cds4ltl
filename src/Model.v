@@ -90,6 +90,13 @@ Proof. now unfold head, cons. Qed.
 Lemma tail_cons x s : tail (cons x s) = s.
 Proof. now unfold tail, cons. Qed.
 
+Lemma cons_head_tail s : cons (head s) (tail s) = s.
+Proof.
+  unfold head, tail, cons.
+  extensionality n.
+  induction n; intuition.
+Qed.
+
 Definition LTL := Ensemble Stream.
 
 Definition next (p : LTL) : LTL := fun s => p (tail s).
@@ -289,7 +296,7 @@ Proof. split; repeat intro; auto. Qed.
 Lemma not_inj (φ ψ : LTL) : (φ ≈ ψ) -> ¬φ ≈ ¬ψ.
 Proof. intros; now rewrite H. Qed.
 
-Lemma until_is_not_release (φ ψ : LTL) : Included _ (φ U ψ) (¬ (¬φ R ¬ψ)).
+Lemma until_incl_not_release (φ ψ : LTL) : Included _ (φ U ψ) (¬ (¬φ R ¬ψ)).
 Proof.
   repeat intro.
   unfold In in *.
@@ -305,7 +312,7 @@ Proof.
       intuition.
 Qed.
 
-Lemma release_is_not_until (φ ψ : LTL) : Included _ (¬φ R ¬ψ) (¬ (φ U ψ)).
+Lemma release_incl_not_until (φ ψ : LTL) : Included _ (¬φ R ¬ψ) (¬ (φ U ψ)).
 Proof.
   repeat intro.
   unfold In in *.
@@ -322,21 +329,6 @@ Proof.
 Qed.
 
 Lemma not_until (φ ψ : LTL) : ¬ (φ U ψ) ≈ ¬φ R ¬ψ.
-Proof.
-  rewrite <- Complement_Complement.
-  apply not_inj.
-  split; repeat intro; unfold In in *.
-  - dependent induction H.
-    + dependent induction H0.
-      * contradiction.
-      * contradiction.
-    + apply release_inv in H1.
-      destruct H1.
-      destruct H2.
-      * contradiction.
-      * rewrite tail_cons in H2.
-        intuition.
-  - (* now need to prove ¬ (¬φ R ¬ψ) ≈ φ U ψ *)
 Admitted.
 
 Lemma not_release (φ ψ : LTL) : ¬ (φ R ψ) ≈ (¬φ U ¬ψ).
@@ -679,12 +671,71 @@ Lemma next_always (φ : LTL) : X (□ φ) ≈ □ (X φ).
 Proof. now rewrite next_release, next_bottom. Qed.
 
 Lemma until_or (ρ φ ψ : LTL) : ρ U (φ ∨ ψ) ≈ (ρ U φ) ∨ (ρ U ψ).
-Admitted.
+Proof.
+  split; repeat intro; unfold In in *.
+  - dependent induction H.
+    + destruct H.
+      * now left; left.
+      * now right; left.
+    + destruct IHuntil.
+      * now left; right.
+      * now right; right.
+  - destruct H.
+    + induction H.
+      * now left; left.
+      * now right.
+    + induction H.
+      * now left; right.
+      * now right.
+Qed.
 
 Lemma and_until (ρ φ ψ : LTL) : (φ ∧ ψ) U ρ ≈ (φ U ρ) ∧ (ψ U ρ).
-Admitted.
+Proof.
+  split; repeat intro; unfold In in *.
+  - dependent induction H.
+    + split.
+      * now left.
+      * now left.
+    + inversion H; subst; clear H.
+      destruct IHuntil.
+      unfold In in *.
+      * split.
+        ** now right.
+        ** now right.
+  - destruct H.
+    induction H.
+    + now left.
+    + apply until_cons_inv in H0.
+      destruct H0.
+      * now left.
+      * destruct H0.
+        right.
+        ** now split.
+        ** now apply IHuntil.
+Qed.
 
 Lemma release_or (ρ φ ψ : LTL) : ρ R (φ ∨ ψ) ≈ (ρ R φ) ∨ (ρ R ψ).
+Proof.
+  split; repeat intro; unfold In in *.
+  - destruct H.
+    + induction H.
+      * left; auto.
+        now left.
+      * right.
+        ** now left.
+    + admit.
+  - destruct H.
+    + induction H.
+      * left; auto.
+        now left.
+      * right.
+        ** now left.
+        ** exact IHrelease.
+    + induction H.
+      * left; auto.
+        now right.
+      * right; auto.
+        now right.
 Admitted.
 
 Lemma and_release (ρ φ ψ : LTL) : (φ ∧ ψ) R ρ ≈ (φ R ρ) ∧ (ψ R ρ).
@@ -694,7 +745,32 @@ Lemma eventually_or (φ ψ : LTL) : ◇ (φ ∨ ψ) ≈ (◇ φ) ∨ (◇ ψ).
 Proof. now rewrite until_or. Qed.
 
 Lemma always_and (φ ψ : LTL) : □ (φ ∧ ψ) ≈ (□ φ) ∧ (□ ψ).
-Admitted.
+Proof.
+  split; repeat intro; unfold In in *.
+  - split; unfold In in *.
+    + induction H; auto.
+      * contradiction.
+      * right.
+        ** now destruct H.
+        ** exact IHrelease.
+    + induction H; auto.
+      * contradiction.
+      * right.
+        ** now destruct H.
+        ** exact IHrelease.
+  - destruct H; unfold In in *.
+    induction H.
+    + contradiction.
+    + revert IHrelease.
+      apply release_cons_inv in H0.
+      destruct H0.
+      destruct H2.
+      * contradiction.
+      * intros.
+        right.
+        ** now split.
+        ** now apply IHrelease.
+Qed.
 
 (** Special Temporal properties *)
 
@@ -734,10 +810,41 @@ Qed.
 (** Expansion laws *)
 
 Lemma expand_until (φ ψ : LTL) : φ U ψ ≈ ψ ∨ (φ ∧ X (φ U ψ)).
-Admitted.
+Proof.
+  unfold next.
+  split; repeat intro; unfold In in *.
+  - dependent induction H.
+    + now left.
+    + right.
+      split.
+      * exact H.
+      * unfold In.
+        now rewrite tail_cons.
+  - destruct H.
+    + now left.
+    + destruct H; unfold In in *.
+      rewrite <- cons_head_tail.
+      right; auto.
+      now rewrite cons_head_tail.
+Qed.
 
 Lemma expand_release (φ ψ : LTL) : φ R ψ ≈ ψ ∧ (φ ∨ X (φ R ψ)).
-Admitted.
+Proof.
+  unfold next.
+  split; repeat intro; unfold In in *.
+  - dependent induction H.
+    + split; auto.
+      now left.
+    + split; auto.
+      right.
+      unfold In.
+      now rewrite tail_cons.
+  - destruct H, H0; unfold In in *.
+    + now left.
+    + rewrite <- cons_head_tail.
+      right; auto.
+      now rewrite cons_head_tail.
+Qed.
 
 Lemma expand_always (φ : LTL) : □ φ ≈ φ ∧ X (□ φ).
 Proof.
@@ -772,7 +879,41 @@ Proof.
 Qed.
 
 Lemma expand_weakUntil  (φ ψ : LTL) : φ W ψ ≈ ψ ∨ (φ ∧ X (φ W ψ)).
-Admitted.
+Proof.
+  unfold next, weakUntil.
+  split; repeat intro; unfold In in *.
+  - destruct H; unfold In in *.
+    dependent induction H.
+    + now left.
+    + destruct IHuntil.
+      * right.
+        split; auto.
+        unfold In in *.
+        rewrite tail_cons.
+        now left.
+      * right.
+        split; auto.
+        unfold In in *.
+        rewrite tail_cons.
+        now left.
+    + right.
+      split; auto.
+      * now apply always_is.
+      * unfold In.
+        right.
+        now apply always_tail.
+  - destruct H.
+    + now left; left.
+    + destruct H.
+      inversion H0; subst; clear H0.
+      unfold In in *.
+      * left.
+        rewrite <- cons_head_tail.
+        right; auto.
+        now rewrite cons_head_tail.
+      * right.
+        now apply expand_always.
+Qed.
 
 (** Absorption laws *)
 
