@@ -3,7 +3,7 @@ Require Import
   FunInd
   Coq.Relations.Relation_Definitions
   Coq.Classes.Equivalence
-  Coq.Classes.Morphisms
+  Coq.Classes.SetoidClass
   Coq.Classes.RelationClasses
   Coq.Classes.Morphisms
   Coq.Logic.Classical
@@ -78,16 +78,34 @@ Section stream_eq_onequant.
   Qed.
 End stream_eq_onequant.
 
-Program Instance stream_eq_Equivalence : Equivalence stream_eq.
+Global Program Instance stream_eq_Equivalence : Equivalence stream_eq.
 Next Obligation.
-  apply (stream_eq_coind (fun x y => x = y)); intuition; now subst.
+  repeat intro.
+  apply stream_eq_coind with (R:=fun s1 s2 => s1 = s2); intros; subst; auto.
 Qed.
 Next Obligation.
-Admitted.
+  repeat intro.
+  eapply stream_eq_coind
+    with (R := fun s1 s2 => stream_eq s2 s1); eauto; clear;
+    intros s1 s2 H0.
+  destruct H0; simpl; symmetry; auto.
+  destruct H0; simpl; auto.
+Qed.
 Next Obligation.
-Admitted.
+  repeat intro.
+  eapply stream_eq_coind
+    with (R := fun s1 s2 => exists s3, stream_eq s1 s3 /\ stream_eq s3 s2);
+    eauto; clear; intros ? ? [s3 [H0 H1] ].
+  - destruct H0; inversion H1; subst; simpl; etransitivity; eauto.
+  - destruct H0; inversion H1; subst; simpl; eexists; eauto.
+Qed.
 
-Program Instance head_Proper : Proper (stream_eq ==> eq) head.
+Global Instance Stream_Setoid `{Setoid a} : Setoid Stream := {
+  equiv := stream_eq;
+  setoid_equiv := stream_eq_Equivalence
+}.
+
+Global Program Instance head_Proper : Proper (stream_eq ==> eq) head.
 Next Obligation.
   unfold head.
   destruct x, y.
@@ -95,7 +113,7 @@ Next Obligation.
   reflexivity.
 Qed.
 
-Program Instance tail_Proper : Proper (stream_eq ==> stream_eq) tail.
+Global Program Instance tail_Proper : Proper (stream_eq ==> stream_eq) tail.
 Next Obligation.
   unfold tail.
   destruct x, y.
@@ -103,7 +121,7 @@ Next Obligation.
   assumption.
 Qed.
 
-Program Instance Cons_Proper : Proper (eq ==> stream_eq ==> stream_eq) Cons.
+Global Program Instance Cons_Proper : Proper (eq ==> stream_eq ==> stream_eq) Cons.
 Next Obligation.
   now constructor.
 Qed.
@@ -130,13 +148,13 @@ Definition LTL := Ensemble Stream.
 
 Definition next (p : LTL) : LTL := fun s => p (tail s).
 
-Program Instance next_Same_set:
+Global Program Instance next_Same_set:
   Proper (Same_set Stream ==> Same_set Stream) next.
 Next Obligation.
   split; repeat intro; unfold In, next in *; now apply H.
 Qed.
 
-Program Instance next_Same_set_iff (p : LTL) :
+Global Program Instance next_Same_set_iff (p : LTL) :
   Proper (stream_eq ==> iff) p ->
   Proper (stream_eq ==> iff) (next p).
 Next Obligation.
@@ -165,7 +183,7 @@ Qed.
 
 Definition examine (P : a -> LTL) : LTL := fun s => P (head s) s.
 
-Program Instance examine_Same_set :
+Global Program Instance examine_Same_set :
   Proper ((@eq a ==> Same_set Stream) ==> Same_set Stream) examine.
 Next Obligation.
   intros.
@@ -179,7 +197,7 @@ Inductive until (p q : LTL) : LTL :=
   | until_hd s : q s -> until p q s
   | until_tl x s : p (Cons x s) -> until p q s -> until p q (Cons x s).
 
-Program Instance until_Same_set :
+Global Program Instance until_Same_set :
   Proper (Same_set Stream ==> Same_set Stream ==> Same_set Stream) until.
 Next Obligation.
   intros.
@@ -194,7 +212,7 @@ Next Obligation.
       now apply H.
 Qed.
 
-Program Instance until_Same_set_iff (p q : LTL) :
+Global Program Instance until_Same_set_iff (p q : LTL) :
   Proper (stream_eq ==> iff) p ->
   Proper (stream_eq ==> iff) q ->
   Proper (stream_eq ==> iff) (until p q).
@@ -208,6 +226,18 @@ Proof.
   dependent induction H; intuition.
 Qed.
 
+Lemma not_until_inv (p q : LTL) s :
+  ~ (until p q s) -> ~ (q s \/ (p s /\ until p q (tail s))).
+Proof.
+  repeat intro.
+  apply H.
+  destruct H0.
+  - now left.
+  - rewrite <- cons_head_tail.
+    right; intuition.
+    now rewrite cons_head_tail.
+Qed.
+
 Lemma until_cons_inv (p q : LTL) x s :
   until p q (Cons x s) -> q (Cons x s) \/ (p (Cons x s) /\ until p q s).
 Proof.
@@ -215,11 +245,82 @@ Proof.
   dependent induction H; intuition.
 Qed.
 
+Lemma not_until_cons_inv (p q : LTL) x s :
+  ~ (until p q (Cons x s)) -> ~ (q (Cons x s) \/ (p (Cons x s) /\ until p q s)).
+Proof.
+  repeat intro.
+  apply H.
+  destruct H0.
+  - now left.
+  - right; intuition.
+Qed.
+
+Lemma not_or_ (φ ψ : Prop) : ~ (φ \/ ψ) <-> ~ φ /\ ~ ψ.
+Proof.
+  split; intros.
+  - split; intro.
+    + apply H.
+      now left.
+    + apply H.
+      now right.
+  - destruct H.
+    intro.
+    destruct H1.
+    + contradiction.
+    + contradiction.
+Qed.
+
+Lemma not_and_ (φ ψ : Prop) : ~ (φ /\ ψ) <-> ~ φ \/ ~ ψ.
+Proof.
+  split; intros.
+  - apply NNPP.
+    intro.
+    apply H.
+    split.
+    + apply not_or_ in H0.
+      firstorder.
+    + apply not_or_ in H0.
+      firstorder.
+  - destruct H.
+    intro.
+    + now apply H.
+    + intro.
+      now apply H.
+Qed.
+
+Lemma not_until_ind :
+  forall (p q : LTL) (P : Stream -> Prop),
+    (forall (x : a) (s : Stream),
+        ~ q (Cons x s)
+          -> ~ (p (Cons x s) /\ until p q s)
+          -> P s
+          -> P (Cons x s)) ->
+    forall s : Stream, ~ until p q s -> P s.
+Proof.
+  intros.
+  destruct s.
+  apply H; auto.
+  - intro.
+    apply H0.
+    now left.
+  - apply not_until_cons_inv in H0.
+    apply not_or_ in H0.
+    destruct H0.
+    apply not_and_ in H1.
+    destruct H1.
+    + intro.
+      apply H1.
+      intuition.
+    + intro.
+      destruct H2.
+      contradiction.
+Abort.
+
 Inductive release (p q : LTL) : LTL :=
   | release_hd s : q s -> p s -> release p q s
   | release_tl x s : q (Cons x s) -> release p q s -> release p q (Cons x s).
 
-Program Instance release_Same_set :
+Global Program Instance release_Same_set :
   Proper (Same_set Stream ==> Same_set Stream ==> Same_set Stream) release.
 Next Obligation.
   intros.
@@ -354,15 +455,15 @@ Proof.
       intuition.
 Qed.
 
+Lemma PPNN : forall p : Prop, p -> ~ ~ p.
+Proof. firstorder. Qed.
+
 Lemma not_until (φ ψ : LTL) : ¬ (φ U ψ) ≈ ¬φ R ¬ψ.
 Proof.
   split; repeat intro; unfold In in *.
-  - destruct x.
-    right.
-    + intro.
-      apply H.
-      now left.
-    + admit.
+  - admit.
+  - apply release_incl_not_until in H.
+    contradiction.
 Admitted.
 
 Lemma not_release (φ ψ : LTL) : ¬ (φ R ψ) ≈ (¬φ U ¬ψ).
