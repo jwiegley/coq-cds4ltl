@@ -208,17 +208,24 @@ Ltac solve :=
      | [ |- _ ≈ _ ] => split; repeat intro
 
      | [ H : (_ ∧ _) _ |- _ ] =>
-       let H' := fresh "H" in destruct H as [H H']
+       let H1 := fresh "H" in
+       let H2 := fresh "H" in inversion H as [H1 H2]; subst; clear H
      | [ |- (_ ∧ _) _ ] => split
 
      | [ H : (_ ∨ _) _ |- _ ] =>
-       let H' := fresh "H" in destruct H as [H|H]
+       let H1 := fresh "H" in inversion H as [H1|H1]; subst; clear H
      | [ H : ?P _ |- (?P ∨ _) _ ] => now left
      | [ H : ?P _ |- (_ ∨ ?P) _ ] => now right
      | [ H : ?P _ |- ((?P ∨ _) ∨ _) _ ] => now left; left
      | [ H : ?P _ |- ((_ ∨ ?P) ∨ _) _ ] => now left; right
      | [ H : ?P _ |- (_ ∨ (?P ∨ _)) _ ] => now right; left
      | [ H : ?P _ |- (_ ∨ (_ ∨ ?P)) _ ] => now right; right
+     | [ H : ¬ ?P _ |- (¬ ?P ∨ _) _ ] => now left
+     | [ H : ¬ ?P _ |- (_ ∨ ¬ ?P) _ ] => now right
+     | [ H : ¬ ?P _ |- ((¬ ?P ∨ _) ∨ _) _ ] => now left; left
+     | [ H : ¬ ?P _ |- ((_ ∨ ¬ ?P) ∨ _) _ ] => now left; right
+     | [ H : ¬ ?P _ |- (_ ∨ (¬ ?P ∨ _)) _ ] => now right; left
+     | [ H : ¬ ?P _ |- (_ ∨ (_ ∨ ¬ ?P)) _ ] => now right; right
 
      | [ H1 : ?P _, H2 : ?Q _ |- ((?P ∧ ?Q) ∨ _) _ ] => left
      | [ H1 : ?P _, H2 : ?Q _ |- (_ ∨ (?P ∧ ?Q)) _ ] => right
@@ -227,14 +234,16 @@ Ltac solve :=
      | [ H : ¬ (_ ∧ _) _ |- _ ] => apply not_and in H
 
      | [ H : _ /\ _ |- _ ] =>
-       let H' := fresh "H" in destruct H as [H H']
+       let H1 := fresh "H" in
+       let H2 := fresh "H" in inversion H as [H1 H2]; subst; clear H
      | [ |- _ /\ _ ] => split
 
      | [ H : _ \/ _ |- _ ] =>
-       let H' := fresh "H" in destruct H as [H|H]
+       let H1 := fresh "H" in inversion H as [H1|H1]; subst; clear H
 
      | [ H : (_ ↔ _) _ |- _ ] =>
-       let H' := fresh "H" in destruct H as [H H']
+       let H1 := fresh "H" in
+       let H2 := fresh "H" in inversion H as [H1 H2]; subst; clear H
      | [ |- (_ ↔ _) _ ] => split
 
      | [ |- _ -> _ ] => intro
@@ -243,7 +252,8 @@ Ltac solve :=
      | [ H : ?P ≈ ?Q |- _ ] => rewrite H in *; clear H
 
      | [ H : _ <-> _ |- _ ] =>
-       let H' := fresh "H" in destruct H as [H H']
+       let H1 := fresh "H" in
+       let H2 := fresh "H" in inversion H as [H1 H2]; subst; clear H
      | [ |- _ <-> _ ] => split
 
      | [ H1 : ?P, H2 : ~ ?P |- _ ] => contradiction
@@ -269,14 +279,20 @@ Ltac solve :=
      try rewrite !Complement_Complement in *;
      try unshelve intuition eauto;
      try unshelve firstorder eauto;
-     try unshelve eauto).
+     try unshelve eauto;
+     try (now left);
+     try (now right);
+     try (now left; left);
+     try (now left; right);
+     try (now right; left);
+     try (now right; right)).
 
 Lemma law_1 : ¬(⊤) ≈ ⊥.
 Proof. now solve. Qed.
 Lemma law_2 : ¬(⊥) ≈ ⊤.
 Proof. now solve. Qed.
 Lemma law_3 : ¬¬ φ ≈ φ.
-Proof. solve. Qed.
+Proof. now solve. Qed.
 Lemma law_4 : (φ ≈ ψ) -> ¬ φ ≈ ¬ ψ.
 Proof. intro; now rewrite H. Qed.
 Lemma law_5 : φ ∨ (ψ ∨ χ) ≈ (φ ∨ ψ) ∨ χ.
@@ -392,7 +408,7 @@ Proof.
   - right.
     unfold In.
     now exists x0.
-  - exists (Cons (head H) H).
+  - exists (Cons (head x) x).
     now rewrite tail_cons.
 Qed.
 Lemma law_43 : ◇□◇ φ ≈ □◇ φ.
@@ -409,13 +425,13 @@ Lemma law_48 : ◯◇□ φ ≈ ◇□ φ.
 Proof. now solve. Qed.
 
 Lemma law_49 : ◯ (φ → ψ) ≈ ◯ φ → ◯ ψ.
-Proof. Fail now solve. Abort.
+Proof. solve. Qed.
 Lemma law_50 : ◯ (φ ∧ ψ) ≈ ◯ φ ∧ ◯ ψ.
-Proof. Fail now solve. Abort.
+Proof. now solve. Qed.
 Lemma law_51 : ◯ (φ ∨ ψ) ≈ ◯ φ ∨ ◯ ψ.
-Proof. Fail now solve. Abort.
+Proof. now solve. Qed.
 Lemma law_52 : ◯ (φ ↔ ψ) ≈ ◯ φ ↔ ◯ ψ.
-Proof. Fail now solve. Abort.
+Proof. now solve. Qed.
 Lemma law_53 : □ (φ ∧ ψ) ≈ □ φ ∧ □ ψ.
 Proof. Fail now solve. Abort.
 Lemma law_54 : □ (φ ∨ ψ) ≉ □ φ ∨ □ ψ.
@@ -489,9 +505,9 @@ Proof. Fail now solve. Abort.
 Lemma law_88 : forall s, (◇ φ → ◇ ψ) s -> ◇ (φ → ψ) s.
 Proof. Fail now solve. Abort.
 Lemma law_89 : forall s, ◇ (φ ∧ ψ) s -> (◇ φ ∧ ◇ ψ) s.
-Proof. Fail now solve. Abort.
+Proof. now solve. Qed.
 Lemma law_90 : forall s, □◇ (φ ∧ ψ) s -> (□◇ φ ∧ □◇ ψ) s.
-Proof. Fail now solve. Abort.
+Proof. now solve. Qed.
 Lemma law_91 : forall s, □◇ (φ ∨ ψ) s -> (□◇ φ ∨ □◇ ψ) s.
 Proof. Fail now solve. Abort.
 Lemma law_92 : forall s, ◇□ (φ ∧ ψ) s -> (◇□ φ ∧ ◇□ ψ) s.
@@ -605,11 +621,11 @@ Proof. Fail now solve. Abort.
 Lemma law_146 : φ U (ψ ∨ χ) ≈ (φ U ψ) ∨ (φ U χ).
 Proof. Fail now solve. Abort.
 Lemma law_147 : forall s, ((φ U χ) ∨ (ψ U χ)) s -> ((φ ∨ ψ) U χ) s.
-Proof. Fail now solve. Abort.
+Proof. now solve. Qed.
 Lemma law_148 : (φ ∧ ψ) U χ ≈ (φ U χ) ∧ (ψ U χ).
 Proof. Fail now solve. Abort.
 Lemma law_149 : forall s, (φ U (ψ ∧ χ)) s -> ((φ U ψ) ∧ (φ U χ)) s.
-Proof. Fail now solve. Abort.
+Proof. now solve. Qed.
 Lemma law_150 : forall s, (φ U (ψ ∧ χ)) s -> (φ U (ψ U χ)) s.
 Proof. Fail now solve. Abort.
 Lemma law_151 : forall s, ((φ ∧ ψ) U χ) s -> ((φ U ψ) U χ) s.
@@ -728,17 +744,17 @@ Proof. Fail now solve. Abort.
 Lemma law_207 : ◇ φ W φ ≈ ◇ φ.
 Proof. Fail now solve. Abort.
 Lemma law_208 : □ φ ∧ (φ W ψ) ≈ □ φ.
-Proof. Fail now solve. Abort.
+Proof. now solve. Qed.
 Lemma law_209 : □ φ ∨ (φ W ψ) ≈ φ W ψ.
-Proof. Fail now solve. Abort.
+Proof. now solve. Qed.
 Lemma law_210 : φ W □ φ ≈ □ φ.
-Proof. Fail now solve. Abort.
+Proof. now solve. Qed.
 Lemma law_211 : □ φ ≈ φ W ⊥.
-Proof. Fail now solve. Abort.
+Proof. now solve. Qed.
 Lemma law_212 : ◇ φ ≈ ¬(¬ φ W ⊥).
 Proof. Fail now solve. Abort.
 Lemma law_213 : ⊤ W φ ≈ ⊤.
-Proof. Fail now solve. Abort.
+Proof. now solve. Qed.
 Lemma law_214 : φ W (⊤) ≈ ⊤.
 Proof. Fail now solve. Abort.
 Lemma law_215 : ⊥ W φ ≈ φ.
@@ -786,7 +802,7 @@ Proof. Fail now solve. Abort.
 Lemma law_236 : forall s, ((φ → ψ) W χ) s -> ((φ W χ) → (ψ W χ)) s.
 Proof. Fail now solve. Abort.
 Lemma law_237 : forall s, □ φ s -> (φ W ψ) s.
-Proof. Fail now solve. Abort.
+Proof. now solve. Qed.
 Lemma law_238 : forall s, □ φ s -> (◯ ψ → ◯ (φ W ψ)) s.
 Proof. Fail now solve. Abort.
 Lemma law_239 : forall s, □ φ s -> (◇ ψ → ◇ (φ W ψ)) s.
@@ -861,7 +877,23 @@ Proof. Fail now solve. Abort.
 Lemma law_273 : (φ ∧ ψ) R χ ≈ (φ R χ) ∧ (ψ R χ). (* ??? *)
 Proof. Fail now solve. Abort.
 Lemma law_274 : ◯ (φ R ψ) ≈ (◯ φ) R (◯ ψ).
-Proof. Fail now solve. Abort.
+Proof.
+  solve.
+  unfold Complement, not, In in *.
+  - apply H with (x0 := x0); intuition eauto.
+    + rewrite from_tail in H2.
+      contradiction.
+    + specialize (H1 _ H2).
+      rewrite from_tail in H3.
+      contradiction.
+  - apply H with (x0 := x0).
+    solve.
+    + rewrite tail_from in H2.
+      contradiction.
+    + specialize (H1 _ H2).
+      rewrite tail_from in H3.
+      contradiction.
+Qed.
 Lemma law_275 : □ ψ ≈ ⊥ R ψ.
 Proof. Fail now solve. Abort.
 

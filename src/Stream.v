@@ -37,7 +37,42 @@ Fixpoint from (i : nat) (s : Stream) : Stream :=
   | S n => match s with Cons _ xs => from n xs end
   end.
 
-Definition tail : Stream -> Stream := from 1.
+Lemma from_cons i x s : from (S i) (Cons x s) = from i s.
+Proof. now induction i. Qed.
+
+Definition tail (s : Stream) : Stream :=
+  match s with Cons _ xs => xs end.
+
+Lemma tail_from_1 s : tail s = from 1 s.
+Proof. reflexivity. Qed.
+
+Lemma tail_from_S i s : tail (from i s) = from (S i) s.
+Proof.
+  revert s.
+  induction i; intros; auto.
+  destruct s; auto.
+  rewrite from_cons.
+  rewrite IHi.
+  now rewrite from_cons.
+Qed.
+
+Lemma from_tail_S i s : from i (tail s) = from (S i) s.
+Proof.
+  revert s.
+  induction i; intros; auto.
+  destruct s; auto.
+Qed.
+
+Lemma from_tail i s : from i (tail s) = tail (from i s).
+Proof.
+  revert s.
+  induction i; intros; auto.
+  destruct s; auto.
+  now rewrite tail_from_S, from_tail_S.
+Qed.
+
+Lemma tail_from i s : tail (from i s) = from i (tail s).
+Proof. symmetry. now apply from_tail. Qed.
 
 Definition every (P : Stream -> Prop) (s : Stream) : Prop :=
   forall i, P (tail i).
