@@ -264,8 +264,9 @@ Ltac solve :=
      | [ H : ~ (exists _, ~ _) |- _ ] => apply not_ex_not_all in H
      | [ H : ~ (exists _, _)   |- _ ] => apply not_ex_all_not in H
      end;
-     unfold In, next, any, every in *;
+     unfold In, next, until, any, every, release, weakUntil in *;
      intros;
+     try rewrite !Complement_Complement in *;
      try unshelve intuition eauto;
      try unshelve firstorder eauto;
      try unshelve eauto).
@@ -275,7 +276,7 @@ Proof. now solve. Qed.
 Lemma law_2 : ¬(⊥) ≈ ⊤.
 Proof. now solve. Qed.
 Lemma law_3 : ¬¬ φ ≈ φ.
-Proof. solve. now apply NNPP. Qed.
+Proof. solve. Qed.
 Lemma law_4 : (φ ≈ ψ) -> ¬ φ ≈ ¬ ψ.
 Proof. intro; now rewrite H. Qed.
 Lemma law_5 : φ ∨ (ψ ∨ χ) ≈ (φ ∨ ψ) ∨ χ.
@@ -677,7 +678,7 @@ Proof. Fail now solve. Abort.
 Lemma law_182 : φ W ψ ≈ (φ U ψ) ∨ □ φ.
 Proof. now solve. Qed.
 Lemma law_183 : ¬(φ W ψ) ≈ ¬ ψ U (¬ φ ∧ ¬ ψ).
-Proof. Fail now Fail now solve. Abort.
+Proof. Fail now solve. Abort.
 Lemma law_184 : ¬(φ W ψ) ≈ (φ ∧ ¬ ψ) U (¬ φ ∧ ¬ ψ).
 Proof. Fail now solve. Abort.
 Lemma law_185 : ¬(φ U ψ) ≈ ¬ ψ W (¬ φ ∧ ¬ ψ).
@@ -734,7 +735,7 @@ Lemma law_210 : φ W □ φ ≈ □ φ.
 Proof. Fail now solve. Abort.
 Lemma law_211 : □ φ ≈ φ W ⊥.
 Proof. Fail now solve. Abort.
-Lemma law_212 : ◇ φ ≈ ¬ (¬ φ W ⊥).
+Lemma law_212 : ◇ φ ≈ ¬(¬ φ W ⊥).
 Proof. Fail now solve. Abort.
 Lemma law_213 : ⊤ W φ ≈ ⊤.
 Proof. Fail now solve. Abort.
@@ -848,7 +849,7 @@ Proof. Fail now solve. Abort.
 Lemma law_267 : φ R ψ ≈ ¬(¬ φ U ¬ ψ).
 Proof. now solve. Qed.
 Lemma law_268 : φ U ψ ≈ ¬(¬ φ R ¬ ψ).
-Proof. Fail now solve. Abort.
+Proof. now solve. Qed.
 Lemma law_269 : φ W ψ ≈ ψ R (ψ ∨ φ).
 Proof. Fail now solve. Abort.
 Lemma law_270 : φ R ψ ≈ ψ W (ψ ∧ φ).
