@@ -1,23 +1,16 @@
 Require Import
-  Program
-  FunInd
-  Coq.Relations.Relation_Definitions
   Coq.Classes.Equivalence
-  Coq.Classes.SetoidClass
-  Coq.Classes.RelationClasses
   Coq.Classes.Morphisms
+  Coq.Classes.RelationClasses
+  Coq.Classes.SetoidClass
   Coq.Logic.Classical
-  Coq.Sets.Ensembles
-  Coq.Sets.Classical_sets
+  Coq.Program.Program
+  Coq.Relations.Relation_Definitions
   Coq.Setoids.Setoid
-  Coq.omega.Omega
+  Coq.Sets.Classical_sets
+  Coq.Sets.Ensembles
+  Stream
   Same_set.
-
-Require Import Equations.Equations.
-(*Require Import Equations.EqDec.*)
-
-Open Scope program_scope.
-Open Scope list_scope.
 
 Generalizable All Variables.
 Set Transparent Obligations.
@@ -27,354 +20,20 @@ Section LTL.
 
 Variable a : Type.
 
-CoInductive Stream := Cons : a -> Stream -> Stream.
+Definition LTL := Ensemble (Stream a).
 
-CoInductive stream_eq : Stream -> Stream -> Prop :=
-  | Stream_eq : forall h t1 t2,
-      stream_eq t1 t2 -> stream_eq (Cons h t1) (Cons h t2).
+(** Boolean logic *)
 
-Definition frob (s : Stream) : Stream :=
-  match s with Cons h t => Cons h t end.
+Infix    "≈"     := (Same_set (Stream a))     (at level 100).
+Notation "⊤"     := (Full_set (Stream a))     (at level 45).
+Notation "⊥"     := (Empty_set (Stream a))    (at level 45).
+Infix    "∧"     := (Intersection (Stream a)) (at level 45).
+Infix    "∨"     := (Union (Stream a))        (at level 45).
+Notation "¬ p"   := (Complement (Stream a) p) (at level 0).
+Notation "p → q" := (¬ p ∨ (p ∧ q))           (at level 45).
 
-Theorem frob_eq : forall (s : Stream), s = frob s.
-  destruct s; reflexivity.
-Qed.
-
-Definition head (s : Stream) : a :=
-  match s with Cons x _ => x end.
-
-Definition tail (s : Stream) : Stream :=
-  match s with Cons _ xs => xs end.
-
-Section stream_eq_coind.
-  Variable R : Stream -> Stream -> Prop.
-
-  Hypothesis Cons_case_hd : forall s1 s2, R s1 s2 -> head s1 = head s2.
-  Hypothesis Cons_case_tl : forall s1 s2, R s1 s2 -> R (tail s1) (tail s2).
-
-  Theorem stream_eq_coind : forall s1 s2, R s1 s2 -> stream_eq s1 s2.
-    cofix stream_eq_coind; destruct s1; destruct s2; intro.
-    generalize (Cons_case_hd _ _ H); intro Heq; simpl in Heq; rewrite Heq.
-    constructor.
-    apply stream_eq_coind.
-    apply (Cons_case_tl _ _ H).
-  Qed.
-End stream_eq_coind.
-
-Section stream_eq_onequant.
-  Variables B : Type.
-
-  Variables f g : B -> Stream.
-
-  Hypothesis Cons_case_hd : forall x, head (f x) = head (g x).
-  Hypothesis Cons_case_tl : forall x,
-    exists y, tail (f x) = f y /\ tail (g x) = g y.
-
-  Theorem stream_eq_onequant : forall x, stream_eq (f x) (g x).
-    intro.
-    apply (stream_eq_coind (fun s1 s2 => exists x, s1 = f x /\ s2 = g x));
-    firstorder; subst; auto.
-    now exists x.
-  Qed.
-End stream_eq_onequant.
-
-Global Program Instance stream_eq_Equivalence : Equivalence stream_eq.
-Next Obligation.
-  repeat intro.
-  apply stream_eq_coind with (R:=fun s1 s2 => s1 = s2); intros; subst; auto.
-Qed.
-Next Obligation.
-  repeat intro.
-  eapply stream_eq_coind
-    with (R := fun s1 s2 => stream_eq s2 s1); eauto; clear;
-    intros s1 s2 H0.
-  destruct H0; simpl; symmetry; auto.
-  destruct H0; simpl; auto.
-Qed.
-Next Obligation.
-  repeat intro.
-  eapply stream_eq_coind
-    with (R := fun s1 s2 => exists s3, stream_eq s1 s3 /\ stream_eq s3 s2);
-    eauto; clear; intros ? ? [s3 [H0 H1] ].
-  - destruct H0; inversion H1; subst; simpl; etransitivity; eauto.
-  - destruct H0; inversion H1; subst; simpl; eexists; eauto.
-Qed.
-
-Global Instance Stream_Setoid `{Setoid a} : Setoid Stream := {
-  equiv := stream_eq;
-  setoid_equiv := stream_eq_Equivalence
-}.
-
-Global Program Instance head_Proper : Proper (stream_eq ==> eq) head.
-Next Obligation.
-  unfold head.
-  destruct x, y.
-  inversion H; subst.
-  reflexivity.
-Qed.
-
-Global Program Instance tail_Proper : Proper (stream_eq ==> stream_eq) tail.
-Next Obligation.
-  unfold tail.
-  destruct x, y.
-  inversion H; subst.
-  assumption.
-Qed.
-
-Global Program Instance Cons_Proper : Proper (eq ==> stream_eq ==> stream_eq) Cons.
-Next Obligation.
-  now constructor.
-Qed.
-
-Lemma cons_inj x s y u : Cons x s = Cons y u -> x = y /\ s = u.
-Proof.
-  intros.
-  split; inversion H; subst; auto.
-Qed.
-
-Lemma head_cons x s : head (Cons x s) = x.
-Proof. now unfold head. Qed.
-
-Lemma tail_cons x s : tail (Cons x s) = s.
-Proof. now unfold tail. Qed.
-
-Lemma cons_head_tail s : Cons (head s) (tail s) = s.
-Proof.
-  unfold head, tail.
-  now destruct s.
-Qed.
-
-Definition LTL := Ensemble Stream.
-
-Definition next (p : LTL) : LTL := fun s => p (tail s).
-
-Global Program Instance next_Same_set:
-  Proper (Same_set Stream ==> Same_set Stream) next.
-Next Obligation.
-  split; repeat intro; unfold In, next in *; now apply H.
-Qed.
-
-Global Program Instance next_Same_set_iff (p : LTL) :
-  Proper (stream_eq ==> iff) p ->
-  Proper (stream_eq ==> iff) (next p).
-Next Obligation.
-  split; repeat intro.
-  - unfold next in *.
-    now setoid_rewrite <- H0.
-  - unfold next in *.
-    now setoid_rewrite H0.
-Qed.
-
-Lemma next_cons_inv (p : LTL) x s : next p (Cons x s) <-> p s.
-Proof. now unfold next, tail. Qed.
-
-Lemma next_inv (p : LTL) (s : Stream) :
-  next p s -> exists x s', stream_eq s (Cons x s') /\ p s'.
-Proof.
-  unfold next, tail.
-  intros.
-  exists (head s).
-  exists (tail s).
-  split.
-  - unfold head, tail; intros.
-    now destruct s.
-  - exact H.
-Qed.
-
-Definition examine (P : a -> LTL) : LTL := fun s => P (head s) s.
-
-Global Program Instance examine_Same_set :
-  Proper ((@eq a ==> Same_set Stream) ==> Same_set Stream) examine.
-Next Obligation.
-  intros.
-  unfold respectful in H.
-  split; repeat intro; unfold In, examine in *;
-  specialize (H (head x0) (head x0) (reflexivity _));
-  now apply H.
-Qed.
-
-Inductive until (p q : LTL) : LTL :=
-  | until_hd s : q s -> until p q s
-  | until_tl x s : p (Cons x s) -> until p q s -> until p q (Cons x s).
-
-Global Program Instance until_Same_set :
-  Proper (Same_set Stream ==> Same_set Stream ==> Same_set Stream) until.
-Next Obligation.
-  intros.
-  split; repeat intro; unfold In in *.
-  - induction H1.
-    + left; now apply H0.
-    + right; auto.
-      now apply H.
-  - induction H1.
-    + left; now apply H0.
-    + right; auto.
-      now apply H.
-Qed.
-
-Global Program Instance until_Same_set_iff (p q : LTL) :
-  Proper (stream_eq ==> iff) p ->
-  Proper (stream_eq ==> iff) q ->
-  Proper (stream_eq ==> iff) (until p q).
-Next Obligation.
-Abort.
-
-Lemma until_inv (p q : LTL) s :
-  until p q s -> q s \/ (p s /\ until p q (tail s)).
-Proof.
-  intros.
-  dependent induction H; intuition.
-Qed.
-
-Lemma not_until_inv (p q : LTL) s :
-  ~ (until p q s) -> ~ (q s \/ (p s /\ until p q (tail s))).
-Proof.
-  repeat intro.
-  apply H.
-  destruct H0.
-  - now left.
-  - rewrite <- cons_head_tail.
-    right; intuition.
-    now rewrite cons_head_tail.
-Qed.
-
-Lemma until_cons_inv (p q : LTL) x s :
-  until p q (Cons x s) -> q (Cons x s) \/ (p (Cons x s) /\ until p q s).
-Proof.
-  intros.
-  dependent induction H; intuition.
-Qed.
-
-Lemma not_until_cons_inv (p q : LTL) x s :
-  ~ (until p q (Cons x s)) -> ~ (q (Cons x s) \/ (p (Cons x s) /\ until p q s)).
-Proof.
-  repeat intro.
-  apply H.
-  destruct H0.
-  - now left.
-  - right; intuition.
-Qed.
-
-Lemma not_or_ (φ ψ : Prop) : ~ (φ \/ ψ) <-> ~ φ /\ ~ ψ.
-Proof.
-  split; intros.
-  - split; intro.
-    + apply H.
-      now left.
-    + apply H.
-      now right.
-  - destruct H.
-    intro.
-    destruct H1.
-    + contradiction.
-    + contradiction.
-Qed.
-
-Lemma not_and_ (φ ψ : Prop) : ~ (φ /\ ψ) <-> ~ φ \/ ~ ψ.
-Proof.
-  split; intros.
-  - apply NNPP.
-    intro.
-    apply H.
-    split.
-    + apply not_or_ in H0.
-      firstorder.
-    + apply not_or_ in H0.
-      firstorder.
-  - destruct H.
-    intro.
-    + now apply H.
-    + intro.
-      now apply H.
-Qed.
-
-Lemma not_until_ind :
-  forall (p q : LTL) (P : Stream -> Prop),
-    (forall (x : a) (s : Stream),
-        ~ q (Cons x s)
-          -> ~ (p (Cons x s) /\ until p q s)
-          -> P s
-          -> P (Cons x s)) ->
-    forall s : Stream, ~ until p q s -> P s.
-Proof.
-  intros.
-  destruct s.
-  apply H; auto.
-  - intro.
-    apply H0.
-    now left.
-  - apply not_until_cons_inv in H0.
-    apply not_or_ in H0.
-    destruct H0.
-    apply not_and_ in H1.
-    destruct H1.
-    + intro.
-      apply H1.
-      intuition.
-    + intro.
-      destruct H2.
-      contradiction.
-Abort.
-
-Inductive release (p q : LTL) : LTL :=
-  | release_hd s : q s -> p s -> release p q s
-  | release_tl x s : q (Cons x s) -> release p q s -> release p q (Cons x s).
-
-Global Program Instance release_Same_set :
-  Proper (Same_set Stream ==> Same_set Stream ==> Same_set Stream) release.
-Next Obligation.
-  intros.
-  split; repeat intro; unfold In in *.
-  - induction H1.
-    + left.
-      * now apply H0.
-      * now apply H.
-    + right; auto.
-      now apply H0.
-  - induction H1.
-    + left.
-      * now apply H0.
-      * now apply H.
-    + right; auto.
-      now apply H0.
-Qed.
-
-Lemma release_inv (p q : LTL) s :
-  release p q s -> q s /\ (p s \/ release p q (tail s)).
-Proof.
-  intros.
-  dependent induction H; intuition.
-Qed.
-
-Lemma release_cons_inv (p q : LTL) x s :
-  release p q (Cons x s) -> q (Cons x s) /\ (p (Cons x s) \/ release p q s).
-Proof.
-  intros.
-  dependent induction H; intuition;
-  apply cons_inj in x;
-  destruct x; subst; auto.
-Qed.
-
-Infix    "≈"       := (Same_set Stream)     (at level 100).
-Notation "⊤"       := (Full_set Stream)     (at level 45).
-Notation "⊥"       := (Empty_set Stream)    (at level 45).
-Infix    "∧"       := (Intersection Stream) (at level 45).
-Infix    "∨"       := (Union Stream)        (at level 45).
-Notation "'X' x"   := (next x)              (at level 0).
-Notation "p 'U' q" := (until p q)           (at level 45).
-Notation "¬ p"     := (Complement Stream p) (at level 0).
-Notation "p → q"   := (¬ p ∨ (p ∧ q))       (at level 45).
-Notation "p 'R' q" := (release p q)         (at level 45).
-Notation "◇ x"     := (⊤ U x)               (at level 0).
-Notation "□ x"     := (⊥ R x)               (at level 0).
-
-Definition weakUntil (p q : LTL) := (p U q) ∨ □ p.
-Notation "p 'W' q" := (weakUntil p q) (at level 45).
-
-Definition strongRelease (p q : LTL) := (p R q) ∧ ◇ p.
-Notation "p 'M' q" := (strongRelease p q) (at level 45).
-
-(** Principles of negation *)
+Lemma not_inj (φ ψ : LTL) : (φ ≈ ψ) -> ¬φ ≈ ¬ψ.
+Proof. intros; now rewrite H. Qed.
 
 (* DeMorgan's laws *)
 Lemma not_or (φ ψ : LTL) : ¬ (φ ∨ ψ) ≈ ¬ φ ∧ ¬ ψ.
@@ -399,16 +58,16 @@ Qed.
 Lemma not_and (φ ψ : LTL) : ¬ (φ ∧ ψ) ≈ ¬ φ ∨ ¬ ψ.
 Proof.
   split.
-  - rewrite <- (Complement_Complement Stream).
+  - rewrite <- Complement_Complement.
     intros s NAB.
     intro H.
     apply NAB.
     split.
-    + rewrite <- (Complement_Complement Stream φ).
+    + rewrite <- (Complement_Complement _ φ).
       intro H0.
       apply H.
       left; auto.
-    + rewrite <- (Complement_Complement Stream ψ).
+    + rewrite <- (Complement_Complement _ ψ).
       intro H0.
       apply H.
       right; auto.
@@ -417,11 +76,124 @@ Proof.
     destruct NANB as [s NA | s NB]; auto.
 Qed.
 
+(** ◯ (or X) - next *)
+
+Definition next (p : LTL) : LTL := fun s => p (tail s).
+
+Notation "◯ p"   := (next p) (at level 0).
+Notation "'X' p" := (next p)              (at level 0).
+
+Global Program Instance next_Same_set:
+  Proper (Same_set (Stream a) ==> Same_set (Stream a)) next.
+Next Obligation.
+  split; repeat intro; unfold In, next in *; now apply H.
+Qed.
+
+Global Program Instance next_Same_set_iff (p : LTL) :
+  Proper (stream_eq a ==> iff) p ->
+  Proper (stream_eq a ==> iff) (next p).
+Next Obligation.
+  split; repeat intro.
+  - unfold next in *.
+    now setoid_rewrite <- H0.
+  - unfold next in *.
+    now setoid_rewrite H0.
+Qed.
+
+Lemma next_inv (p : LTL) (s : Stream a) :
+  next p s -> exists x s', stream_eq a s (Cons x s') /\ p s'.
+Proof.
+  unfold next, tail.
+  intros.
+  exists (head s).
+  exists (tail s).
+  split.
+  - unfold head, tail; intros.
+    now destruct s.
+  - exact H.
+Qed.
+
+Lemma next_cons_inv (p : LTL) x s : next p (Cons x s) <-> p s.
+Proof. now unfold next, tail. Qed.
+
+(** p U q - until *)
+
+Definition until (p q : LTL) : LTL :=
+  fun s => exists i, q (from i s) /\ forall k, k < i -> p (from k s).
+
+Notation "p 'U' q" := (until p q) (at level 45).
+
+Global Program Instance until_Same_set :
+  Proper (Same_set (Stream a) ==> Same_set (Stream a)
+                              ==> Same_set (Stream a)) until.
+Next Obligation.
+  intros.
+  split; repeat intro; unfold In in *.
+  - destruct H1, H1.
+    exists x2.
+    split.
+    + now apply H0.
+    + intros.
+      now apply H, H2.
+  - destruct H1, H1.
+    exists x2.
+    split.
+    + now apply H0.
+    + intros.
+      now apply H, H2.
+Qed.
+
+Global Program Instance until_Same_set_iff (p q : LTL) :
+  Proper (stream_eq a ==> iff) p ->
+  Proper (stream_eq a ==> iff) q ->
+  Proper (stream_eq a ==> iff) (until p q).
+Next Obligation.
+  unfold until.
+  split; repeat intro.
+  - destruct H2, H2.
+    exists x0.
+    split.
+    + now setoid_rewrite <- H1.
+    + intros.
+      setoid_rewrite <- H1.
+      now apply H3.
+  - destruct H2, H2.
+    exists x0.
+    split.
+    + now setoid_rewrite H1.
+    + intros.
+      setoid_rewrite H1.
+      now apply H3.
+Qed.
+
+Lemma until_inv (p q : LTL) s :
+  until p q s -> q s \/ (p s /\ until p q (tail s)).
+Proof.
+  intros.
+  dependent induction H; intuition.
+Admitted.
+
+Lemma until_cons_inv (p q : LTL) x s :
+  until p q (Cons x s) -> q (Cons x s) \/ (p (Cons x s) /\ until p q s).
+Proof.
+  intros.
+  dependent induction H; intuition.
+Admitted.
+
+Notation "□ p" := (every p) (at level 0).
+Notation "◇ p" := (any p) (at level 0).
+
+Definition weakUntil (p q : LTL) := (p U q) ∨ □ p.
+Notation "p 'W' q" := (weakUntil p q) (at level 45).
+
+(*************************************************************************
+ * Laws for the Linear Temporal Logic
+ *)
+
+(** Principles of negation *)
+
 Lemma not_next (φ : LTL) : ¬(X φ) ≈ X ¬φ.
 Proof. split; repeat intro; auto. Qed.
-
-Lemma not_inj (φ ψ : LTL) : (φ ≈ ψ) -> ¬φ ≈ ¬ψ.
-Proof. intros; now rewrite H. Qed.
 
 Lemma until_incl_not_release (φ ψ : LTL) : Included _ (φ U ψ) (¬ (¬φ R ¬ψ)).
 Proof.
@@ -454,9 +226,6 @@ Proof.
       rewrite tail_cons in H2.
       intuition.
 Qed.
-
-Lemma PPNN : forall p : Prop, p -> ~ ~ p.
-Proof. firstorder. Qed.
 
 Lemma not_until (φ ψ : LTL) : ¬ (φ U ψ) ≈ ¬φ R ¬ψ.
 Proof.
@@ -624,7 +393,7 @@ Proof.
   now intuition.
 Qed.
 
-Lemma always_cons (φ : LTL) x s : (□ φ) (cons x s) -> (□ φ) s.
+Lemma always_cons (φ : LTL) x s : (□ φ) (Cons x s) -> (□ φ) s.
 Proof.
   repeat intro.
   apply release_cons_inv in H.
@@ -637,13 +406,10 @@ Proof.
   dependent induction H; intuition.
 Qed.
 
-Lemma eventually_cons (φ : LTL) x s : (◇ φ) (cons x s) -> φ (cons x s) \/ (◇ φ) s.
+Lemma eventually_cons (φ : LTL) x s : (◇ φ) (Cons x s) -> φ (Cons x s) \/ (◇ φ) s.
 Proof.
   intros.
   dependent induction H; intuition.
-  apply cons_inj in x.
-  destruct x; subst.
-  intuition.
 Qed.
 
 Lemma eventually_always_until (φ ψ : LTL) s :
@@ -746,15 +512,13 @@ Proof.
 Qed.
 
 Lemma p_cons_tail (φ : LTL) s :
-  φ (tail s) <-> exists x u, s = cons x u /\ φ u.
+  φ (tail s) <-> exists x u, s = Cons x u /\ φ u.
 Proof.
   split; intros.
   - exists (head s).
     exists (tail s).
     split; auto.
-    extensionality n.
-    unfold cons, head, tail.
-    induction n; intuition.
+    now rewrite cons_head_tail.
   - destruct H, H, H; subst.
     now rewrite tail_cons.
 Qed.
@@ -851,14 +615,19 @@ Qed.
 
 Lemma release_or (ρ φ ψ : LTL) : ρ R (φ ∨ ψ) ≈ (ρ R φ) ∨ (ρ R ψ).
 Proof.
+  rewrite !release_until.
+  rewrite <- not_and.
+  rewrite until_or.
   split; repeat intro; unfold In in *.
-  - destruct H.
-    + induction H.
-      * left; auto.
-        now left.
-      * right.
-        ** now left.
-    + admit.
+  - dependent induction H.
+    + destruct H.
+      * now left; left.
+      * now right; left.
+    + inversion H; subst; clear H.
+      destruct IHrelease;
+      unfold In in *.
+      * now left; right.
+      * left. right; auto. left.
   - destruct H.
     + induction H.
       * left; auto.
@@ -1057,5 +826,63 @@ Admitted.
 
 Lemma asborb_always (φ : LTL) : □ ◇ □ φ ≈ ◇ □ φ.
 Admitted.
+
+(** Predicates on elements *)
+
+Definition examine (P : a -> LTL) : LTL := fun s => P (head s) s.
+
+Global Program Instance examine_Same_set :
+  Proper ((@eq a ==> Same_set Stream) ==> Same_set Stream) examine.
+Next Obligation.
+  intros.
+  unfold respectful in H.
+  split; repeat intro; unfold In, examine in *;
+  specialize (H (head x0) (head x0) (reflexivity _));
+  now apply H.
+Qed.
+
+Inductive release (p q : LTL) : LTL :=
+  | release_hd s : q s -> p s -> release p q s
+  | release_tl x s : q (Cons x s) -> release p q s -> release p q (Cons x s).
+
+Notation "p 'R' q" := (release p q) (at level 45).
+
+Global Program Instance release_Same_set :
+  Proper (Same_set Stream ==> Same_set Stream ==> Same_set Stream) release.
+Next Obligation.
+  intros.
+  split; repeat intro; unfold In in *.
+  - induction H1.
+    + left.
+      * now apply H0.
+      * now apply H.
+    + right; auto.
+      now apply H0.
+  - induction H1.
+    + left.
+      * now apply H0.
+      * now apply H.
+    + right; auto.
+      now apply H0.
+Qed.
+
+Lemma release_inv (p q : LTL) s :
+  release p q s -> q s /\ (p s \/ release p q (tail s)).
+Proof.
+  intros.
+  dependent induction H; intuition.
+Qed.
+
+Lemma release_cons_inv (p q : LTL) x s :
+  release p q (Cons x s) -> q (Cons x s) /\ (p (Cons x s) \/ release p q s).
+Proof.
+  intros.
+  dependent induction H; intuition;
+  apply cons_inj in x;
+  destruct x; subst; auto.
+Qed.
+
+Definition strongRelease (p q : LTL) := (p R q) ∧ ◇ p.
+Notation "p 'M' q" := (strongRelease p q) (at level 45).
 
 End LTL.

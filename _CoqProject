@@ -2,4 +2,6 @@
 src/Model.v
 src/Syntax.v
 src/Step.v
+src/Stream.v
+src/Lib.v
 src/Same_set.v
