@@ -433,29 +433,62 @@ Proof. now solve. Qed.
 Lemma law_52 : ◯ (φ ↔ ψ) ≈ ◯ φ ↔ ◯ ψ.
 Proof. now solve. Qed.
 Lemma law_53 : □ (φ ∧ ψ) ≈ □ φ ∧ □ ψ.
-Proof. Fail now solve. Abort.
+Proof.
+  solve;
+  specialize (H i);
+  now solve.
+Qed.
 Lemma law_54 : □ (φ ∨ ψ) ≉ □ φ ∨ □ ψ.
-Proof. Fail now solve. Abort.
+Proof. Fail now solve. Abort.   (* appears unsolvable *)
 Lemma law_55 : φ ∨ ◇ φ ≈ ◇ φ.
-Proof. Fail now solve. Abort.
+Proof.
+  solve.
+  - now exists (Cons (head x) x).
+  - now right; exists x0.
+Qed.
 Lemma law_56 : ◇ φ ∧ φ ≈ φ.
-Proof. Fail now solve. Abort.
+Proof.
+  solve.
+  now exists (Cons (head x) x).
+Qed.
 Lemma law_57 : ◇ (φ ∧ ψ) ≉ ◇ φ ∧ ◇ ψ.
-Proof. Fail now solve. Abort.
+Proof. Fail now solve. Abort.   (* appears unsolvable *)
 Lemma law_58 : ◇ (φ ∨ ψ) ≉ ◇ φ ∨ ◇ ψ.
-Proof. Fail now solve. Abort.
+Proof. Fail now solve. Abort.   (* appears unsolvable *)
 Lemma law_59 : φ ∧ □ φ ≈ □ φ.
-Proof. Fail now solve. Abort.
+Proof.
+  solve.
+  now specialize (H (Cons (head x) x)).
+Qed.
 Lemma law_60 : □ φ ∨ φ ≈ φ.
-Proof. Fail now solve. Abort.
+Proof.
+  solve.
+  now specialize (H1 (Cons (head x) x)).
+Qed.
 Lemma law_61 : ◇ φ ∧ □ φ ≈ □ φ.
 Proof. now solve. Qed.
 Lemma law_62 : □ φ ∨ ◇ φ ≈ ◇ φ.
-Proof. Fail now solve. Abort.
+Proof.
+  solve.
+  now right; exists x0.
+Qed.
 Lemma law_63 : ◇□ (φ ∧ ψ) ≈ ◇□ φ ∧ ◇□ ψ.
-Proof. Fail now solve. Abort.
+Proof.
+  solve; exists x; intros.
+  - now destruct (H i).
+  - now destruct (H i).
+  - now split; intuition.
+Qed.
 Lemma law_64 : □◇ (φ ∨ ψ) ≈ □◇ φ ∨ □◇ ψ.
-Proof. Fail now solve. Abort.
+Proof.
+  solve.
+  - left; intro.
+    now exists x0.
+  - right; intro.
+    now exists x0.
+  - now exists x0; left.
+  - now exists x0; right.
+Qed.
 Lemma law_65 : ◇□ (φ → □ ψ) ≈ ◇□¬ φ ∧ ◇□ ψ.
 Proof. Fail now solve. Abort.
 Lemma law_66 : □ (□◇ φ → ◇ ψ) ≈ ◇□¬ φ ∧ □◇ ψ.
@@ -463,9 +496,18 @@ Proof. Fail now solve. Abort.
 Lemma law_67 : □ ((φ ∨ □ ψ) ∧ (□ φ ∨ ψ)) ≈ □ φ ∨ □ ψ.
 Proof. Fail now solve. Abort.
 Lemma law_68 : ◇ φ ≈ ¬□¬ φ.
-Proof. Fail now solve. Abort.
+Proof.
+  solve.
+  unfold Complement, In in H.
+  solve.
+Qed.
 Lemma law_69 : □ φ ≈ ¬◇¬ φ.
-Proof. Fail now solve. Abort.
+Proof.
+  solve.
+  specialize (H i); simpl in H.
+  unfold Complement, In, not in H.
+  now apply NNPP in H.
+Qed.
 Lemma law_70 : ◇ φ ∧ □¬ φ ≈ ⊥.
 Proof. now solve. Qed.
 Lemma law_71 : □ φ ∧ ◇¬ φ ≈ ⊥.
