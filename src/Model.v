@@ -266,13 +266,53 @@ Ltac solve :=
      | [ |- ¬ _ _ ] => intro
      | [ |- (⊥) _ ] => elimtype False
      | [ |- ~ _ ] => intro
+     | [ H : ¬ (fun _ => forall _, _) _ |- _ ] => unfold Complement, In in H
 
      | [ |- ◯ _ _ ] => unfold next
 
-     | [ H : ~ (forall _, ~ _) |- _ ] => apply not_all_not_ex in H
-     | [ H : ~ (forall _, _)   |- _ ] => apply not_all_ex_not in H
-     | [ H : ~ (exists _, ~ _) |- _ ] => apply not_ex_not_all in H
-     | [ H : ~ (exists _, _)   |- _ ] => apply not_ex_all_not in H
+     | [ |- nat ] => exact 0
+
+     | [ H : ~ (forall _, ~ _)        |- _ ] => apply not_all_not_ex in H
+     | [ H : (forall _, ~ _) -> False |- _ ] => apply not_all_not_ex in H
+     | [ H : ~ (forall _, _)          |- _ ] => apply not_all_ex_not in H
+     | [ H : (forall _, _) -> False   |- _ ] => apply not_all_ex_not in H
+     | [ H : ~ (exists _, ~ _)        |- _ ] => apply not_ex_not_all in H
+     | [ H : (exists _, ~ _) -> False |- _ ] => apply not_ex_not_all in H
+     | [ H : ~ (exists _, _)          |- _ ] => apply not_ex_all_not in H
+     | [ H : (exists _, _) -> False   |- _ ] => apply not_ex_all_not in H
+
+     | [ |- exists _, ¬ _ _ ] => apply not_all_ex_not; intro
+
+     | [ H : forall i : nat, ?P (from i ?S) |- ?P ?S ] => apply (H 0)
+     | [ H : forall i : nat, ?P (from i ?S) |- ?P (tail ?S) ] => apply (H 1)
+     | [ H : ?P ?S |- exists i : nat, ?P (from i ?S) ] => exists 0
+     | [ H : forall i : nat, ?P (from i ?S) |- ?P (from ?I (tail ?S)) ]
+         => rewrite from_tail_S; apply H
+     | [ H : forall i : nat, ?P (from i ?S) |- ?P (tail (from ?I ?S)) ]
+         => rewrite tail_from_S; apply H
+     | [ H : ?P (tail ?S) |- exists i : nat, ?P (from i ?S) ] => exists 1
+     | [ H : forall i : nat, ?P (from i (from ?X ?S))
+       |- exists n : nat, ?P (from n (from _ ?S)) ] => eexists; rewrite from_from
+     | [ H : forall i : nat, ?P (from i (tail ?S)) |- ?P (tail (from _ ?S)) ] =>
+       rewrite tail_from
+     | [ H : forall i : nat, ?P (tail (from i ?S)) |- ?P (from _ (tail ?S)) ] =>
+       rewrite from_tail
+     | [ H : forall i j : nat, ?P (from j (from i ?S)) |- ?P (from _ ?S) ] =>
+       apply (H 0)
+     | [ H : forall i : nat, ?P (from i ?S) |- ?P (from ?I (from ?J ?S)) ] =>
+       rewrite from_plus
+     | [ H : ?P (from ?I (from ?J ?S)) |- exists i : nat, ?P (from i ?S) ] =>
+       rewrite from_plus in H
+     | [ H : ?P (from ?I ?S) |- exists i : nat, ?P (from i ?S) ] => exists I
+     | [ H : ?P (from ?I ?S) |- exists i j : nat, ?P (from i (from j ?S)) ] =>
+       exists I; exists 0
+     | [ H : ?P (from ?I ?S) |- exists i j : nat, ?P (from j (from i ?S)) ] =>
+       exists I; exists 0
+     | [ H : ?P (tail (from ?I ?S)) |- exists i : nat, ?P (from i (tail ?S)) ] =>
+       exists I; rewrite from_tail
+     | [ H : ?P (from ?I (tail ?S)) |- exists i : nat, ?P (tail (from i ?S)) ] =>
+       exists I; rewrite tail_from
+
      end;
      unfold In, next, until, any, every, release, weakUntil in *;
      intros;
@@ -309,7 +349,6 @@ Lemma law_10 : φ ∧ (⊤) ≈ φ.
 Proof. now solve. Qed.
 Lemma law_11 : φ ∨ (ψ ∧ χ) ≈ (φ ∨ ψ) ∧ (φ ∨ χ).
 Proof. now solve. Qed.
-
 Lemma law_12 : φ ∧ (ψ ∨ χ) ≈ (φ ∧ ψ) ∨ (φ ∧ χ).
 Proof. now solve. Qed.
 Lemma law_13 : ¬(φ ∨ ψ) ≈ ¬ φ ∧ ¬ ψ.
@@ -324,132 +363,97 @@ Proof. now solve. Qed.
 Lemma law_17 : ◯ φ ≈ ¬◯¬ φ.
 Proof. solve. now apply NNPP. Qed.
 Lemma law_18 : ◇ (⊤) ≈ ⊤.
-Proof.
-  solve.
-  exists 0.
-  now constructor.
-Qed.
+Proof. solve; now exists 0; constructor. Qed.
 Lemma law_19 : ◇ (⊥) ≈ ⊥.
 Proof. now solve. Qed.
 Lemma law_20 : □ (⊤) ≈ ⊤.
 Proof. now solve. Qed.
 Lemma law_21 : □ (⊥) ≈ ⊥.
-Proof. solve. exact 0. Qed.
+Proof. now solve. Qed.
 Lemma law_22 : ¬◯ φ ≈ ◯¬ φ.
 Proof. now solve. Qed.
 Lemma law_23 : ¬□ φ ≈ ◇¬ φ.
-Proof.
-  solve.
-  unfold Complement, In in H.
-  now solve.
-Qed.
+Proof. now solve. Qed.
 Lemma law_24 : ¬◇ φ ≈ □¬ φ.
 Proof. now solve. Qed.
 Lemma law_25 : ¬◇□ φ ≈ □◇¬ φ.
-Proof.
-  solve.
-  apply not_all_ex_not; intro.
-  now eapply H; eauto.
-Qed.
+Proof. now solve. Qed.
 Lemma law_26 : ¬□◇ φ ≈ ◇□¬ φ.
-Proof.
-  solve.
-  unfold Complement, In in H.
-  now solve.
-Qed.
+Proof. now solve. Qed.
 Lemma law_27 : forall s, □ φ s -> φ s.
-Proof. solve. now apply (H 0). Qed.
+Proof. now solve. Qed.
 Lemma law_28 : forall s, φ s -> ◇ φ s.
-Proof.
-  solve.
-  exists 0.
-  now solve.
-Qed.
+Proof. now solve. Qed.
 Lemma law_29 : forall s, □ φ s -> ◯ φ s.
-Proof.
-  solve.
-  now apply (H 1).
-Qed.
+Proof. now solve. Qed.
 Lemma law_30 : forall s, □ φ s -> ◯□ φ s.
-Proof.
-  solve.
-  rewrite from_tail_S.
-  now apply (H (S i)).
-Qed.
+Proof. now solve. Qed.
 Lemma law_31 : forall s, □ φ s -> □◯ φ s.
-Proof.
-  solve.
-  rewrite tail_from_S.
-  now apply H.
-Qed.
+Proof. now solve. Qed.
 Lemma law_32 : forall s, ◯ φ s -> ◇ φ s.
-Proof.
-  solve.
-  now exists 1.
-Qed.
+Proof. now solve. Qed.
 Lemma law_33 : forall s, □ φ s -> ◇ φ s.
-Proof.
-  solve.
-  exact 0.
-Qed.
+Proof. now solve. Qed.
 Lemma law_34 : forall s, ◇□ φ s -> □◇ φ s.
-Proof.
-  solve.
-  exists x.
-  now rewrite from_from.
-Qed.
+Proof. now solve. Qed.
 Lemma law_35 : forall s, □¬ φ s -> ¬□ φ s.
-Proof.
-  solve.
-  now exact 0.
-Qed.
+Proof. now solve. Qed.
 
 Lemma law_36 : □□ φ ≈ □ φ.
 Proof. now solve. Qed.
 Lemma law_37 : ◇◇ φ ≈ ◇ φ.
 Proof. now solve. Qed.
 Lemma law_38 : □◯ φ ≈ ◯□ φ.
-Proof.
-  solve.
-  now apply (H (Cons (head i) i)).
-Qed.
+Proof. now solve. Qed.
 Lemma law_39 : ◇◯ φ ≈ ◯◇ φ.
-Proof.
-  solve.
-  exists (Cons (head x0) x0).
-  now rewrite tail_cons.
-Qed.
+Proof. now solve. Qed.
 Lemma law_40 : □ φ ≈ φ ∧ ◯□ φ.
 Proof.
   solve.
-  now apply (H (Cons (head x) x)).
+  generalize dependent x.
+  induction i; auto; simpl.
+  now intros; intuition.
 Qed.
 Lemma law_41 : □ φ ≈ φ ∧ ◯ φ ∧ ◯□ φ.
 Proof.
   solve.
-  now apply (H (Cons (head x) x)).
+  generalize dependent x.
+  induction i; auto; simpl.
+  now intros; intuition.
 Qed.
 Lemma law_42 : ◇ φ ≈ φ ∨ ◯◇ φ.
 Proof.
   solve.
-  - right.
-    unfold In.
-    now exists x0.
-  - exists (Cons (head x) x).
-    now rewrite tail_cons.
+  - generalize dependent x.
+    induction x0; auto; intros; simpl.
+    + now left.
+    + right; unfold In.
+      exists x0.
+      now rewrite from_tail_S.
+  - exists (S x0).
+    now rewrite <- from_tail_S.
 Qed.
 Lemma law_43 : ◇□◇ φ ≈ □◇ φ.
-Proof. now solve. Qed.
+Proof.
+  solve.
+  - destruct (H i).
+    exists (x1 + x0).
+    rewrite from_from in H0.
+    rewrite (from_plus _ x1 x0) in H0.
+    now rewrite from_from in H0.
+  - exists 0; intros; simpl.
+    now apply H.
+Qed.
 Lemma law_44 : □◇□ φ ≈ ◇□ φ.
-Proof. now solve. Qed.
+Proof. Fail now solve. Abort.
 Lemma law_45 : □◇□◇ φ ≈ □◇ φ.
-Proof. now solve. Qed.
+Proof. Fail now solve. Abort.
 Lemma law_46 : ◇□◇□ φ ≈ ◇□ φ.
-Proof. now solve. Qed.
+Proof. Fail now solve. Abort.
 Lemma law_47 : ◯□◇ φ ≈ □◇ φ.
-Proof. now solve. Qed.
+Proof. Fail now solve. Abort.
 Lemma law_48 : ◯◇□ φ ≈ ◇□ φ.
-Proof. now solve. Qed.
+Proof. Fail now solve. Abort.
 
 Lemma law_49 : ◯ (φ → ψ) ≈ ◯ φ → ◯ ψ.
 Proof. solve. Qed.
@@ -470,28 +474,18 @@ Proof. Fail now solve. Abort.   (* appears unsolvable *)
 Lemma law_55 : φ ∨ ◇ φ ≈ ◇ φ.
 Proof.
   solve.
-  - now exists (Cons (head x) x).
   - now right; exists x0.
 Qed.
 Lemma law_56 : ◇ φ ∧ φ ≈ φ.
-Proof.
-  solve.
-  now exists (Cons (head x) x).
-Qed.
+Proof. now solve. Qed.
 Lemma law_57 : ◇ (φ ∧ ψ) ≉ ◇ φ ∧ ◇ ψ.
 Proof. Fail now solve. Abort.   (* appears unsolvable *)
 Lemma law_58 : ◇ (φ ∨ ψ) ≉ ◇ φ ∨ ◇ ψ.
 Proof. Fail now solve. Abort.   (* appears unsolvable *)
 Lemma law_59 : φ ∧ □ φ ≈ □ φ.
-Proof.
-  solve.
-  now specialize (H (Cons (head x) x)).
-Qed.
+Proof. now solve. Qed.
 Lemma law_60 : □ φ ∨ φ ≈ φ.
-Proof.
-  solve.
-  now specialize (H1 (Cons (head x) x)).
-Qed.
+Proof. now solve. Qed.
 Lemma law_61 : ◇ φ ∧ □ φ ≈ □ φ.
 Proof. now solve. Qed.
 Lemma law_62 : □ φ ∨ ◇ φ ≈ ◇ φ.
@@ -501,21 +495,15 @@ Proof.
 Qed.
 Lemma law_63 : ◇□ (φ ∧ ψ) ≈ ◇□ φ ∧ ◇□ ψ.
 Proof.
-  solve; exists x; intros.
-  - now destruct (H i).
-  - now destruct (H i).
-  - now split; intuition.
-Qed.
-Lemma law_64 : □◇ (φ ∨ ψ) ≈ □◇ φ ∨ □◇ ψ.
-Proof.
   solve.
-  - left; intro.
-    now exists x0.
-  - right; intro.
-    now exists x0.
-  - now exists x0; left.
-  - now exists x0; right.
-Qed.
+  - exists x0; intros.
+    now destruct (H i).
+  - exists x0; intros.
+    now destruct (H i).
+  - admit.
+Abort.
+Lemma law_64 : □◇ (φ ∨ ψ) ≈ □◇ φ ∨ □◇ ψ.
+Proof. solve. Abort.
 Lemma law_65 : ◇□ (φ → □ ψ) ≈ ◇□¬ φ ∧ ◇□ ψ.
 Proof.
   solve.
@@ -525,19 +513,14 @@ Proof.
   - exists x0; intros.
     specialize (H i); solve.
     admit.
-  - exists x; intros.
-    now left; apply H0.
-  Fail now solve. Abort.
+  - admit.
+Abort.
 Lemma law_66 : □ (□◇ φ → ◇ ψ) ≈ ◇□¬ φ ∧ □◇ ψ.
 Proof. Fail now solve. Abort.
 Lemma law_67 : □ ((φ ∨ □ ψ) ∧ (□ φ ∨ ψ)) ≈ □ φ ∨ □ ψ.
 Proof. Fail now solve. Abort.
 Lemma law_68 : ◇ φ ≈ ¬□¬ φ.
-Proof.
-  solve.
-  unfold Complement, In in H.
-  solve.
-Qed.
+Proof. now solve. Qed.
 Lemma law_69 : □ φ ≈ ¬◇¬ φ.
 Proof.
   solve.
@@ -556,7 +539,7 @@ Proof. now solve. Qed.
 Lemma law_74 : ◇□ φ ∧ □◇¬ φ ≈ ⊥.
 Proof. now solve. Qed.
 Lemma law_75 : ◇□ φ ∧ ◇□¬ φ ≈ ⊥.
-Proof. now solve. Qed.
+Proof. Fail now solve. Abort.
 Lemma law_76 : forall s, (◇ φ ∨ □¬ φ) s.
 Proof. Fail now solve. Abort.
 Lemma law_77 : forall s, (□ φ ∨ ◇¬ φ) s.
@@ -572,7 +555,7 @@ Proof. Fail now solve. Abort.
 Lemma law_82 : forall s, ◇ (φ → ψ) s -> (□ φ → ◇ ψ) s.
 Proof. Fail now solve. Abort.
 Lemma law_83 : forall s, (φ → □ φ) s -> (φ → ◯□ φ) s.
-Proof. now solve. Qed.
+Proof. Fail now solve. Abort.
 Lemma law_84 : forall s, (φ ∧ ◇¬ φ) s -> (◇ (φ ∧ ◯¬ φ)) s.
 Proof. Fail now solve. Abort.
 Lemma law_85 : forall s, □ (φ → ψ) s -> (□ φ → □ ψ) s.
@@ -586,7 +569,7 @@ Proof. Fail now solve. Abort.
 Lemma law_89 : forall s, ◇ (φ ∧ ψ) s -> (◇ φ ∧ ◇ ψ) s.
 Proof. now solve. Qed.
 Lemma law_90 : forall s, □◇ (φ ∧ ψ) s -> (□◇ φ ∧ □◇ ψ) s.
-Proof. now solve. Qed.
+Proof. Fail now solve. Abort.
 Lemma law_91 : forall s, □◇ (φ ∨ ψ) s -> (□◇ φ ∨ □◇ ψ) s.
 Proof. Fail now solve. Abort.
 Lemma law_92 : forall s, ◇□ (φ ∧ ψ) s -> (◇□ φ ∧ ◇□ ψ) s.
@@ -653,309 +636,311 @@ Lemma law_122 : forall s, □ ((φ → ◇ ψ) ∧ (ψ → ◇ χ)) s -> (φ →
 Proof. Fail now solve. Abort.
 Lemma law_123 : forall s, □ ((φ → □ ψ) ∧ (ψ → □ χ)) s -> (φ → □ χ) s.
 Proof. Fail now solve. Abort.
-Lemma law_124 : forall s, □ (φ ∨ ψ) s -> exists u, □ ((φ ∧ u) ∨ (ψ ∧ ¬ u)) s.
+Lemma law_124 : forall s, (□ (□ φ → ◇ ψ) ∧ (ψ → ◯ χ)) s -> (□ φ → ◯□◇ χ) s.
 Proof. Fail now solve. Abort.
-Lemma law_125 : forall s, □ ((φ → ◇ (ψ ∨ χ)) ∧ (ψ → ◇ ρ) ∧ (χ → ◇ ρ)) s -> (φ → ◇ ρ) s.
+Lemma law_125 : forall s, □ (φ ∨ ψ) s -> exists u, □ ((φ ∧ u) ∨ (ψ ∧ ¬ u)) s.
 Proof. Fail now solve. Abort.
-Lemma law_126 : forall s, (□ (□ φ → ψ) ∨ □ (□ ψ → φ)) s.
+Lemma law_126 : forall s, □ ((φ → ◇ (ψ ∨ χ)) ∧ (ψ → ◇ ρ) ∧ (χ → ◇ ρ)) s -> (φ → ◇ ρ) s.
 Proof. Fail now solve. Abort.
-Lemma law_127 : φ U (⊥) ≈ ⊥.
+Lemma law_127 : forall s, (□ (□ φ → ψ) ∨ □ (□ ψ → φ)) s.
+Proof. Fail now solve. Abort.
+Lemma law_128 : φ U (⊥) ≈ ⊥.
 Proof. now solve. Qed.
-Lemma law_128 : ⊥ U φ ≈ ⊥.
+Lemma law_129 : ⊥ U φ ≈ ⊥.
 Proof. Fail now solve. Abort.
-Lemma law_129 : φ U (⊤) ≈ ⊤.
+Lemma law_130 : φ U (⊤) ≈ ⊤.
 Proof. Fail now solve. Abort.
-Lemma law_130 : φ U φ ≈ φ.
+Lemma law_131 : φ U φ ≈ φ.
 Proof. Fail now solve. Abort.
-Lemma law_131 : ¬ φ U φ ≈ ◇ φ.
+Lemma law_132 : ¬ φ U φ ≈ ◇ φ.
 Proof. Fail now solve. Abort.
-Lemma law_132 : forall s, ψ s -> (φ U φ) s.
+Lemma law_133 : forall s, ψ s -> (φ U φ) s.
 Proof. Fail now solve. Abort.
-Lemma law_133 : forall s, (φ U ψ) s -> (φ ∨ ψ) s.
+Lemma law_134 : forall s, (φ U ψ) s -> (φ ∨ ψ) s.
 Proof. Fail now solve. Abort.
-Lemma law_134 : forall s, (φ ∧ ψ) s -> (φ U ψ) s.
+Lemma law_135 : forall s, (φ ∧ ψ) s -> (φ U ψ) s.
 Proof. Fail now solve. Abort.
-Lemma law_135 : forall s, ((φ U ψ) ∨ (φ U ¬ ψ)) s.
+Lemma law_136 : forall s, ((φ U ψ) ∨ (φ U ¬ ψ)) s.
 Proof. Fail now solve. Abort.
-Lemma law_136 : φ ∨ (φ U ψ) ≈ φ ∨ ψ.
+Lemma law_137 : φ ∨ (φ U ψ) ≈ φ ∨ ψ.
 Proof. Fail now solve. Abort.
-Lemma law_137 : (φ U ψ) ∨ ψ ≈ φ U ψ.
+Lemma law_138 : (φ U ψ) ∨ ψ ≈ φ U ψ.
 Proof. Fail now solve. Abort.
-Lemma law_138 : (φ U ψ) ∧ ψ ≈ ψ.
+Lemma law_139 : (φ U ψ) ∧ ψ ≈ ψ.
 Proof. Fail now solve. Abort.
-Lemma law_139 : (φ U ψ) ∨ (φ ∧ ψ) ≈ φ U ψ.
+Lemma law_140 : (φ U ψ) ∨ (φ ∧ ψ) ≈ φ U ψ.
 Proof. Fail now solve. Abort.
-Lemma law_140 : (φ U ψ) ∧ (φ ∨ ψ) ≈ φ U ψ.
+Lemma law_141 : (φ U ψ) ∧ (φ ∨ ψ) ≈ φ U ψ.
 Proof. Fail now solve. Abort.
-Lemma law_141 : φ U (φ U ψ) ≈ φ U ψ.
+Lemma law_142 : φ U (φ U ψ) ≈ φ U ψ.
 Proof. Fail now solve. Abort.
-Lemma law_142 : (φ U ψ) U ψ ≈ φ U ψ.
+Lemma law_143 : (φ U ψ) U ψ ≈ φ U ψ.
 Proof. Fail now solve. Abort.
-Lemma law_143 : φ U ψ ≈ ψ ∨ (φ ∧ ◯ (φ U ψ)).
+Lemma law_144 : φ U ψ ≈ ψ ∨ (φ ∧ ◯ (φ U ψ)).
 Proof. Fail now solve. Abort.
-Lemma law_144 : φ U ψ ≈ (φ ∨ ψ) U ψ.
+Lemma law_145 : φ U ψ ≈ (φ ∨ ψ) U ψ.
 Proof. Fail now solve. Abort.
-Lemma law_145 : φ U ψ ≈ (φ ∧ ¬ ψ) U ψ.
+Lemma law_146 : φ U ψ ≈ (φ ∧ ¬ ψ) U ψ.
 Proof. Fail now solve. Abort.
-Lemma law_146 : φ U (ψ ∨ χ) ≈ (φ U ψ) ∨ (φ U χ).
+Lemma law_147 : φ U (ψ ∨ χ) ≈ (φ U ψ) ∨ (φ U χ).
 Proof. Fail now solve. Abort.
-Lemma law_147 : forall s, ((φ U χ) ∨ (ψ U χ)) s -> ((φ ∨ ψ) U χ) s.
+Lemma law_148 : forall s, ((φ U χ) ∨ (ψ U χ)) s -> ((φ ∨ ψ) U χ) s.
 Proof. now solve. Qed.
-Lemma law_148 : (φ ∧ ψ) U χ ≈ (φ U χ) ∧ (ψ U χ).
+Lemma law_149 : (φ ∧ ψ) U χ ≈ (φ U χ) ∧ (ψ U χ).
 Proof. Fail now solve. Abort.
-Lemma law_149 : forall s, (φ U (ψ ∧ χ)) s -> ((φ U ψ) ∧ (φ U χ)) s.
+Lemma law_150 : forall s, (φ U (ψ ∧ χ)) s -> ((φ U ψ) ∧ (φ U χ)) s.
 Proof. now solve. Qed.
-Lemma law_150 : forall s, (φ U (ψ ∧ χ)) s -> (φ U (ψ U χ)) s.
+Lemma law_151 : forall s, (φ U (ψ ∧ χ)) s -> (φ U (ψ U χ)) s.
 Proof. Fail now solve. Abort.
-Lemma law_151 : forall s, ((φ ∧ ψ) U χ) s -> ((φ U ψ) U χ) s.
+Lemma law_152 : forall s, ((φ ∧ ψ) U χ) s -> ((φ U ψ) U χ) s.
 Proof. Fail now solve. Abort.
-Lemma law_152 : forall s, ((φ ∧ ψ) U χ) s -> (φ U (ψ U χ)) s.
+Lemma law_153 : forall s, ((φ ∧ ψ) U χ) s -> (φ U (ψ U χ)) s.
 Proof. Fail now solve. Abort.
-Lemma law_153 : ◯ (φ U ψ) ≈ (◯ φ) U (◯ ψ).
+Lemma law_154 : ◯ (φ U ψ) ≈ (◯ φ) U (◯ ψ).
 Proof. Fail now solve. Abort.
-Lemma law_154 : ◇ (φ U ψ) ≉ (◇ φ) U (◇ ψ).
+Lemma law_155 : ◇ (φ U ψ) ≉ (◇ φ) U (◇ ψ).
 Proof. Fail now solve. Abort.
-Lemma law_155 : ◇ φ ≈ ⊤ U φ.
+Lemma law_156 : ◇ φ ≈ ⊤ U φ.
 Proof. Fail now solve. Abort.
-Lemma law_156 : (φ U ψ) ∧ ◇ ψ ≈ φ U ψ.
+Lemma law_157 : (φ U ψ) ∧ ◇ ψ ≈ φ U ψ.
+Proof. now solve. Qed.
+Lemma law_158 : (φ U ψ) ∨ ◇ ψ ≈ ◇ ψ.
 Proof. Fail now solve. Abort.
-Lemma law_157 : (φ U ψ) ∨ ◇ ψ ≈ ◇ ψ.
+Lemma law_159 : φ U ◇ ψ ≈ ◇ ψ.
 Proof. Fail now solve. Abort.
-Lemma law_158 : φ U ◇ ψ ≈ ◇ ψ.
+Lemma law_160 : φ U □ φ ≈ □ φ.
 Proof. Fail now solve. Abort.
-Lemma law_159 : φ U □ φ ≈ □ φ.
+Lemma law_161 : φ U □ ψ ≈ □ (φ U ψ).
 Proof. Fail now solve. Abort.
-Lemma law_160 : φ U □ ψ ≈ □ (φ U ψ).
+Lemma law_162 : forall s, (◇ φ → ((φ → ψ) U φ)) s.
 Proof. Fail now solve. Abort.
-Lemma law_161 : forall s, (◇ φ → ((φ → ψ) U φ)) s.
+Lemma law_163 : forall s, ((φ U ψ) ∧ (¬ ψ U χ)) s -> (φ U χ) s.
 Proof. Fail now solve. Abort.
-Lemma law_162 : forall s, ((φ U ψ) ∧ (¬ ψ U χ)) s -> (φ U χ) s.
+Lemma law_164 : forall s, (φ U (ψ U χ)) s -> ((φ ∨ ψ) U χ) s.
 Proof. Fail now solve. Abort.
-Lemma law_163 : forall s, (φ U (ψ U χ)) s -> ((φ ∨ ψ) U χ) s.
+Lemma law_165 : forall s, ((φ → ψ) U χ) s -> ((φ U χ) → (ψ U χ)) s.
 Proof. Fail now solve. Abort.
-Lemma law_164 : forall s, ((φ → ψ) U χ) s -> ((φ U χ) → (ψ U χ)) s.
+Lemma law_166 : forall s, ((¬ φ U (ψ U χ)) ∧ (φ U χ)) s -> (ψ U χ) s.
 Proof. Fail now solve. Abort.
-Lemma law_165 : forall s, ((¬ φ U (ψ U χ)) ∧ (φ U χ)) s -> (ψ U χ) s.
+Lemma law_167 : forall s, ((φ U (¬ ψ U χ)) ∧ (ψ U χ)) s -> (φ U χ) s.
 Proof. Fail now solve. Abort.
-Lemma law_166 : forall s, ((φ U (¬ ψ U χ)) ∧ (ψ U χ)) s -> (φ U χ) s.
+Lemma law_168 : forall s, ((φ U ψ) ∧ (¬ ψ U φ)) s -> φ s.
 Proof. Fail now solve. Abort.
-Lemma law_167 : forall s, ((φ U ψ) ∧ (¬ ψ U φ)) s -> φ s.
+Lemma law_169 : forall s, (φ ∧ (¬ φ U ψ)) s -> ψ s.
 Proof. Fail now solve. Abort.
-Lemma law_168 : forall s, (φ ∧ (¬ φ U ψ)) s -> ψ s.
+Lemma law_170 : forall s, □ φ s -> (◯ ψ → ◯ (φ U ψ)) s.
 Proof. Fail now solve. Abort.
-Lemma law_169 : forall s, □ φ s -> (◯ ψ → ◯ (φ U ψ)) s.
+Lemma law_171 : forall s, □ φ s -> (◇ ψ → ◇ (φ U ψ)) s.
 Proof. Fail now solve. Abort.
-Lemma law_170 : forall s, □ φ s -> (◇ ψ → ◇ (φ U ψ)) s.
+Lemma law_172 : forall s, □ φ s -> (□ ψ → □ (φ U ψ)) s.
 Proof. Fail now solve. Abort.
-Lemma law_171 : forall s, □ φ s -> (□ ψ → □ (φ U ψ)) s.
+Lemma law_173 : forall s, □ φ s -> ¬(ψ U ¬ φ) s.
+Proof. now solve. Qed.
+Lemma law_174 : forall s, □ φ s -> (◇ ψ) s -> (φ U ψ) s.
+Proof. now solve. Qed.
+Lemma law_175 : forall s, (□ φ ∧ (ψ U χ)) s -> ((φ ∧ ψ) U (φ ∧ χ)) s.
 Proof. Fail now solve. Abort.
-Lemma law_172 : forall s, □ φ s -> ¬(ψ U ¬ φ) s.
+Lemma law_176 : forall s, □ (φ → ψ) s -> ((χ U φ) → (χ U ψ)) s.
 Proof. Fail now solve. Abort.
-Lemma law_173 : forall s, □ φ s -> (◇ ψ) s -> (φ U ψ) s.
+Lemma law_177 : forall s, □ (φ → ψ) s -> ((φ U χ) → (ψ U χ)) s.
 Proof. Fail now solve. Abort.
-Lemma law_174 : forall s, (□ φ ∧ (ψ U χ)) s -> ((φ ∧ ψ) U (φ ∧ χ)) s.
+Lemma law_178 : forall s, (φ U ψ) s -> (◇ ψ) s.
+Proof. now solve. Qed.
+Lemma law_179 : forall s, □ ((φ → ψ U χ) ∧ (χ → ψ U ρ)) s -> (φ → □ χ) s.
 Proof. Fail now solve. Abort.
-Lemma law_175 : forall s, □ (φ → ψ) s -> ((χ U φ) → (χ U ψ)) s.
+Lemma law_180 : forall s, □ ((φ → χ) ∧ (ψ → ρ)) s -> (φ U ψ → χ U ρ) s.
 Proof. Fail now solve. Abort.
-Lemma law_176 : forall s, □ (φ → ψ) s -> ((φ U χ) → (ψ U χ)) s.
-Proof. Fail now solve. Abort.
-Lemma law_177 : forall s, (φ U ψ) s -> (◇ ψ) s.
-Proof. Fail now solve. Abort.
-Lemma law_178 : forall s, □ ((φ → ψ U χ) ∧ (χ → ψ U ρ)) s -> (φ → □ χ) s.
-Proof. Fail now solve. Abort.
-Lemma law_179 : forall s, □ ((φ → χ) ∧ (ψ → ρ)) s -> (φ U ψ → χ U ρ) s.
-Proof. Fail now solve. Abort.
-Lemma law_180 : forall s, □ (φ → ¬ ψ ∧ ◯ χ) s -> (φ → ¬(ψ U χ)) s.
+Lemma law_181 : forall s, □ (φ → ¬ ψ ∧ ◯ χ) s -> (φ → ¬(ψ U χ)) s.
 Proof. Fail now solve. Abort.
 
-Lemma law_181 : φ W φ ≈ φ.
+Lemma law_182 : φ W φ ≈ φ.
 Proof. Fail now solve. Abort.
-Lemma law_182 : φ W ψ ≈ (φ U ψ) ∨ □ φ.
+Lemma law_183 : φ W ψ ≈ (φ U ψ) ∨ □ φ.
 Proof. now solve. Qed.
-Lemma law_183 : ¬(φ W ψ) ≈ ¬ ψ U (¬ φ ∧ ¬ ψ).
+Lemma law_184 : ¬(φ W ψ) ≈ ¬ ψ U (¬ φ ∧ ¬ ψ).
 Proof. Fail now solve. Abort.
-Lemma law_184 : ¬(φ W ψ) ≈ (φ ∧ ¬ ψ) U (¬ φ ∧ ¬ ψ).
+Lemma law_185 : ¬(φ W ψ) ≈ (φ ∧ ¬ ψ) U (¬ φ ∧ ¬ ψ).
 Proof. Fail now solve. Abort.
-Lemma law_185 : ¬(φ U ψ) ≈ ¬ ψ W (¬ φ ∧ ¬ ψ).
+Lemma law_186 : ¬(φ U ψ) ≈ ¬ ψ W (¬ φ ∧ ¬ ψ).
 Proof. Fail now solve. Abort.
-Lemma law_186 : ¬(φ U ψ) ≈ (φ ∧ ¬ ψ) W (¬ φ ∧ ¬ ψ).
+Lemma law_187 : ¬(φ U ψ) ≈ (φ ∧ ¬ ψ) W (¬ φ ∧ ¬ ψ).
 Proof. Fail now solve. Abort.
-Lemma law_187 : ¬(¬ φ U ¬ ψ) ≈ ψ W (φ ∧ ψ).
+Lemma law_188 : ¬(¬ φ U ¬ ψ) ≈ ψ W (φ ∧ ψ).
 Proof. Fail now solve. Abort.
-Lemma law_188 : ¬(¬ φ U ¬ ψ) ≈ (¬ φ ∧ ψ) W (φ ∧ ψ).
+Lemma law_189 : ¬(¬ φ U ¬ ψ) ≈ (¬ φ ∧ ψ) W (φ ∧ ψ).
 Proof. Fail now solve. Abort.
-Lemma law_189 : ¬(¬ φ W ¬ ψ) ≈ ψ U (φ ∧ ψ).
+Lemma law_190 : ¬(¬ φ W ¬ ψ) ≈ ψ U (φ ∧ ψ).
 Proof. Fail now solve. Abort.
-Lemma law_190 : ¬(¬ φ W ¬ ψ) ≈ (¬ φ ∧ ψ) U (φ ∧ ψ).
+Lemma law_191 : ¬(¬ φ W ¬ ψ) ≈ (¬ φ ∧ ψ) U (φ ∧ ψ).
 Proof. Fail now solve. Abort.
-Lemma law_191 : φ W ψ ≈ φ U (ψ ∨ □ φ).
+Lemma law_192 : φ W ψ ≈ φ U (ψ ∨ □ φ).
 Proof. Fail now solve. Abort.
-Lemma law_192 : φ W ψ ≈ (φ ∨ ψ) W ψ.
+Lemma law_193 : φ W ψ ≈ (φ ∨ ψ) W ψ.
 Proof. Fail now solve. Abort.
-Lemma law_193 : φ W ψ ≈ □ (φ ∧ ¬ ψ) ∨ (φ U ψ).
+Lemma law_194 : φ W ψ ≈ □ (φ ∧ ¬ ψ) ∨ (φ U ψ).
 Proof. Fail now solve. Abort.
-Lemma law_194 : φ U ψ ≈ (φ W ψ) ∧ ◇ ψ.
+Lemma law_195 : φ U ψ ≈ (φ W ψ) ∧ ◇ ψ.
 Proof. Fail now solve. Abort.
-Lemma law_195 : φ U ψ ≈ (φ W ψ) ∧ ¬□¬ ψ.
+Lemma law_196 : φ U ψ ≈ (φ W ψ) ∧ ¬□¬ ψ.
 Proof. Fail now solve. Abort.
-Lemma law_196 : φ U ψ ≈ ◇ ψ ∧ (φ W ψ).
+Lemma law_197 : φ U ψ ≈ ◇ ψ ∧ (φ W ψ).
 Proof. Fail now solve. Abort.
-Lemma law_197 : φ W ψ ≈ ψ ∨ (φ ∧ ◯ (φ W ψ)).
+Lemma law_198 : φ W ψ ≈ ψ ∨ (φ ∧ ◯ (φ W ψ)).
 Proof. Fail now solve. Abort.
-Lemma law_198 : φ W ψ ≈ (φ ∧ ¬ ψ) W ψ.
+Lemma law_199 : φ W ψ ≈ (φ ∧ ¬ ψ) W ψ.
 Proof. Fail now solve. Abort.
-Lemma law_199 : φ W (φ W ψ) ≈ φ W ψ.
+Lemma law_200 : φ W (φ W ψ) ≈ φ W ψ.
 Proof. Fail now solve. Abort.
-Lemma law_200 : (φ W ψ) W ψ ≈ φ W ψ.
+Lemma law_201 : (φ W ψ) W ψ ≈ φ W ψ.
 Proof. Fail now solve. Abort.
-Lemma law_201 : φ W (φ U ψ) ≈ φ W ψ.
+Lemma law_202 : φ W (φ U ψ) ≈ φ W ψ.
 Proof. Fail now solve. Abort.
-Lemma law_202 : (φ U ψ) W ψ ≈ φ U ψ.
+Lemma law_203 : (φ U ψ) W ψ ≈ φ U ψ.
 Proof. Fail now solve. Abort.
-Lemma law_203 : φ U (φ W ψ) ≈ φ W ψ.
+Lemma law_204 : φ U (φ W ψ) ≈ φ W ψ.
 Proof. Fail now solve. Abort.
-Lemma law_204 : (φ W ψ) U ψ ≈ φ U ψ.
+Lemma law_205 : (φ W ψ) U ψ ≈ φ U ψ.
 Proof. Fail now solve. Abort.
-Lemma law_205 : ◯ (φ W ψ) ≈ ◯ φ W ◯ ψ.
+Lemma law_206 : ◯ (φ W ψ) ≈ ◯ φ W ◯ ψ.
 Proof. Fail now solve. Abort.
-Lemma law_206 : φ W ◇ ψ ≈ □ φ ∨ ◇ ψ.
+Lemma law_207 : φ W ◇ ψ ≈ □ φ ∨ ◇ ψ.
 Proof. Fail now solve. Abort.
-Lemma law_207 : ◇ φ W φ ≈ ◇ φ.
+Lemma law_208 : ◇ φ W φ ≈ ◇ φ.
 Proof. Fail now solve. Abort.
-Lemma law_208 : □ φ ∧ (φ W ψ) ≈ □ φ.
+Lemma law_209 : □ φ ∧ (φ W ψ) ≈ □ φ.
 Proof. now solve. Qed.
-Lemma law_209 : □ φ ∨ (φ W ψ) ≈ φ W ψ.
+Lemma law_210 : □ φ ∨ (φ W ψ) ≈ φ W ψ.
 Proof. now solve. Qed.
-Lemma law_210 : φ W □ φ ≈ □ φ.
+Lemma law_211 : φ W □ φ ≈ □ φ.
+Proof. Fail now solve. Abort.
+Lemma law_212 : □ φ ≈ φ W ⊥.
 Proof. now solve. Qed.
-Lemma law_211 : □ φ ≈ φ W ⊥.
+Lemma law_213 : ◇ φ ≈ ¬(¬ φ W ⊥).
 Proof. now solve. Qed.
-Lemma law_212 : ◇ φ ≈ ¬(¬ φ W ⊥).
-Proof. Fail now solve. Abort.
-Lemma law_213 : ⊤ W φ ≈ ⊤.
+Lemma law_214 : ⊤ W φ ≈ ⊤.
 Proof. now solve. Qed.
-Lemma law_214 : φ W (⊤) ≈ ⊤.
+Lemma law_215 : φ W (⊤) ≈ ⊤.
 Proof. Fail now solve. Abort.
-Lemma law_215 : ⊥ W φ ≈ φ.
+Lemma law_216 : ⊥ W φ ≈ φ.
 Proof. Fail now solve. Abort.
-Lemma law_216 : φ W (ψ ∨ χ) ≈ (φ W ψ) ∨ (φ W χ).
+Lemma law_217 : φ W (ψ ∨ χ) ≈ (φ W ψ) ∨ (φ W χ).
 Proof. Fail now solve. Abort.
-Lemma law_217 : (φ ∧ ψ) W χ ≈ (φ W χ) ∧ (ψ W χ).
+Lemma law_218 : (φ ∧ ψ) W χ ≈ (φ W χ) ∧ (ψ W χ).
 Proof. Fail now solve. Abort.
-Lemma law_218 : φ ∨ (φ W ψ) ≈ φ ∨ ψ.
+Lemma law_219 : φ ∨ (φ W ψ) ≈ φ ∨ ψ.
 Proof. Fail now solve. Abort.
-Lemma law_219 : (φ W ψ) ∨ ψ ≈ φ W ψ.
+Lemma law_220 : (φ W ψ) ∨ ψ ≈ φ W ψ.
 Proof. Fail now solve. Abort.
-Lemma law_220 : (φ W ψ) ∧ ψ ≈ ψ.
+Lemma law_221 : (φ W ψ) ∧ ψ ≈ ψ.
 Proof. Fail now solve. Abort.
-Lemma law_221 : (φ W ψ) ∧ (φ ∨ ψ) ≈ φ W ψ.
+Lemma law_222 : (φ W ψ) ∧ (φ ∨ ψ) ≈ φ W ψ.
 Proof. Fail now solve. Abort.
-Lemma law_222 : (φ W ψ) ∨ (φ ∧ ψ) ≈ φ W ψ.
+Lemma law_223 : (φ W ψ) ∨ (φ ∧ ψ) ≈ φ W ψ.
 Proof. Fail now solve. Abort.
-Lemma law_223 : ((¬ φ U ψ) ∨ (¬ ψ U φ)) ≈ ◇ (φ ∨ ψ).
+Lemma law_224 : ((¬ φ U ψ) ∨ (¬ ψ U φ)) ≈ ◇ (φ ∨ ψ).
 Proof. Fail now solve. Abort.
-Lemma law_224 : forall s, ψ s -> (φ W ψ) s.
+Lemma law_225 : forall s, ψ s -> (φ W ψ) s.
 Proof. Fail now solve. Abort.
-Lemma law_225 : forall s, (φ W φ) s -> (φ ∨ ψ) s.
+Lemma law_226 : forall s, (φ W φ) s -> (φ ∨ ψ) s.
 Proof. Fail now solve. Abort.
-Lemma law_226 : forall s, (φ W φ) s -> (□ φ ∨ ◇ ψ) s.
+Lemma law_227 : forall s, (φ W φ) s -> (□ φ ∨ ◇ ψ) s.
 Proof. Fail now solve. Abort.
-Lemma law_227 : forall s, (¬ φ W φ) s.
+Lemma law_228 : forall s, (¬ φ W φ) s.
 Proof. Fail now solve. Abort.
-Lemma law_228 : forall s, ((φ → ψ) W φ) s.
+Lemma law_229 : forall s, ((φ → ψ) W φ) s.
 Proof. Fail now solve. Abort.
-Lemma law_229 : forall s, ((φ W ψ) ∨ (φ W ¬ ψ)) s.
+Lemma law_230 : forall s, ((φ W ψ) ∨ (φ W ¬ ψ)) s.
 Proof. Fail now solve. Abort.
-Lemma law_230 : forall s, (φ W (ψ ∧ χ)) s -> ((φ W ψ) ∧ (φ W χ)) s.
+Lemma law_231 : forall s, (φ W (ψ ∧ χ)) s -> ((φ W ψ) ∧ (φ W χ)) s.
 Proof. Fail now solve. Abort.
-Lemma law_231 : forall s, ((φ W χ) ∨ (ψ W χ)) s -> ((φ ∨ ψ) W χ) s.
+Lemma law_232 : forall s, ((φ W χ) ∨ (ψ W χ)) s -> ((φ ∨ ψ) W χ) s.
 Proof. Fail now solve. Abort.
-Lemma law_232 : forall s, (φ U ψ) s -> (φ W ψ) s.
+Lemma law_233 : forall s, (φ U ψ) s -> (φ W ψ) s.
 Proof. Fail now solve. Abort.
-Lemma law_233 : forall s, (φ W □ ψ) s -> □ (φ W ψ) s.
+Lemma law_234 : forall s, (φ W □ ψ) s -> □ (φ W ψ) s.
 Proof. Fail now solve. Abort.
-Lemma law_234 : forall s, ¬(φ U ψ) s -> ((φ ∧ ¬ ψ) W (¬ φ ∧ ¬ ψ)) s.
+Lemma law_235 : forall s, ¬(φ U ψ) s -> ((φ ∧ ¬ ψ) W (¬ φ ∧ ¬ ψ)) s.
 Proof. Fail now solve. Abort.
-Lemma law_235 : forall s, ¬(φ W ψ) s -> ((φ ∧ ¬ ψ) U (¬ φ ∧ ¬ ψ)) s.
+Lemma law_236 : forall s, ¬(φ W ψ) s -> ((φ ∧ ¬ ψ) U (¬ φ ∧ ¬ ψ)) s.
 Proof. Fail now solve. Abort.
-Lemma law_236 : forall s, ((φ → ψ) W χ) s -> ((φ W χ) → (ψ W χ)) s.
+Lemma law_237 : forall s, ((φ → ψ) W χ) s -> ((φ W χ) → (ψ W χ)) s.
 Proof. Fail now solve. Abort.
-Lemma law_237 : forall s, □ φ s -> (φ W ψ) s.
+Lemma law_238 : forall s, □ φ s -> (φ W ψ) s.
 Proof. now solve. Qed.
-Lemma law_238 : forall s, □ φ s -> (◯ ψ → ◯ (φ W ψ)) s.
+Lemma law_239 : forall s, □ φ s -> (◯ ψ → ◯ (φ W ψ)) s.
 Proof. Fail now solve. Abort.
-Lemma law_239 : forall s, □ φ s -> (◇ ψ → ◇ (φ W ψ)) s.
+Lemma law_240 : forall s, □ φ s -> (◇ ψ → ◇ (φ W ψ)) s.
 Proof. Fail now solve. Abort.
-Lemma law_240 : forall s, □ φ s -> (□ ψ → □ (φ W ψ)) s.
+Lemma law_241 : forall s, □ φ s -> (□ ψ → □ (φ W ψ)) s.
 Proof. Fail now solve. Abort.
-Lemma law_241 : forall s, □ (φ ∨ ψ) s -> (φ W ψ) s.
+Lemma law_242 : forall s, □ (φ ∨ ψ) s -> (φ W ψ) s.
 Proof. Fail now solve. Abort.
-Lemma law_242 : forall s, □ (¬ ψ → φ) s -> (φ W ψ) s.
+Lemma law_243 : forall s, □ (¬ ψ → φ) s -> (φ W ψ) s.
 Proof. Fail now solve. Abort.
-Lemma law_243 : forall s, □ (φ → (◯ φ ∧ ψ) ∨ χ) s -> (φ → ψ W χ) s.
+Lemma law_244 : forall s, □ (φ → (◯ φ ∧ ψ) ∨ χ) s -> (φ → ψ W χ) s.
 Proof. Fail now solve. Abort.
-Lemma law_244 : forall s, □ (φ → ◯ (φ ∨ ψ)) s -> (φ → φ W ψ) s.
+Lemma law_245 : forall s, □ (φ → ◯ (φ ∨ ψ)) s -> (φ → φ W ψ) s.
 Proof. Fail now solve. Abort.
-Lemma law_245 : forall s, □ (φ → ◯ φ) s -> (φ → φ W ψ) s.
+Lemma law_246 : forall s, □ (φ → ◯ φ) s -> (φ → φ W ψ) s.
 Proof. Fail now solve. Abort.
-Lemma law_246 : forall s, □ (φ → ψ ∧ ◯ φ) s -> (φ → φ W ψ) s.
+Lemma law_247 : forall s, □ (φ → ψ ∧ ◯ φ) s -> (φ → φ W ψ) s.
 Proof. Fail now solve. Abort.
-Lemma law_247 : forall s, (□ φ ∧ (ψ W χ)) s -> ((φ ∧ ψ) W (φ ∧ χ)) s.
+Lemma law_248 : forall s, (□ φ ∧ (ψ W χ)) s -> ((φ ∧ ψ) W (φ ∧ χ)) s.
 Proof. Fail now solve. Abort.
-Lemma law_248 : forall s, ((φ W ψ) ∧ □¬ ψ) s -> □ φ s.
+Lemma law_249 : forall s, ((φ W ψ) ∧ □¬ ψ) s -> □ φ s.
+Proof. now solve. Qed.
+Lemma law_250 : forall s, □ φ s -> ((φ U ψ) ∨ □¬ ψ) s.
 Proof. Fail now solve. Abort.
-Lemma law_249 : forall s, □ φ s -> ((φ U ψ) ∨ □¬ ψ) s.
+Lemma law_251 : forall s, (¬□ φ ∧ (φ W ψ)) s -> ◇ ψ s.
+Proof. now solve. Qed.
+Lemma law_252 : forall s, ◇ ψ s -> (¬□ φ ∨ (φ U ψ)) s.
 Proof. Fail now solve. Abort.
-Lemma law_250 : forall s, (¬□ φ ∧ (φ W ψ)) s -> ◇ ψ s.
+Lemma law_253 : forall s, □ (φ → ψ) s -> (φ W χ → ψ W χ) s.
 Proof. Fail now solve. Abort.
-Lemma law_251 : forall s, ◇ ψ s -> (¬□ φ ∨ (φ U ψ)) s.
+Lemma law_254 : forall s, □ (φ → ψ) s -> (χ W φ → χ W ψ) s.
 Proof. Fail now solve. Abort.
-Lemma law_252 : forall s, □ (φ → ψ) s -> (φ W χ → ψ W χ) s.
+Lemma law_255 : forall s, □ ((φ → χ) ∧ (ψ → ρ)) s -> ((φ W ψ) → (χ W ρ)) s.
 Proof. Fail now solve. Abort.
-Lemma law_253 : forall s, □ (φ → ψ) s -> (χ W φ → χ W ψ) s.
+Lemma law_256 : forall s, □ ((φ → ψ W χ) ∧ (χ → ψ W ρ)) s -> (φ → ψ W ρ) s.
 Proof. Fail now solve. Abort.
-Lemma law_254 : forall s, □ ((φ → χ) ∧ (ψ → ρ)) s -> ((φ W ψ) → (χ W ρ)) s.
+Lemma law_257 : forall s, ((φ U ψ) W χ) s -> ((φ W ψ) W χ) s.
 Proof. Fail now solve. Abort.
-Lemma law_255 : forall s, □ ((φ → ψ W χ) ∧ (χ → ψ W ρ)) s -> (φ → ψ W ρ) s.
+Lemma law_258 : forall s, (φ W (ψ U χ)) s -> (φ W (ψ W χ)) s.
 Proof. Fail now solve. Abort.
-Lemma law_256 : forall s, ((φ U ψ) W χ) s -> ((φ W ψ) W χ) s.
+Lemma law_259 : forall s, (φ U (ψ U χ)) s -> (φ U (ψ W χ)) s.
 Proof. Fail now solve. Abort.
-Lemma law_257 : forall s, (φ W (ψ U χ)) s -> (φ W (ψ W χ)) s.
+Lemma law_260 : forall s, ((φ U ψ) U χ) s -> ((φ W ψ) U χ) s.
 Proof. Fail now solve. Abort.
-Lemma law_258 : forall s, (φ U (ψ U χ)) s -> (φ U (ψ W χ)) s.
+Lemma law_261 : forall s, ((φ U ψ) U χ) s -> ((φ ∨ ψ) U χ) s.
 Proof. Fail now solve. Abort.
-Lemma law_259 : forall s, ((φ U ψ) U χ) s -> ((φ W ψ) U χ) s.
+Lemma law_262 : forall s, ((φ W ψ) W χ) s -> ((φ ∨ ψ) W χ) s.
 Proof. Fail now solve. Abort.
-Lemma law_260 : forall s, ((φ U ψ) U χ) s -> ((φ ∨ ψ) U χ) s.
+Lemma law_263 : forall s, (φ W (ψ W χ)) s -> (φ W (ψ ∨ χ)) s.
 Proof. Fail now solve. Abort.
-Lemma law_261 : forall s, ((φ W ψ) W χ) s -> ((φ ∨ ψ) W χ) s.
+Lemma law_264 : forall s, (φ W (ψ W χ)) s -> ((φ ∨ ψ) W χ) s.
 Proof. Fail now solve. Abort.
-Lemma law_262 : forall s, (φ W (ψ W χ)) s -> (φ W (ψ ∨ χ)) s.
+Lemma law_265 : forall s, (φ W (ψ ∧ χ)) s -> ((φ W ψ) W χ) s.
 Proof. Fail now solve. Abort.
-Lemma law_263 : forall s, (φ W (ψ W χ)) s -> ((φ ∨ ψ) W χ) s.
+Lemma law_266 : forall s, ((¬ φ W ψ) ∨ (¬ ψ W φ)) s.
 Proof. Fail now solve. Abort.
-Lemma law_264 : forall s, (φ W (ψ ∧ χ)) s -> ((φ W ψ) W χ) s.
-Proof. Fail now solve. Abort.
-Lemma law_265 : forall s, ((¬ φ W ψ) ∨ (¬ ψ W φ)) s.
-Proof. Fail now solve. Abort.
-Lemma law_266 : forall s, ((φ W ψ) ∧ (¬ ψ W χ)) s -> (φ W χ) s.
+Lemma law_267 : forall s, ((φ W ψ) ∧ (¬ ψ W χ)) s -> (φ W χ) s.
 Proof. Fail now solve. Abort.
 
-Lemma law_267 : φ R ψ ≈ ¬(¬ φ U ¬ ψ).
+Lemma law_268 : φ R ψ ≈ ¬(¬ φ U ¬ ψ).
 Proof. now solve. Qed.
-Lemma law_268 : φ U ψ ≈ ¬(¬ φ R ¬ ψ).
+Lemma law_269 : φ U ψ ≈ ¬(¬ φ R ¬ ψ).
 Proof. now solve. Qed.
-Lemma law_269 : φ W ψ ≈ ψ R (ψ ∨ φ).
+Lemma law_270 : φ W ψ ≈ ψ R (ψ ∨ φ).
 Proof. Fail now solve. Abort.
-Lemma law_270 : φ R ψ ≈ ψ W (ψ ∧ φ).
+Lemma law_271 : φ R ψ ≈ ψ W (ψ ∧ φ).
 Proof. Fail now solve. Abort.
-Lemma law_271 : φ R ψ ≈ ψ ∧ (φ ∨ ◯ (φ R ψ)).
+Lemma law_272 : φ R ψ ≈ ψ ∧ (φ ∨ ◯ (φ R ψ)).
 Proof. Fail now solve. Abort.
-Lemma law_272 : φ R (ψ ∨ χ) ≈ (φ R ψ) ∨ (φ R χ). (* ??? *)
+Lemma law_273 : φ R (ψ ∨ χ) ≈ (φ R ψ) ∨ (φ R χ). (* ??? *)
 Proof. Fail now solve. Abort.
-Lemma law_273 : (φ ∧ ψ) R χ ≈ (φ R χ) ∧ (ψ R χ). (* ??? *)
+Lemma law_274 : (φ ∧ ψ) R χ ≈ (φ R χ) ∧ (ψ R χ). (* ??? *)
 Proof. Fail now solve. Abort.
-Lemma law_274 : ◯ (φ R ψ) ≈ (◯ φ) R (◯ ψ).
+Lemma law_275 : ◯ (φ R ψ) ≈ (◯ φ) R (◯ ψ).
 Proof.
   solve.
   unfold Complement, not, In in *.
@@ -973,16 +958,16 @@ Proof.
       rewrite tail_from in H3.
       contradiction.
 Qed.
-Lemma law_275 : □ ψ ≈ ⊥ R ψ.
+Lemma law_276 : □ ψ ≈ ⊥ R ψ.
 Proof. Fail now solve. Abort.
 
-Lemma law_276 : φ M ψ ≈ (φ R ψ) ∧ ◇ φ.
+Lemma law_277 : φ M ψ ≈ (φ R ψ) ∧ ◇ φ.
 Proof. now solve. Qed.
-Lemma law_277 : φ M ψ ≈ φ R (ψ ∧ ◇ φ).
+Lemma law_278 : φ M ψ ≈ φ R (ψ ∧ ◇ φ).
 Proof. Fail now solve. Abort.
-Lemma law_278 : ¬(φ W ψ) ≈ (¬ φ M ¬ ψ).
+Lemma law_279 : ¬(φ W ψ) ≈ (¬ φ M ¬ ψ).
 Proof. Fail now solve. Abort.
-Lemma law_279 : ¬(φ M ψ) ≈ (¬ φ W ¬ ψ).
+Lemma law_280 : ¬(φ M ψ) ≈ (¬ φ W ¬ ψ).
 Proof. Fail now solve. Abort.
 
 End LTL.

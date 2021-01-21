@@ -91,12 +91,21 @@ Qed.
 Lemma from_from i j s : from i (from j s) = from j (from i s).
 Proof.
   generalize dependent j.
-  induction i; auto.
-  intros.
+  induction i; intros; auto.
   specialize (IHi (S j)).
   rewrite from_S.
   rewrite <- IHi.
   now rewrite from_S.
+Qed.
+
+Lemma from_plus i j s : from i (from j s) = from (i + j) s.
+Proof.
+  generalize dependent j.
+  induction i; intros; auto.
+  rewrite PeanoNat.Nat.add_succ_comm.
+  rewrite <- IHi.
+  simpl.
+  now rewrite tail_from.
 Qed.
 
 Definition every (P : Stream -> Prop) (s : Stream) : Prop :=
