@@ -31,17 +31,17 @@ Qed.
 Definition head (s : Stream) : a :=
   match s with Cons x _ => x end.
 
+Definition tail (s : Stream) : Stream :=
+  match s with Cons _ xs => xs end.
+
 Fixpoint from (i : nat) (s : Stream) : Stream :=
   match i with
   | O => s
-  | S n => match s with Cons _ xs => from n xs end
+  | S n => from n (tail s)
   end.
 
 Lemma from_cons i x s : from (S i) (Cons x s) = from i s.
 Proof. now induction i. Qed.
-
-Definition tail (s : Stream) : Stream :=
-  match s with Cons _ xs => xs end.
 
 Lemma tail_from_1 s : tail s = from 1 s.
 Proof. reflexivity. Qed.
@@ -60,7 +60,6 @@ Lemma from_tail_S i s : from i (tail s) = from (S i) s.
 Proof.
   revert s.
   induction i; intros; auto.
-  destruct s; auto.
 Qed.
 
 Lemma from_tail i s : from i (tail s) = tail (from i s).
@@ -74,11 +73,37 @@ Qed.
 Lemma tail_from i s : tail (from i s) = from i (tail s).
 Proof. symmetry. now apply from_tail. Qed.
 
+Lemma from_S i j s : from i (from (S j) s) = from (S i) (from j s).
+Proof.
+  generalize dependent j.
+  induction i; intros; auto.
+  - destruct s; auto.
+    rewrite from_cons.
+    simpl.
+    now rewrite tail_from.
+  - rewrite <- IHi.
+    destruct s; auto.
+    rewrite from_cons.
+    simpl.
+    now rewrite !tail_from.
+Qed.
+
+Lemma from_from i j s : from i (from j s) = from j (from i s).
+Proof.
+  generalize dependent j.
+  induction i; auto.
+  intros.
+  specialize (IHi (S j)).
+  rewrite from_S.
+  rewrite <- IHi.
+  now rewrite from_S.
+Qed.
+
 Definition every (P : Stream -> Prop) (s : Stream) : Prop :=
-  forall i, P (tail i).
+  forall i, P (from i s).
 
 Definition any (P : Stream -> Prop) (s : Stream) : Prop :=
-  exists i, P (tail i).
+  exists i, P (from i s).
 
 Section stream_eq_coind.
   Variable R : Stream -> Stream -> Prop.

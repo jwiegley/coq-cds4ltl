@@ -326,15 +326,15 @@ Proof. solve. now apply NNPP. Qed.
 Lemma law_18 : ◇ (⊤) ≈ ⊤.
 Proof.
   solve.
-  exists (Cons (head x) x).
-  now rewrite tail_cons.
+  exists 0.
+  now constructor.
 Qed.
 Lemma law_19 : ◇ (⊥) ≈ ⊥.
 Proof. now solve. Qed.
 Lemma law_20 : □ (⊤) ≈ ⊤.
 Proof. now solve. Qed.
 Lemma law_21 : □ (⊥) ≈ ⊥.
-Proof. now solve. Qed.
+Proof. solve. exact 0. Qed.
 Lemma law_22 : ¬◯ φ ≈ ◯¬ φ.
 Proof. now solve. Qed.
 Lemma law_23 : ¬□ φ ≈ ◇¬ φ.
@@ -349,33 +349,60 @@ Lemma law_25 : ¬◇□ φ ≈ □◇¬ φ.
 Proof.
   solve.
   apply not_all_ex_not; intro.
-  now apply H.
+  now eapply H; eauto.
 Qed.
 Lemma law_26 : ¬□◇ φ ≈ ◇□¬ φ.
-Proof. now solve. Qed.
-
+Proof.
+  solve.
+  unfold Complement, In in H.
+  now solve.
+Qed.
 Lemma law_27 : forall s, □ φ s -> φ s.
-Proof. solve. now apply (H (Cons (head s) s)). Qed.
+Proof. solve. now apply (H 0). Qed.
 Lemma law_28 : forall s, φ s -> ◇ φ s.
 Proof.
   solve.
-  exists (Cons (head s) s).
-  now rewrite tail_cons.
+  exists 0.
+  now solve.
 Qed.
 Lemma law_29 : forall s, □ φ s -> ◯ φ s.
-Proof. now solve. Qed.
+Proof.
+  solve.
+  now apply (H 1).
+Qed.
 Lemma law_30 : forall s, □ φ s -> ◯□ φ s.
-Proof. now solve. Qed.
+Proof.
+  solve.
+  rewrite from_tail_S.
+  now apply (H (S i)).
+Qed.
 Lemma law_31 : forall s, □ φ s -> □◯ φ s.
-Proof. now solve. Qed.
+Proof.
+  solve.
+  rewrite tail_from_S.
+  now apply H.
+Qed.
 Lemma law_32 : forall s, ◯ φ s -> ◇ φ s.
-Proof. now solve. Qed.
+Proof.
+  solve.
+  now exists 1.
+Qed.
 Lemma law_33 : forall s, □ φ s -> ◇ φ s.
-Proof. now solve. Qed.
+Proof.
+  solve.
+  exact 0.
+Qed.
 Lemma law_34 : forall s, ◇□ φ s -> □◇ φ s.
-Proof. now solve. Qed.
+Proof.
+  solve.
+  exists x.
+  now rewrite from_from.
+Qed.
 Lemma law_35 : forall s, □¬ φ s -> ¬□ φ s.
-Proof. now solve. Qed.
+Proof.
+  solve.
+  now exact 0.
+Qed.
 
 Lemma law_36 : □□ φ ≈ □ φ.
 Proof. now solve. Qed.
@@ -490,7 +517,17 @@ Proof.
   - now exists x0; right.
 Qed.
 Lemma law_65 : ◇□ (φ → □ ψ) ≈ ◇□¬ φ ∧ ◇□ ψ.
-Proof. Fail now solve. Abort.
+Proof.
+  solve.
+  - exists x0; intros.
+    specialize (H i); solve.
+    admit.
+  - exists x0; intros.
+    specialize (H i); solve.
+    admit.
+  - exists x; intros.
+    now left; apply H0.
+  Fail now solve. Abort.
 Lemma law_66 : □ (□◇ φ → ◇ ψ) ≈ ◇□¬ φ ∧ □◇ ψ.
 Proof. Fail now solve. Abort.
 Lemma law_67 : □ ((φ ∨ □ ψ) ∧ (□ φ ∨ ψ)) ≈ □ φ ∨ □ ψ.
