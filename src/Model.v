@@ -16,7 +16,22 @@ Generalizable All Variables.
 Set Transparent Obligations.
 Set Decidable Equality Schemes.
 
-Module Type Boolean.
+(***********************************************************************
+ *
+ * This is a minimal Boolean Logic comprised of ∨, ¬ and five axioms.
+ *
+ * NOTE: It is possible to formulate the following using a single axiom:
+ *
+ *   forall (φ ψ χ ρ : t),
+ *     ¬(¬(¬(φ ∨ ψ) ∨ χ) ∨ ¬(φ ∨ ¬(¬χ ∨ ¬(χ ∨ ρ)))) ≈ χ
+ *
+ * However, the proofs of the five axioms below in terms of this single one
+ * are laborious and left as an exercise to the motivated reader. Further
+ * notes may be found in the paper "Short Single Axioms for Boolean Algebra"
+ * by McCune, et al.: https://www.cs.unm.edu/~mccune/papers/basax/v12.pdf
+ *)
+
+Module Type MinimalBooleanLogic.
 
 Parameter t : Type.
 
@@ -26,7 +41,6 @@ Parameter true : t.
 Parameter false : t.
 Parameter not : t -> t.
 Parameter or : t -> t -> t.
-Parameter and : t -> t -> t.
 
 Declare Instance impl_transitive : Transitive impl.
 Declare Instance impl_equiv : Proper (equiv ==> equiv ==> Basics.impl) impl.
@@ -36,7 +50,6 @@ Declare Instance equiv_equiv : Proper (equiv ==> equiv ==> Basics.impl) equiv.
 Declare Instance equiv_flip_equiv : Proper (equiv ==> equiv ==> flip Basics.impl) equiv.
 Declare Instance not_equiv : Proper (equiv ==> equiv) not.
 Declare Instance or_equiv : Proper (equiv ==> equiv ==> equiv) or.
-Declare Instance and_equiv : Proper (equiv ==> equiv ==> equiv) and.
 
 Global Infix    "⟹"      := impl            (at level 91).
 Global Infix    "≈"       := equiv           (at level 90).
@@ -46,27 +59,20 @@ Global Notation "¬ p"     := (not p)         (at level 0).
 Global Infix    "∨"       := or              (at level 46, right associativity).
 Global Infix    "∧"       := and             (at level 45, right associativity).
 Global Notation "p → q"   := (¬ p ∨ q)       (at level 80, only parsing).
-Global Notation "p ↔ q"   := (p → q ∧ q → p) (at level 80, only parsing).
-Global Notation "p ≡ q"   := (p ↔ q)         (at level 80, only parsing).
 
-(** "and" is not fundamental, and can be defined in terms of "or". To allow
-    for efficient choices of "and", we simply require that its behavior be
-    equivalent to the more basic definition. *)
+(** "and" is not fundamental, and can be defined in terms of "or". *)
 Hypothesis impl_def : forall (φ ψ : t), φ ⟹ ψ <-> φ → ψ ≈ ⊤.
 Hypothesis equiv_def : forall (φ ψ : t), φ ≈ ψ <-> (φ ⟹ ψ) /\ (ψ ⟹ φ).
 Hypothesis true_def : forall (φ : t), ⊤ ≈ φ ∨ ¬ φ.
 Hypothesis false_def : forall (φ : t), ⊥ ≈ ¬ (φ ∨ ¬ φ).
-Hypothesis and_def : forall (φ ψ : t), φ ∧ ψ ≈ ¬ (¬ φ ∨ ¬ ψ).
 
 (** This is one set of fundamental axioms of boolean algebra. *)
-Hypothesis not_not : forall (φ : t), ¬¬ φ ≈ φ.
 Hypothesis or_true : forall (φ : t), φ ∨ ⊤ ≈ ⊤.
 Hypothesis or_false : forall (φ : t), φ ∨ ⊥ ≈ φ.
-Hypothesis or_idem : forall (φ : t), φ ∨ φ ≈ φ.
 Hypothesis or_comm : forall (φ ψ : t), φ ∨ ψ ≈ ψ ∨ φ.
 Hypothesis or_assoc : forall (φ ψ χ : t), (φ ∨ ψ) ∨ χ ≈ φ ∨ (ψ ∨ χ).
-Hypothesis distr_or_and : forall (φ ψ χ : t), φ ∧ (ψ ∨ χ) ≈ (φ ∧ ψ) ∨ (φ ∧ χ).
-Hypothesis distr_and_or : forall (φ ψ χ : t), φ ∨ (ψ ∧ χ) ≈ (φ ∨ ψ) ∧ (φ ∨ χ).
+Hypothesis or_distr_not : forall (φ ψ χ : t),
+  ¬ (¬ (φ ∨ ψ) ∨ ¬ (φ ∨ χ)) ≈ φ ∨ ¬ (¬ ψ ∨ ¬ χ).
 
 Lemma not_true : ¬ ⊤ ≈ ⊥.
 Proof.
@@ -76,8 +82,47 @@ Qed.
 
 Lemma not_false : ¬ ⊥ ≈ ⊤.
 Proof.
-  rewrite <- not_true.
+  rewrite (true_def ⊥).
+  rewrite or_comm.
+  now rewrite or_false.
+Qed.
+
+Lemma not_not : forall (φ : t), ¬¬ φ ≈ φ.
+Proof.
+  intros.
+  rewrite <- or_false.
+  rewrite <- (or_false φ) at 2.
+  rewrite <- not_true at 2.
+  rewrite <- (or_false ⊤).
+  rewrite <- not_true at 2.
+  rewrite <- not_false at 1.
+  rewrite <- (or_distr_not φ ⊥ ⊤).
+  rewrite !or_false.
+  rewrite or_true.
+  rewrite not_true.
+  now rewrite or_false.
+Qed.
+
+Lemma not_or : forall (φ : t), ¬ (¬ φ ∨ ¬ ⊤) ≈ φ.
+Proof.
+  intros.
+  rewrite not_true.
+  rewrite or_false.
   now apply not_not.
+Qed.
+
+Lemma or_idem : forall (φ : t), φ ∨ φ ≈ φ.
+Proof.
+  intros.
+  rewrite <- (or_false φ) at 3.
+  rewrite (false_def φ).
+  rewrite <- (not_not φ) at 4.
+  rewrite <- or_distr_not.
+  rewrite <- true_def.
+  rewrite not_true.
+  rewrite (or_comm ⊥).
+  rewrite or_false.
+  now rewrite not_not.
 Qed.
 
 Lemma impl_true (φ : t) : ⊤ ⟹ φ <-> φ ≈ ⊤.
@@ -107,6 +152,58 @@ Proof.
   rewrite not_not.
   rewrite or_comm.
   now apply (proj1 (impl_def _ _)).
+Qed.
+
+Lemma weakening (φ ψ : t) : φ ⟹ φ ∨ ψ.
+Proof.
+  apply impl_def.
+  rewrite <- or_assoc.
+  rewrite (or_comm _ φ).
+  rewrite <- true_def.
+  rewrite or_comm.
+  now apply or_true.
+Qed.
+
+Lemma not_swap (φ ψ : t) : (¬ φ ≈ ψ) <-> (φ ≈ ¬ ψ).
+Proof.
+  split; intro.
+  - rewrite <- not_not.
+    now rewrite H.
+  - rewrite H.
+    now apply not_not.
+Qed.
+
+End MinimalBooleanLogic.
+
+Module Type BooleanLogic <: MinimalBooleanLogic.
+
+Include MinimalBooleanLogic.
+
+Parameter and : t -> t -> t.
+
+Declare Instance and_equiv : Proper (equiv ==> equiv ==> equiv) and.
+
+Global Infix    "∧"       := and             (at level 45, right associativity).
+Global Notation "p ↔ q"   := (p → q ∧ q → p) (at level 80, only parsing).
+Global Notation "p ≡ q"   := (p ↔ q)         (at level 80, only parsing).
+
+(** "and" is not fundamental, and can be defined in terms of "or". To allow
+    for efficient choices of "and", we simply require that its behavior be
+    equivalent to the more basic definition. *)
+Hypothesis and_def : forall (φ ψ : t), φ ∧ ψ ≈ ¬ (¬ φ ∨ ¬ ψ).
+
+Lemma distr_or_and (φ ψ χ : t) : φ ∧ (ψ ∨ χ) ≈ (φ ∧ ψ) ∨ (φ ∧ χ).
+Proof.
+  rewrite !and_def.
+  apply not_swap.
+  rewrite or_distr_not.
+  now rewrite !not_not.
+Qed.
+
+Lemma distr_and_or (φ ψ χ : t) : φ ∨ (ψ ∧ χ) ≈ (φ ∨ ψ) ∧ (φ ∨ χ).
+Proof.
+  rewrite !and_def.
+  now rewrite or_distr_not.
 Qed.
 
 Lemma absurdity (φ : t) : φ ∧ ¬ φ ⟹ ⊥.
@@ -186,28 +283,9 @@ Proof.
   now rewrite or_false.
 Qed.
 
-Lemma weakening (φ ψ : t) : φ ⟹ φ ∨ ψ.
-Proof.
-  apply impl_def.
-  rewrite <- or_assoc.
-  rewrite (or_comm _ φ).
-  rewrite <- true_def.
-  rewrite or_comm.
-  now apply or_true.
-Qed.
+End BooleanLogic.
 
-Lemma not_swap (φ ψ : t) : (¬ φ ≈ ψ) <-> (φ ≈ ¬ ψ).
-Proof.
-  split; intro.
-  - rewrite <- not_not.
-    now rewrite H.
-  - rewrite H.
-    now apply not_not.
-Qed.
-
-End Boolean.
-
-Module Type LTL <: Boolean.
+Module Type LinearTemporalLogic <: BooleanLogic.
 
 (***********************************************************************
  *
