@@ -5,7 +5,9 @@ Require Import
   Coq.Classes.SetoidClass
   Coq.Classes.RelationClasses
   Coq.Classes.Morphisms
-  Coq.Setoids.Setoid.
+  Coq.Setoids.Setoid
+  Coq.Sets.Ensembles
+  Same_set.
 
 Generalizable All Variables.
 Set Transparent Obligations.
@@ -191,13 +193,6 @@ Next Obligation.
   reflexivity.
 Qed.
 
-Global Program Instance from_Proper :
-  Proper (@eq nat ==> stream_eq ==> stream_eq) from.
-Next Obligation.
-  repeat intro.
-  subst.
-Admitted.
-
 Global Program Instance tail_Proper :
   Proper (stream_eq ==> stream_eq) tail.
 Next Obligation.
@@ -208,19 +203,75 @@ Next Obligation.
   assumption.
 Qed.
 
-Global Program Instance any_Proper :
-  Proper ((stream_eq ==> impl) ==> stream_eq ==> impl) any.
+Global Program Instance from_Proper :
+  Proper (@eq nat ==> stream_eq ==> stream_eq) from.
+Next Obligation.
+  repeat intro; subst.
+  induction y; auto.
+  now rewrite <- !from_tail_S, !from_tail, IHy.
+Qed.
+
+Global Program Instance any_Proper f :
+  Proper (stream_eq ==> impl) f ->
+  Proper (stream_eq ==> impl) (any f).
 Next Obligation.
   unfold any.
-  repeat intro.
-Admitted.
+  repeat intro; subst.
+  destruct H1.
+  exists x0.
+  now rewrite <- H0.
+Qed.
 
-Global Program Instance every_Proper :
-  Proper ((stream_eq ==> impl) ==> stream_eq ==> impl) every.
+Global Program Instance any_flip_Proper f :
+  Proper (stream_eq ==> flip impl) f ->
+  Proper (stream_eq ==> flip impl) (any f).
+Next Obligation.
+  unfold any.
+  repeat intro; subst.
+  destruct H1.
+  exists x0.
+  now rewrite H0.
+Qed.
+
+Global Program Instance any_Same_set_Proper :
+  Proper (Same_set Stream ==> Same_set Stream) any.
+Next Obligation.
+  unfold any.
+  split; repeat intro; unfold In in *.
+  - destruct H0.
+    exists x1.
+    now apply H.
+  - destruct H0.
+    exists x1.
+    now apply H.
+Qed.
+
+Global Program Instance every_Proper f :
+  Proper (stream_eq ==> impl) f ->
+  Proper (stream_eq ==> impl) (every f).
 Next Obligation.
   unfold every.
-  repeat intro.
-Admitted.
+  repeat intro; subst.
+  now rewrite <- H0.
+Qed.
+
+Global Program Instance every_flip_Proper f :
+  Proper (stream_eq ==> flip impl) f ->
+  Proper (stream_eq ==> flip impl) (every f).
+Next Obligation.
+  unfold every.
+  repeat intro; subst.
+  now rewrite H0.
+Qed.
+
+Global Program Instance every_Same_set_Proper :
+  Proper (Same_set Stream ==> Same_set Stream) every.
+Next Obligation.
+  unfold every.
+  split; repeat intro; unfold In in *.
+  - now apply H; unfold In.
+  - now apply H; unfold In.
+Qed.
 
 Lemma cons_inj x s y u : Cons x s = Cons y u -> x = y /\ s = u.
 Proof.
