@@ -451,7 +451,17 @@ Proof.
 Qed.
 
 Lemma (* 24 *) until_24 (φ ψ χ : t) : (¬ φ U (ψ U χ)) ∧ (φ U χ) ⟹ ψ U χ.
-Admitted.
+Proof.
+  rewrite until_right_or_order.
+  rewrite until_right_distr_impl.
+  rewrite and_comm.
+  rewrite distr_or_and.
+  rewrite absurdity.
+  rewrite or_comm.
+  rewrite or_false.
+  rewrite and_comm.
+  now rewrite and_proj.
+Qed.
 
 Lemma (* 25 *) until_25 (φ ψ χ : t) : (φ U (¬ ψ U χ)) ∧ (ψ U χ) ⟹ φ U χ.
 Admitted.
@@ -460,6 +470,9 @@ Lemma (* 26 *) until_26 (φ ψ : t) : (φ U ψ) ∧ (¬ ψ U φ) ⟹ φ.
 Admitted.
 
 Lemma (* 27 *) until_27 (φ ψ : t) : φ ∧ (¬ φ U ψ) ⟹ ψ.
+Proof.
+  rewrite <- (until_idem φ) at 1.
+  rewrite until_impl_order.
 Admitted.
 
 Lemma (* 28 *) until_28 (φ ψ : t) : φ U ψ ⟹ φ ∨ ψ.
