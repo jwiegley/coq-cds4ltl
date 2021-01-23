@@ -1,6 +1,7 @@
 Require Import
   Coq.Classes.Equivalence
   Coq.Classes.Morphisms
+  Coq.Classes.Morphisms_Prop
   Coq.Classes.RelationClasses
   Coq.Classes.SetoidClass
   Coq.Logic.Classical
@@ -17,7 +18,6 @@ Set Transparent Obligations.
 Set Decidable Equality Schemes.
 
 (***********************************************************************
- *
  * This is a minimal Boolean Logic comprised of ∨, ¬ and five axioms.
  *
  * NOTE: It is possible to formulate the following using a single axiom:
@@ -42,14 +42,17 @@ Parameter false : t.
 Parameter not : t -> t.
 Parameter or : t -> t -> t.
 
+Declare Instance impl_reflexive : Reflexive impl.
 Declare Instance impl_transitive : Transitive impl.
 Declare Instance impl_equiv : Proper (equiv ==> equiv ==> Basics.impl) impl.
-Declare Instance impl_flip : Proper (impl --> equiv ==> flip Basics.impl) impl.
+
 Declare Instance equiv_equivalence : Equivalence equiv.
 Declare Instance equiv_equiv : Proper (equiv ==> equiv ==> Basics.impl) equiv.
 Declare Instance equiv_flip_equiv : Proper (equiv ==> equiv ==> flip Basics.impl) equiv.
+
 Declare Instance not_equiv : Proper (equiv ==> equiv) not.
 Declare Instance or_equiv : Proper (equiv ==> equiv ==> equiv) or.
+Declare Instance or_impl : Proper (impl ==> impl ==> impl) or.
 
 Global Infix    "⟹"      := impl            (at level 91).
 Global Infix    "≈"       := equiv           (at level 90).
@@ -103,7 +106,7 @@ Proof.
   now rewrite or_false.
 Qed.
 
-Lemma not_or : forall (φ : t), ¬ (¬ φ ∨ ¬ ⊤) ≈ φ.
+Lemma not_not_or : forall (φ : t), ¬ (¬ φ ∨ ¬ ⊤) ≈ φ.
 Proof.
   intros.
   rewrite not_true.
@@ -145,16 +148,20 @@ Proof.
   now rewrite <- true_def.
 Qed.
 
-Lemma contrapositive (φ ψ : t) : φ ⟹ ψ -> ¬ ψ ⟹ ¬ φ.
+Lemma contrapositive (φ ψ : t) : φ ⟹ ψ <-> ¬ ψ ⟹ ¬ φ.
 Proof.
-  intro.
-  apply impl_def.
-  rewrite not_not.
-  rewrite or_comm.
-  now apply (proj1 (impl_def _ _)).
+  split; intro.
+  - apply impl_def.
+    rewrite not_not.
+    rewrite or_comm.
+    now apply (proj1 (impl_def _ _)).
+  - apply impl_def.
+    rewrite or_comm.
+    apply impl_def in H.
+    now rewrite not_not in H.
 Qed.
 
-Lemma weakening (φ ψ : t) : φ ⟹ φ ∨ ψ.
+Lemma or_inj (φ ψ : t) : φ ⟹ φ ∨ ψ.
 Proof.
   apply impl_def.
   rewrite <- or_assoc.
@@ -173,7 +180,32 @@ Proof.
     now apply not_not.
 Qed.
 
+Global Program Instance equiv_iff :
+  Proper (equiv ==> equiv ==> iff) equiv.
+Next Obligation.
+  repeat intro.
+  split; intro.
+  - rewrite <- H.
+    now rewrite H1.
+  - rewrite H.
+    now rewrite H0.
+Qed.
+
+Global Program Instance not_impl :
+  Proper (impl --> impl) not.
+Next Obligation.
+  repeat intro.
+  apply contrapositive.
+  now rewrite !not_not.
+Qed.
+
 End MinimalBooleanLogic.
+
+(***********************************************************************
+ * This Boolean Logic adds the concept of ∧, which although it can be
+ * defined simply in terms of ∨, this allows for more optimal choices
+ * if meant to be used computationally.
+ *)
 
 Module Type BooleanLogic <: MinimalBooleanLogic.
 
@@ -182,6 +214,7 @@ Include MinimalBooleanLogic.
 Parameter and : t -> t -> t.
 
 Declare Instance and_equiv : Proper (equiv ==> equiv ==> equiv) and.
+Declare Instance and_impl : Proper (impl ==> impl ==> impl) and.
 
 Global Infix    "∧"       := and             (at level 45, right associativity).
 Global Notation "p ↔ q"   := (p → q ∧ q → p) (at level 80, only parsing).
@@ -206,15 +239,10 @@ Proof.
   now rewrite or_distr_not.
 Qed.
 
-Lemma absurdity (φ : t) : φ ∧ ¬ φ ⟹ ⊥.
+Lemma absurdity (φ : t) : φ ∧ ¬ φ ≈ ⊥.
 Proof.
   rewrite and_def.
-  apply impl_def.
-  rewrite !not_not.
-  rewrite (or_comm _ φ).
-  rewrite <- true_def.
-  rewrite <- not_true.
-  now rewrite <- true_def.
+  now rewrite <- false_def.
 Qed.
 
 Lemma not_or (φ ψ : t) : ¬ (φ ∨ ψ) ≈ ¬ φ ∧ ¬ ψ.
@@ -283,20 +311,33 @@ Proof.
   now rewrite or_false.
 Qed.
 
-End BooleanLogic.
+Lemma and_proj (φ ψ : t) : φ ∧ ψ ⟹ φ.
+Proof.
+  rewrite and_def.
+  apply impl_def.
+  rewrite or_comm.
+  rewrite not_not.
+  rewrite <- or_assoc.
+  rewrite <- true_def.
+  rewrite or_comm.
+  now rewrite or_true.
+Qed.
 
-Module Type LinearTemporalLogic <: BooleanLogic.
+End BooleanLogic.
 
 (***********************************************************************
  *
- * This logic follows directly the paper
+ * This Linear Temporal Logic follows directly from the paper:
  *
  * "A Calculational Deductive System for Linear Temporal Logic"
+ * https://dl.acm.org/doi/10.1145/3387109
  *
- * by Warford, Vega and Staley, https://dl.acm.org/doi/10.1145/3387109
+ * by Warford, Vega and Staley
  *)
 
-Include Boolean.
+Module Type LinearTemporalLogic <: BooleanLogic.
+
+Include BooleanLogic.
 
 Parameter next : t -> t.
 Parameter until : t -> t -> t.
@@ -383,25 +424,35 @@ Hypothesis (* 18 *) until_right_and_order : forall (φ ψ χ : t), φ U (ψ ∧ 
 (* Lemmas 19-37 *)
 
 Lemma (* 19 *) until_right_distr_impl (φ ψ χ : t) : (φ → ψ) U χ ⟹ (φ U χ) → (ψ U χ).
-Proof.
-  rewrite <- until_right_distr_or.
-  rewrite <- !weakening.
 Admitted.
 
 Lemma (* 20 *) until_right_top (φ : t) : φ U ⊤ ≈ ⊤.
-Admitted.
+Proof.
+  rewrite until_expansion.
+  rewrite or_comm.
+  now rewrite or_true.
+Qed.
 
 Lemma (* 21 *) until_left_bottom (φ : t) : ⊥ U φ ≈ φ.
-Admitted.
+Proof.
+  rewrite until_expansion.
+  rewrite and_comm.
+  rewrite and_false.
+  now rewrite or_false.
+Qed.
 
-Lemma (* 22 *) until_idempotency (φ : t) : φ U φ ≈ φ.
+Lemma (* 22 *) until_idem (φ : t) : φ U φ ≈ φ.
 Proof.
   rewrite until_expansion.
   now rewrite or_absorb.
 Qed.
 
 Lemma (* 23 *) until_excl_middle (φ ψ : t) : (φ U ψ) ∨ (φ U ¬ ψ) ≈ ⊤.
-Admitted.
+Proof.
+  rewrite <- until_left_distr_or.
+  rewrite <- true_def.
+  now apply until_right_top.
+Qed.
 
 Lemma (* 24 *) until_24 (φ ψ χ : t) : (¬ φ U (ψ U χ)) ∧ (φ U χ) ⟹ ψ U χ.
 Admitted.
@@ -416,34 +467,77 @@ Lemma (* 27 *) until_27 (φ ψ : t) : φ ∧ (¬ φ U ψ) ⟹ ψ.
 Admitted.
 
 Lemma (* 28 *) until_28 (φ ψ : t) : φ U ψ ⟹ φ ∨ ψ.
-Admitted.
+Proof.
+  rewrite until_expansion.
+  rewrite distr_and_or.
+  rewrite and_proj.
+  rewrite or_comm.
+  reflexivity.
+Qed.
 
 Lemma (* 29 *) until_insertion (φ ψ : t) : ψ ⟹ φ U ψ.
 Proof.
   rewrite until_expansion.
-  now apply weakening.
+  now apply or_inj.
 Qed.
 
 Lemma (* 30 *) until_30 (φ ψ : t) : φ ∧ ψ ⟹ φ U ψ.
-Admitted.
+Proof.
+  rewrite until_expansion.
+  rewrite <- or_inj.
+  rewrite and_comm.
+  now apply and_proj.
+Qed.
 
 Lemma (* 31 *) until_absorb_or_u (φ ψ : t) : φ ∨ (φ U ψ) ≈ φ ∨ ψ.
-Admitted.
+Proof.
+  apply equiv_def; split.
+  - rewrite (until_28 φ ψ) at 1.
+    rewrite <- or_assoc.
+    now rewrite or_idem.
+  - now rewrite <- until_insertion.
+Qed.
 
 Lemma (* 32 *) until_absorb_u_or (φ ψ : t) : (φ U ψ) ∨ ψ ≈ φ U ψ.
-Admitted.
+Proof.
+  rewrite until_expansion.
+  rewrite or_comm at 1.
+  rewrite <- or_assoc.
+  now rewrite or_idem.
+Qed.
 
 Lemma (* 33 *) until_absorb_u_and (φ ψ : t) : (φ U ψ) ∧ ψ ≈ ψ.
-Admitted.
+Proof.
+  apply equiv_def; split.
+  - rewrite and_comm.
+    now apply and_proj.
+  - rewrite <- and_idem at 1.
+    now rewrite (until_insertion φ ψ) at 1.
+Qed.
 
 Lemma (* 34 *) until_absorb_u_or_and (φ ψ : t) : (φ U ψ) ∨ (φ ∧ ψ) ≈ φ U ψ.
-Admitted.
+Proof.
+  apply equiv_def; split.
+  - rewrite until_30.
+    now rewrite or_idem.
+  - now rewrite <- or_inj.
+Qed.
 
 Lemma (* 35 *) until_absorb_u_and_or (φ ψ : t) : (φ U ψ) ∧ (φ ∨ ψ) ≈ φ U ψ.
-Admitted.
+Proof.
+  apply equiv_def; split.
+  - now apply and_proj.
+  - rewrite <- until_28.
+    now rewrite and_idem.
+Qed.
 
 Lemma (* 36 *) until_left_absorb (φ ψ : t) : φ U (φ U ψ) ≈ φ U ψ.
-Admitted.
+Proof.
+  apply equiv_def; split.
+  - rewrite until_right_or_order.
+    now rewrite or_idem.
+  - now apply until_insertion.
+Qed.
 
 Lemma (* 37 *) until_right_absorb (φ ψ : t) : (φ U ψ) U ψ ≈ φ U ψ.
 Admitted.
@@ -521,7 +615,7 @@ Definition not := Complement (Stream a).
 Definition and := Intersection (Stream a).
 Definition or := Union (Stream a).
 
-Definition next (p : t) : t := fun s => p (tail s).
+Definition next (p : t) : t := fun s => p (from 1 s).
 Definition until (p q : t) : t :=
   fun s => exists i, q (from i s) /\ forall k, k < i -> p (from k s).
 
