@@ -1,16 +1,11 @@
 Require Import
   Coq.Classes.Equivalence
   Coq.Classes.Morphisms
-  Coq.Classes.Morphisms_Prop
   Coq.Classes.RelationClasses
-  Coq.Classes.SetoidClass
-  Coq.Logic.Classical
   Coq.Program.Program
   Coq.Relations.Relation_Definitions
-  Coq.Setoids.Setoid
   Coq.Sets.Classical_sets
   Coq.Sets.Ensembles
-  Stream
   Same_set.
 
 Generalizable All Variables.
@@ -54,14 +49,14 @@ Declare Instance not_equiv : Proper (equiv ==> equiv) not.
 Declare Instance or_equiv : Proper (equiv ==> equiv ==> equiv) or.
 Declare Instance or_impl : Proper (impl ==> impl ==> impl) or.
 
-Global Infix    "⟹"      := impl            (at level 91).
-Global Infix    "≈"       := equiv           (at level 90).
-Global Notation "⊤"       := true            (at level 0).
-Global Notation "⊥"       := false           (at level 0).
-Global Notation "¬ p"     := (not p)         (at level 0).
-Global Infix    "∨"       := or              (at level 46, right associativity).
-Global Infix    "∧"       := and             (at level 45, right associativity).
-Global Notation "p → q"   := (¬ p ∨ q)       (at level 80, only parsing).
+Infix    "⟹"      := impl            (at level 91).
+Infix    "≈"       := equiv           (at level 90).
+Notation "⊤"       := true            (at level 0).
+Notation "⊥"       := false           (at level 0).
+Notation "¬ p"     := (not p)         (at level 0).
+Infix    "∨"       := or              (at level 46, right associativity).
+Infix    "∧"       := and             (at level 45, right associativity).
+Notation "p → q"   := (¬ p ∨ q)       (at level 80, only parsing).
 
 (** "and" is not fundamental, and can be defined in terms of "or". *)
 Hypothesis impl_def : forall (φ ψ : t), φ ⟹ ψ <-> φ → ψ ≈ ⊤.
@@ -90,7 +85,7 @@ Proof.
   now rewrite or_false.
 Qed.
 
-Lemma not_not : forall (φ : t), ¬¬ φ ≈ φ.
+Lemma not_not (φ : t) : ¬¬ φ ≈ φ.
 Proof.
   intros.
   rewrite <- or_false.
@@ -106,7 +101,7 @@ Proof.
   now rewrite or_false.
 Qed.
 
-Lemma not_not_or : forall (φ : t), ¬ (¬ φ ∨ ¬ ⊤) ≈ φ.
+Lemma not_not_or (φ : t) : ¬ (¬ φ ∨ ¬ ⊤) ≈ φ.
 Proof.
   intros.
   rewrite not_true.
@@ -114,7 +109,7 @@ Proof.
   now apply not_not.
 Qed.
 
-Lemma or_idem : forall (φ : t), φ ∨ φ ≈ φ.
+Lemma or_idem (φ : t) : φ ∨ φ ≈ φ.
 Proof.
   intros.
   rewrite <- (or_false φ) at 3.
@@ -216,9 +211,9 @@ Parameter and : t -> t -> t.
 Declare Instance and_equiv : Proper (equiv ==> equiv ==> equiv) and.
 Declare Instance and_impl : Proper (impl ==> impl ==> impl) and.
 
-Global Infix    "∧"       := and             (at level 45, right associativity).
-Global Notation "p ↔ q"   := (p → q ∧ q → p) (at level 80, only parsing).
-Global Notation "p ≡ q"   := (p ↔ q)         (at level 80, only parsing).
+Infix    "∧"       := and             (at level 45, right associativity).
+Notation "p ↔ q"   := (p → q ∧ q → p) (at level 80, only parsing).
+Notation "p ≡ q"   := (p ↔ q)         (at level 80, only parsing).
 
 (** "and" is not fundamental, and can be defined in terms of "or". To allow
     for efficient choices of "and", we simply require that its behavior be
@@ -345,8 +340,8 @@ Parameter until : t -> t -> t.
 Declare Instance next_equiv : Proper (equiv ==> equiv) next.
 Declare Instance until_equiv : Proper (equiv ==> equiv ==> equiv) until.
 
-Global Notation "◯ p"     := (next p)    (at level 0).
-Global Notation "p 'U' q" := (until p q) (at level 45).
+Notation "◯ p"     := (next p)    (at level 0).
+Notation "p 'U' q" := (until p q) (at level 45).
 
 (*** 3.1 Next *)
 
@@ -424,6 +419,7 @@ Hypothesis (* 18 *) until_right_and_order : forall (φ ψ χ : t), φ U (ψ ∧ 
 (* Lemmas 19-37 *)
 
 Lemma (* 19 *) until_right_distr_impl (φ ψ χ : t) : (φ → ψ) U χ ⟹ (φ U χ) → (ψ U χ).
+Proof.
 Admitted.
 
 Lemma (* 20 *) until_right_top (φ : t) : φ U ⊤ ≈ ⊤.
