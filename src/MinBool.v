@@ -1,6 +1,6 @@
 Require Import
   Coq.Classes.Morphisms
-  Impl.
+  Coq.Setoids.Setoid.
 
 (***********************************************************************
  * This is a minimal Boolean Logic comprised of ∨, ¬ and five axioms.
@@ -18,25 +18,63 @@ Require Import
 
 Module Type MinimalBooleanLogic.
 
-Declare Module Impl : Implication.
-Include Impl.
+Parameter t : Type.
 
 Parameter not : t -> t.
 Parameter or : t -> t -> t.
 Parameter true : t.
 Parameter false : t.
+Parameter impl : t -> t -> Prop.
 
-Declare Instance not_impl_Proper : Proper (impl --> impl) not | 1.
-Declare Instance not_equiv_Proper : Proper (equiv ==> equiv) not.
-Declare Instance or_impl_Proper : Proper (impl ==> impl ==> impl) or | 1.
-Declare Instance or_equiv_Proper : Proper (equiv ==> equiv ==> equiv) or.
+Declare Instance impl_reflexive : Reflexive impl.
+Declare Instance impl_transitive : Transitive impl.
 
-Notation "¬ p"   := (not p)   (at level 0).
-Infix    "∨"     := or        (at level 46, right associativity).
-Notation "p → q" := (¬ p ∨ q) (at level 80, only parsing).
-Notation "⊤"     := true      (at level 0).
-Notation "⊥"     := false     (at level 0).
-Notation "p ⟹ q" := (p → q ≈ ⊤) (at level 50, only parsing).
+Declare Instance not_respects_impl :
+  Proper (impl --> impl) not | 1.
+Declare Instance or_respects_impl :
+  Proper (impl ==> impl ==> impl) or.
+
+Definition eqv (x y : t) : Prop := impl x y /\ impl y x.
+
+Program Instance eqv_equivalence : Equivalence eqv.
+Next Obligation. intro x; now split. Qed.
+Next Obligation. repeat intro; split; destruct H; now intuition. Qed.
+Next Obligation. repeat intro; split; destruct H, H0; now transitivity y. Qed.
+
+Program Instance impl_respects_eqv :
+  Proper (eqv ==> eqv ==> Basics.impl) impl.
+Next Obligation.
+  repeat intro.
+  destruct H, H0.
+  transitivity x; auto.
+  transitivity x0; auto.
+Qed.
+
+Program Instance not_respects_eqv :
+  Proper (eqv ==> eqv) not.
+Next Obligation.
+  repeat intro.
+  destruct H; split.
+  - now rewrite H0.
+  - now rewrite H.
+Qed.
+
+Program Instance or_respects_eqv :
+  Proper (eqv ==> eqv ==> eqv) or.
+Next Obligation.
+  repeat intro.
+  destruct H, H0; split.
+  - now rewrite H, H0.
+  - now rewrite H1, H2.
+Qed.
+
+Notation "¬ p"   := (not p)    (at level 0, right associativity).
+Infix    "∨"     := or         (at level 46, right associativity).
+Notation "p → q" := (¬ p ∨ q)  (at level 51, right associativity, only parsing).
+Notation "⊤"     := true       (at level 0, no associativity).
+Notation "⊥"     := false      (at level 0, no associativity).
+Infix    "⟹"    := impl       (at level 94, right associativity).
+Infix    "≈"     := eqv        (at level 90, no associativity).
 
 Hypothesis impl_def : forall (φ ψ : t), φ ⟹ ψ <-> φ → ψ ≈ ⊤.
 Hypothesis true_def : forall (φ : t), ⊤ ≈ φ ∨ ¬ φ.
@@ -105,25 +143,14 @@ Qed.
 Lemma impl_true (φ : t) : ⊤ ⟹ φ <-> φ ≈ ⊤.
 Proof.
   split; intro.
-  - rewrite not_true in H.
+  - apply impl_def in H.
+    rewrite not_true in H.
     rewrite or_comm in H.
     now rewrite or_false in H.
-  - rewrite not_true.
-    rewrite or_comm.
-    now rewrite or_false
-Qed.
-
-Proof.
-  split; intro.
-  - apply impl_def in H.
-    rewrite <- H.
+  - apply impl_def.
     rewrite not_true.
     rewrite or_comm.
     now rewrite or_false.
-  - apply impl_def.
-    rewrite <- H at 1.
-    rewrite or_comm.
-    now rewrite <- true_def.
 Qed.
 
 Lemma excluded_middle (φ : t) : ⊤ ⟹ φ ∨ ¬ φ.
@@ -132,27 +159,16 @@ Proof.
   now rewrite <- true_def.
 Qed.
 
-(*
-Lemma or_split_true (φ ψ : t) : φ ∨ ψ ≈ ⊤ <-> (φ ≈ ⊤) \/ (ψ ≈ ⊤).
-Proof.
-  split; intro.
-  - apply equiv_def in H.
-    destruct H.
-    pose proof (excluded_middle φ).
-
-Lemma or_split_false (φ ψ : t) : φ ∨ ψ ≈ ⊥ <-> (φ ≈ ⊥) /\ (ψ ≈ ⊥).
-*)
-
 Lemma contrapositive (φ ψ : t) : φ ⟹ ψ <-> ¬ ψ ⟹ ¬ φ.
 Proof.
   split; intro.
-  - apply impl_def.
+  - apply impl_def in H.
+    apply impl_def.
     rewrite not_not.
+    now rewrite or_comm.
+  - apply impl_def in H.
+    apply impl_def.
     rewrite or_comm.
-    now apply (proj1 (impl_def _ _)).
-  - apply impl_def.
-    rewrite or_comm.
-    apply impl_def in H.
     now rewrite not_not in H.
 Qed.
 
@@ -166,7 +182,7 @@ Proof.
   now apply or_true.
 Qed.
 
-Lemma not_swap (φ ψ : t) : (¬ φ ≈ ψ) <-> (φ ≈ ¬ ψ).
+Lemma not_swap (φ ψ : t) : ¬ φ ≈ ψ <-> φ ≈ ¬ ψ.
 Proof.
   split; intro.
   - rewrite <- not_not.
@@ -174,15 +190,5 @@ Proof.
   - rewrite H.
     now apply not_not.
 Qed.
-
-(*
-Lemma or_distr_impl (φ ψ χ : t) : φ ∨ ψ ⟹ χ <-> (φ → χ) ∧ (ψ → χ) ≈ ⊤.
-
-
-Lemma impl_distr_or (φ ψ χ : t) : φ ⟹ ψ ∨ χ <-> (φ → ψ) ∨ (φ → χ) ≈ ⊤.
-Proof.
-
-Lemma impl_or (φ ψ χ : t) : φ ⟹ ψ ∨ χ <-> (φ ⟹ ψ) /\ (ψ ⟹ χ).
-*)
 
 End MinimalBooleanLogic.

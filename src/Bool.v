@@ -1,5 +1,6 @@
 Require Import
   Coq.Classes.Morphisms
+  Coq.Setoids.Setoid
   MinBool.
 
 (***********************************************************************
@@ -15,19 +16,28 @@ Include MinBool.
 
 Parameter and : t -> t -> t.
 
-Declare Instance and_impl_Proper : Proper (impl ==> impl ==> impl) and.
-Declare Instance and_equiv_Propen : Proper (equiv ==> equiv ==> equiv) and.
+Declare Instance and_respects_impl :
+  Proper (impl ==> impl ==> impl) and.
+
+Program Instance and_respects_eqv :
+  Proper (eqv ==> eqv ==> eqv) and.
+Next Obligation.
+  repeat intro.
+  destruct H, H0; split.
+  - now rewrite H, H0.
+  - now rewrite H1, H2.
+Qed.
 
 Infix    "∧"       := and             (at level 45, right associativity).
-Notation "p ↔ q"   := (p → q ∧ q → p) (at level 80, only parsing).
-Notation "p ≡ q"   := (p ↔ q)         (at level 80, only parsing).
+Notation "p ↔ q"   := (p → q ∧ q → p) (at level 80, right associativity, only parsing).
+Notation "p ≡ q"   := (p ↔ q)         (at level 80, right associativity, only parsing).
 
 (** "and" is not fundamental, and can be defined in terms of "or". To allow
     for efficient choices of "and", we simply require that its behavior be
     equivalent to the more basic definition. *)
 Hypothesis and_def : forall (φ ψ : t), φ ∧ ψ ≈ ¬ (¬ φ ∨ ¬ ψ).
 
-Lemma or_distr_and (φ ψ χ : t) : φ ∧ (ψ ∨ χ) ≈ (φ ∧ ψ) ∨ (φ ∧ χ).
+Lemma and_distr_or (φ ψ χ : t) : φ ∧ (ψ ∨ χ) ≈ (φ ∧ ψ) ∨ (φ ∧ χ).
 Proof.
   rewrite !and_def.
   apply not_swap.
@@ -35,7 +45,7 @@ Proof.
   now rewrite !not_not.
 Qed.
 
-Lemma and_distr_or (φ ψ χ : t) : φ ∨ (ψ ∧ χ) ≈ (φ ∨ ψ) ∧ (φ ∨ χ).
+Lemma or_distr_and (φ ψ χ : t) : φ ∨ (ψ ∧ χ) ≈ (φ ∨ ψ) ∧ (φ ∨ χ).
 Proof.
   rewrite !and_def.
   now rewrite or_distr_not.
@@ -98,7 +108,7 @@ Qed.
 Lemma or_absorb (φ ψ : t) : φ ∨ (φ ∧ ψ) ≈ φ.
 Proof.
   rewrite <- (and_true φ) at 1.
-  rewrite <- or_distr_and.
+  rewrite <- and_distr_or.
   rewrite or_comm.
   rewrite or_true.
   now rewrite and_true.
@@ -107,7 +117,7 @@ Qed.
 Lemma and_absorb (φ ψ : t) : φ ∧ (φ ∨ ψ) ≈ φ.
 Proof.
   rewrite <- (or_false φ) at 1.
-  rewrite <- and_distr_or.
+  rewrite <- or_distr_and.
   rewrite and_comm.
   rewrite and_false.
   now rewrite or_false.
@@ -115,8 +125,8 @@ Qed.
 
 Lemma and_proj (φ ψ : t) : φ ∧ ψ ⟹ φ.
 Proof.
-  rewrite and_def.
   apply impl_def.
+  rewrite and_def.
   rewrite or_comm.
   rewrite not_not.
   rewrite <- or_assoc.
@@ -125,34 +135,41 @@ Proof.
   now rewrite or_true.
 Qed.
 
-Lemma and_impl (φ ψ χ : t) : φ ∧ ψ ⟹ χ <-> φ → (ψ → χ) ≈ ⊤.
+Lemma impl_and (φ ψ χ : t) : φ ∧ ψ → χ ≈ φ → (ψ → χ).
 Proof.
-  split; intros.
-  - apply impl_def in H.
-    rewrite and_def in H.
-    rewrite not_not in H.
-    rewrite <- or_assoc.
-    now apply H.
-  - apply impl_def.
-    rewrite and_def.
-    rewrite not_not.
-    rewrite or_assoc.
-    now apply H.
+  rewrite and_def.
+  rewrite not_not.
+  now rewrite <- or_assoc.
 Qed.
 
-(*
-Lemma and_distr_impl (φ ψ χ : t) : φ ∧ ψ ⟹ χ <-> (φ ⟹ ψ) \/ (φ ⟹ χ).
+Lemma and_impl (φ ψ : t) : φ ∧ (φ → ψ) ≈ φ ∧ ψ.
+Proof.
+  rewrite and_distr_or.
+  rewrite absurdity.
+  rewrite or_comm.
+  now rewrite or_false.
+Qed.
+
+Lemma and_impl_iff (φ ψ χ : t) : φ ∧ ψ ⟹ χ <-> φ ⟹ (ψ → χ).
 Proof.
   split; intro.
-  - split.
-    + rewrite and_def in H.
-      apply impl_def in H.
-      apply impl_def.
-      rewrite <- H.
-      rewrite and_distr_not.
-
-Lemma impl_distr_and (φ ψ χ : t) : φ ⟹ ψ ∧ χ <-> (φ ⟹ ψ) /\ (φ ⟹ χ).
-Proof.
-*)
+  - rewrite <- H; clear H.
+    rewrite and_comm.
+    rewrite or_distr_and.
+    rewrite or_comm.
+    rewrite <- true_def.
+    rewrite and_comm.
+    rewrite and_true.
+    rewrite or_comm.
+    now apply or_inj.
+  - rewrite H; clear H.
+    rewrite and_comm.
+    rewrite and_distr_or.
+    rewrite absurdity.
+    rewrite or_comm.
+    rewrite or_false.
+    rewrite and_comm.
+    now apply and_proj.
+Qed.
 
 End BooleanLogic.
