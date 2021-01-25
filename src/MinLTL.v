@@ -48,7 +48,18 @@ Qed.
 Notation "◯ p"     := (next p)    (at level 0, right associativity).
 Notation "p 'U' q" := (until p q) (at level 44, right associativity).
 
-(*** 3.1 Next *)
+(*** 3.1 Next ◯ *)
+
+(**
+(1) Axiom, Self-dual: ◯ ¬p ◯ ≡ ¬ p
+(2) Axiom, Distributivity of ◯ p ◯ ≡ ¬ ¬p
+(3) Linearity: ◯ over ⇒ : ◯ (p ≡ ⇒ ◯ q) p ⇒ ◯ q
+(4) Distributivity of ◯ over ∨ : ◯ (p ∨ q) ◯ ≡ p ∨ ◯ q
+(5) Distributivity of ◯ over ∧ : ◯ (p ∧ q) ◯ ≡ p ∧ ◯ q
+(6) Distributivity of ◯ over ≡ : ◯ (p ≡ q) ≡ ◯ p ≡ ◯ q
+(7) Truth of ◯ : ◯ true ≡ true
+(8) Falsehood of ◯ : ◯ false ≡ false
+*)
 
 Hypothesis (* 1 *) next_self_dual : forall (φ : t), ◯¬ φ ≈ ¬◯ φ.
 Hypothesis (* 2 *) next_distr_impl : forall (φ ψ : t), ◯ (φ → ψ) ≈ ◯ φ → ◯ ψ.
@@ -101,7 +112,39 @@ Proof.
   now rewrite false_def.
 Qed.
 
-(*** 3.2 Until *)
+(*** 3.2 Until U *)
+
+(**
+(9) Axiom, Distributivity of ◯ over U : ◯ (p ≡ U ◯ q) p U ◯ q
+(10) Axiom, Expansion of U : p U q ≡ q ∨ (p ∧ ◯ (p U q))
+(11) Axiom, Right zero of U : p U false ≡ false
+(12) Axiom, Left distributivity of U over ∨ : p U (q ∨ r) ≡ p U q ∨ p U r
+(13) Axiom, Right distributivity of U over ∨ : p U r ∨ q U r ⇒ (p ∨ q) U r
+(14) Axiom, Left distributivity of U over ∧ : p U (q ∧ r) ⇒ p U q ∧ p U r
+(15) Axiom, Right distributivity of U over ∧ : (p ∧ q) U r ≡ p U r ∧ q U r
+(16) Axiom, U implication ordering: p U q ∧ ¬q U r ⇒ p U r
+(17) Axiom, Right U ∨ ordering: p U (q U r) ⇒ (p ∨ q) U r
+(18) Axiom, Right ∧ U ordering: p U (q ∧ r) ⇒ (p U q) U r
+(19) Right distributivity of U over ⇒ : (p ⇒ q) U r ⇒ (p U r ⇒ q U r)
+(20) Right zero of U : p U true ≡ true
+(21) Left identity of U : false U q ≡ q
+(22) Idempotency of U : p U p ≡ p
+(23) U excluded middle: p U q ∨ p U ¬q
+(24) ¬p U (q U r) ∧ p U r ⇒ q U r
+(25) p U (¬q U r) ∧ q U r ⇒ p U r
+(26) p U q ∧ ¬q U p ⇒ p
+(27) p ∧ ¬p U q ⇒ q
+(28) p U q ⇒ p ∨ q
+(29) U insertion: q ⇒ p U q
+(30) p ∧ q ⇒ p U q
+(31) Absorption: p ∨ p U q ≡ p ∨ q
+(32) Absorption: p U q ∨ q ≡ p U q
+(33) Absorption: p U q ∧ q ≡ q
+(34) Absorption: p U q ∨ (p ∧ q) ≡ p U q
+(35) Absorption: p U q ∧ (p ∨ q) ≡ p U q
+(36) Left absorption of U : p U (p U q) ≡ p U q
+(37) Right absorption of U : (p U q) U q ≡ p U q
+*)
 
 Hypothesis (* 9 *) next_distr_until : forall (φ ψ : t),
   ◯ (φ U ψ) ≈ (◯ φ) U (◯ ψ).

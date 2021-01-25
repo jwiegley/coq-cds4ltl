@@ -26,7 +26,26 @@ Notation "◇ p"     := (eventually p) (at level 0, right associativity).
 Notation "□ p"     := (always p)     (at level 0, right associativity).
 Notation "p 'W' q" := (wait p q)     (at level 44, right associativity).
 
-(*** 3.3 Eventually *)
+(*** 3.3 Eventually ◇ *)
+
+(**
+(38) Deﬁnition of ◇ : ◇ q ≡ true U q
+(39) Absorption of ◇ into U : p U q ∧ ◇ q ≡ p U q
+(40) Absorption of U into ◇ : p U q ∨ ◇ q ≡ ◇ q
+(41) Absorption of U into ◇ : p U ◇ q ≡ ◇ q
+(42) Eventuality: p U q ⟹ ◇ q
+(43) Truth of ◇ : ◇ true ≡ true
+(44) Falsehood of ◇ : ◇ false ≡ false
+(45) Expansion of ◇ : ◇ p ≡ p ∨ ◯ ◇ p
+(46) Weakening of ◇ : p ⟹ ◇ p
+(47) Weakening of ◇ : ◯ p ⟹ ◇ p
+(48) Absorption of ∨ into ◇ : p ∨ ◇ p ≡ ◇ p
+(49) Absorption of ◇ into ∧ : ◇ p ∧ p ≡ p
+(50) Absorption of ◇ : ◇ ◇ p ≡ ◇ p
+(51) Exchange of ◯ and ◇ : ◯ ◇ p ≡ ◇ ◯ p
+(52) Distributivity of ◇ over ∨ : ◇ (p ∨ q) ≡ ◇ p ∨ ◇ q
+(53) Distributivity of ◇ over ∧ : ◇ (p ∧ q) ⟹ ◇ p ∧ ◇ q
+*)
 
 Hypothesis (* 38 *) eventually_def : forall (φ : t), ◇ φ ≈ ⊤ U φ.
 
@@ -48,7 +67,38 @@ Lemma (* 51 *) law (φ : t) : ◯◇ φ ≈ ◇◯ φ.
 Lemma (* 52 *) law (φ ψ : t) : ◇ (φ ∨ ψ) ⟹ ◇ φ ∨ ◇ ψ.
 Lemma (* 53 *) law (φ ψ : t) : ◇ (φ ∧ ψ) ⟹ ◇ φ ∧ ◇ ψ.
 
-(*** 3.4 Always *)
+(*** 3.4 Always □ *)
+
+(**
+(54) Deﬁnition of □ : □ p ≡ ¬◇ ¬p
+(55) Axiom, U Induction: □ (p ⇒ (◯ p ∧ q) ∨ r) ⇒ (p ⇒ □ q ∨ q U r)
+(56) Axiom, U Induction: □ (p ⇒ ◯ (p ∨ q)) ⇒ (p ⇒ □ p ∨ p U q)
+(57) □ Induction: □ (p → ◯ p) ⟹ (p → □ p)
+(58) ◇ Induction: □ ( ◯ p → p) ⟹ (◇ p → p)
+(59) ◇ p ≡ ¬□ ¬p
+(60) Dual of □ : ¬□ p ≡ ◇ ¬p
+(61) Dual of ◇ : ¬◇ p ≡ □ ¬p
+(62) Dual of ◇ □ : ¬◇ □ p ≡ □ ◇ ¬p
+(63) Dual of □ ◇ : ¬□ ◇ p ≡ ◇ □ ¬p
+(64) Truth of □ : □ true ≡ true
+(65) Falsehood of □ : □ false ≡ false
+(66) Expansion of □ : □ p ≡ p ∧ ◯ □ p
+(67) Expansion of □ : □ p ≡ p ∧ ◯ p ∧ ◯ □ p
+(68) Absorption of ∧ into □ : p ∧ □ p ≡ □ p
+(69) Absorption of □ into ∨ : □ p ∨ p ≡ p
+(70) Absorption of ◇ into □ : ◇ p ∧ □ p ≡ □ p
+(71) Absorption of □ into ◇ : □ p ∨ ◇ p ≡ ◇ p
+(72) Absorption of □ : □ □ p ≡ □ p
+(73) Exchange of ◯ and □ : ◯ □ p ≡ ◯ □ p
+(74) p → □ p ≡ p → ◯ □ p
+(75) p ∧ ◇ ¬p ⟹ ◇ (p ∧ ◯ ¬p)
+(76) Strengthening of □ : □ p ⟹ p
+(77) Strengthening of □ : □ p ⟹ ◇ p
+(78) Strengthening of □ : □ p ⟹ ◯ p
+(79) Strengthening of □ : □ p ⟹ ◯ □
+(80) ◯ generalization: □ p ⟹ □ ◯ p
+(81) □ p ⟹ ¬(q U ¬p)
+*)
 
 Hypothesis (* 54 *) always_def : forall (φ : t), □ φ ≈ ¬◇¬ φ.
 Hypothesis (* 55 *) always_until_and_ind : forall (φ ψ χ : t),
@@ -84,11 +134,73 @@ Lemma (* 81 *) law (φ ψ : t) : □ φ ⟹ ¬ (ψ U ¬ φ).
 
 (*** 3.5 Temporal Deduction *)
 
+(**
+(82) Temporal deduction:
+     To prove □ P₁ ∧ □ P₂ ⇒ Q, assume P₁ and P₂, and prove Q.
+     You cannot use textual substitution in P₁ or P₂.
+*)
+
 Lemma (* 82 *) temporal_deduction (φ ψ : t) : (φ ≈ ⊤ -> ψ ≈ ⊤) -> □ φ ⟹ ψ.
 Proof.
 Admitted.
 
-(*** 3.6 Always, Continued *)
+(*** 3.6 Always □, Continued *)
+
+(**
+(83) Distributivity of ∧ over U : □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r)
+(84) U implication: □ p ∧ ◇ q ⟹ p U q
+(85) Right monotonicity of U : □ (p → q) ⟹ (r U p → r U q)
+(86) Left monotonicity of U : □ (p → q) ⟹ (p U r → q U r)
+(87) Distributivity of ¬ over □ : □ ¬p ⟹ ¬□ p
+(88) Distributivity of ◇ over ∧ : □ p ∧ ◇ q ⟹ ◇ (p ∧ q)
+(89) ◇ excluded middle: ◇ p ∨ □ ¬p
+(90) □ excluded middle: □ p ∨ ◇ ¬p
+(91) Temporal excluded middle: ◇ p ∨ ◇ ¬p
+(92) ◇ contradiction: ◇ p ∧ □ ¬p ≡ false
+(93) □ contradiction: □ p ∧ ◇ ¬p ≡ false
+(94) Temporal contradiction: □ p ∧ □ ¬p ≡ false
+(95) □ ◇ excluded middle: □ ◇ p ∨ ◇ □ ¬p
+(96) ◇ □ excluded middle: ◇ □ p ∨ □ ◇ ¬p
+(97) □ ◇ contradiction: □ ◇ p ∧ ◇ □ ¬p ≡ false
+(98) ◇ □ contradiction: ◇ □ p ∧ □ ◇ ¬p ≡ false
+(99) Distributivity of □ over ∧ : □ (p ∧ q) ≡ □ p ∧ □ q
+(100) Distributivity of □ over ∨ : □ p ∨ □ q ⟹ □ (p ∨ q)
+(101) Logical equivalence law of ◯ : □ (p ≡ q) ⟹ ( ◯ p ≡ ◯ q)
+(102) Logical equivalence law of ◇ : □ (p ≡ q) ⟹ (◇ p ≡ ◇ q)
+(103) Logical equivalence law of □ : □ (p ≡ q) ⟹ (□ p ≡ □ q)
+(104) Distributivity of ◇ over ⟹ : ◇ (p → q) ≡ (□ p → ◇ q)
+(105) Distributivity of ◇ over ⟹ : (◇ p → ◇ q) ⟹ ◇ (p → q)
+(106) ∧ frame law of ◯ : □ p ⟹ ( ◯ q → ◯ (p ∧ q))
+(107) ∧ frame law of ◇ : □ p ⟹ (◇ q → ◇ (p ∧ q))
+(108) ∧ frame law of □ : □ p ⟹ (□ q → □ (p ∧ q))
+(109) ∨ frame law of ◯ : □ p ⟹ ( ◯ q → ◯ (p ∨ q))
+(110) ∨ frame law of ◇ : □ p ⟹ (◇ q → ◇ (p ∨ q))
+(111) ∨ frame law of □ : □ p ⟹ (□ q → □ (p ∨ q))
+(112) ⟹ frame law of ◯ : □ p ⟹ ( ◯ q → ◯ (p → q))
+(113) ⟹ frame law of ◇ : □ p ⟹ (◇ q → ◇ (p → q))
+(114) ⟹ frame law of □ : □ p ⟹ (□ q → □ (p → q))
+(115) ≡ frame law of ◯ : □ p ⟹ ( ◯ q → ◯ (p ≡ q))
+(116) ≡ frame law of ◇ : □ p ⟹ (◇ q → ◇ (p ≡ q))
+(117) ≡ frame law of □ : □ p ⟹ (□ q → □ (p ≡ q))
+(118) Monotonicity of ◯ : □ (p → q) ⟹ ( ◯ p → ◯ q)
+(119) Monotonicity of ◇ : □ (p → q) ⟹ (◇ p → ◇ q)
+(120) Monotonicity of □ : □ (p → q) ⟹ (□ p → □ q)
+(121) Consequence rule of ◯ : □ ((p → q) ∧ (q → ◯ r) ∧ (r → s)) ⟹ (p → ◯ s)
+(122) Consequence rule of ◇ : □ ((p → q) ∧ (q → ◇ r) ∧ (r → s)) ⟹ (p → ◇ s)
+(123) Consequence rule of □ : □ ((p → q) ∧ (q → □ r) ∧ (r → s)) ⟹ (p → □ s)
+(124) Catenation rule of ◇ : □ ((p → ◇ q) ∧ (q → ◇ r)) ⟹ (p → ◇ r)
+(125) Catenation rule of □ : □ ((p → □ q) ∧ (q → □ r)) ⟹ (p → □ r)
+(126) Catenation rule of U : □ ((p → q U r) ∧ (r → q U s)) ⟹ (p → q U s)
+(127) U strengthening rule: □ ((p → r) ∧ (q → s)) ⟹ (p U q → r U s)
+(128) Induction rule ◇ : □ (p ∨ ◯ q → q) ⟹ (◇ p → q)
+(129) Induction rule □ : □ (p → q ∧ ◯ p) ⟹ (p → □ q)
+(130) Induction rule U : □ (p → ¬q ∧ ◯ p) ⟹ (p → ¬(r U q))
+(131) ◇ Conﬂuence: □ ((p → ◇ (q ∨ r)) ∧ (q → ◇ t) ∧ (r → ◇ t)) ⟹ (p → ◇ t)
+(132) Temporal generalization law: □ (□ p → q) ⟹ (□ p → □ q)
+(133) Temporal particularization law: □ (p → ◇ q) ⟹ (◇ p → ◇ q)
+(134) □ (p → ◯ q) ⟹ (p → ◇ q)
+(135) □ (p → ◯ ¬p) ⟹ (p → ¬□ p)
+*)
 
 Lemma (* 83 *) law (φ ψ χ : t) : □ φ ∧ (ψ U χ) ⟹ (φ ∧ ψ) U (φ ∧ χ).
 Proof.
@@ -100,9 +212,14 @@ Proof.
   now apply true_def.
 Qed.
 
-(* Lemmas 84-135 (52) *)
-
 (*** 3.7 Proof Metatheorems *)
+
+(**
+(136) Metatheorem: P is a theorem iff □ P is a theorem.
+(137) Metatheorem ◯ : If P ⇒ Q is a theorem then ◯ P ⇒ ◯ Q is a theorem.
+(138) Metatheorem ◇ : If P ⇒ Q is a theorem then ◇ P ⇒ ◇ Q is a theorem.
+(139) Metatheorem □ : If P ⇒ Q is a theorem then □ P ⇒ □ Q is a theorem.
+*)
 
 (*
 Lemma (* 136 *) metatheorem (ϕ : t) : ϕ is a theorem <-> □ ϕ is a theorem.
@@ -117,16 +234,133 @@ Proof. now apply eventually_respects_impl. Qed.
 Lemma (* 139 *) always_metatheorem (φ ψ : t) : φ ⟹ ψ -> □ φ ⟹ □ ψ.
 Proof. now apply always_respects_impl. Qed.
 
-(*** 3.8 Always, Continued *)
+(*** 3.8 Always □, Continued *)
 
-(* Lemmas 140-168 (28) *)
+(**
+(140) U □ implication: p U □ q ⟹ □ (p U q)
+(141) Absorption of U into □ : p U □ p ≡ □ p
+(142) Right ∧ U strengthening: p U (q ∧ r) ⟹ p U (q U r)
+(143) Left ∧ U strengthening: (p ∧ q) U r ⟹ (p U q) U r
+(144) Left ∧ U ordering: (p ∧ q) U r ⟹ p U (q U r)
+(145) ◇ □ implication: ◇ □ p ⟹ □ ◇ p
+(146) □ ◇ excluded middle: □ ◇ p ∨ □ ◇ ¬p
+(147) ◇ □ contradiction: ◇ □ p ∧ ◇ □ ¬p ≡ false
+(148) U frame law of ◯ : □ p ⟹ ( ◯ q → ◯ (p U q))
+(149) U frame law of ◇ : □ p ⟹ (◇ q → ◇ (p U q))
+(150) U frame law of □ : □ p ⟹ (□ q → □ (p U q))
+(151) Absorption of ◇ into □ ◇ : ◇ □ ◇ p ≡ □ ◇ p
+(152) Absorption of □ into ◇ □ : □ ◇ □ p ≡ ◇ □ p
+(153) Absorption of □ ◇ : □ ◇ □ ◇ p ≡ □ ◇ p
+(154) Absorption of ◇ □ : ◇ □ ◇ □ p ≡ ◇ □ p
+(155) Absorption of ◯ into □ ◇ : ◯ □ ◇ p ≡ □ ◇ p
+(156) Absorption of ◯ into ◇ □ : ◯ ◇ □ p ≡ ◇ □ p
+(157) Monotonicity of □ ◇ : □ (p → q) ⟹ (□ ◇ p → □ ◇ q)
+(158) Monotonicity of ◇ □ : □ (p → q) ⟹ (◇ □ p → ◇ □ q)
+(159) Distributivity of □ ◇ over ∧ : □ ◇ (p ∧ q) ⟹ □ ◇ p ∧ □ ◇ q
+(160) Distributivity of ◇ □ over ∨ : ◇ □ p ∨ ◇ □ q ⟹ ◇ □ (p ∨ q)
+(161) Distributivity of □ ◇ over ∨ : □ ◇ (p ∨ q) ≡ □ ◇ p ∨ □ ◇ q
+(162) Distributivity of ◇ □ over ∧ : ◇ □ (p ∧ q) ≡ ◇ □ p ∧ ◇ □ q
+(163) Eventual latching: ◇ □ (p → □ q) ≡ ◇ □ ¬p ∨ ◇ □ q
+(164) □ (□ ◇ p → ◇ q) ≡ ◇ □ ¬p ∨ □ ◇ q
+(165) □ ((p ∨ □ q) ∧ (□ p ∨ q)) ≡ □ p ∨ □ q
+(166) ◇ □ p ∧ □ ◇ q ⟹ □ ◇ (p ∧ q)
+(167) □ ((□ p → ◇ q) ∧ (q → ◯ r)) ⟹ (□ p → ◯ □ ◇ r)
+(168) Progress proof rule: □ p ∧ □ (□ p → ◇ q) ⟹ ◇ q
+*)
 
-(*** 3.9 Wait *)
+(*** 3.9 Wait W *)
+
+(*
+(169) Deﬁnition of W : p W q ≡ □ p ∨ p U q
+(170) Axiom, Distributivity of ¬ over W : ¬(p W q) ≡ ¬q U (¬p ∧ ¬q)
+(171) U in terms of W : p U q ≡ p W q ∧ ◇ q
+(172) p W q ≡ □ (p ∧ ¬q) ∨ p U q
+(173) Distributivity of ¬ over U : ¬(p U q) ≡ ¬q W (¬p ∧ ¬q)
+(174) U implication: p U q ⟹ p W q
+(175) Distributivity of ∧ over W : □ p ∧ q W r ⟹ (p ∧ q) W (p ∧ r)
+(176) W ◇ equivalence: p W ◇ q ≡ □ p ∨ ◇ q
+(177) W □ implication: p W □ q ⟹ □ (p W q)
+(178) Absorption of W into □ : p W □ p ≡ □ p
+(179) Perpetuity: □ p ⟹ p W q
+(180) Distributivity of ◯ over W : ◯ (p W q) ≡ ◯ p W ◯ q
+(181) Expansion of W : p W q ≡ q ∨ (p ∧ ◯ (p W q))
+(182) W excluded middle: p W q ∨ p W ¬q
+(183) Left zero of W : true W q ≡ true
+(184) Left distributivity of W over ∨ : p W (q ∨ r) ≡ p W q ∨ p W r
+(185) Right distributivity of W over ∨ : p W r ∨ q W r ⟹ (p ∨ q) W r
+(186) Left distributivity of W over ∧ : p W (q ∧ r) ⟹ p W q ∧ p W r
+(187) Right distributivity of W over ∧ : (p ∧ q) W r ≡ p W r ∧ q W r
+(188) Right distributivity of W over ⟹ : (p → q) W r ⟹ (p W r → q W r)
+(189) Disjunction rule of W : p W q ≡ (p ∨ q) W q
+(190) Disjunction rule of U : p U q ≡ (p ∨ q) U q
+(191) Rule of W : ¬q W q
+(192) Rule of U : ¬q U q ≡ ◇ q
+(193) (p ⟹ q) W p
+(194) ◇ p ⟹ (p → q) U p
+(195) Conjunction rule of W : p W q ≡ (p ∧ ¬q) W q
+(196) Conjunction rule of U : p U q ≡ (p ∧ ¬q) U q
+(197) Distributivity of ¬ over W : ¬(p W q) ≡ (p ∧ ¬q) U (¬p ∧ ¬q)
+(198) Distributivity of ¬ over U : ¬(p U q) ≡ (p ∧ ¬q) W (¬p ∧ ¬q)
+(199) Dual of U : ¬(¬p U ¬q) ≡ q W (p ∧ q)
+(200) Dual of U : ¬(¬p U ¬q) ≡ (¬p ∧ q) W (p ∧ q)
+(201) Dual of W : ¬(¬p W ¬q) ≡ q U (p ∧ q)
+(202) Dual of W : ¬(¬p W ¬q) ≡ (¬p ∧ q) U (p ∧ q)
+(203) Idempotency of W : p W p ≡ p
+(204) Right zero of W : p W true ≡ true
+(205) Left identity of W : false W q ≡ q
+(206) p W q ⟹ p ∨ q
+(207) □ (p ∨ q) ⟹ p W q
+(208) □ (¬q → p) ⟹ p W q
+(209) W insertion: q ⟹ p W q
+(210) W frame law of ◯ : □ p ⟹ ( ◯ q → ◯ (p W q))
+(211) W frame law of ◇ : □ p ⟹ (◇ q → ◇ (p W q))
+(212) W frame law of □ : □ p ⟹ (□ q → □ (p W q))
+(213) W induction: □ (p → ( ◯ p ∧ q) ∨ r) ⟹ (p → q W r)
+(214) W induction: □ (p → ◯ (p ∨ q)) ⟹ (p → p W q)
+(215) W induction: □ (p → ◯ p) ⟹ (p → p W q)
+(216) W induction: □ (p → q ∧ ◯ p) ⟹ (p → p W q)
+(217) Absorption: p ∨ p W q ≡ p ∨ q
+(218) Absorption: p W q ∨ q ≡ p W q
+(219) Absorption: p W q ∧ q ≡ q
+(220) Absorption: p W q ∧ (p ∨ q) ≡ p W q
+(221) Absorption: p W q ∨ (p ∧ q) ≡ p W q
+(222) Left absorption of W : p W (p W q) ≡ p W q
+(223) Right absorption of W : (p W q) W q ≡ p W q
+(224) □ to W law: □ p ≡ p W false
+(225) ◇ to W law: ◇ p ≡ ¬(¬p W false)
+(226) W implication: p W q ⟹ □ p ∨ ◇ q
+(227) Absorption: p W (p U q) ≡ p W q
+(228) Absorption: (p U q) W q ≡ p U q
+(229) Absorption: p U (p W q) ≡ p W q
+(230) Absorption: (p W q) U q ≡ p U q
+(231) Absorption of W into ◇ : ◇ q W q ≡ ◇ q
+(232) Absorption of W into □ : □ p ∧ p W q ≡ □ p
+(233) Absorption of □ into W : □ p ∨ p W q ≡ p W q
+(234) p W q ∧ □ ¬q ⟹ □ p
+(235) □ p ⟹ p U q ∨ □ ¬q
+(236) ¬□ p ∧ p W q ⟹ ◇ q
+(237) ◇ q ⟹ ¬□ p ∨ p U q
+(238) Left monotonicity of W : □ (p → q) ⟹ (p W r → q W r)
+(239) Right monotonicity of W : □ (p → q) ⟹ (r W p → r W q)
+(240) W strengthening rule : □ ((p → r) ∧ (q → s)) ⟹ (p W q → r W s)
+(241) W catenation rule: □ ((p → q W r) ∧ (r → q W s)) ⟹ (p → q W s)
+(242) Left U W implication: (p U q) W r ⟹ (p W q) W r
+(243) Right W U implication: p W (q U r) ⟹ p W (q W r)
+(244) Right U U implication: p U (q U r) ⟹ p U (q W r)
+(245) Left U U implication: (p U q) U r ⟹ (p W q) U r
+(246) Left U ∨ strengthening: (p U q) U r ⟹ (p ∨ q) U r
+(247) Left W ∨ strengthening: (p W q) W r ⟹ (p ∨ q) W r
+(248) Right W ∨ strengthening: p W (q W r) ⟹ p W (q ∨ r)
+(249) Right W ∨ ordering: p W (q W r) ⟹ (p ∨ q) W r
+(250) Right ∧ W ordering: p W (q ∧ r) ⟹ (p W q) W r
+(251) U ordering: ¬p U q ∨ ¬q U p ≡ ◇ (p ∨ q)
+(252) W ordering: ¬p W q ∨ ¬q W p
+(253) W implication ordering: p W q ∧ ¬q W r ⟹ p W r
+(254) Lemmon formula: □ (□ p → q) ∨ □ (□ q → p)
+*)
 
 Hypothesis (* 169 *) wait_def : forall (φ ψ : t), φ W ψ ≈ □ φ ∨ (φ U ψ).
 Hypothesis (* 170 *) wait_distr_not : forall (φ ψ : t), ¬(φ W ψ) ≈ ¬ ψ U (¬ φ ∧ ¬ ψ).
-
-(* Lemmas 171-254 (84) *)
 
 Lemma law_182 (φ : t) : φ W φ ≈ φ.
 Lemma law_183 (φ ψ : t) : φ W ψ ≈ (φ U ψ) ∨ □ φ.
@@ -218,7 +452,7 @@ Lemma weakUntil_until_or (φ ψ : t) : φ W ψ ≈ φ U (ψ ∨ □ φ).
 Lemma until_eventually_weakUntil (φ ψ : t) : φ U ψ ≈ ◇ ψ ∧ (φ W ψ).
 Lemma expand_weakUntil  (φ ψ : t) : φ W ψ ≈ ψ ∨ (φ ∧ ◯ (φ W ψ)).
 
-(*** Release *)
+(*** Release R *)
 
 Notation "p 'R' q" := (release p q) (at level 45, right associativity).
 
@@ -244,7 +478,7 @@ Lemma release_or (ρ φ ψ : t) : ρ R (φ ∨ ψ) ≈ (ρ R φ) ∨ (ρ R ψ).
 Lemma and_release (ρ φ ψ : t) : (φ ∧ ψ) R ρ ≈ (φ R ρ) ∧ (ψ R ρ).
 Lemma expand_release (φ ψ : t) : φ R ψ ≈ ψ ∧ (φ ∨ ◯ (φ R ψ)).
 
-(*** Strong Release *)
+(*** Strong Release M *)
 
 Notation "p 'M' q" := (strong_release p q) (at level 45, right associativity).
 
