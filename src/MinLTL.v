@@ -122,7 +122,7 @@ Hypothesis (* 16 *) until_impl_order : forall (φ ψ χ : t),
 Hypothesis (* 17 *) until_right_or_order : forall (φ ψ χ : t),
   φ U (ψ U χ) ⟹ (φ ∨ ψ) U χ.
 Hypothesis (* 18 *) until_right_and_order : forall (φ ψ χ : t),
-  φ U (ψ ∧ χ) ⟹ φ U (ψ U χ).
+  φ U (ψ ∧ χ) ⟹ (φ U ψ) U χ.
 
 Lemma (* 19 *) until_right_distr_impl (φ ψ χ : t) :
   (φ → ψ) U χ ⟹ (φ U χ) → (ψ U χ).
@@ -282,7 +282,8 @@ Proof.
   split.
   - rewrite until_28.
     now apply until_absorb_u_or.
-  -
-Admitted.
+  - rewrite <- until_right_and_order.
+    now rewrite and_idem.
+Qed.
 
 End MinimalLinearTemporalLogic.
