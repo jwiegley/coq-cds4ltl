@@ -189,12 +189,21 @@ Qed.
 
 Lemma (* 26 *) until_26 (φ ψ : t) : (φ U ψ) ∧ (¬ ψ U φ) ⟹ φ.
 Proof.
-Admitted.
+  rewrite until_impl_order.
+  now rewrite until_idem.
+Qed.
 
 Lemma (* 27 *) until_27 (φ ψ : t) : φ ∧ (¬ φ U ψ) ⟹ ψ.
 Proof.
-
-Admitted.
+  rewrite until_expansion.
+  rewrite and_distr_or.
+  rewrite <- and_assoc.
+  rewrite absurdity.
+  rewrite false_and.
+  rewrite or_false.
+  rewrite and_comm.
+  now apply and_proj.
+Qed.
 
 Lemma (* 28 *) until_28 (φ ψ : t) : φ U ψ ⟹ φ ∨ ψ.
 Proof.
@@ -273,7 +282,7 @@ Proof.
   split.
   - rewrite until_28.
     now apply until_absorb_u_or.
-  - admit.
+  -
 Admitted.
 
 End MinimalLinearTemporalLogic.
