@@ -77,8 +77,8 @@ Infix    "⟹"    := impl       (at level 94, right associativity).
 Infix    "≈"     := eqv        (at level 90, no associativity).
 
 Hypothesis impl_def : forall (φ ψ : t), φ ⟹ ψ <-> φ → ψ ≈ ⊤.
-Hypothesis true_def : forall (φ : t), ⊤ ≈ φ ∨ ¬ φ.
-Hypothesis false_def : forall (φ : t), ⊥ ≈ ¬ (φ ∨ ¬ φ).
+Hypothesis true_def : forall (φ : t), φ ∨ ¬ φ ≈ ⊤.
+Hypothesis false_def : forall (φ : t), ¬ (φ ∨ ¬ φ) ≈ ⊥.
 
 (** This is one set of fundamental axioms of boolean algebra.
     "and" is not fundamental, and can be defined in terms of "or". *)
@@ -89,18 +89,16 @@ Hypothesis or_assoc : forall (φ ψ χ : t), (φ ∨ ψ) ∨ χ ≈ φ ∨ (ψ �
 Hypothesis or_distr_not : forall (φ ψ χ : t),
   ¬ (¬ (φ ∨ ψ) ∨ ¬ (φ ∨ χ)) ≈ φ ∨ ¬ (¬ ψ ∨ ¬ χ).
 
-Lemma not_true : ¬ ⊤ ≈ ⊥.
-Proof.
-  rewrite (true_def ⊥).
-  now rewrite <- false_def.
-Qed.
+Lemma true_or (φ : t) : ⊤ ∨ φ ≈ ⊤.
+Proof. now rewrite or_comm; apply or_true. Qed.
 
+Lemma false_or (φ : t) : ⊥ ∨ φ ≈ φ.
+Proof. now rewrite or_comm; apply or_false. Qed.
+
+Lemma not_true : ¬ ⊤ ≈ ⊥.
+Proof. now rewrite <- (true_def ⊥), false_def. Qed.
 Lemma not_false : ¬ ⊥ ≈ ⊤.
-Proof.
-  rewrite (true_def ⊥).
-  rewrite or_comm.
-  now rewrite or_false.
-Qed.
+Proof. now rewrite <- (true_def ⊥), false_or. Qed.
 
 Lemma not_not (φ : t) : ¬¬ φ ≈ φ.
 Proof.
@@ -130,13 +128,12 @@ Lemma or_idem (φ : t) : φ ∨ φ ≈ φ.
 Proof.
   intros.
   rewrite <- (or_false φ) at 3.
-  rewrite (false_def φ).
+  rewrite <- (false_def φ).
   rewrite <- (not_not φ) at 4.
   rewrite <- or_distr_not.
-  rewrite <- true_def.
+  rewrite true_def.
   rewrite not_true.
-  rewrite (or_comm ⊥).
-  rewrite or_false.
+  rewrite false_or.
   now rewrite not_not.
 Qed.
 
@@ -145,12 +142,10 @@ Proof.
   split; intro.
   - apply impl_def in H.
     rewrite not_true in H.
-    rewrite or_comm in H.
-    now rewrite or_false in H.
+    now rewrite false_or in H.
   - apply impl_def.
     rewrite not_true.
-    rewrite or_comm.
-    now rewrite or_false.
+    now rewrite false_or.
 Qed.
 
 Lemma excluded_middle (φ : t) : ⊤ ⟹ φ ∨ ¬ φ.
@@ -177,9 +172,8 @@ Proof.
   apply impl_def.
   rewrite <- or_assoc.
   rewrite (or_comm _ φ).
-  rewrite <- true_def.
-  rewrite or_comm.
-  now apply or_true.
+  rewrite true_def.
+  now apply true_or.
 Qed.
 
 Lemma not_swap (φ ψ : t) : ¬ φ ≈ ψ <-> φ ≈ ¬ ψ.

@@ -46,7 +46,7 @@ Next Obligation.
 Qed.
 
 Notation "◯ p"     := (next p)    (at level 0, right associativity).
-Notation "p 'U' q" := (until p q) (at level 45, right associativity).
+Notation "p 'U' q" := (until p q) (at level 44, right associativity).
 
 (*** 3.1 Next *)
 
@@ -84,21 +84,21 @@ Proof.
   now rewrite next_distr_and.
 Qed.
 
-Lemma (* 7 *) next_top : ◯ (⊤) ≈ ⊤.
+Lemma (* 7 *) next_true : ◯ (⊤) ≈ ⊤.
 Proof.
-  rewrite (true_def ⊤) at 1.
+  rewrite <- (true_def ⊤) at 1.
   rewrite next_distr_or.
   rewrite next_self_dual.
-  now rewrite <- true_def.
+  now rewrite true_def.
 Qed.
 
-Lemma (* 8 *) next_bottom : ◯ (⊥) ≈ ⊥.
+Lemma (* 8 *) next_false : ◯ (⊥) ≈ ⊥.
 Proof.
-  rewrite (false_def ⊥) at 1.
+  rewrite <- (false_def ⊥) at 1.
   rewrite next_self_dual.
   rewrite next_distr_or.
   rewrite next_self_dual.
-  now rewrite <- false_def.
+  now rewrite false_def.
 Qed.
 
 (*** 3.2 Until *)
@@ -136,18 +136,16 @@ Proof.
   now apply and_proj.
 Qed.
 
-Lemma (* 20 *) until_right_top (φ : t) : φ U ⊤ ≈ ⊤.
+Lemma (* 20 *) until_true (φ : t) : φ U ⊤ ≈ ⊤.
 Proof.
   rewrite until_expansion.
-  rewrite or_comm.
-  now rewrite or_true.
+  now rewrite true_or.
 Qed.
 
-Lemma (* 21 *) until_left_bottom (φ : t) : ⊥ U φ ≈ φ.
+Lemma (* 21 *) false_until (φ : t) : ⊥ U φ ≈ φ.
 Proof.
   rewrite until_expansion.
-  rewrite and_comm.
-  rewrite and_false.
+  rewrite false_and.
   now rewrite or_false.
 Qed.
 
@@ -160,8 +158,8 @@ Qed.
 Lemma (* 23 *) until_excl_middle (φ ψ : t) : (φ U ψ) ∨ (φ U ¬ ψ) ≈ ⊤.
 Proof.
   rewrite <- until_left_distr_or.
-  rewrite <- true_def.
-  now apply until_right_top.
+  rewrite true_def.
+  now apply until_true.
 Qed.
 
 Lemma (* 24 *) until_24 (φ ψ χ : t) : (¬ φ U (ψ U χ)) ∧ (φ U χ) ⟹ ψ U χ.
@@ -171,22 +169,31 @@ Proof.
   rewrite and_comm.
   rewrite and_distr_or.
   rewrite absurdity.
-  rewrite or_comm.
-  rewrite or_false.
+  rewrite false_or.
   rewrite and_comm.
   now rewrite and_proj.
 Qed.
 
 Lemma (* 25 *) until_25 (φ ψ χ : t) : (φ U (¬ ψ U χ)) ∧ (ψ U χ) ⟹ φ U χ.
-Admitted.
+Proof.
+  rewrite until_right_or_order.
+  rewrite or_comm.
+  rewrite until_right_distr_impl.
+  rewrite and_comm.
+  rewrite and_distr_or.
+  rewrite absurdity.
+  rewrite false_or.
+  rewrite and_comm.
+  now rewrite and_proj.
+Qed.
 
 Lemma (* 26 *) until_26 (φ ψ : t) : (φ U ψ) ∧ (¬ ψ U φ) ⟹ φ.
+Proof.
 Admitted.
 
 Lemma (* 27 *) until_27 (φ ψ : t) : φ ∧ (¬ φ U ψ) ⟹ ψ.
 Proof.
-  rewrite <- (until_idem φ) at 1.
-  rewrite until_impl_order.
+
 Admitted.
 
 Lemma (* 28 *) until_28 (φ ψ : t) : φ U ψ ⟹ φ ∨ ψ.
@@ -194,8 +201,7 @@ Proof.
   rewrite until_expansion.
   rewrite or_distr_and.
   rewrite and_proj.
-  rewrite or_comm.
-  reflexivity.
+  now rewrite or_comm.
 Qed.
 
 Lemma (* 29 *) until_insertion (φ ψ : t) : ψ ⟹ φ U ψ.
@@ -263,6 +269,11 @@ Proof.
 Qed.
 
 Lemma (* 37 *) until_right_absorb (φ ψ : t) : (φ U ψ) U ψ ≈ φ U ψ.
+Proof.
+  split.
+  - rewrite until_28.
+    now apply until_absorb_u_or.
+  - admit.
 Admitted.
 
 End MinimalLinearTemporalLogic.

@@ -85,6 +85,22 @@ Proof.
   now apply not_true.
 Qed.
 
+Lemma true_and (φ : t) : ⊤ ∧ φ ≈ φ.
+Proof.
+  rewrite and_def.
+  rewrite not_true.
+  rewrite false_or.
+  now apply not_not.
+Qed.
+
+Lemma false_and (φ : t) : ⊥ ∧ φ ≈ ⊥.
+Proof.
+  rewrite and_def.
+  rewrite not_false.
+  rewrite true_or.
+  now apply not_true.
+Qed.
+
 Lemma and_idem (φ : t) : φ ∧ φ ≈ φ.
 Proof.
   rewrite and_def.
@@ -130,9 +146,8 @@ Proof.
   rewrite or_comm.
   rewrite not_not.
   rewrite <- or_assoc.
-  rewrite <- true_def.
-  rewrite or_comm.
-  now rewrite or_true.
+  rewrite true_def.
+  now rewrite true_or.
 Qed.
 
 Lemma impl_and (φ ψ χ : t) : φ ∧ ψ → χ ≈ φ → (ψ → χ).
@@ -146,8 +161,7 @@ Lemma and_impl (φ ψ : t) : φ ∧ (φ → ψ) ≈ φ ∧ ψ.
 Proof.
   rewrite and_distr_or.
   rewrite absurdity.
-  rewrite or_comm.
-  now rewrite or_false.
+  now rewrite false_or.
 Qed.
 
 Lemma and_impl_iff (φ ψ χ : t) : φ ∧ ψ ⟹ χ <-> φ ⟹ (ψ → χ).
@@ -157,17 +171,15 @@ Proof.
     rewrite and_comm.
     rewrite or_distr_and.
     rewrite or_comm.
-    rewrite <- true_def.
-    rewrite and_comm.
-    rewrite and_true.
+    rewrite true_def.
+    rewrite true_and.
     rewrite or_comm.
     now apply or_inj.
   - rewrite H; clear H.
     rewrite and_comm.
     rewrite and_distr_or.
     rewrite absurdity.
-    rewrite or_comm.
-    rewrite or_false.
+    rewrite false_or.
     rewrite and_comm.
     now apply and_proj.
 Qed.
