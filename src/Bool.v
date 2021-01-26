@@ -16,6 +16,10 @@ Include MinBool.
 
 Parameter and : t -> t -> t.
 
+Infix    "∧"       := and             (at level 45, right associativity).
+Notation "p ↔ q"   := (p → q ∧ q → p) (at level 80, right associativity, only parsing).
+Notation "p ≡ q"   := (p ↔ q)         (at level 80, right associativity, only parsing).
+
 Declare Instance and_respects_impl :
   Proper (impl ==> impl ==> impl) and.
 
@@ -28,16 +32,12 @@ Next Obligation.
   - now rewrite H1, H2.
 Qed.
 
-Infix    "∧"       := and             (at level 45, right associativity).
-Notation "p ↔ q"   := (p → q ∧ q → p) (at level 80, right associativity, only parsing).
-Notation "p ≡ q"   := (p ↔ q)         (at level 80, right associativity, only parsing).
-
 (** "and" is not fundamental, and can be defined in terms of "or". To allow
     for efficient choices of "and", we simply require that its behavior be
     equivalent to the more basic definition. *)
-Hypothesis and_def : forall (φ ψ : t), φ ∧ ψ ≈ ¬ (¬ φ ∨ ¬ ψ).
+Hypothesis and_def : forall (φ ψ : t), φ ∧ ψ ≈ ¬(¬φ ∨ ¬ψ).
 
-Lemma and_distr_or (φ ψ χ : t) : φ ∧ (ψ ∨ χ) ≈ (φ ∧ ψ) ∨ (φ ∧ χ).
+Lemma and_or (φ ψ χ : t) : φ ∧ (ψ ∨ χ) ≈ (φ ∧ ψ) ∨ (φ ∧ χ).
 Proof.
   rewrite !and_def.
   apply not_swap.
@@ -45,25 +45,25 @@ Proof.
   now rewrite !not_not.
 Qed.
 
-Lemma or_distr_and (φ ψ χ : t) : φ ∨ (ψ ∧ χ) ≈ (φ ∨ ψ) ∧ (φ ∨ χ).
+Lemma or_and (φ ψ χ : t) : φ ∨ (ψ ∧ χ) ≈ (φ ∨ ψ) ∧ (φ ∨ χ).
 Proof.
   rewrite !and_def.
   now rewrite or_distr_not.
 Qed.
 
-Lemma absurdity (φ : t) : φ ∧ ¬ φ ≈ ⊥.
+Lemma absurdity (φ : t) : φ ∧ ¬φ ≈ ⊥.
 Proof.
   rewrite and_def.
   now rewrite <- false_def.
 Qed.
 
-Lemma not_or (φ ψ : t) : ¬ (φ ∨ ψ) ≈ ¬ φ ∧ ¬ ψ.
+Lemma not_or (φ ψ : t) : ¬(φ ∨ ψ) ≈ ¬φ ∧ ¬ψ.
 Proof.
   rewrite and_def.
   now rewrite !not_not.
 Qed.
 
-Lemma not_and (φ ψ : t) : ¬ (φ ∧ ψ) ≈ ¬ φ ∨ ¬ ψ.
+Lemma not_and (φ ψ : t) : ¬(φ ∧ ψ) ≈ ¬φ ∨ ¬ψ.
 Proof.
   rewrite and_def.
   now rewrite !not_not.
@@ -124,7 +124,7 @@ Qed.
 Lemma or_absorb (φ ψ : t) : φ ∨ (φ ∧ ψ) ≈ φ.
 Proof.
   rewrite <- (and_true φ) at 1.
-  rewrite <- and_distr_or.
+  rewrite <- and_or.
   rewrite or_comm.
   rewrite or_true.
   now rewrite and_true.
@@ -133,7 +133,7 @@ Qed.
 Lemma and_absorb (φ ψ : t) : φ ∧ (φ ∨ ψ) ≈ φ.
 Proof.
   rewrite <- (or_false φ) at 1.
-  rewrite <- or_distr_and.
+  rewrite <- or_and.
   rewrite and_comm.
   rewrite and_false.
   now rewrite or_false.
@@ -159,7 +159,7 @@ Qed.
 
 Lemma and_impl (φ ψ : t) : φ ∧ (φ → ψ) ≈ φ ∧ ψ.
 Proof.
-  rewrite and_distr_or.
+  rewrite and_or.
   rewrite absurdity.
   now rewrite false_or.
 Qed.
@@ -169,7 +169,7 @@ Proof.
   split; intro.
   - rewrite <- H; clear H.
     rewrite and_comm.
-    rewrite or_distr_and.
+    rewrite or_and.
     rewrite or_comm.
     rewrite true_def.
     rewrite true_and.
@@ -177,7 +177,7 @@ Proof.
     now apply or_inj.
   - rewrite H; clear H.
     rewrite and_comm.
-    rewrite and_distr_or.
+    rewrite and_or.
     rewrite absurdity.
     rewrite false_or.
     rewrite and_comm.

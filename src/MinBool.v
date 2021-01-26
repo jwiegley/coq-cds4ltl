@@ -26,6 +26,16 @@ Parameter true : t.
 Parameter false : t.
 Parameter impl : t -> t -> Prop.
 
+Definition eqv (x y : t) : Prop := impl x y /\ impl y x.
+
+Notation "¬ p"   := (not p)    (at level 0, right associativity).
+Infix    "∨"     := or         (at level 46, right associativity).
+Notation "p → q" := (¬ p ∨ q)  (at level 51, right associativity, only parsing).
+Notation "⊤"     := true       (at level 0, no associativity).
+Notation "⊥"     := false      (at level 0, no associativity).
+Infix    "⟹"    := impl       (at level 94, right associativity).
+Infix    "≈"     := eqv        (at level 90, no associativity).
+
 Declare Instance impl_reflexive : Reflexive impl.
 Declare Instance impl_transitive : Transitive impl.
 
@@ -33,8 +43,6 @@ Declare Instance not_respects_impl :
   Proper (impl --> impl) not | 1.
 Declare Instance or_respects_impl :
   Proper (impl ==> impl ==> impl) or.
-
-Definition eqv (x y : t) : Prop := impl x y /\ impl y x.
 
 Program Instance eqv_equivalence : Equivalence eqv.
 Next Obligation. intro x; now split. Qed.
@@ -68,17 +76,9 @@ Next Obligation.
   - now rewrite H1, H2.
 Qed.
 
-Notation "¬ p"   := (not p)    (at level 0, right associativity).
-Infix    "∨"     := or         (at level 46, right associativity).
-Notation "p → q" := (¬ p ∨ q)  (at level 51, right associativity, only parsing).
-Notation "⊤"     := true       (at level 0, no associativity).
-Notation "⊥"     := false      (at level 0, no associativity).
-Infix    "⟹"    := impl       (at level 94, right associativity).
-Infix    "≈"     := eqv        (at level 90, no associativity).
-
 Hypothesis impl_def : forall (φ ψ : t), φ ⟹ ψ <-> φ → ψ ≈ ⊤.
-Hypothesis true_def : forall (φ : t), φ ∨ ¬ φ ≈ ⊤.
-Hypothesis false_def : forall (φ : t), ¬ (φ ∨ ¬ φ) ≈ ⊥.
+Hypothesis true_def : forall (φ : t), φ ∨ ¬φ ≈ ⊤.
+Hypothesis false_def : forall (φ : t), ¬(φ ∨ ¬φ) ≈ ⊥.
 
 (** This is one set of fundamental axioms of boolean algebra.
     "and" is not fundamental, and can be defined in terms of "or". *)
@@ -87,7 +87,7 @@ Hypothesis or_false : forall (φ : t), φ ∨ ⊥ ≈ φ.
 Hypothesis or_comm : forall (φ ψ : t), φ ∨ ψ ≈ ψ ∨ φ.
 Hypothesis or_assoc : forall (φ ψ χ : t), (φ ∨ ψ) ∨ χ ≈ φ ∨ (ψ ∨ χ).
 Hypothesis or_distr_not : forall (φ ψ χ : t),
-  ¬ (¬ (φ ∨ ψ) ∨ ¬ (φ ∨ χ)) ≈ φ ∨ ¬ (¬ ψ ∨ ¬ χ).
+  ¬(¬(φ ∨ ψ) ∨ ¬(φ ∨ χ)) ≈ φ ∨ ¬(¬ψ ∨ ¬χ).
 
 Lemma true_or (φ : t) : ⊤ ∨ φ ≈ ⊤.
 Proof. now rewrite or_comm; apply or_true. Qed.
@@ -95,12 +95,12 @@ Proof. now rewrite or_comm; apply or_true. Qed.
 Lemma false_or (φ : t) : ⊥ ∨ φ ≈ φ.
 Proof. now rewrite or_comm; apply or_false. Qed.
 
-Lemma not_true : ¬ ⊤ ≈ ⊥.
+Lemma not_true : ¬⊤ ≈ ⊥.
 Proof. now rewrite <- (true_def ⊥), false_def. Qed.
-Lemma not_false : ¬ ⊥ ≈ ⊤.
+Lemma not_false : ¬⊥ ≈ ⊤.
 Proof. now rewrite <- (true_def ⊥), false_or. Qed.
 
-Lemma not_not (φ : t) : ¬¬ φ ≈ φ.
+Lemma not_not (φ : t) : ¬¬φ ≈ φ.
 Proof.
   intros.
   rewrite <- or_false.
@@ -116,7 +116,7 @@ Proof.
   now rewrite or_false.
 Qed.
 
-Lemma not_not_or (φ : t) : ¬ (¬ φ ∨ ¬ ⊤) ≈ φ.
+Lemma not_not_or (φ : t) : ¬(¬φ ∨ ¬⊤) ≈ φ.
 Proof.
   intros.
   rewrite not_true.
@@ -148,13 +148,13 @@ Proof.
     now rewrite false_or.
 Qed.
 
-Lemma excluded_middle (φ : t) : ⊤ ⟹ φ ∨ ¬ φ.
+Lemma excluded_middle (φ : t) : ⊤ ⟹ φ ∨ ¬φ.
 Proof.
   apply impl_true.
   now rewrite <- true_def.
 Qed.
 
-Lemma contrapositive (φ ψ : t) : φ ⟹ ψ <-> ¬ ψ ⟹ ¬ φ.
+Lemma contrapositive (φ ψ : t) : φ ⟹ ψ <-> ¬ψ ⟹ ¬φ.
 Proof.
   split; intro.
   - apply impl_def in H.
@@ -176,7 +176,7 @@ Proof.
   now apply true_or.
 Qed.
 
-Lemma not_swap (φ ψ : t) : ¬ φ ≈ ψ <-> φ ≈ ¬ ψ.
+Lemma not_swap (φ ψ : t) : ¬φ ≈ ψ <-> φ ≈ ¬ψ.
 Proof.
   split; intro.
   - rewrite <- not_not.

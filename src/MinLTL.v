@@ -22,6 +22,9 @@ Include Bool.
 Parameter next : t -> t.
 Parameter until : t -> t -> t.
 
+Notation "◯ p"     := (next p)    (at level 0, right associativity).
+Notation "p 'U' q" := (until p q) (at level 44, right associativity).
+
 Declare Instance next_respects_impl :
   Proper (impl ==> impl) next.
 Declare Instance until_respects_impl :
@@ -45,15 +48,12 @@ Next Obligation.
   - now rewrite H1, H2.
 Qed.
 
-Notation "◯ p"     := (next p)    (at level 0, right associativity).
-Notation "p 'U' q" := (until p q) (at level 44, right associativity).
-
 (*** 3.1 Next ◯ *)
 
 (**
-(1) Axiom, Self-dual: ◯ ¬p ◯ ≡ ¬ p
-(2) Axiom, Distributivity of ◯ p ◯ ≡ ¬ ¬p
-(3) Linearity: ◯ over ⇒ : ◯ (p ≡ ⇒ ◯ q) p ⇒ ◯ q
+(1) Axiom, Self-dual : ◯¬p ≡ ¬◯ p
+(2) Axiom, Distributivity of ◯ over ⟹ : ◯ (p ⇒ q) ≡ ◯ p ⇒ ◯ q
+(3) Linearity: ◯ p ≡ ¬◯ ¬p
 (4) Distributivity of ◯ over ∨ : ◯ (p ∨ q) ◯ ≡ p ∨ ◯ q
 (5) Distributivity of ◯ over ∧ : ◯ (p ∧ q) ◯ ≡ p ∧ ◯ q
 (6) Distributivity of ◯ over ≡ : ◯ (p ≡ q) ≡ ◯ p ≡ ◯ q
@@ -61,61 +61,61 @@ Notation "p 'U' q" := (until p q) (at level 44, right associativity).
 (8) Falsehood of ◯ : ◯ false ≡ false
 *)
 
-Hypothesis (* 1 *) next_self_dual : forall (φ : t), ◯¬ φ ≈ ¬◯ φ.
-Hypothesis (* 2 *) next_distr_impl : forall (φ ψ : t), ◯ (φ → ψ) ≈ ◯ φ → ◯ ψ.
+Hypothesis (* 1 *) next_not : forall (φ : t), ◯ ¬φ ≈ ¬◯ φ.
+Hypothesis (* 2 *) next_impl : forall (φ ψ : t), ◯ (φ → ψ) ≈ ◯ φ → ◯ ψ.
 
-Lemma (* 3 *) next_linearity (φ : t) : ◯ φ ≈ ¬◯¬ φ.
+Lemma (* 3 *) next_linearity (φ : t) : ◯ φ ≈ ¬◯ ¬φ.
 Proof.
-  rewrite next_self_dual.
+  rewrite next_not.
   now apply not_swap.
 Qed.
 
-Lemma (* 4 *) next_distr_or (φ ψ : t) : ◯ (φ ∨ ψ) ≈ ◯ φ ∨ ◯ ψ.
+Lemma (* 4 *) next_or (φ ψ : t) : ◯ (φ ∨ ψ) ≈ ◯ φ ∨ ◯ ψ.
 Proof.
-  pose proof (next_distr_impl (¬ φ) ψ) as H; rewrite not_not in H.
+  pose proof (next_impl (¬φ) ψ) as H; rewrite not_not in H.
   rewrite H.
   now rewrite <- next_linearity.
 Qed.
 
-Lemma (* 5 *) next_distr_and (φ ψ : t) : ◯ (φ ∧ ψ) ≈ ◯ φ ∧ ◯ ψ.
+Lemma (* 5 *) next_and (φ ψ : t) : ◯ (φ ∧ ψ) ≈ ◯ φ ∧ ◯ ψ.
 Proof.
   rewrite <- (not_not φ) at 1.
   rewrite <- (not_not ψ) at 1.
   rewrite <- not_or.
-  rewrite next_self_dual.
-  rewrite next_distr_or.
+  rewrite next_not.
+  rewrite next_or.
   rewrite not_or.
   now rewrite <- !next_linearity.
 Qed.
 
-Lemma (* 6 *) next_distr_next_eq (φ ψ : t) : ◯ (φ ≡ ψ) ≈ ◯ φ ≡ ◯ ψ.
+Lemma (* 6 *) next_eqv (φ ψ : t) : ◯ (φ ≡ ψ) ≈ ◯ φ ≡ ◯ ψ.
 Proof.
-  rewrite !next_distr_or.
-  rewrite !next_self_dual.
-  now rewrite next_distr_and.
+  rewrite !next_or.
+  rewrite !next_not.
+  now rewrite next_and.
 Qed.
 
-Lemma (* 7 *) next_true : ◯ (⊤) ≈ ⊤.
+Lemma (* 7 *) next_true : ◯ ⊤ ≈ ⊤.
 Proof.
   rewrite <- (true_def ⊤) at 1.
-  rewrite next_distr_or.
-  rewrite next_self_dual.
+  rewrite next_or.
+  rewrite next_not.
   now rewrite true_def.
 Qed.
 
-Lemma (* 8 *) next_false : ◯ (⊥) ≈ ⊥.
+Lemma (* 8 *) next_false : ◯ ⊥ ≈ ⊥.
 Proof.
   rewrite <- (false_def ⊥) at 1.
-  rewrite next_self_dual.
-  rewrite next_distr_or.
-  rewrite next_self_dual.
+  rewrite next_not.
+  rewrite next_or.
+  rewrite next_not.
   now rewrite false_def.
 Qed.
 
 (*** 3.2 Until U *)
 
 (**
-(9) Axiom, Distributivity of ◯ over U : ◯ (p ≡ U ◯ q) p U ◯ q
+(9) Axiom, Distributivity of ◯ over U : ◯ (p U q) ≡ p U ◯ q
 (10) Axiom, Expansion of U : p U q ≡ q ∨ (p ∧ ◯ (p U q))
 (11) Axiom, Right zero of U : p U false ≡ false
 (12) Axiom, Left distributivity of U over ∨ : p U (q ∨ r) ≡ p U q ∨ p U r
@@ -146,35 +146,35 @@ Qed.
 (37) Right absorption of U : (p U q) U q ≡ p U q
 *)
 
-Hypothesis (* 9 *) next_distr_until : forall (φ ψ : t),
+Hypothesis (* 9 *) next_until : forall (φ ψ : t),
   ◯ (φ U ψ) ≈ (◯ φ) U (◯ ψ).
 Hypothesis (* 10 *) until_expansion : forall (φ ψ : t),
   φ U ψ ≈ ψ ∨ (φ ∧ ◯ (φ U ψ)).
 Hypothesis (* 11 *) until_right_bottom : forall (φ : t),
   φ U ⊥ ≈ ⊥.
-Hypothesis (* 12 *) until_left_distr_or : forall (φ ψ χ : t),
+Hypothesis (* 12 *) until_left_or : forall (φ ψ χ : t),
   φ U (ψ ∨ χ) ≈ (φ U ψ) ∨ (φ U χ).
-Hypothesis (* 13 *) until_right_distr_or : forall (φ ψ χ : t),
+Hypothesis (* 13 *) until_right_or : forall (φ ψ χ : t),
   (φ U χ) ∨ (ψ U χ) ⟹ (φ ∨ ψ) U χ.
-Hypothesis (* 14 *) until_left_distr_and : forall (φ ψ χ : t),
+Hypothesis (* 14 *) until_left_and : forall (φ ψ χ : t),
   φ U (ψ ∧ χ) ⟹ (φ U ψ) ∧ (φ U χ).
-Hypothesis (* 15 *) until_right_distr_and : forall (φ ψ χ : t),
+Hypothesis (* 15 *) until_right_and : forall (φ ψ χ : t),
   (φ ∧ ψ) U χ ≈ (φ U χ) ∧ (ψ U χ).
 Hypothesis (* 16 *) until_impl_order : forall (φ ψ χ : t),
-  (φ U ψ) ∧ (¬ ψ U χ) ⟹ φ U χ.
+  (φ U ψ) ∧ (¬ψ U χ) ⟹ φ U χ.
 Hypothesis (* 17 *) until_right_or_order : forall (φ ψ χ : t),
   φ U (ψ U χ) ⟹ (φ ∨ ψ) U χ.
 Hypothesis (* 18 *) until_right_and_order : forall (φ ψ χ : t),
   φ U (ψ ∧ χ) ⟹ (φ U ψ) U χ.
 
-Lemma (* 19 *) until_right_distr_impl (φ ψ χ : t) :
+Lemma (* 19 *) until_right_impl (φ ψ χ : t) :
   (φ → ψ) U χ ⟹ (φ U χ) → (ψ U χ).
 Proof.
   apply and_impl_iff.
-  rewrite <- until_right_distr_and.
+  rewrite <- until_right_and.
   rewrite and_comm.
   rewrite and_impl.
-  rewrite until_right_distr_and.
+  rewrite until_right_and.
   rewrite and_comm.
   now apply and_proj.
 Qed.
@@ -198,48 +198,48 @@ Proof.
   now rewrite or_absorb.
 Qed.
 
-Lemma (* 23 *) until_excl_middle (φ ψ : t) : (φ U ψ) ∨ (φ U ¬ ψ) ≈ ⊤.
+Lemma (* 23 *) until_excl_middle (φ ψ : t) : (φ U ψ) ∨ (φ U ¬ψ) ≈ ⊤.
 Proof.
-  rewrite <- until_left_distr_or.
+  rewrite <- until_left_or.
   rewrite true_def.
   now apply until_true.
 Qed.
 
-Lemma (* 24 *) until_24 (φ ψ χ : t) : (¬ φ U (ψ U χ)) ∧ (φ U χ) ⟹ ψ U χ.
+Lemma (* 24 *) until_24 (φ ψ χ : t) : (¬φ U (ψ U χ)) ∧ (φ U χ) ⟹ ψ U χ.
 Proof.
   rewrite until_right_or_order.
-  rewrite until_right_distr_impl.
+  rewrite until_right_impl.
   rewrite and_comm.
-  rewrite and_distr_or.
+  rewrite and_or.
   rewrite absurdity.
   rewrite false_or.
   rewrite and_comm.
   now rewrite and_proj.
 Qed.
 
-Lemma (* 25 *) until_25 (φ ψ χ : t) : (φ U (¬ ψ U χ)) ∧ (ψ U χ) ⟹ φ U χ.
+Lemma (* 25 *) until_25 (φ ψ χ : t) : (φ U (¬ψ U χ)) ∧ (ψ U χ) ⟹ φ U χ.
 Proof.
   rewrite until_right_or_order.
   rewrite or_comm.
-  rewrite until_right_distr_impl.
+  rewrite until_right_impl.
   rewrite and_comm.
-  rewrite and_distr_or.
+  rewrite and_or.
   rewrite absurdity.
   rewrite false_or.
   rewrite and_comm.
   now rewrite and_proj.
 Qed.
 
-Lemma (* 26 *) until_26 (φ ψ : t) : (φ U ψ) ∧ (¬ ψ U φ) ⟹ φ.
+Lemma (* 26 *) until_26 (φ ψ : t) : (φ U ψ) ∧ (¬ψ U φ) ⟹ φ.
 Proof.
   rewrite until_impl_order.
   now rewrite until_idem.
 Qed.
 
-Lemma (* 27 *) until_27 (φ ψ : t) : φ ∧ (¬ φ U ψ) ⟹ ψ.
+Lemma (* 27 *) until_27 (φ ψ : t) : φ ∧ (¬φ U ψ) ⟹ ψ.
 Proof.
   rewrite until_expansion.
-  rewrite and_distr_or.
+  rewrite and_or.
   rewrite <- and_assoc.
   rewrite absurdity.
   rewrite false_and.
@@ -251,7 +251,7 @@ Qed.
 Lemma (* 28 *) until_28 (φ ψ : t) : φ U ψ ⟹ φ ∨ ψ.
 Proof.
   rewrite until_expansion.
-  rewrite or_distr_and.
+  rewrite or_and.
   rewrite and_proj.
   now rewrite or_comm.
 Qed.
