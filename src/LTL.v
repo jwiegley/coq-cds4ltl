@@ -83,25 +83,115 @@ Qed.
 (53) Distributivity of ◇ over ∧ : ◇ (p ∧ q) ⇒ ◇ p ∧ ◇ q
 *)
 
-Hypothesis (* 38 *) eventually_def : forall (φ : t), ◇ φ ≈ ⊤ U φ.
+Hypothesis (* 38 *) evn_def : forall (φ : t), ◇ φ ≈ ⊤ U φ.
 
-Set Nested Proofs Allowed.
+Lemma (* 39 *) law_39 (φ ψ : t) : (φ U ψ) ∧ ◇ ψ ≈ φ U ψ.
+Proof.
+  rewrite evn_def.
+  rewrite <- until_right_and.
+  now rewrite and_true.
+Qed.
 
-Lemma (* 39 *) law (φ ψ : t) : (φ U ψ) ∧ ◇ ψ ≈ φ U ψ.
-Lemma (* 40 *) law (φ ψ : t) : (φ U ψ) ∨ ◇ ψ ≈ ◇ ψ.
-Lemma (* 41 *) law (φ ψ : t) : φ U ◇ ψ ≈ ◇ ψ.
-Lemma (* 42 *) law (φ ψ : t) : φ U ψ ⟹ ◇ ψ.
-Lemma (* 43 *) law : ◇ ⊤ ≈ ⊤.
-Lemma (* 44 *) law : ◇ ⊥ ≈ ⊥.
-Lemma (* 45 *) law (φ : t) : ◇ φ ≈ φ ∨ ◯◇ φ.
-Lemma (* 46 *) law (φ : t) : φ ⟹ ◇ φ.
-Lemma (* 47 *) law (φ : t) : ◯ φ ⟹ ◇ φ.
-Lemma (* 48 *) law (φ : t) : φ ∨ ◇ φ ≈ ◇ φ.
-Lemma (* 49 *) law (φ : t) : ◇ φ ∧ φ ≈ φ.
-Lemma (* 50 *) law (φ : t) : ◇ ◇ φ ≈ ◇ φ.
-Lemma (* 51 *) law (φ : t) : ◯ ◇ φ ≈ ◇ ◯ φ.
-Lemma (* 52 *) law (φ ψ : t) : ◇ (φ ∨ ψ) ⟹ ◇ φ ∨ ◇ ψ.
-Lemma (* 53 *) law (φ ψ : t) : ◇ (φ ∧ ψ) ⟹ ◇ φ ∧ ◇ ψ.
+Lemma (* 40 *) until_absorb_or_evn (φ ψ : t) : (φ U ψ) ∨ ◇ ψ ≈ ◇ ψ.
+Proof.
+  rewrite evn_def.
+  split.
+  - rewrite until_right_or.
+    now rewrite or_true.
+  - rewrite or_comm.
+    now apply or_inj.
+Qed.
+
+Lemma (* 41 *) until_absorb_evn (φ ψ : t) : φ U ◇ ψ ≈ ◇ ψ.
+Proof.
+  rewrite evn_def.
+  split.
+  - rewrite until_right_or_order.
+    now rewrite or_true.
+  - now apply until_insertion.
+Qed.
+
+Lemma (* 42 *) law_42 (φ ψ : t) : φ U ψ ⟹ ◇ ψ.
+Proof.
+  rewrite <- (until_absorb_evn φ).
+  apply until_respects_impl; [reflexivity|].
+  rewrite evn_def.
+  now rewrite <- until_insertion.
+Qed.
+
+Lemma (* 43 *) law_43 : ◇ ⊤ ≈ ⊤.
+Proof.
+  rewrite evn_def.
+  now apply until_true.
+Qed.
+
+Lemma (* 44 *) law_44 : ◇ ⊥ ≈ ⊥.
+Proof.
+  rewrite evn_def.
+  now apply until_right_bottom.
+Qed.
+
+Lemma (* 45 *) law_45 (φ : t) : ◇ φ ≈ φ ∨ ◯ ◇ φ.
+Proof.
+  rewrite evn_def.
+  rewrite until_expansion at 1.
+  now rewrite true_and.
+Qed.
+
+Lemma (* 46 *) evn_weaken (φ : t) : φ ⟹ ◇ φ.
+Proof.
+  rewrite evn_def.
+  now rewrite <- until_insertion.
+Qed.
+
+Lemma (* 47 *) law_47 (φ : t) : ◯ φ ⟹ ◇ φ.
+Proof.
+  rewrite evn_def.
+  rewrite until_expansion.
+  rewrite or_comm.
+  rewrite <- or_inj.
+  rewrite true_and.
+  apply next_respects_impl.
+  rewrite <- evn_def.
+  apply evn_weaken.
+Qed.
+
+Lemma (* 48 *) law_48 (φ : t) : φ ∨ ◇ φ ≈ ◇ φ.
+Proof.
+  rewrite <- (false_until φ) at 1.
+  now apply until_absorb_or_evn.
+Qed.
+
+Lemma (* 49 *) law_49 (φ : t) : ◇ φ ∧ φ ≈ φ.
+Proof.
+  rewrite evn_def.
+  now apply until_absorb_u_and.
+Qed.
+
+Lemma (* 50 *) law_50 (φ : t) : ◇ ◇ φ ≈ ◇ φ.
+Proof.
+  rewrite !evn_def.
+  now apply until_left_absorb.
+Qed.
+
+Lemma (* 51 *) law_51 (φ : t) : ◯ ◇ φ ≈ ◇ ◯ φ.
+Proof.
+  rewrite !evn_def.
+  rewrite next_until.
+  now rewrite next_true.
+Qed.
+
+Lemma (* 52 *) evn_or (φ ψ : t) : ◇ (φ ∨ ψ) ≈ ◇ φ ∨ ◇ ψ.
+Proof.
+  rewrite !evn_def.
+  now apply until_left_or.
+Qed.
+
+Lemma (* 53 *) law_53 (φ ψ : t) : ◇ (φ ∧ ψ) ⟹ ◇ φ ∧ ◇ ψ.
+Proof.
+  rewrite !evn_def.
+  now apply until_left_and.
+Qed.
 
 (*** 3.4 Always □ *)
 
@@ -142,31 +232,130 @@ Hypothesis (* 55 *) always_until_and_ind : forall (φ ψ χ : t),
 Hypothesis (* 56 *) always_until_or_ind : forall (φ ψ : t),
   □ (φ → ◯ (φ ∨ ψ)) ⟹ φ → □ φ ∨ φ U ψ.
 
-Lemma (* 57 *) law (φ : t) : □ (φ → ◯ φ) ⟹ φ → □ φ.
-Lemma (* 58 *) law (φ : t) : □ (◯ φ → φ) ⟹ ◇ φ → φ.
-Lemma (* 59 *) law (φ : t) : ◇ φ ≈ ¬□ ¬φ.
-Lemma (* 60 *) law (φ : t) : ¬□ φ ≈ ◇ ¬φ.
-Lemma (* 61 *) law (φ : t) : ¬◇ φ ≈ □ ¬φ.
-Lemma (* 62 *) law (φ : t) : ¬◇ □ φ ≈ □ ◇ ¬φ.
-Lemma (* 63 *) law (φ : t) : ¬□ ◇ φ ≈ ◇ □ ¬φ.
-Lemma (* 64 *) law : □ ⊤ ≈ ⊤.
-Lemma (* 65 *) law : □ ⊥ ≈ ⊥.
-Lemma (* 66 *) law (φ : t) : □ φ ≈ φ ∧ ◯ □ φ.
-Lemma (* 67 *) law (φ : t) : □ φ ≈ φ ∧ ◯ φ ∧ ◯ □ φ.
-Lemma (* 68 *) law (φ : t) : φ ∧ □ φ ≈ □ φ.
-Lemma (* 69 *) law (φ : t) : □ φ ∨ φ ≈ φ.
-Lemma (* 70 *) law (φ : t) : ◇ φ ∧ □ φ ≈ □ φ.
-Lemma (* 71 *) law (φ : t) : □ φ ∨ ◇ φ ≈ ◇ φ.
-Lemma (* 72 *) law (φ : t) : □ □ φ ≈ □ φ.
-Lemma (* 73 *) law (φ : t) : ◯ □ φ ≈ □ ◯ φ.
-Lemma (* 74 *) law (φ : t) : φ → □ φ ⟹ φ → ◯ □ φ.
-Lemma (* 75 *) law (φ : t) : φ ∧ ◇ ¬φ ⟹ ◇ (φ ∧ ◯ ¬φ).
-Lemma (* 76 *) law (φ : t) : □ φ ⟹ φ.
-Lemma (* 77 *) law (φ : t) : □ φ ⟹ ◇ φ.
-Lemma (* 78 *) law (φ : t) : □ φ ⟹ ◯ φ.
-Lemma (* 79 *) law (φ : t) : □ φ ⟹ ◯ □ φ.
-Lemma (* 80 *) law (φ : t) : □ φ ⟹ □ ◯ φ.
-Lemma (* 81 *) law (φ ψ : t) : □ φ ⟹ ¬(ψ U ¬φ).
+Lemma (* 57 *) law_57 (φ : t) : □ (φ → ◯ φ) ⟹ φ → □ φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 58 *) law_58 (φ : t) : □ (◯ φ → φ) ⟹ ◇ φ → φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 59 *) law_59 (φ : t) : ◇ φ ≈ ¬□ ¬φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 60 *) law_60 (φ : t) : ¬□ φ ≈ ◇ ¬φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 61 *) law_61 (φ : t) : ¬◇ φ ≈ □ ¬φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 62 *) law_62 (φ : t) : ¬◇ □ φ ≈ □ ◇ ¬φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 63 *) law_63 (φ : t) : ¬□ ◇ φ ≈ ◇ □ ¬φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 64 *) law_64 : □ ⊤ ≈ ⊤.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 65 *) law_65 : □ ⊥ ≈ ⊥.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 66 *) law_66 (φ : t) : □ φ ≈ φ ∧ ◯ □ φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 67 *) law_67 (φ : t) : □ φ ≈ φ ∧ ◯ φ ∧ ◯ □ φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 68 *) law_68 (φ : t) : φ ∧ □ φ ≈ □ φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 69 *) law_69 (φ : t) : □ φ ∨ φ ≈ φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 70 *) law_70 (φ : t) : ◇ φ ∧ □ φ ≈ □ φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 71 *) law_71 (φ : t) : □ φ ∨ ◇ φ ≈ ◇ φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 72 *) law_72 (φ : t) : □ □ φ ≈ □ φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 73 *) law_73 (φ : t) : ◯ □ φ ≈ □ ◯ φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 74 *) law_74 (φ : t) : φ → □ φ ⟹ φ → ◯ □ φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 75 *) law_75 (φ : t) : φ ∧ ◇ ¬φ ⟹ ◇ (φ ∧ ◯ ¬φ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 76 *) law_76 (φ : t) : □ φ ⟹ φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 77 *) law_77 (φ : t) : □ φ ⟹ ◇ φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 78 *) law_78 (φ : t) : □ φ ⟹ ◯ φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 79 *) law_79 (φ : t) : □ φ ⟹ ◯ □ φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 80 *) law_80 (φ : t) : □ φ ⟹ □ ◯ φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 81 *) law_81 (φ ψ : t) : □ φ ⟹ ¬(ψ U ¬φ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
 
 (*** 3.5 Temporal Deduction *)
 
@@ -177,6 +366,8 @@ Lemma (* 81 *) law (φ ψ : t) : □ φ ⟹ ¬(ψ U ¬φ).
 *)
 
 Lemma (* 82 *) temporal_deduction (φ ψ : t) : (φ ≈ ⊤ -> ψ ≈ ⊤) -> □ φ ⟹ ψ.
+Proof.
+  (* FILL IN HERE *)
 Admitted.
 
 (*** 3.6 Always □, Continued *)
@@ -237,7 +428,7 @@ Admitted.
 (135) □ (p → ◯ ¬p) ⇒ (p → ¬□ p)
 *)
 
-Lemma (* 83 *) law (φ ψ χ : t) : □ φ ∧ (ψ U χ) ⟹ (φ ∧ ψ) U (φ ∧ χ).
+Lemma (* 83 *) (*Distributivity of ∧ over U*) law_83 (φ ψ χ : t) : □ φ ∧ ψ U χ ⟹ (φ ∧ ψ) U (φ ∧ χ).
 Proof.
   apply and_impl_iff.
   apply temporal_deduction; intros.
@@ -247,59 +438,265 @@ Proof.
   now apply true_def.
 Qed.
 
-Lemma (* 83 *) (*Distributivity of ∧ over U*) law__ (φ ψ χ : t) : □ φ ∧ ψ U χ ⟹ (φ ∧ ψ) U (φ ∧ χ).
-Lemma (* 84 *) (*U implication*) law__ (φ ψ : t) : □ φ ∧ ◇ ψ ⟹ φ U ψ.
-Lemma (* 85 *) (*Right monotonicity of U*) law__ (φ ψ χ : t) : □ (φ → ψ) ⟹ (χ U φ → χ U ψ).
-Lemma (* 86 *) (*Left monotonicity of U*) law__ (φ ψ χ : t) : □ (φ → ψ) ⟹ (φ U χ → ψ U χ).
-Lemma (* 87 *) (*Distributivity of ¬ over □*) law__ (φ : t) : □ ¬φ ⟹ ¬□ φ.
-Lemma (* 88 *) (*Distributivity of ◇ over ∧*) law__ (φ ψ : t) : □ φ ∧ ◇ ψ ⟹ ◇ (φ ∧ ψ).
-Lemma (* 89 *) (*◇ excluded middle*) law__ (φ : t) : ◇ φ ∨ □ ¬φ ≈ ⊤.
-Lemma (* 90 *) (*□ excluded middle*) law__ (φ : t) : □ φ ∨ ◇ ¬φ ≈ ⊤.
-Lemma (* 91 *) (*Temporal excluded middle*) law__ (φ : t) : ◇ φ ∨ ◇ ¬φ ≈ ⊤.
-Lemma (* 92 *) (*◇ contradiction*) law__ (φ : t) : ◇ φ ∧ □ ¬φ ≈ ⊥.
-Lemma (* 93 *) (*□ contradiction*) law__ (φ : t) : □ φ ∧ ◇ ¬φ ≈ ⊥.
-Lemma (* 94 *) (*Temporal contradiction*) law__ (φ : t) : □ φ ∧ □ ¬φ ≈ ⊥.
-Lemma (* 95 *) (*□ ◇ excluded middle*) law__ (φ : t) : □ ◇ φ ∨ ◇ □ ¬φ ≈ ⊤.
-Lemma (* 96 *) (*◇ □ excluded middle*) law__ (φ : t) : ◇ □ φ ∨ □ ◇ ¬φ ≈ ⊤.
-Lemma (* 97 *) (*□ ◇ contradiction*) law__ (φ : t) : □ ◇ φ ∧ ◇ □ ¬φ ≈ ⊥.
-Lemma (* 98 *) (*◇ □ contradiction*) law__ (φ : t) : ◇ □ φ ∧ □ ◇ ¬φ ≈ ⊥.
-Lemma (* 99 *) (*Distributivity of □ over ∧*) law__ (φ ψ : t) : □ (φ ∧ ψ) ≈ □ φ ∧ □ ψ.
-Lemma (* 100 *) (*Distributivity of □ over ∨*) law__ (φ ψ : t) : □ φ ∨ □ ψ ⟹ □ (φ ∨ ψ).
-Lemma (* 101 *) (*Logical equivalence law of ◯*) law__ (φ ψ : t) : □ (φ ≡ ψ) ⟹ (◯ φ ≡ ◯ ψ).
-Lemma (* 102 *) (*Logical equivalence law of ◇*) law__ (φ ψ : t) : □ (φ ≡ ψ) ⟹ (◇ φ ≡ ◇ ψ).
-Lemma (* 103 *) (*Logical equivalence law of □*) law__ (φ ψ : t) : □ (φ ≡ ψ) ⟹ (□ φ ≡ □ ψ).
-Lemma (* 104 *) (*Distributivity of ◇ over ⟹*) law__ (φ ψ : t) : ◇ (φ → ψ) ≈ (□ φ → ◇ ψ).
-Lemma (* 105 *) (*Distributivity of ◇ over ⟹*) law__ (φ ψ : t) : (◇ φ → ◇ ψ) ⟹ ◇ (φ → ψ).
-Lemma (* 106 *) (*∧ frame law of ◯*) law__ (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ ∧ ψ)).
-Lemma (* 107 *) (*∧ frame law of ◇*) law__ (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ ∧ ψ)).
-Lemma (* 108 *) (*∧ frame law of □*) law__ (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ ∧ ψ)).
-Lemma (* 109 *) (*∨ frame law of ◯*) law__ (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ ∨ ψ)).
-Lemma (* 110 *) (*∨ frame law of ◇*) law__ (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ ∨ ψ)).
-Lemma (* 111 *) (*∨ frame law of □*) law__ (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ ∨ ψ)).
-Lemma (* 112 *) (*⟹ frame law of ◯*) law__ (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ → ψ)).
-Lemma (* 113 *) (*⟹ frame law of ◇*) law__ (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ → ψ)).
-Lemma (* 114 *) (*⟹ frame law of □*) law__ (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ → ψ)).
-Lemma (* 115 *) (*≡ frame law of ◯*) law__ (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ ≡ ψ)).
-Lemma (* 116 *) (*≡ frame law of ◇*) law__ (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ ≡ ψ)).
-Lemma (* 117 *) (*≡ frame law of □*) law__ (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ ≡ ψ)).
-Lemma (* 118 *) (*Monotonicity of ◯*) law__ (φ ψ : t) : □ (φ → ψ) ⟹ (◯ φ → ◯ ψ).
-Lemma (* 119 *) (*Monotonicity of ◇*) law__ (φ ψ : t) : □ (φ → ψ) ⟹ (◇ φ → ◇ ψ).
-Lemma (* 120 *) (*Monotonicity of □*) law__ (φ ψ : t) : □ (φ → ψ) ⟹ (□ φ → □ ψ).
-Lemma (* 121 *) (*Consequence rule of ◯*) law__ (φ ψ χ ρ : t) : □ ((φ → ψ) ∧ (ψ → ◯ χ) ∧ (χ → ρ)) ⟹ (φ → ◯ ρ).
-Lemma (* 122 *) (*Consequence rule of ◇*) law__ (φ ψ χ ρ : t) : □ ((φ → ψ) ∧ (ψ → ◇ χ) ∧ (χ → ρ)) ⟹ (φ → ◇ ρ).
-Lemma (* 123 *) (*Consequence rule of □*) law__ (φ ψ χ ρ : t) : □ ((φ → ψ) ∧ (ψ → □ χ) ∧ (χ → ρ)) ⟹ (φ → □ ρ).
-Lemma (* 124 *) (*Catenation rule of ◇*) law__ (φ ψ χ : t) : □ ((φ → ◇ ψ) ∧ (ψ → ◇ χ)) ⟹ (φ → ◇ χ).
-Lemma (* 125 *) (*Catenation rule of □*) law__ (φ ψ χ : t) : □ ((φ → □ ψ) ∧ (ψ → □ χ)) ⟹ (φ → □ χ).
-Lemma (* 126 *) (*Catenation rule of U*) law__ (φ ψ χ ρ : t) : □ ((φ → ψ U χ) ∧ (χ → ψ U ρ)) ⟹ (φ → ψ U ρ).
-Lemma (* 127 *) (*U strengthening rule*) law__ (φ ψ χ ρ : t) : □ ((φ → χ) ∧ (ψ → ρ)) ⟹ (φ U ψ → χ U ρ).
-Lemma (* 128 *) (*Induction rule ◇*) law__ (φ ψ : t) : □ (φ ∨ ◯ ψ → ψ) ⟹ (◇ φ → ψ).
-Lemma (* 129 *) (*Induction rule □*) law__ (φ ψ : t) : □ (φ → ψ ∧ ◯ φ) ⟹ (φ → □ ψ).
-Lemma (* 130 *) (*Induction rule U*) law__ (φ ψ χ : t) : □ (φ → ¬ψ ∧ ◯ φ) ⟹ (φ → ¬(χ U ψ)).
-Lemma (* 131 *) (*◇ Conﬂuence*) law__ (φ ψ χ ρ : t) : □ ((φ → ◇ (ψ ∨ χ)) ∧ (ψ → ◇ ρ) ∧ (χ → ◇ ρ)) ⟹ (φ → ◇ ρ).
-Lemma (* 132 *) (*Temporal generalization law*) law__ (φ ψ : t) : □ (□ φ → ψ) ⟹ (□ φ → □ ψ).
-Lemma (* 133 *) (*Temporal particularization law*) law__ (φ ψ : t) : □ (φ → ◇ ψ) ⟹ (◇ φ → ◇ ψ).
-Lemma (* 134 *) law__ (φ ψ : t) : □ (φ → ◯ ψ) ⟹ (φ → ◇ ψ).
-Lemma (* 135 *) law__ (φ : t) : □ (φ → ◯ ¬φ) ⟹ (φ → ¬□ φ).
+Lemma (* 84 *) (*U implication*) law_84 (φ ψ : t) : □ φ ∧ ◇ ψ ⟹ φ U ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 85 *) (*Right monotonicity of U*) law_85 (φ ψ χ : t) : □ (φ → ψ) ⟹ (χ U φ → χ U ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 86 *) (*Left monotonicity of U*) law_86 (φ ψ χ : t) : □ (φ → ψ) ⟹ (φ U χ → ψ U χ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 87 *) (*Distributivity of ¬ over □*) law_87 (φ : t) : □ ¬φ ⟹ ¬□ φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 88 *) (*Distributivity of ◇ over ∧*) law_88 (φ ψ : t) : □ φ ∧ ◇ ψ ⟹ ◇ (φ ∧ ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 89 *) (*◇ excluded middle*) law_89 (φ : t) : ◇ φ ∨ □ ¬φ ≈ ⊤.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 90 *) (*□ excluded middle*) law_90 (φ : t) : □ φ ∨ ◇ ¬φ ≈ ⊤.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 91 *) (*Temporal excluded middle*) law_91 (φ : t) : ◇ φ ∨ ◇ ¬φ ≈ ⊤.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 92 *) (*◇ contradiction*) law_92 (φ : t) : ◇ φ ∧ □ ¬φ ≈ ⊥.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 93 *) (*□ contradiction*) law_93 (φ : t) : □ φ ∧ ◇ ¬φ ≈ ⊥.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 94 *) (*Temporal contradiction*) law_94 (φ : t) : □ φ ∧ □ ¬φ ≈ ⊥.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 95 *) (*□ ◇ excluded middle*) law_95 (φ : t) : □ ◇ φ ∨ ◇ □ ¬φ ≈ ⊤.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 96 *) (*◇ □ excluded middle*) law_96 (φ : t) : ◇ □ φ ∨ □ ◇ ¬φ ≈ ⊤.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 97 *) (*□ ◇ contradiction*) law_97 (φ : t) : □ ◇ φ ∧ ◇ □ ¬φ ≈ ⊥.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 98 *) (*◇ □ contradiction*) law_98 (φ : t) : ◇ □ φ ∧ □ ◇ ¬φ ≈ ⊥.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 99 *) (*Distributivity of □ over ∧*) law_99 (φ ψ : t) : □ (φ ∧ ψ) ≈ □ φ ∧ □ ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 100 *) (*Distributivity of □ over ∨*) law_100 (φ ψ : t) : □ φ ∨ □ ψ ⟹ □ (φ ∨ ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 101 *) (*Logical equivalence law of ◯*) law_101 (φ ψ : t) : □ (φ ≡ ψ) ⟹ (◯ φ ≡ ◯ ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 102 *) (*Logical equivalence law of ◇*) law_102 (φ ψ : t) : □ (φ ≡ ψ) ⟹ (◇ φ ≡ ◇ ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 103 *) (*Logical equivalence law of □*) law_103 (φ ψ : t) : □ (φ ≡ ψ) ⟹ (□ φ ≡ □ ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 104 *) (*Distributivity of ◇ over ⟹*) law_104 (φ ψ : t) : ◇ (φ → ψ) ≈ (□ φ → ◇ ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 105 *) (*Distributivity of ◇ over ⟹*) law_105 (φ ψ : t) : (◇ φ → ◇ ψ) ⟹ ◇ (φ → ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 106 *) (*∧ frame law of ◯*) law_106 (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ ∧ ψ)).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 107 *) (*∧ frame law of ◇*) law_107 (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ ∧ ψ)).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 108 *) (*∧ frame law of □*) law_108 (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ ∧ ψ)).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 109 *) (*∨ frame law of ◯*) law_109 (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ ∨ ψ)).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 110 *) (*∨ frame law of ◇*) law_110 (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ ∨ ψ)).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 111 *) (*∨ frame law of □*) law_111 (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ ∨ ψ)).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 112 *) (*⟹ frame law of ◯*) law_112 (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ → ψ)).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 113 *) (*⟹ frame law of ◇*) law_113 (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ → ψ)).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 114 *) (*⟹ frame law of □*) law_114 (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ → ψ)).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 115 *) (*≡ frame law of ◯*) law_115 (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ ≡ ψ)).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 116 *) (*≡ frame law of ◇*) law_116 (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ ≡ ψ)).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 117 *) (*≡ frame law of □*) law_117 (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ ≡ ψ)).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 118 *) (*Monotonicity of ◯*) law_118 (φ ψ : t) : □ (φ → ψ) ⟹ (◯ φ → ◯ ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 119 *) (*Monotonicity of ◇*) law_119 (φ ψ : t) : □ (φ → ψ) ⟹ (◇ φ → ◇ ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 120 *) (*Monotonicity of □*) law_120 (φ ψ : t) : □ (φ → ψ) ⟹ (□ φ → □ ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 121 *) (*Consequence rule of ◯*) law_121 (φ ψ χ ρ : t) : □ ((φ → ψ) ∧ (ψ → ◯ χ) ∧ (χ → ρ)) ⟹ (φ → ◯ ρ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 122 *) (*Consequence rule of ◇*) law_122 (φ ψ χ ρ : t) : □ ((φ → ψ) ∧ (ψ → ◇ χ) ∧ (χ → ρ)) ⟹ (φ → ◇ ρ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 123 *) (*Consequence rule of □*) law_123 (φ ψ χ ρ : t) : □ ((φ → ψ) ∧ (ψ → □ χ) ∧ (χ → ρ)) ⟹ (φ → □ ρ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 124 *) (*Catenation rule of ◇*) law_124 (φ ψ χ : t) : □ ((φ → ◇ ψ) ∧ (ψ → ◇ χ)) ⟹ (φ → ◇ χ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 125 *) (*Catenation rule of □*) law_125 (φ ψ χ : t) : □ ((φ → □ ψ) ∧ (ψ → □ χ)) ⟹ (φ → □ χ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 126 *) (*Catenation rule of U*) law_126 (φ ψ χ ρ : t) : □ ((φ → ψ U χ) ∧ (χ → ψ U ρ)) ⟹ (φ → ψ U ρ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 127 *) (*U strengthening rule*) law_127 (φ ψ χ ρ : t) : □ ((φ → χ) ∧ (ψ → ρ)) ⟹ (φ U ψ → χ U ρ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 128 *) (*Induction rule ◇*) law_128 (φ ψ : t) : □ (φ ∨ ◯ ψ → ψ) ⟹ (◇ φ → ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 129 *) (*Induction rule □*) law_129 (φ ψ : t) : □ (φ → ψ ∧ ◯ φ) ⟹ (φ → □ ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 130 *) (*Induction rule U*) law_130 (φ ψ χ : t) : □ (φ → ¬ψ ∧ ◯ φ) ⟹ (φ → ¬(χ U ψ)).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 131 *) (*◇ Conﬂuence*) law_131 (φ ψ χ ρ : t) : □ ((φ → ◇ (ψ ∨ χ)) ∧ (ψ → ◇ ρ) ∧ (χ → ◇ ρ)) ⟹ (φ → ◇ ρ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 132 *) (*Temporal generalization law*) law_132 (φ ψ : t) : □ (□ φ → ψ) ⟹ (□ φ → □ ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 133 *) (*Temporal particularization law*) law_133 (φ ψ : t) : □ (φ → ◇ ψ) ⟹ (◇ φ → ◇ ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 134 *) law_134 (φ ψ : t) : □ (φ → ◯ ψ) ⟹ (φ → ◇ ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 135 *) law_135 (φ : t) : □ (φ → ◯ ¬φ) ⟹ (φ → ¬□ φ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
 
 (*** 3.7 Proof Metatheorems *)
 
@@ -357,35 +754,150 @@ Proof. now apply always_respects_impl. Qed.
 (168) Progress proof rule: □ p ∧ □ (□ p → ◇ q) ⇒ ◇ q
 *)
 
-Lemma (* 140 *) law__ (*U □ implication*) (φ ψ : t) : φ U □ ψ ⟹ □ (φ U ψ).
-Lemma (* 141 *) law__ (*Absorption of U into □*) (φ : t) : φ U □ φ ≈ □ φ.
-Lemma (* 142 *) law__ (*Right ∧ U strengthening*) (φ ψ χ : t) : φ U (ψ ∧ χ) ⟹ φ U (ψ U χ).
-Lemma (* 143 *) law__ (*Left ∧ U strengthening*) (φ ψ χ : t) : (φ ∧ ψ) U χ ⟹ (φ U ψ) U χ.
-Lemma (* 144 *) law__ (*Left ∧ U ordering*) (φ ψ χ : t) : (φ ∧ ψ) U χ ⟹ φ U (ψ U χ).
-Lemma (* 145 *) law__ (*◇ □ implication*) (φ : t) : ◇ □ φ ⟹ □ ◇ φ.
-Lemma (* 146 *) law__ (*□ ◇ excluded middle*) (φ : t) : □ ◇ φ ∨ □ ◇ ¬φ ≈ ⊤.
-Lemma (* 147 *) law__ (*◇ □ contradiction*) (φ : t) : ◇ □ φ ∧ ◇ □ ¬φ ≈ ⊥.
-Lemma (* 148 *) law__ (*U frame law of ◯*) (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ U ψ)).
-Lemma (* 149 *) law__ (*U frame law of ◇*) (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ U ψ)).
-Lemma (* 150 *) law__ (*U frame law of □*) (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ U ψ)).
-Lemma (* 151 *) law__ (*Absorption of ◇ into □ ◇*) (φ : t) : ◇ □ ◇ φ ≈ □ ◇ φ.
-Lemma (* 152 *) law__ (*Absorption of □ into ◇ □*) (φ : t) : □ ◇ □ φ ≈ ◇ □ φ.
-Lemma (* 153 *) law__ (*Absorption of □ ◇*) (φ : t) : □ ◇ □ ◇ φ ≈ □ ◇ φ.
-Lemma (* 154 *) law__ (*Absorption of ◇ □*) (φ : t) : ◇ □ ◇ □ φ ≈ ◇ □ φ.
-Lemma (* 155 *) law__ (*Absorption of ◯ into □ ◇*) (φ : t) : ◯ □ ◇ φ ≈ □ ◇ φ.
-Lemma (* 156 *) law__ (*Absorption of ◯ into ◇ □*) (φ : t) : ◯ ◇ □ φ ≈ ◇ □ φ.
-Lemma (* 157 *) law__ (*Monotonicity of □ ◇*) (φ ψ : t) : □ (φ → ψ) ⟹ (□ ◇ φ → □ ◇ ψ).
-Lemma (* 158 *) law__ (*Monotonicity of ◇ □*) (φ ψ : t) : □ (φ → ψ) ⟹ (◇ □ φ → ◇ □ ψ).
-Lemma (* 159 *) law__ (*Distributivity of □ ◇ over ∧*) (φ ψ : t) : □ ◇ (φ ∧ ψ) ⟹ □ ◇ φ ∧ □ ◇ ψ.
-Lemma (* 160 *) law__ (*Distributivity of ◇ □ over ∨*) (φ ψ : t) : ◇ □ φ ∨ ◇ □ ψ ⟹ ◇ □ (φ ∨ ψ).
-Lemma (* 161 *) law__ (*Distributivity of □ ◇ over ∨*) (φ ψ : t) : □ ◇ (φ ∨ ψ) ≈ □ ◇ φ ∨ □ ◇ ψ.
-Lemma (* 162 *) law__ (*Distributivity of ◇ □ over ∧*) (φ ψ : t) : ◇ □ (φ ∧ ψ) ≈ ◇ □ φ ∧ ◇ □ ψ.
-Lemma (* 163 *) law__ (*Eventual latching*) (φ ψ : t) : ◇ □ (φ → □ ψ) ≈ ◇ □ ¬φ ∨ ◇ □ ψ.
-Lemma (* 164 *) law__ (**) (φ ψ : t) : □ (□ ◇ φ → ◇ ψ) ≈ ◇ □ ¬φ ∨ □ ◇ ψ.
-Lemma (* 165 *) law__ (**) (φ ψ : t) : □ ((φ ∨ □ ψ) ∧ (□ φ ∨ ψ)) ≈ □ φ ∨ □ ψ.
-Lemma (* 166 *) law__ (**) (φ ψ : t) : ◇ □ φ ∧ □ ◇ ψ ⟹ □ ◇ (φ ∧ ψ).
-Lemma (* 167 *) law__ (**) (φ ψ χ : t) : □ ((□ φ → ◇ ψ) ∧ (ψ → ◯ χ)) ⟹ (□ φ → ◯ □ ◇ χ).
-Lemma (* 168 *) law__ (*Progress proof rule*) (φ ψ : t) : ◇ □ φ ∧ □ (□ φ → ◇ ψ) ⟹ ◇ ψ.
+Lemma (* 140 *) law_140 (*U □ implication*) (φ ψ : t) : φ U □ ψ ⟹ □ (φ U ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 141 *) law_141 (*Absorption of U into □*) (φ : t) : φ U □ φ ≈ □ φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 142 *) law_142 (*Right ∧ U strengthening*) (φ ψ χ : t) : φ U (ψ ∧ χ) ⟹ φ U (ψ U χ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 143 *) law_143 (*Left ∧ U strengthening*) (φ ψ χ : t) : (φ ∧ ψ) U χ ⟹ (φ U ψ) U χ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 144 *) law_144 (*Left ∧ U ordering*) (φ ψ χ : t) : (φ ∧ ψ) U χ ⟹ φ U (ψ U χ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 145 *) law_145 (*◇ □ implication*) (φ : t) : ◇ □ φ ⟹ □ ◇ φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 146 *) law_146 (*□ ◇ excluded middle*) (φ : t) : □ ◇ φ ∨ □ ◇ ¬φ ≈ ⊤.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 147 *) law_147 (*◇ □ contradiction*) (φ : t) : ◇ □ φ ∧ ◇ □ ¬φ ≈ ⊥.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 148 *) law_148 (*U frame law of ◯*) (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ U ψ)).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 149 *) law_149 (*U frame law of ◇*) (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ U ψ)).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 150 *) law_150 (*U frame law of □*) (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ U ψ)).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 151 *) law_151 (*Absorption of ◇ into □ ◇*) (φ : t) : ◇ □ ◇ φ ≈ □ ◇ φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 152 *) law_152 (*Absorption of □ into ◇ □*) (φ : t) : □ ◇ □ φ ≈ ◇ □ φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 153 *) law_153 (*Absorption of □ ◇*) (φ : t) : □ ◇ □ ◇ φ ≈ □ ◇ φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 154 *) law_154 (*Absorption of ◇ □*) (φ : t) : ◇ □ ◇ □ φ ≈ ◇ □ φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 155 *) law_155 (*Absorption of ◯ into □ ◇*) (φ : t) : ◯ □ ◇ φ ≈ □ ◇ φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 156 *) law_156 (*Absorption of ◯ into ◇ □*) (φ : t) : ◯ ◇ □ φ ≈ ◇ □ φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 157 *) law_157 (*Monotonicity of □ ◇*) (φ ψ : t) : □ (φ → ψ) ⟹ (□ ◇ φ → □ ◇ ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 158 *) law_158 (*Monotonicity of ◇ □*) (φ ψ : t) : □ (φ → ψ) ⟹ (◇ □ φ → ◇ □ ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 159 *) law_159 (*Distributivity of □ ◇ over ∧*) (φ ψ : t) : □ ◇ (φ ∧ ψ) ⟹ □ ◇ φ ∧ □ ◇ ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 160 *) law_160 (*Distributivity of ◇ □ over ∨*) (φ ψ : t) : ◇ □ φ ∨ ◇ □ ψ ⟹ ◇ □ (φ ∨ ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 161 *) law_161 (*Distributivity of □ ◇ over ∨*) (φ ψ : t) : □ ◇ (φ ∨ ψ) ≈ □ ◇ φ ∨ □ ◇ ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 162 *) law_162 (*Distributivity of ◇ □ over ∧*) (φ ψ : t) : ◇ □ (φ ∧ ψ) ≈ ◇ □ φ ∧ ◇ □ ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 163 *) law_163 (*Eventual latching*) (φ ψ : t) : ◇ □ (φ → □ ψ) ≈ ◇ □ ¬φ ∨ ◇ □ ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 164 *) law_164 (**) (φ ψ : t) : □ (□ ◇ φ → ◇ ψ) ≈ ◇ □ ¬φ ∨ □ ◇ ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 165 *) law_165 (**) (φ ψ : t) : □ ((φ ∨ □ ψ) ∧ (□ φ ∨ ψ)) ≈ □ φ ∨ □ ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 166 *) law_166 (**) (φ ψ : t) : ◇ □ φ ∧ □ ◇ ψ ⟹ □ ◇ (φ ∧ ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 167 *) law_167 (**) (φ ψ χ : t) : □ ((□ φ → ◇ ψ) ∧ (ψ → ◯ χ)) ⟹ (□ φ → ◯ □ ◇ χ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 168 *) law_168 (*Progress proof rule*) (φ ψ : t) : ◇ □ φ ∧ □ (□ φ → ◇ ψ) ⟹ ◇ ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
 
 (*** 3.9 Wait W *)
 
@@ -481,94 +993,430 @@ Lemma (* 168 *) law__ (*Progress proof rule*) (φ ψ : t) : ◇ □ φ ∧ □ (
 Hypothesis (* 169 *) wait_def : forall (φ ψ : t), φ W ψ ≈ □ φ ∨ φ U ψ.
 Hypothesis (* 170 *) not_wait : forall (φ ψ : t), ¬(φ W ψ) ≈ ¬ψ U (¬φ ∧ ¬ψ).
 
-Lemma (* 171 *) law__ (* U in terms of W *) (φ ψ : t) : φ U ψ ≈ φ W ψ ∧ ◇ ψ.
-Lemma (* 172 *) law__ (**) (φ ψ : t) : φ W ψ ≈ □ (φ ∧ ¬ψ) ∨ φ U ψ.
-Lemma (* 173 *) law__ (*Distributivity of ¬ over U *) (φ ψ : t) : ¬(φ U ψ) ≈ ¬ψ W (¬φ ∧ ¬ψ).
-Lemma (* 174 *) law__ (*U implication*) (φ ψ : t) : φ U ψ ⟹ φ W ψ.
-Lemma (* 175 *) law__ (*Distributivity of ∧ over W *) (φ ψ χ : t) : □ φ ∧ ψ W χ ⟹ (φ ∧ ψ) W (φ ∧ χ).
-Lemma (* 176 *) law__ (*W ◇ equivalence*) (φ ψ : t) : φ W ◇ ψ ≈ □ φ ∨ ◇ ψ.
-Lemma (* 177 *) law__ (*W □ implication*) (φ ψ : t) : φ W □ ψ ⟹ □ (φ W ψ).
-Lemma (* 178 *) law__ (*Absorption of W into □ *) (φ : t) : φ W □ φ ≈ □ φ.
-Lemma (* 179 *) law__ (*Perpetuity*) (φ ψ : t) : □ φ ⟹ φ W ψ.
-Lemma (* 180 *) law__ (*Distributivity of ◯ over W *) (φ ψ : t) : ◯ (φ W ψ) ≈ ◯ φ W ◯ ψ.
-Lemma (* 181 *) law__ (*Expansion of W *) (φ ψ : t) : φ W ψ ≈ ψ ∨ (φ ∧ ◯ (φ W ψ)).
-Lemma (* 182 *) law__ (*W excluded middle*) (φ ψ : t) : φ W ψ ∨ φ W ¬ψ ≈ ⊤.
-Lemma (* 183 *) law__ (*Left zero of W *) (ψ : t) : ⊤ W ψ ≈ ⊤.
-Lemma (* 184 *) law__ (*Left distributivity of W over ∨ *) (φ ψ χ : t) : φ W (ψ ∨ χ) ≈ φ W ψ ∨ φ W χ.
-Lemma (* 185 *) law__ (*Right distributivity of W over ∨ *) (φ ψ χ : t) : φ W χ ∨ ψ W χ ⟹ (φ ∨ ψ) W χ.
-Lemma (* 186 *) law__ (*Left distributivity of W over ∧ *) (φ ψ χ : t) : φ W (ψ ∧ χ) ⟹ φ W ψ ∧ φ W χ.
-Lemma (* 187 *) law__ (*Right distributivity of W over ∧ *) (φ ψ χ : t) : (φ ∧ ψ) W χ ≈ φ W χ ∧ ψ W χ.
-Lemma (* 188 *) law__ (*Right distributivity of W over ⟹ *) (φ ψ χ : t) : (φ → ψ) W χ ⟹ (φ W χ → ψ W χ).
-Lemma (* 189 *) law__ (*Disjunction rule of W *) (φ ψ : t) : φ W ψ ≈ (φ ∨ ψ) W ψ.
-Lemma (* 190 *) law__ (*Disjunction rule of U *) (φ ψ : t) : φ U ψ ≈ (φ ∨ ψ) U ψ.
-Lemma (* 191 *) law__ (*Rule of W *) (ψ : t) : ¬ψ W ψ ≈ ⊤.
-Lemma (* 192 *) law__ (*Rule of U *) (ψ : t) : ¬ψ U ψ ≈ ◇ ψ.
-Lemma (* 193 *) law__ (**) (φ ψ : t) : (φ → ψ) W φ ≈ ⊤.
-Lemma (* 194 *) law__ (**) (φ ψ : t) : ◇ φ ⟹ (φ → ψ) U φ.
-Lemma (* 195 *) law__ (*Conjunction rule of W *) (φ ψ : t) : φ W ψ ≈ (φ ∧ ¬ψ) W ψ.
-Lemma (* 196 *) law__ (*Conjunction rule of U *) (φ ψ : t) : φ U ψ ≈ (φ ∧ ¬ψ) U ψ.
-Lemma (* 197 *) law__ (*Distributivity of ¬ over W *) (φ ψ : t) : ¬(φ W ψ) ≈ (φ ∧ ¬ψ) U (¬φ ∧ ¬ψ).
-Lemma (* 198 *) law__ (*Distributivity of ¬ over U *) (φ ψ : t) : ¬(φ U ψ) ≈ (φ ∧ ¬ψ) W (¬φ ∧ ¬ψ).
-Lemma (* 199 *) law__ (*Dual of U *) (φ ψ : t) : ¬(¬φ U ¬ψ) ≈ ψ W (φ ∧ ψ).
-Lemma (* 200 *) law__ (*Dual of U *) (φ ψ : t) : ¬(¬φ U ¬ψ) ≈ (¬φ ∧ ψ) W (φ ∧ ψ).
-Lemma (* 201 *) law__ (*Dual of W *) (φ ψ : t) : ¬(¬φ W ¬ψ) ≈ ψ U (φ ∧ ψ).
-Lemma (* 202 *) law__ (*Dual of W *) (φ ψ : t) : ¬(¬φ W ¬ψ) ≈ (¬φ ∧ ψ) U (φ ∧ ψ).
-Lemma (* 203 *) law__ (*Idempotency of W *) (φ : t) : φ W φ ≈ φ.
-Lemma (* 204 *) law__ (*Right zero of W *) (φ : t) : φ W ⊤ ≈ ⊤.
-Lemma (* 205 *) law__ (*Left identity of W *) (ψ : t) : ⊥ W ψ ≈ ψ.
-Lemma (* 206 *) law__ (**) (φ ψ : t) : φ W ψ ⟹ φ ∨ ψ.
-Lemma (* 207 *) law__ (**) (φ ψ : t) : □ (φ ∨ ψ) ⟹ φ W ψ.
-Lemma (* 208 *) law__ (**) (φ ψ : t) : □ (¬ψ → φ) ⟹ φ W ψ.
-Lemma (* 209 *) law__ (*W insertion*) (φ ψ : t) : ψ ⟹ φ W ψ.
-Lemma (* 210 *) law__ (*W frame law of ◯ *) (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ W ψ)).
-Lemma (* 211 *) law__ (*W frame law of ◇ *) (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ W ψ)).
-Lemma (* 212 *) law__ (*W frame law of □ *) (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ W ψ)).
-Lemma (* 213 *) law__ (*W induction*) (φ ψ χ : t) : □ (φ → (◯ φ ∧ ψ) ∨ χ) ⟹ (φ → ψ W χ).
-Lemma (* 214 *) law__ (*W induction*) (φ ψ : t) : □ (φ → ◯ (φ ∨ ψ)) ⟹ (φ → φ W ψ).
-Lemma (* 215 *) law__ (*W induction*) (φ ψ : t) : □ (φ → ◯ φ) ⟹ (φ → φ W ψ).
-Lemma (* 216 *) law__ (*W induction*) (φ ψ : t) : □ (φ → ψ ∧ ◯ φ) ⟹ (φ → φ W ψ).
-Lemma (* 217 *) law__ (*Absorption*) (φ ψ : t) : φ ∨ φ W ψ ≈ φ ∨ ψ.
-Lemma (* 218 *) law__ (*Absorption*) (φ ψ : t) : φ W ψ ∨ ψ ≈ φ W ψ.
-Lemma (* 219 *) law__ (*Absorption*) (φ ψ : t) : φ W ψ ∧ ψ ≈ ψ.
-Lemma (* 220 *) law__ (*Absorption*) (φ ψ : t) : φ W ψ ∧ (φ ∨ ψ) ≈ φ W ψ.
-Lemma (* 221 *) law__ (*Absorption*) (φ ψ : t) : φ W ψ ∨ (φ ∧ ψ) ≈ φ W ψ.
-Lemma (* 222 *) law__ (*Left absorption of W *) (φ ψ : t) : φ W (φ W ψ) ≈ φ W ψ.
-Lemma (* 223 *) law__ (*Right absorption of W *) (φ ψ : t) : (φ W ψ) W ψ ≈ φ W ψ.
-Lemma (* 224 *) law__ (*□ to W law*) (φ : t) : □ φ ≈ φ W ⊥.
-Lemma (* 225 *) law__ (*◇ to W law*) (φ : t) : ◇ φ ≈ ¬(¬φ W ⊥).
-Lemma (* 226 *) law__ (*W implication*) (φ ψ : t) : φ W ψ ⟹ □ φ ∨ ◇ ψ.
-Lemma (* 227 *) law__ (*Absorption*) (φ ψ : t) : φ W (φ U ψ) ≈ φ W ψ.
-Lemma (* 228 *) law__ (*Absorption*) (φ ψ : t) : (φ U ψ) W ψ ≈ φ U ψ.
-Lemma (* 229 *) law__ (*Absorption*) (φ ψ : t) : φ U (φ W ψ) ≈ φ W ψ.
-Lemma (* 230 *) law__ (*Absorption*) (φ ψ : t) : (φ W ψ) U ψ ≈ φ U ψ.
-Lemma (* 231 *) law__ (*Absorption of W into ◇ *) (ψ : t) : ◇ ψ W ψ ≈ ◇ ψ.
-Lemma (* 232 *) law__ (*Absorption of W into □ *) (φ ψ : t) : □ φ ∧ φ W ψ ≈ □ φ.
-Lemma (* 233 *) law__ (*Absorption of □ into W *) (φ ψ : t) : □ φ ∨ φ W ψ ≈ φ W ψ.
-Lemma (* 234 *) law__ (**) (φ ψ : t) : φ W ψ ∧ □ ¬ψ ⟹ □ φ.
-Lemma (* 235 *) law__ (**) (φ ψ : t) : □ φ ⟹ φ U ψ ∨ □ ¬ψ.
-Lemma (* 236 *) law__ (**) (φ ψ : t) : ¬□ φ ∧ φ W ψ ⟹ ◇ ψ.
-Lemma (* 237 *) law__ (**) (φ ψ : t) : ◇ ψ ⟹ ¬□ φ ∨ φ U ψ.
-Lemma (* 237b *) law__ (**) (φ ψ : t) : ◇ ψ ⟹ □ φ → φ U ψ.
-Lemma (* 238 *) law__ (*Left monotonicity of W *) (φ ψ χ : t) : □ (φ → ψ) ⟹ (φ W χ → ψ W χ).
-Lemma (* 239 *) law__ (*Right monotonicity of W *) (φ ψ χ : t) : □ (φ → ψ) ⟹ (χ W φ → χ W ψ).
-Lemma (* 240 *) law__ (*W strengthening rule *) (φ ψ χ ρ : t) : □ ((φ → χ) ∧ (ψ → ρ)) ⟹ (φ W ψ → χ W ρ).
-Lemma (* 241 *) law__ (*W catenation rule*) (φ ψ χ ρ : t) : □ ((φ → ψ W χ) ∧ (χ → ψ W ρ)) ⟹ (φ → ψ W ρ).
-Lemma (* 242 *) law__ (*Left U W implication*) (φ ψ χ : t) : (φ U ψ) W χ ⟹ (φ W ψ) W χ.
-Lemma (* 243 *) law__ (*Right W U implication*) (φ ψ χ : t) : φ W (ψ U χ) ⟹ φ W (ψ W χ).
-Lemma (* 244 *) law__ (*Right U U implication*) (φ ψ χ : t) : φ U (ψ U χ) ⟹ φ U (ψ W χ).
-Lemma (* 245 *) law__ (*Left U U implication*) (φ ψ χ : t) : (φ U ψ) U χ ⟹ (φ W ψ) U χ.
-Lemma (* 246 *) law__ (*Left U ∨ strengthening*) (φ ψ χ : t) : (φ U ψ) U χ ⟹ (φ ∨ ψ) U χ.
-Lemma (* 247 *) law__ (*Left W ∨ strengthening*) (φ ψ χ : t) : (φ W ψ) W χ ⟹ (φ ∨ ψ) W χ.
-Lemma (* 248 *) law__ (*Right W ∨ strengthening*) (φ ψ χ : t) : φ W (ψ W χ) ⟹ φ W (ψ ∨ χ).
-Lemma (* 249 *) law__ (*Right W ∨ ordering*) (φ ψ χ : t) : φ W (ψ W χ) ⟹ (φ ∨ ψ) W χ.
-Lemma (* 250 *) law__ (*Right ∧ W ordering*) (φ ψ χ : t) : φ W (ψ ∧ χ) ⟹ (φ W ψ) W χ.
-Lemma (* 251 *) law__ (*U ordering*) (φ ψ : t) : ¬φ U ψ ∨ ¬ψ U φ ≈ ◇ (φ ∨ ψ).
-Lemma (* 252 *) law__ (*W ordering*) (φ ψ : t) : ¬φ W ψ ∨ ¬ψ W φ ≈ ⊤.
-Lemma (* 253 *) law__ (*W implication ordering*) (φ ψ χ : t) : φ W ψ ∧ ¬ψ W χ ⟹ φ W χ.
-Lemma (* 254 *) law__ (*Lemmon formula*) (φ ψ : t) : □ (□ φ → ψ) ∨ □ (□ ψ → φ) ≈ ⊤.
+Lemma (* 171 *) law_171 (* U in terms of W *) (φ ψ : t) : φ U ψ ≈ φ W ψ ∧ ◇ ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
 
-Lemma law__ (φ ψ : t) : φ W ψ ≈ φ U (ψ ∨ □ φ).
-Lemma law__ (φ ψ : t) : φ U ψ ≈ φ W ψ ∧ ¬□ ¬ψ.
+Lemma (* 172 *) law_172 (**) (φ ψ : t) : φ W ψ ≈ □ (φ ∧ ¬ψ) ∨ φ U ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 173 *) law_173 (*Distributivity of ¬ over U *) (φ ψ : t) : ¬(φ U ψ) ≈ ¬ψ W (¬φ ∧ ¬ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 174 *) law_174 (*U implication*) (φ ψ : t) : φ U ψ ⟹ φ W ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 175 *) law_175 (*Distributivity of ∧ over W *) (φ ψ χ : t) : □ φ ∧ ψ W χ ⟹ (φ ∧ ψ) W (φ ∧ χ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 176 *) law_176 (*W ◇ equivalence*) (φ ψ : t) : φ W ◇ ψ ≈ □ φ ∨ ◇ ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 177 *) law_177 (*W □ implication*) (φ ψ : t) : φ W □ ψ ⟹ □ (φ W ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 178 *) law_178 (*Absorption of W into □ *) (φ : t) : φ W □ φ ≈ □ φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 179 *) law_179 (*Perpetuity*) (φ ψ : t) : □ φ ⟹ φ W ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 180 *) law_180 (*Distributivity of ◯ over W *) (φ ψ : t) : ◯ (φ W ψ) ≈ ◯ φ W ◯ ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 181 *) law_181 (*Expansion of W *) (φ ψ : t) : φ W ψ ≈ ψ ∨ (φ ∧ ◯ (φ W ψ)).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 182 *) law_182 (*W excluded middle*) (φ ψ : t) : φ W ψ ∨ φ W ¬ψ ≈ ⊤.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 183 *) law_183 (*Left zero of W *) (ψ : t) : ⊤ W ψ ≈ ⊤.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 184 *) law_184 (*Left distributivity of W over ∨ *) (φ ψ χ : t) : φ W (ψ ∨ χ) ≈ φ W ψ ∨ φ W χ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 185 *) law_185 (*Right distributivity of W over ∨ *) (φ ψ χ : t) : φ W χ ∨ ψ W χ ⟹ (φ ∨ ψ) W χ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 186 *) law_186 (*Left distributivity of W over ∧ *) (φ ψ χ : t) : φ W (ψ ∧ χ) ⟹ φ W ψ ∧ φ W χ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 187 *) law_187 (*Right distributivity of W over ∧ *) (φ ψ χ : t) : (φ ∧ ψ) W χ ≈ φ W χ ∧ ψ W χ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 188 *) law_188 (*Right distributivity of W over ⟹ *) (φ ψ χ : t) : (φ → ψ) W χ ⟹ (φ W χ → ψ W χ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 189 *) law_189 (*Disjunction rule of W *) (φ ψ : t) : φ W ψ ≈ (φ ∨ ψ) W ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 190 *) law_190 (*Disjunction rule of U *) (φ ψ : t) : φ U ψ ≈ (φ ∨ ψ) U ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 191 *) law_191 (*Rule of W *) (ψ : t) : ¬ψ W ψ ≈ ⊤.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 192 *) law_192 (*Rule of U *) (ψ : t) : ¬ψ U ψ ≈ ◇ ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 193 *) law_193 (**) (φ ψ : t) : (φ → ψ) W φ ≈ ⊤.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 194 *) law_194 (**) (φ ψ : t) : ◇ φ ⟹ (φ → ψ) U φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 195 *) law_195 (*Conjunction rule of W *) (φ ψ : t) : φ W ψ ≈ (φ ∧ ¬ψ) W ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 196 *) law_196 (*Conjunction rule of U *) (φ ψ : t) : φ U ψ ≈ (φ ∧ ¬ψ) U ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 197 *) law_197 (*Distributivity of ¬ over W *) (φ ψ : t) : ¬(φ W ψ) ≈ (φ ∧ ¬ψ) U (¬φ ∧ ¬ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 198 *) law_198 (*Distributivity of ¬ over U *) (φ ψ : t) : ¬(φ U ψ) ≈ (φ ∧ ¬ψ) W (¬φ ∧ ¬ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 199 *) law_199 (*Dual of U *) (φ ψ : t) : ¬(¬φ U ¬ψ) ≈ ψ W (φ ∧ ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 200 *) law_200 (*Dual of U *) (φ ψ : t) : ¬(¬φ U ¬ψ) ≈ (¬φ ∧ ψ) W (φ ∧ ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 201 *) law_201 (*Dual of W *) (φ ψ : t) : ¬(¬φ W ¬ψ) ≈ ψ U (φ ∧ ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 202 *) law_202 (*Dual of W *) (φ ψ : t) : ¬(¬φ W ¬ψ) ≈ (¬φ ∧ ψ) U (φ ∧ ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 203 *) law_203 (*Idempotency of W *) (φ : t) : φ W φ ≈ φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 204 *) law_204 (*Right zero of W *) (φ : t) : φ W ⊤ ≈ ⊤.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 205 *) law_205 (*Left identity of W *) (ψ : t) : ⊥ W ψ ≈ ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 206 *) law_206 (**) (φ ψ : t) : φ W ψ ⟹ φ ∨ ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 207 *) law_207 (**) (φ ψ : t) : □ (φ ∨ ψ) ⟹ φ W ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 208 *) law_208 (**) (φ ψ : t) : □ (¬ψ → φ) ⟹ φ W ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 209 *) law_209 (*W insertion*) (φ ψ : t) : ψ ⟹ φ W ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 210 *) law_210 (*W frame law of ◯ *) (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ W ψ)).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 211 *) law_211 (*W frame law of ◇ *) (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ W ψ)).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 212 *) law_212 (*W frame law of □ *) (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ W ψ)).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 213 *) law_213 (*W induction*) (φ ψ χ : t) : □ (φ → (◯ φ ∧ ψ) ∨ χ) ⟹ (φ → ψ W χ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 214 *) law_214 (*W induction*) (φ ψ : t) : □ (φ → ◯ (φ ∨ ψ)) ⟹ (φ → φ W ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 215 *) law_215 (*W induction*) (φ ψ : t) : □ (φ → ◯ φ) ⟹ (φ → φ W ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 216 *) law_216 (*W induction*) (φ ψ : t) : □ (φ → ψ ∧ ◯ φ) ⟹ (φ → φ W ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 217 *) law_217 (*Absorption*) (φ ψ : t) : φ ∨ φ W ψ ≈ φ ∨ ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 218 *) law_218 (*Absorption*) (φ ψ : t) : φ W ψ ∨ ψ ≈ φ W ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 219 *) law_219 (*Absorption*) (φ ψ : t) : φ W ψ ∧ ψ ≈ ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 220 *) law_220 (*Absorption*) (φ ψ : t) : φ W ψ ∧ (φ ∨ ψ) ≈ φ W ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 221 *) law_221 (*Absorption*) (φ ψ : t) : φ W ψ ∨ (φ ∧ ψ) ≈ φ W ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 222 *) law_222 (*Left absorption of W *) (φ ψ : t) : φ W (φ W ψ) ≈ φ W ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 223 *) law_223 (*Right absorption of W *) (φ ψ : t) : (φ W ψ) W ψ ≈ φ W ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 224 *) law_224 (*□ to W law*) (φ : t) : □ φ ≈ φ W ⊥.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 225 *) law_225 (*◇ to W law*) (φ : t) : ◇ φ ≈ ¬(¬φ W ⊥).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 226 *) law_226 (*W implication*) (φ ψ : t) : φ W ψ ⟹ □ φ ∨ ◇ ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 227 *) law_227 (*Absorption*) (φ ψ : t) : φ W (φ U ψ) ≈ φ W ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 228 *) law_228 (*Absorption*) (φ ψ : t) : (φ U ψ) W ψ ≈ φ U ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 229 *) law_229 (*Absorption*) (φ ψ : t) : φ U (φ W ψ) ≈ φ W ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 230 *) law_230 (*Absorption*) (φ ψ : t) : (φ W ψ) U ψ ≈ φ U ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 231 *) law_231 (*Absorption of W into ◇ *) (ψ : t) : ◇ ψ W ψ ≈ ◇ ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 232 *) law_232 (*Absorption of W into □ *) (φ ψ : t) : □ φ ∧ φ W ψ ≈ □ φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 233 *) law_233 (*Absorption of □ into W *) (φ ψ : t) : □ φ ∨ φ W ψ ≈ φ W ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 234 *) law_234 (**) (φ ψ : t) : φ W ψ ∧ □ ¬ψ ⟹ □ φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 235 *) law_235 (**) (φ ψ : t) : □ φ ⟹ φ U ψ ∨ □ ¬ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 236 *) law_236 (**) (φ ψ : t) : ¬□ φ ∧ φ W ψ ⟹ ◇ ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 237 *) law_237 (**) (φ ψ : t) : ◇ ψ ⟹ ¬□ φ ∨ φ U ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 237b *) law (**) (φ ψ : t) : ◇ ψ ⟹ □ φ → φ U ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 238 *) law_238 (*Left monotonicity of W *) (φ ψ χ : t) : □ (φ → ψ) ⟹ (φ W χ → ψ W χ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 239 *) law_239 (*Right monotonicity of W *) (φ ψ χ : t) : □ (φ → ψ) ⟹ (χ W φ → χ W ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 240 *) law_240 (*W strengthening rule *) (φ ψ χ ρ : t) : □ ((φ → χ) ∧ (ψ → ρ)) ⟹ (φ W ψ → χ W ρ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 241 *) law_241 (*W catenation rule*) (φ ψ χ ρ : t) : □ ((φ → ψ W χ) ∧ (χ → ψ W ρ)) ⟹ (φ → ψ W ρ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 242 *) law_242 (*Left U W implication*) (φ ψ χ : t) : (φ U ψ) W χ ⟹ (φ W ψ) W χ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 243 *) law_243 (*Right W U implication*) (φ ψ χ : t) : φ W (ψ U χ) ⟹ φ W (ψ W χ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 244 *) law_244 (*Right U U implication*) (φ ψ χ : t) : φ U (ψ U χ) ⟹ φ U (ψ W χ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 245 *) law_245 (*Left U U implication*) (φ ψ χ : t) : (φ U ψ) U χ ⟹ (φ W ψ) U χ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 246 *) law_246 (*Left U ∨ strengthening*) (φ ψ χ : t) : (φ U ψ) U χ ⟹ (φ ∨ ψ) U χ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 247 *) law_247 (*Left W ∨ strengthening*) (φ ψ χ : t) : (φ W ψ) W χ ⟹ (φ ∨ ψ) W χ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 248 *) law_248 (*Right W ∨ strengthening*) (φ ψ χ : t) : φ W (ψ W χ) ⟹ φ W (ψ ∨ χ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 249 *) law_249 (*Right W ∨ ordering*) (φ ψ χ : t) : φ W (ψ W χ) ⟹ (φ ∨ ψ) W χ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 250 *) law_250 (*Right ∧ W ordering*) (φ ψ χ : t) : φ W (ψ ∧ χ) ⟹ (φ W ψ) W χ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 251 *) law_251 (*U ordering*) (φ ψ : t) : ¬φ U ψ ∨ ¬ψ U φ ≈ ◇ (φ ∨ ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 252 *) law_252 (*W ordering*) (φ ψ : t) : ¬φ W ψ ∨ ¬ψ W φ ≈ ⊤.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 253 *) law_253 (*W implication ordering*) (φ ψ χ : t) : φ W ψ ∧ ¬ψ W χ ⟹ φ W χ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma (* 254 *) law_254 (*Lemmon formula*) (φ ψ : t) : □ (□ φ → ψ) ∨ □ (□ ψ → φ) ≈ ⊤.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
 
 (*** Release R *)
 
@@ -576,40 +1424,110 @@ Notation "p 'R' q" := (release p q) (at level 45, right associativity).
 
 Hypothesis release_def : forall (φ ψ : t), φ R ψ ≈ ¬(¬φ U ¬ψ).
 
-Lemma law__ (φ ψ : t) : φ U ψ ≈ ¬(¬φ R ¬ψ).
-Lemma law__ (φ ψ : t) : φ W ψ ≈ ψ R (ψ ∨ φ).
-Lemma law__ (φ ψ : t) : φ R ψ ≈ ψ W (ψ ∧ φ).
-Lemma law__ (φ ψ : t) : φ R ψ ≈ ψ ∧ (φ ∨ ◯ (φ R ψ)).
-Lemma law__ (φ ψ χ : t) : φ R (ψ ∨ χ) ≈ (φ R ψ) ∨ (φ R χ).
-Lemma law__ (φ ψ χ : t) : (φ ∧ ψ) R χ ≈ (φ R χ) ∧ (ψ R χ).
-Lemma law__ (φ ψ : t) : ◯ (φ R ψ) ≈ ◯ φ R ◯ ψ.
-Lemma law__ (φ ψ : t) : □ ψ ≈ ⊥ R ψ.
-Lemma law__ (φ ψ : t) : ¬(φ U ψ) ≈ ¬φ R ¬ψ.
-Lemma law__ (φ ψ : t) : ¬(φ R ψ) ≈ ¬φ U ¬ψ.
+Lemma law_256 (φ ψ : t) : φ U ψ ≈ ¬(¬φ R ¬ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma law_257 (φ ψ : t) : φ W ψ ≈ ψ R (ψ ∨ φ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma law_258 (φ ψ : t) : φ R ψ ≈ ψ W (ψ ∧ φ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma law_259 (φ ψ : t) : φ R ψ ≈ ψ ∧ (φ ∨ ◯ (φ R ψ)).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma law_260 (φ ψ χ : t) : φ R (ψ ∨ χ) ≈ (φ R ψ) ∨ (φ R χ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma law_261 (φ ψ χ : t) : (φ ∧ ψ) R χ ≈ (φ R χ) ∧ (ψ R χ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma law_262 (φ ψ : t) : ◯ (φ R ψ) ≈ ◯ φ R ◯ ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma law_263 (φ ψ : t) : □ ψ ≈ ⊥ R ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma law_264 (φ ψ : t) : ¬(φ U ψ) ≈ ¬φ R ¬ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma law_265 (φ ψ : t) : ¬(φ R ψ) ≈ ¬φ U ¬ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
 
 (*** Strong Release M *)
 
 Notation "p 'M' q" := (strong_release p q) (at level 45, right associativity).
 
-Hypothesis strong_release_def : forall (φ ψ : t), φ M ψ ≈ (φ R ψ) ∧ ◇ φ.
+Hypothesis strong_release_def : forall (φ ψ : t), φ M ψ ≈ φ U (ψ ∧ φ).
 
-Lemma law__ (φ ψ : t) : φ W ψ ≈ ¬(¬φ M ¬ψ).
-Lemma law__ (φ ψ : t) : φ M ψ ≈ ¬(¬φ W ¬ψ).
-Lemma law__ (φ ψ : t) : φ M ψ ≈ φ R ψ ∧ ◇ φ.
-Lemma law__ (φ ψ : t) : φ M ψ ≈ φ R (ψ ∧ ◇ φ).
+Lemma law_266 (φ ψ : t) : φ W ψ ≈ ¬(¬φ M ¬ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma law_267 (φ ψ : t) : φ M ψ ≈ ¬(¬φ W ¬ψ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma law_268 (φ ψ : t) : φ M ψ ≈ φ R ψ ∧ ◇ φ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma law_269 (φ ψ : t) : φ M ψ ≈ φ R (ψ ∧ ◇ φ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
 
 (*** OLD *)
 
 Notation "p ≉ q" := (~ (p ≈ q)) (at level 90, no associativity).
 
-(* jww (2021-01-25): Why wouldn't this be an equality? *)
-Lemma law__ (φ ψ : t) : ◇ (φ ∨ ψ) ≈ ◇ φ ∨ ◇ ψ.
+Lemma law_270 (φ ψ : t) : □ φ ⟹ ◇ ψ → φ U ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
 
-Lemma law__ (φ ψ : t) : □ φ ⟹ ◇ ψ → φ U ψ.
-Lemma law__ (φ ψ : t) : □ (φ ∨ ψ) ≈ ⊤ -> exists u, □ ((φ ∧ u) ∨ (ψ ∧ ¬u)) ≈ ⊤.
-Lemma law__ (φ ψ χ : t) : □ (φ → ¬ψ ∧ ◯ χ) ⟹ φ → ¬(ψ U χ).
-Lemma law__ (φ ψ χ ρ : t) : □ ((φ → ψ U χ) ∧ (χ → ψ U ρ)) ⟹ φ → □ χ.
-Lemma law__ (φ ψ : t) : ◇ (φ U ψ) ≉ ◇ φ U ◇ ψ.
+Lemma law_271 (φ ψ : t) : □ (φ ∨ ψ) ≈ ⊤ -> exists u, □ ((φ ∧ u) ∨ (ψ ∧ ¬u)) ≈ ⊤.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma law_272 (φ ψ χ : t) : □ (φ → ¬ψ ∧ ◯ χ) ⟹ φ → ¬(ψ U χ).
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma law_273 (φ ψ χ ρ : t) : □ ((φ → ψ U χ) ∧ (χ → ψ U ρ)) ⟹ φ → □ χ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma law_274 (φ ψ : t) : ◇ (φ U ψ) ≉ ◇ φ U ◇ ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
 
 (* Definition examine {a : Type} (P : a -> t) : t := fun s => P (head s) s. *)
 
