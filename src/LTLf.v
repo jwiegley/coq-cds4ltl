@@ -58,10 +58,25 @@ Declare Instance strong_release_respects_eqv :
 (53) Distributivity of ◇ over ∧ : ◇ (p ∧ q) ⇒ ◇ p ∧ ◇ q
 *)
 
+Hypothesis (* 169 *) wait_def : forall (φ ψ : t), φ W ψ ≈ □ φ ∨ φ U ψ.
+
 Hypothesis (* 38 *) always_def : forall (φ : t), □ φ ≈ φ W ⊥.
 Hypothesis (* 38 *) evn_def : forall (φ : t), ◇ φ ≈ ¬□ ¬φ.
 Hypothesis (* 38 *) weak_next_def : forall (φ : t), ● φ ≈ ¬◯ ¬φ.
 Hypothesis (* 38 *) end_def : END ≈ ¬◯ ⊤.
+
+Hypothesis (* 170 *) not_wait : forall (φ ψ : t), ¬(φ W ψ) ≈ ¬ψ U (¬φ ∧ ¬ψ).
+
+Lemma (* 38 *) evn_def2 : forall (φ : t), ◇ φ ≈ ⊤ U φ.
+Proof.
+  intros.
+  rewrite evn_def.
+  rewrite always_def.
+  rewrite not_wait.
+  rewrite not_false.
+  rewrite and_true.
+  now rewrite not_not.
+Qed.
 
 Hypothesis (* 38 *) end_impl_not_next : forall (φ : t), END ⟹ ¬◯ φ.
 Hypothesis (* 38 *) evn_end : ◇ END ≈ ⊤.
