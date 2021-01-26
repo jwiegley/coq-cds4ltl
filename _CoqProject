@@ -1,10 +1,11 @@
 -R src Top
-src/Bool.v
-src/LTL.v
 src/MinBool.v
+src/Bool.v
 src/MinLTL.v
+src/LTL.v
+src/LTLf.v
 src/Model.v
 src/Same_set.v
-src/Step.v
 src/Stream.v
 src/Syntax.v
+src/Step.v

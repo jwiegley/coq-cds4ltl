@@ -2,34 +2,39 @@ Require Import
   Coq.Classes.Morphisms
   MinLTL.
 
-Module Type LinearTemporalLogic.
+Module Type FiniteLinearTemporalLogic.
 
 Declare Module MinLTL : MinimalLinearTemporalLogic.
 Include MinLTL.
 
+Parameter END : t.
 Parameter eventually : t -> t.
 Parameter always : t -> t.
 Parameter wait : t -> t -> t.
+Parameter weak_next : t -> t.
 Parameter release : t -> t -> t.
 Parameter strong_release : t -> t -> t.
 
 Notation "◇ p"     := (eventually p) (at level 0, right associativity).
 Notation "□ p"     := (always p)     (at level 0, right associativity).
+Notation "● p"     := (weak_next p)  (at level 0, right associativity).
 Notation "p 'W' q" := (wait p q)     (at level 44, right associativity).
 Notation "p 'R' q" := (release p q) (at level 45, right associativity).
 Notation "p 'M' q" := (strong_release p q) (at level 45, right associativity).
 
 Declare Instance eventually_respects_impl : Proper (impl ==> impl) eventually.
-Program Instance eventually_respects_eqv : Proper (eqv ==> eqv) eventually.
+Declare Instance eventually_respects_eqv : Proper (eqv ==> eqv) eventually.
 Declare Instance always_respects_impl : Proper (impl ==> impl) always.
-Program Instance always_respects_eqv : Proper (eqv ==> eqv) always.
+Declare Instance always_respects_eqv : Proper (eqv ==> eqv) always.
 Declare Instance wait_respects_impl : Proper (impl ==> impl ==> impl) wait.
-Program Instance wait_respects_eqv : Proper (eqv ==> eqv ==> eqv) wait.
+Declare Instance wait_respects_eqv : Proper (eqv ==> eqv ==> eqv) wait.
+Declare Instance weak_next_respects_impl : Proper (impl ==> impl) weak_next.
+Declare Instance weak_next_respects_eqv : Proper (eqv ==> eqv) weak_next.
 Declare Instance release_respects_impl : Proper (impl ==> impl ==> impl) release.
-Program Instance release_respects_eqv : Proper (eqv ==> eqv ==> eqv) release.
+Declare Instance release_respects_eqv : Proper (eqv ==> eqv ==> eqv) release.
 Declare Instance strong_release_respects_impl :
   Proper (impl ==> impl ==> impl) strong_release.
-Program Instance strong_release_respects_eqv :
+Declare Instance strong_release_respects_eqv :
   Proper (eqv ==> eqv ==> eqv) strong_release.
 
 (*** 3.3 Eventually ◇ *)
@@ -53,7 +58,17 @@ Program Instance strong_release_respects_eqv :
 (53) Distributivity of ◇ over ∧ : ◇ (p ∧ q) ⇒ ◇ p ∧ ◇ q
 *)
 
-Hypothesis (* 38 *) evn_def : forall (φ : t), ◇ φ ≈ ⊤ U φ.
+Hypothesis (* 38 *) always_def : forall (φ : t), □ φ ≈ φ W ⊥.
+Hypothesis (* 38 *) evn_def : forall (φ : t), ◇ φ ≈ ¬□ ¬φ.
+Hypothesis (* 38 *) weak_next_def : forall (φ : t), ● φ ≈ ¬◯ ¬φ.
+Hypothesis (* 38 *) end_def : END ≈ ¬◯ ⊤.
+
+Hypothesis (* 38 *) end_impl_not_next : forall (φ : t), END ⟹ ¬◯ φ.
+Hypothesis (* 38 *) evn_end : ◇ END ≈ ⊤.
+
+Hypothesis (* 2 *) weak_next_impl : forall (φ ψ : t), ● (φ → ψ) ≈ ● φ → ● ψ.
+Hypothesis (* 2 *) weak_next_weaken : forall (φ : t), φ ⟹ ● φ.
+Hypothesis (* 2 *) always_induction : forall (φ ψ : t), (φ → ψ) ∧ (φ → ● φ) ⟹ (φ → □ ψ).
 
 Lemma (* 39 *) law_39 (φ ψ : t) : (φ U ψ) ∧ ◇ ψ ≈ φ U ψ.
 Proof.
@@ -1497,4 +1512,4 @@ Admitted.
 
 (* Definition examine {a : Type} (P : a -> t) : t := fun s => P (head s) s. *)
 
-End LinearTemporalLogic.
+End FiniteLinearTemporalLogic.

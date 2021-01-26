@@ -39,18 +39,12 @@ Infix    "≈"     := eqv        (at level 90, no associativity).
 Declare Instance impl_reflexive : Reflexive impl.
 Declare Instance impl_transitive : Transitive impl.
 
-Declare Instance not_respects_impl :
-  Proper (impl --> impl) not | 1.
-Declare Instance or_respects_impl :
-  Proper (impl ==> impl ==> impl) or.
-
 Program Instance eqv_equivalence : Equivalence eqv.
 Next Obligation. intro x; now split. Qed.
 Next Obligation. repeat intro; split; destruct H; now intuition. Qed.
 Next Obligation. repeat intro; split; destruct H, H0; now transitivity y. Qed.
 
-Program Instance impl_respects_eqv :
-  Proper (eqv ==> eqv ==> Basics.impl) impl.
+Program Instance impl_respects_eqv : Proper (eqv ==> eqv ==> Basics.impl) impl.
 Next Obligation.
   repeat intro.
   destruct H, H0.
@@ -58,23 +52,36 @@ Next Obligation.
   transitivity x0; auto.
 Qed.
 
-Program Instance not_respects_eqv :
-  Proper (eqv ==> eqv) not.
-Next Obligation.
-  repeat intro.
-  destruct H; split.
-  - now rewrite H0.
-  - now rewrite H.
-Qed.
+Ltac one_arg :=
+  repeat intro;
+  match goal with
+    [ H : _ ≈ _ |- _ ≈ _ ] =>
+    let H1 := fresh "H" in
+    let H2 := fresh "H" in
+    destruct H as [H1 H2]; split;
+    first [ now rewrite H1
+          | now rewrite H2 ]
+  end.
 
-Program Instance or_respects_eqv :
-  Proper (eqv ==> eqv ==> eqv) or.
-Next Obligation.
-  repeat intro.
-  destruct H, H0; split.
-  - now rewrite H, H0.
-  - now rewrite H1, H2.
-Qed.
+Ltac two_arg :=
+  repeat intro;
+  match goal with
+    [ HA : _ ≈ _, HB : _ ≈ _ |- _ ≈ _ ] =>
+    let H1 := fresh "H" in
+    let H2 := fresh "H" in
+    let H3 := fresh "H" in
+    let H4 := fresh "H" in
+    destruct HA as [H1 H2], HB as [H3 H4]; split;
+    first [ now rewrite H1, H3
+          | now rewrite H2, H4 ]
+  end.
+
+Obligation Tactic := solve [ one_arg | two_arg ].
+
+Declare Instance not_respects_impl : Proper (impl --> impl) not | 1.
+Program Instance not_respects_eqv : Proper (eqv ==> eqv) not.
+Declare Instance or_respects_impl : Proper (impl ==> impl ==> impl) or.
+Program Instance or_respects_eqv : Proper (eqv ==> eqv ==> eqv) or.
 
 Hypothesis impl_def : forall (φ ψ : t), φ ⟹ ψ <-> φ → ψ ≈ ⊤.
 Hypothesis true_def : forall (φ : t), φ ∨ ¬φ ≈ ⊤.

@@ -20,17 +20,8 @@ Infix    "∧"       := and             (at level 45, right associativity).
 Notation "p ↔ q"   := (p → q ∧ q → p) (at level 80, right associativity, only parsing).
 Notation "p ≡ q"   := (p ↔ q)         (at level 80, right associativity, only parsing).
 
-Declare Instance and_respects_impl :
-  Proper (impl ==> impl ==> impl) and.
-
-Program Instance and_respects_eqv :
-  Proper (eqv ==> eqv ==> eqv) and.
-Next Obligation.
-  repeat intro.
-  destruct H, H0; split.
-  - now rewrite H, H0.
-  - now rewrite H1, H2.
-Qed.
+Declare Instance and_respects_impl : Proper (impl ==> impl ==> impl) and.
+Program Instance and_respects_eqv : Proper (eqv ==> eqv ==> eqv) and.
 
 (** "and" is not fundamental, and can be defined in terms of "or". To allow
     for efficient choices of "and", we simply require that its behavior be

@@ -25,28 +25,10 @@ Parameter until : t -> t -> t.
 Notation "◯ p"     := (next p)    (at level 0, right associativity).
 Notation "p 'U' q" := (until p q) (at level 44, right associativity).
 
-Declare Instance next_respects_impl :
-  Proper (impl ==> impl) next.
-Declare Instance until_respects_impl :
-  Proper (impl ==> impl ==> impl) until.
-
-Program Instance next_respects_eqv :
-  Proper (eqv ==> eqv) next.
-Next Obligation.
-  repeat intro.
-  destruct H; split.
-  - now rewrite H.
-  - now rewrite H0.
-Qed.
-
-Program Instance until_respects_eqv :
-  Proper (eqv ==> eqv ==> eqv) until.
-Next Obligation.
-  repeat intro.
-  destruct H, H0; split.
-  - now rewrite H, H0.
-  - now rewrite H1, H2.
-Qed.
+Declare Instance next_respects_impl : Proper (impl ==> impl) next.
+Program Instance next_respects_eqv : Proper (eqv ==> eqv) next.
+Declare Instance until_respects_impl : Proper (impl ==> impl ==> impl) until.
+Program Instance until_respects_eqv : Proper (eqv ==> eqv ==> eqv) until.
 
 (*** 3.1 Next ◯ *)
 
