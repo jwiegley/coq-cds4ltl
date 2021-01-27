@@ -265,87 +265,144 @@ Qed.
 
 Lemma (* 67 *) law_67 (φ : t) : □ φ ≈ φ ∧ ◯ φ ∧ ◯ □ φ.
 Proof.
-  rewrite law_66 at 1.
-  rewrite law_66 at 1.
-  rewrite next_and.
-  apply and_respects_eqv; [reflexivity|].
-  apply and_respects_eqv; [reflexivity|].
-  rewrite always_def.
-  rewrite !next_not.
-  rewrite !law_51.
-  apply not_respects_eqv.
-  (* FILL IN HERE *)
-Admitted.
+  split.
+  - rewrite <- next_and.
+    assert (□ φ ⟹ φ ∧ □ φ).
+      rewrite law_66.
+      rewrite <- and_assoc.
+      now rewrite and_idem.
+    rewrite <- H.
+    now apply law_66.
+  - rewrite <- and_assoc.
+    rewrite (and_comm φ).
+    rewrite and_assoc.
+    rewrite <- law_66.
+    rewrite and_comm.
+    now apply and_proj.
+Qed.
 
 Lemma (* 68 *) law_68 (φ : t) : φ ∧ □ φ ≈ □ φ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  split.
+  - rewrite always_def.
+    rewrite and_comm.
+    now apply and_proj.
+  - rewrite law_66.
+    rewrite <- and_assoc.
+    now rewrite and_idem.
+Qed.
 
 Lemma (* 69 *) law_69 (φ : t) : □ φ ∨ φ ≈ φ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  split.
+  - rewrite <- law_68.
+    rewrite or_comm.
+    rewrite or_and.
+    rewrite or_idem.
+    now apply and_proj.
+  - rewrite or_comm.
+    now apply or_inj.
+Qed.
 
 Lemma (* 70 *) law_70 (φ : t) : ◇ φ ∧ □ φ ≈ □ φ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  split.
+  - rewrite and_comm.
+    now apply and_proj.
+  - rewrite <- law_68 at 1.
+    now rewrite <- evn_weaken.
+Qed.
 
 Lemma (* 71 *) law_71 (φ : t) : □ φ ∨ ◇ φ ≈ ◇ φ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  split.
+  - rewrite always_def.
+    apply contrapositive.
+    rewrite <- (evn_weaken (¬ φ)).
+    rewrite not_not.
+    now rewrite law_48.
+  - rewrite or_comm.
+    now apply or_inj.
+Qed.
 
 Lemma (* 72 *) law_72 (φ : t) : □ □ φ ≈ □ φ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite always_def.
+  rewrite law_60.
+  rewrite law_50.
+  now rewrite <- always_def.
+Qed.
 
 Lemma (* 73 *) law_73 (φ : t) : ◯ □ φ ≈ □ ◯ φ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite !always_def.
+  rewrite next_not.
+  rewrite law_51.
+  now rewrite <- next_not.
+Qed.
 
 Lemma (* 74 *) law_74 (φ : t) : φ → □ φ ⟹ φ → ◯ □ φ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite always_def.
+  rewrite <- always_def.
+  rewrite law_66 at 1.
+  rewrite or_and.
+  rewrite or_comm at 1.
+  rewrite true_def.
+  now rewrite true_and.
+Qed.
 
 Lemma (* 75 *) law_75 (φ : t) : φ ∧ ◇ ¬φ ⟹ ◇ (φ ∧ ◯ ¬φ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  apply contrapositive.
+  rewrite !and_def.
+  rewrite <- !always_def.
+  rewrite next_not.
+  rewrite !not_not.
+  now apply always_induction.
+Qed.
 
 Lemma (* 76 *) law_76 (φ : t) : □ φ ⟹ φ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite always_def.
+  apply contrapositive.
+  rewrite not_not.
+  now apply evn_weaken.
+Qed.
 
 Lemma (* 77 *) law_77 (φ : t) : □ φ ⟹ ◇ φ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite <- evn_weaken.
+  now apply law_76.
+Qed.
 
 Lemma (* 78 *) law_78 (φ : t) : □ φ ⟹ ◯ φ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite law_67.
+  rewrite and_comm.
+  rewrite and_proj.
+  now apply and_proj.
+Qed.
 
 Lemma (* 79 *) law_79 (φ : t) : □ φ ⟹ ◯ □ φ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite <- law_78.
+  now rewrite law_72.
+Qed.
 
 Lemma (* 80 *) law_80 (φ : t) : □ φ ⟹ □ ◯ φ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite <- law_73.
+  now apply law_79.
+Qed.
 
 Lemma (* 81 *) law_81 (φ ψ : t) : □ φ ⟹ ¬(ψ U ¬φ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite always_def.
+  apply contrapositive.
+  rewrite !not_not.
+  now rewrite law_42.
+Qed.
 
 (*** 3.5 Temporal Deduction *)
 
