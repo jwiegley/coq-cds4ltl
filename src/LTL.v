@@ -414,7 +414,15 @@ Qed.
 
 Lemma (* 82 *) temporal_deduction (φ ψ : t) : (φ ≈ ⊤ -> ψ ≈ ⊤) -> □ φ ⟹ ψ.
 Proof.
-  (* FILL IN HERE *)
+  intros.
+  rewrite always_def.
+  apply contrapositive.
+  rewrite not_not.
+  rewrite H.
+  - rewrite not_true.
+    now apply false_impl.
+  - apply true_impl.
+    admit.
 Admitted.
 
 (*** 3.6 Always □, Continued *)
@@ -478,8 +486,7 @@ Admitted.
 Lemma (* 83 *) (*Distributivity of ∧ over U*) law_83 (φ ψ χ : t) : □ φ ∧ ψ U χ ⟹ (φ ∧ ψ) U (φ ∧ χ).
 Proof.
   apply and_impl_iff.
-  apply temporal_deduction; intros.
-  rewrite H.
+  apply temporal_deduction; intro H; rewrite H.
   rewrite !true_and.
   rewrite or_comm.
   now apply true_def.
@@ -487,8 +494,13 @@ Qed.
 
 Lemma (* 84 *) (*U implication*) law_84 (φ ψ : t) : □ φ ∧ ◇ ψ ⟹ φ U ψ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite evn_def.
+  rewrite law_83.
+  rewrite and_true.
+  rewrite until_left_and.
+  rewrite and_comm.
+  now apply and_proj.
+Qed.
 
 Lemma (* 85 *) (*Right monotonicity of U*) law_85 (φ ψ χ : t) : □ (φ → ψ) ⟹ (χ U φ → χ U ψ).
 Proof.
