@@ -202,58 +202,78 @@ Hypothesis (* 55 *) always_until_and_ind : forall (φ ψ χ : t),
 Hypothesis (* 56 *) always_until_or_ind : forall (φ ψ : t),
   □ (φ → ◯ (φ ∨ ψ)) ⟹ φ → □ φ ∨ φ U ψ.
 
-Lemma (* 57 *) law_57 (φ : t) : □ (φ → ◯ φ) ⟹ φ → □ φ.
+Lemma (* 57 *) always_induction (φ : t) : □ (φ → ◯ φ) ⟹ (φ → □ φ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  pose proof (always_until_or_ind φ ⊥).
+  rewrite until_right_bottom in H.
+  now rewrite !or_false in H.
+Qed.
 
-Lemma (* 58 *) law_58 (φ : t) : □ (◯ φ → φ) ⟹ ◇ φ → φ.
+Lemma (* 58 *) evn_induction (φ : t) : □ (◯ φ → φ) ⟹ (◇ φ → φ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  pose proof (always_until_or_ind (¬ φ) ⊥).
+  rewrite until_right_bottom in H.
+  rewrite !or_false in H.
+  rewrite next_linearity in H.
+  rewrite !not_not in H.
+  rewrite or_comm in H.
+  rewrite H; clear H.
+  rewrite always_def.
+  rewrite not_not.
+  now rewrite or_comm.
+Qed.
 
 Lemma (* 59 *) law_59 (φ : t) : ◇ φ ≈ ¬□ ¬φ.
-Proof.
-  (* FILL IN HERE *)
-Admitted.
+Proof. now rewrite always_def, !not_not. Qed.
 
 Lemma (* 60 *) law_60 (φ : t) : ¬□ φ ≈ ◇ ¬φ.
-Proof.
-  (* FILL IN HERE *)
-Admitted.
+Proof. now rewrite always_def, !not_not. Qed.
 
 Lemma (* 61 *) law_61 (φ : t) : ¬◇ φ ≈ □ ¬φ.
-Proof.
-  (* FILL IN HERE *)
-Admitted.
+Proof. now rewrite always_def, !not_not. Qed.
 
 Lemma (* 62 *) law_62 (φ : t) : ¬◇ □ φ ≈ □ ◇ ¬φ.
-Proof.
-  (* FILL IN HERE *)
-Admitted.
+Proof. now rewrite !always_def. Qed.
 
 Lemma (* 63 *) law_63 (φ : t) : ¬□ ◇ φ ≈ ◇ □ ¬φ.
-Proof.
-  (* FILL IN HERE *)
-Admitted.
+Proof. now rewrite !always_def, !not_not. Qed.
 
 Lemma (* 64 *) law_64 : □ ⊤ ≈ ⊤.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite always_def.
+  rewrite not_true.
+  rewrite law_44.
+  now rewrite not_false.
+Qed.
 
 Lemma (* 65 *) law_65 : □ ⊥ ≈ ⊥.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite always_def.
+  rewrite not_false.
+  rewrite law_43.
+  now rewrite not_true.
+Qed.
 
 Lemma (* 66 *) law_66 (φ : t) : □ φ ≈ φ ∧ ◯ □ φ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite always_def.
+  rewrite law_45 at 1.
+  rewrite not_or.
+  rewrite not_not.
+  now rewrite next_not.
+Qed.
 
 Lemma (* 67 *) law_67 (φ : t) : □ φ ≈ φ ∧ ◯ φ ∧ ◯ □ φ.
 Proof.
+  rewrite law_66 at 1.
+  rewrite law_66 at 1.
+  rewrite next_and.
+  apply and_respects_eqv; [reflexivity|].
+  apply and_respects_eqv; [reflexivity|].
+  rewrite always_def.
+  rewrite !next_not.
+  rewrite !law_51.
+  apply not_respects_eqv.
   (* FILL IN HERE *)
 Admitted.
 
