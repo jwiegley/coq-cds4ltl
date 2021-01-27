@@ -16,6 +16,12 @@ Notation "● p" := (weak_next p) (at level 0, right associativity).
 Declare Instance weak_next_respects_impl : Proper (impl ==> impl) weak_next.
 Program Instance weak_next_respects_eqv : Proper (eqv ==> eqv) weak_next.
 
+Hypothesis end_not_next : forall (φ : t), ω ⟹ ¬◯ φ.
+Hypothesis end_weak_next : forall (φ : t), ω ⟹ ● φ.
+Hypothesis end_not_until : forall (φ ψ : t), ω ⟹ ¬(φ U ψ).
+Hypothesis end_not_evn : forall (φ : t), ω ⟹ ¬◇ φ.
+Hypothesis end_always : forall (φ : t), ω ⟹ □ φ.
+
 Hypothesis end_def : ω ≈ ¬◯ ⊤.
 Hypothesis weak_next_def : forall (φ : t), ● φ ≈ ◯ φ ∨ ω.
 

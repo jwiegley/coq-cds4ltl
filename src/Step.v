@@ -6,9 +6,7 @@ Require Import
   Coq.Classes.Morphisms
   Coq.Classes.RelationClasses
   Coq.Logic.Classical
-  Coq.Sets.Ensembles
-  Hask.Control.Monad
-  Hask.Prelude.
+  Coq.Sets.Ensembles.
 
 Open Scope program_scope.
 Open Scope list_scope.

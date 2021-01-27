@@ -6,12 +6,7 @@ Require Import
   Coq.Classes.Equivalence
   Coq.Classes.Morphisms
   Coq.Classes.RelationClasses
-  Coq.Logic.Classical
-  Coq.omega.Omega
-  Hask.Data.Maybe.
-
-Require Import Equations.Equations.
-(*Require Import Equations.EqDec.*)
+  Coq.Logic.Classical.
 
 Open Scope program_scope.
 Open Scope list_scope.
