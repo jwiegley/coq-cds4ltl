@@ -83,6 +83,7 @@ Program Instance not_respects_eqv : Proper (eqv ==> eqv) not.
 Declare Instance or_respects_impl : Proper (impl ==> impl ==> impl) or.
 Program Instance or_respects_eqv : Proper (eqv ==> eqv ==> eqv) or.
 
+Hypothesis contra : forall (φ : t), φ ≈ ¬ φ -> False.
 Hypothesis impl_def : forall (φ ψ : t), φ ⟹ ψ <-> φ → ψ ≈ ⊤.
 Hypothesis true_def : forall (φ : t), φ ∨ ¬φ ≈ ⊤.
 Hypothesis false_def : forall (φ : t), ¬(φ ∨ ¬φ) ≈ ⊥.
