@@ -44,6 +44,14 @@ Next Obligation. intro x; now split. Qed.
 Next Obligation. repeat intro; split; destruct H; now intuition. Qed.
 Next Obligation. repeat intro; split; destruct H, H0; now transitivity y. Qed.
 
+Program Instance impl_respects_impl : Proper (impl --> impl ==> Basics.impl) impl.
+Next Obligation.
+  repeat intro.
+  unfold Basics.flip in H.
+  rewrite H.
+  now rewrite <- H0.
+Qed.
+
 Program Instance impl_respects_eqv : Proper (eqv ==> eqv ==> Basics.impl) impl.
 Next Obligation.
   repeat intro.
@@ -83,7 +91,10 @@ Program Instance not_respects_eqv : Proper (eqv ==> eqv) not.
 Declare Instance or_respects_impl : Proper (impl ==> impl ==> impl) or.
 Program Instance or_respects_eqv : Proper (eqv ==> eqv ==> eqv) or.
 
-Hypothesis impl_def : forall (φ ψ : t), φ ⟹ ψ <-> φ → ψ ≈ ⊤.
+(* Hypothesis not_denote : forall (φ : t), (φ ≈ ¬ φ) -> False. *)
+(* Hypothesis or_denote : forall (φ ψ : t), φ ∨ ψ ≈ ⊤ <-> (φ ≈ ⊤) \/ (ψ ≈ ⊤). *)
+Hypothesis impl_denote : forall (φ ψ : t), (φ ≈ ⊤ -> ψ ≈ ⊤) <-> (φ ⟹ ψ).
+
 Hypothesis true_def : forall (φ : t), φ ∨ ¬φ ≈ ⊤.
 Hypothesis false_def : forall (φ : t), ¬(φ ∨ ¬φ) ≈ ⊥.
 
@@ -144,13 +155,29 @@ Proof.
   now rewrite not_not.
 Qed.
 
+Lemma impl_eqv_denote (φ ψ : t) : φ ⟹ ψ <-> φ → ψ ≈ ⊤.
+Proof.
+  split; intros.
+  - split.
+    + apply impl_denote; intro.
+      reflexivity.
+    + rewrite <- H.
+      rewrite or_comm.
+      rewrite true_def.
+      reflexivity.
+  - apply impl_denote; intro.
+    rewrite H0 in H.
+    rewrite not_true in H.
+    now rewrite false_or in H.
+Qed.
+
 Lemma true_impl (φ : t) : ⊤ ⟹ φ <-> φ ≈ ⊤.
 Proof.
   split; intro.
-  - apply impl_def in H.
+  - apply impl_eqv_denote in H.
     rewrite not_true in H.
     now rewrite false_or in H.
-  - apply impl_def.
+  - apply impl_eqv_denote.
     rewrite not_true.
     now rewrite false_or.
 Qed.
@@ -164,19 +191,19 @@ Qed.
 Lemma contrapositive (φ ψ : t) : φ ⟹ ψ <-> ¬ψ ⟹ ¬φ.
 Proof.
   split; intro.
-  - apply impl_def in H.
-    apply impl_def.
+  - apply impl_eqv_denote in H.
+    apply impl_eqv_denote.
     rewrite not_not.
     now rewrite or_comm.
-  - apply impl_def in H.
-    apply impl_def.
+  - apply impl_eqv_denote in H.
+    apply impl_eqv_denote.
     rewrite or_comm.
     now rewrite not_not in H.
 Qed.
 
 Lemma or_inj (φ ψ : t) : φ ⟹ φ ∨ ψ.
 Proof.
-  apply impl_def.
+  apply impl_eqv_denote.
   rewrite <- or_assoc.
   rewrite (or_comm _ φ).
   rewrite true_def.

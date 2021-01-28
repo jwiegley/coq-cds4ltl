@@ -132,7 +132,7 @@ Qed.
 
 Lemma and_proj (φ ψ : t) : φ ∧ ψ ⟹ φ.
 Proof.
-  apply impl_def.
+  apply impl_eqv_denote.
   rewrite and_def.
   rewrite or_comm.
   rewrite not_not.
@@ -140,6 +140,44 @@ Proof.
   rewrite true_def.
   now rewrite true_or.
 Qed.
+
+Ltac boolean :=
+  repeat match goal with
+    | [ |- context G [¬ ⊤] ] => rewrite not_true
+    | [ |- context G [¬ ⊥] ] => rewrite not_false
+    | [ |- context G [¬¬ ?P] ] => rewrite (not_not P)
+    | [ |- context G [?P ∧ ?P] ] => rewrite (and_idem P)
+    | [ |- context G [?P ∨ ?P] ] => rewrite (or_idem P)
+    | [ |- context G [⊤ ∧ ?P] ] => rewrite true_and
+    | [ |- context G [?P ∧ ⊤] ] => rewrite and_true
+    | [ |- context G [⊥ ∧ ?P] ] => rewrite false_and
+    | [ |- context G [?P ∧ ⊥] ] => rewrite and_false
+    | [ |- context G [⊤ ∨ ?P] ] => rewrite true_or
+    | [ |- context G [?P ∨ ⊤] ] => rewrite or_true
+    | [ |- context G [⊥ ∨ ?P] ] => rewrite false_or
+    | [ |- context G [?P ∨ ⊥] ] => rewrite or_false
+    | [ |- context G [¬ ?P ∨ ?P] ] => rewrite (or_comm (¬ P) P)
+    | [ |- context G [?P ∨ ¬ ?P] ] => rewrite true_def
+    | [ |- context G [(¬ ?P ∨ ?Q) ∧ ?P] ] =>
+        rewrite (and_comm (¬ P ∨ Q) P),
+                (and_or P (¬ P) Q), and_def
+    | [ |- context G [¬ ?P ∧ ?P] ] => rewrite (and_comm (¬ P) P)
+    | [ |- context G [?P ∧ ¬ ?P] ] => rewrite (absurdity P)
+    | [ |- context G [?P ∨ (?P ∧ ?Q)] ] => rewrite (or_absorb P Q)
+    | [ |- context G [?P ∧ (?P ∨ ?Q)] ] => rewrite (and_absorb P Q)
+    | [ |- ?P ≈ ?P ] => reflexivity
+    | [ |- ?P ⟹ ?P ] => reflexivity
+    | [ |- ?P ⟹ ⊤ ] => apply impl_true
+    | [ |- ⊥ ⟹ ?P ] => apply false_impl
+    | [ |- ?P ∧ ?Q ⟹ ?P ] => apply and_proj
+    | [ |- ?Q ∧ ?P ⟹ ?P ] => rewrite (and_comm Q P)
+    | [ |- ?P ⟹ ?P ∨ ?Q ] => apply or_inj
+    | [ |- ?P ⟹ ?Q ∨ ?P ] => rewrite (or_comm Q P)
+    | [ |- ?P ∨ ?Q ≈ ?Q ∨ ?P ] => apply or_comm
+    | [ |- ?P ∧ ?Q ≈ ?Q ∧ ?P ] => apply and_comm
+    | [ |- ?P ∨ ?Q ⟹ ?Q ∨ ?P ] => rewrite (or_comm P Q)
+    | [ |- ?P ∧ ?Q ⟹ ?Q ∧ ?P ] => rewrite (and_comm P Q)
+  end.
 
 Lemma impl_and (φ ψ χ : t) : φ ∧ ψ → χ ≈ φ → (ψ → χ).
 Proof.
@@ -149,11 +187,7 @@ Proof.
 Qed.
 
 Lemma and_impl (φ ψ : t) : φ ∧ (φ → ψ) ≈ φ ∧ ψ.
-Proof.
-  rewrite and_or.
-  rewrite absurdity.
-  now rewrite false_or.
-Qed.
+Proof. now rewrite and_or; boolean. Qed.
 
 Lemma and_impl_iff (φ ψ χ : t) : φ ∧ ψ ⟹ χ <-> φ ⟹ (ψ → χ).
 Proof.
@@ -161,18 +195,11 @@ Proof.
   - rewrite <- H; clear H.
     rewrite and_comm.
     rewrite or_and.
-    rewrite or_comm.
-    rewrite true_def.
-    rewrite true_and.
-    rewrite or_comm.
-    now apply or_inj.
+    now boolean.
   - rewrite H; clear H.
     rewrite and_comm.
     rewrite and_or.
-    rewrite absurdity.
-    rewrite false_or.
-    rewrite and_comm.
-    now apply and_proj.
+    now boolean.
 Qed.
 
 End BooleanLogic.

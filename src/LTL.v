@@ -219,24 +219,23 @@ Proof.
   rewrite or_comm in H.
   rewrite H; clear H.
   rewrite always_def.
-  rewrite not_not.
-  now rewrite or_comm.
+  now boolean.
 Qed.
 
 Lemma (* 59 *) law_59 (φ : t) : ◇ φ ≈ ¬□ ¬φ.
-Proof. now rewrite always_def, !not_not. Qed.
+Proof. now rewrite always_def; boolean. Qed.
 
 Lemma (* 60 *) law_60 (φ : t) : ¬□ φ ≈ ◇ ¬φ.
-Proof. now rewrite always_def, !not_not. Qed.
+Proof. now rewrite always_def; boolean. Qed.
 
 Lemma (* 61 *) law_61 (φ : t) : ¬◇ φ ≈ □ ¬φ.
-Proof. now rewrite always_def, !not_not. Qed.
+Proof. now rewrite always_def; boolean. Qed.
 
 Lemma (* 62 *) law_62 (φ : t) : ¬◇ □ φ ≈ □ ◇ ¬φ.
 Proof. now rewrite !always_def. Qed.
 
 Lemma (* 63 *) law_63 (φ : t) : ¬□ ◇ φ ≈ ◇ □ ¬φ.
-Proof. now rewrite !always_def, !not_not. Qed.
+Proof. now rewrite !always_def; boolean. Qed.
 
 Lemma (* 64 *) law_64 : □ ⊤ ≈ ⊤.
 Proof.
@@ -415,15 +414,10 @@ Qed.
 Lemma (* 82 *) temporal_deduction (φ ψ : t) : (φ ≈ ⊤ -> ψ ≈ ⊤) -> □ φ ⟹ ψ.
 Proof.
   intros.
-  rewrite always_def.
-  apply contrapositive.
-  rewrite not_not.
+  apply impl_denote in H.
   rewrite H.
-  - rewrite not_true.
-    now apply false_impl.
-  - apply true_impl.
-    admit.
-Admitted.
+  now apply law_76.
+Qed.
 
 (*** 3.6 Always □, Continued *)
 
@@ -487,9 +481,7 @@ Lemma (* 83 *) (*Distributivity of ∧ over U*) law_83 (φ ψ χ : t) : □ φ �
 Proof.
   apply and_impl_iff.
   apply temporal_deduction; intro H; rewrite H.
-  rewrite !true_and.
-  rewrite or_comm.
-  now apply true_def.
+  now boolean.
 Qed.
 
 Lemma (* 84 *) (*U implication*) law_84 (φ ψ : t) : □ φ ∧ ◇ ψ ⟹ φ U ψ.
@@ -498,14 +490,15 @@ Proof.
   rewrite law_83.
   rewrite and_true.
   rewrite until_left_and.
-  rewrite and_comm.
-  now apply and_proj.
+  now boolean.
 Qed.
 
 Lemma (* 85 *) (*Right monotonicity of U*) law_85 (φ ψ χ : t) : □ (φ → ψ) ⟹ (χ U φ → χ U ψ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  apply and_impl_iff.
+  rewrite law_83.
+  now apply until_respects_impl; boolean.
+Qed.
 
 Lemma (* 86 *) (*Left monotonicity of U*) law_86 (φ ψ χ : t) : □ (φ → ψ) ⟹ (φ U χ → ψ U χ).
 Proof.

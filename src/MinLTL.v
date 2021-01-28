@@ -193,10 +193,7 @@ Proof.
   rewrite until_right_impl.
   rewrite and_comm.
   rewrite and_or.
-  rewrite absurdity.
-  rewrite false_or.
-  rewrite and_comm.
-  now rewrite and_proj.
+  now boolean.
 Qed.
 
 Lemma (* 25 *) until_25 (φ ψ χ : t) : (φ U (¬ψ U χ)) ∧ (ψ U χ) ⟹ φ U χ.
@@ -206,10 +203,7 @@ Proof.
   rewrite until_right_impl.
   rewrite and_comm.
   rewrite and_or.
-  rewrite absurdity.
-  rewrite false_or.
-  rewrite and_comm.
-  now rewrite and_proj.
+  now boolean.
 Qed.
 
 Lemma (* 26 *) until_26 (φ ψ : t) : (φ U ψ) ∧ (¬ψ U φ) ⟹ φ.
@@ -223,11 +217,7 @@ Proof.
   rewrite until_expansion.
   rewrite and_or.
   rewrite <- and_assoc.
-  rewrite absurdity.
-  rewrite false_and.
-  rewrite or_false.
-  rewrite and_comm.
-  now apply and_proj.
+  now boolean.
 Qed.
 
 Lemma (* 28 *) until_28 (φ ψ : t) : φ U ψ ⟹ φ ∨ ψ.
