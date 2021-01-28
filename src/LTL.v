@@ -502,8 +502,10 @@ Qed.
 
 Lemma (* 86 *) (*Left monotonicity of U*) law_86 (φ ψ χ : t) : □ (φ → ψ) ⟹ (φ U χ → ψ U χ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  apply and_impl_iff.
+  rewrite law_83.
+  now apply until_respects_impl; boolean.
+Qed.
 
 Lemma (* 87 *) (*Distributivity of ¬ over □*) law_87 (φ : t) : □ ¬φ ⟹ ¬□ φ.
 Proof.
