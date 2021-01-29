@@ -568,68 +568,103 @@ Qed.
 
 Lemma (* 95 *) (*□ ◇ excluded middle*) law_95 (φ : t) : □ ◇ φ ∨ ◇ □ ¬φ ≈ ⊤.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite <- law_63.
+  now boolean.
+Qed.
 
 Lemma (* 96 *) (*◇ □ excluded middle*) law_96 (φ : t) : ◇ □ φ ∨ □ ◇ ¬φ ≈ ⊤.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite <- law_62.
+  now boolean.
+Qed.
 
 Lemma (* 97 *) (*□ ◇ contradiction*) law_97 (φ : t) : □ ◇ φ ∧ ◇ □ ¬φ ≈ ⊥.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite <- law_63.
+  now boolean.
+Qed.
 
 Lemma (* 98 *) (*◇ □ contradiction*) law_98 (φ : t) : ◇ □ φ ∧ □ ◇ ¬φ ≈ ⊥.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite <- law_62.
+  now boolean.
+Qed.
 
 Lemma (* 99 *) (*Distributivity of □ over ∧*) law_99 (φ ψ : t) : □ (φ ∧ ψ) ≈ □ φ ∧ □ ψ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite !always_def.
+  rewrite not_and.
+  rewrite evn_or.
+  now rewrite not_or.
+Qed.
 
 Lemma (* 100 *) (*Distributivity of □ over ∨*) law_100 (φ ψ : t) : □ φ ∨ □ ψ ⟹ □ (φ ∨ ψ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite !always_def.
+  apply contrapositive.
+  rewrite not_or.
+  rewrite !not_not.
+  rewrite law_53.
+  now rewrite <- and_def.
+Qed.
 
 Lemma (* 101 *) (*Logical equivalence law of ◯*) law_101 (φ ψ : t) : □ (φ ≡ ψ) ⟹ (◯ φ ≡ ◯ ψ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  boolean.
+  rewrite (or_comm _ φ).
+  rewrite (or_comm _ (◯ φ)).
+  rewrite <- !or_assoc.
+  now boolean.
+Qed.
 
 Lemma (* 102 *) (*Logical equivalence law of ◇*) law_102 (φ ψ : t) : □ (φ ≡ ψ) ⟹ (◇ φ ≡ ◇ ψ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  boolean.
+  rewrite (or_comm _ φ).
+  rewrite (or_comm _ (◇ φ)).
+  rewrite <- !or_assoc.
+  now boolean.
+Qed.
 
 Lemma (* 103 *) (*Logical equivalence law of □*) law_103 (φ ψ : t) : □ (φ ≡ ψ) ⟹ (□ φ ≡ □ ψ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  boolean.
+  rewrite (or_comm _ φ).
+  rewrite (or_comm _ (□ φ)).
+  rewrite <- !or_assoc.
+  now boolean.
+Qed.
 
 Lemma (* 104 *) (*Distributivity of ◇ over ⟹*) law_104 (φ ψ : t) : ◇ (φ → ψ) ≈ (□ φ → ◇ ψ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite evn_or.
+  now rewrite law_60.
+Qed.
 
 Lemma (* 105 *) (*Distributivity of ◇ over ⟹*) law_105 (φ ψ : t) : (◇ φ → ◇ ψ) ⟹ ◇ (φ → ψ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite evn_or.
+  rewrite <- law_60.
+  rewrite law_61.
+  now rewrite law_87.
+Qed.
 
 Lemma (* 106 *) (*∧ frame law of ◯*) law_106 (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ ∧ ψ)).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite law_78.
+  rewrite <- next_not.
+  rewrite <- next_or.
+  rewrite or_and.
+  boolean.
+  rewrite next_or.
+  now boolean.
+Qed.
 
 Lemma (* 107 *) (*∧ frame law of ◇*) law_107 (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ ∧ ψ)).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  apply and_impl_iff.
+  now apply law_88.
+Qed.
 
 Lemma (* 108 *) (*∧ frame law of □*) law_108 (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ ∧ ψ)).
 Proof.
