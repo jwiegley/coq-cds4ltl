@@ -509,43 +509,62 @@ Qed.
 
 Lemma (* 87 *) (*Distributivity of ¬ over □*) law_87 (φ : t) : □ ¬φ ⟹ ¬□ φ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite !always_def.
+  boolean.
+  rewrite <- evn_weaken.
+  now apply evn_weaken.
+Qed.
 
 Lemma (* 88 *) (*Distributivity of ◇ over ∧*) law_88 (φ ψ : t) : □ φ ∧ ◇ ψ ⟹ ◇ (φ ∧ ψ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite !evn_def.
+  rewrite law_83.
+  boolean.
+  now apply until_respects_impl; boolean.
+Qed.
 
 Lemma (* 89 *) (*◇ excluded middle*) law_89 (φ : t) : ◇ φ ∨ □ ¬φ ≈ ⊤.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite always_def.
+  now boolean.
+Qed.
 
 Lemma (* 90 *) (*□ excluded middle*) law_90 (φ : t) : □ φ ∨ ◇ ¬φ ≈ ⊤.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite always_def.
+  now boolean.
+Qed.
 
 Lemma (* 91 *) (*Temporal excluded middle*) law_91 (φ : t) : ◇ φ ∨ ◇ ¬φ ≈ ⊤.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite !evn_def.
+  now apply until_excl_middle.
+Qed.
 
 Lemma (* 92 *) (*◇ contradiction*) law_92 (φ : t) : ◇ φ ∧ □ ¬φ ≈ ⊥.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite always_def.
+  now boolean.
+Qed.
 
 Lemma (* 93 *) (*□ contradiction*) law_93 (φ : t) : □ φ ∧ ◇ ¬φ ≈ ⊥.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite always_def.
+  now boolean.
+Qed.
 
 Lemma (* 94 *) (*Temporal contradiction*) law_94 (φ : t) : □ φ ∧ □ ¬φ ≈ ⊥.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite <- law_61.
+  rewrite always_def.
+  rewrite <- not_not.
+  rewrite not_and.
+  rewrite !not_not.
+  rewrite <- evn_or.
+  boolean.
+  rewrite law_43.
+  now boolean.
+Qed.
 
 Lemma (* 95 *) (*□ ◇ excluded middle*) law_95 (φ : t) : □ ◇ φ ∨ ◇ □ ¬φ ≈ ⊤.
 Proof.
