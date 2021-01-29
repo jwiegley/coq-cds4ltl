@@ -202,4 +202,18 @@ Proof.
     now boolean.
 Qed.
 
+Lemma impl_trans (φ ψ χ : t) : (φ → ψ) ∧ (ψ → χ) ⟹ (φ → χ).
+Proof.
+  apply and_impl_iff.
+  rewrite (or_comm _ (_ ∨ _)).
+  rewrite or_assoc.
+  apply or_respects_impl; [reflexivity|].
+  rewrite or_comm.
+  rewrite not_or.
+  rewrite not_not.
+  rewrite or_comm.
+  rewrite or_and.
+  now boolean.
+Qed.
+
 End BooleanLogic.

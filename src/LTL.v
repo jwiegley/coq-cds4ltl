@@ -493,6 +493,12 @@ Proof.
   now boolean.
 Qed.
 
+Corollary law_84b (φ ψ : t) : □ φ ⟹ ◇ ψ → φ U ψ.
+Proof.
+  apply and_impl_iff.
+  now apply law_84.
+Qed.
+
 Lemma (* 85 *) (*Right monotonicity of U*) law_85 (φ ψ χ : t) : □ (φ → ψ) ⟹ (χ U φ → χ U ψ).
 Proof.
   apply and_impl_iff.
@@ -651,123 +657,205 @@ Qed.
 
 Lemma (* 106 *) (*∧ frame law of ◯*) law_106 (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ ∧ ψ)).
 Proof.
+  apply and_impl_iff.
   rewrite law_78.
-  rewrite <- next_not.
-  rewrite <- next_or.
-  rewrite or_and.
-  boolean.
-  rewrite next_or.
-  now boolean.
+  now rewrite next_and.
 Qed.
 
 Lemma (* 107 *) (*∧ frame law of ◇*) law_107 (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ ∧ ψ)).
 Proof.
   apply and_impl_iff.
-  now apply law_88.
+  now rewrite law_88.
 Qed.
 
 Lemma (* 108 *) (*∧ frame law of □*) law_108 (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ ∧ ψ)).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  apply and_impl_iff.
+  now rewrite law_99.
+Qed.
 
 Lemma (* 109 *) (*∨ frame law of ◯*) law_109 (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ ∨ ψ)).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  apply and_impl_iff.
+  rewrite law_78.
+  rewrite next_or.
+  now rewrite and_proj, <- or_inj.
+Qed.
 
 Lemma (* 110 *) (*∨ frame law of ◇*) law_110 (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ ∨ ψ)).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  apply and_impl_iff.
+  rewrite law_88.
+  rewrite law_53.
+  rewrite evn_or.
+  now rewrite and_proj, <- or_inj.
+Qed.
 
 Lemma (* 111 *) (*∨ frame law of □*) law_111 (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ ∨ ψ)).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  apply and_impl_iff.
+  rewrite <- law_100.
+  now rewrite and_proj, <- or_inj.
+Qed.
 
 Lemma (* 112 *) (*⟹ frame law of ◯*) law_112 (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ → ψ)).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  apply and_impl_iff.
+  rewrite law_78.
+  rewrite next_or.
+  now rewrite and_comm, and_proj, or_comm, <- or_inj.
+Qed.
 
 Lemma (* 113 *) (*⟹ frame law of ◇*) law_113 (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ → ψ)).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  apply and_impl_iff.
+  rewrite law_88.
+  rewrite law_53.
+  rewrite evn_or.
+  now rewrite and_comm, and_proj, or_comm, <- or_inj.
+Qed.
 
 Lemma (* 114 *) (*⟹ frame law of □*) law_114 (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ → ψ)).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  apply and_impl_iff.
+  rewrite <- law_100.
+  now rewrite and_comm, and_proj, or_comm, <- or_inj.
+Qed.
 
 Lemma (* 115 *) (*≡ frame law of ◯*) law_115 (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ ≡ ψ)).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  apply and_impl_iff.
+  rewrite law_78.
+  rewrite !next_or.
+  boolean.
+  now rewrite and_proj, (or_comm _ (_ φ)), or_comm, <- !or_inj.
+Qed.
 
 Lemma (* 116 *) (*≡ frame law of ◇*) law_116 (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ ≡ ψ)).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  apply and_impl_iff.
+  rewrite law_88.
+  rewrite law_53.
+  rewrite !evn_or.
+  boolean.
+  now rewrite and_proj, (or_comm _ (_ φ)), or_comm, <- !or_inj.
+Qed.
 
 Lemma (* 117 *) (*≡ frame law of □*) law_117 (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ ≡ ψ)).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  apply and_impl_iff.
+  rewrite <- !law_100.
+  boolean.
+  now rewrite and_proj, (or_comm _ (_ φ)), or_comm, <- !or_inj.
+Qed.
 
 Lemma (* 118 *) (*Monotonicity of ◯*) law_118 (φ ψ : t) : □ (φ → ψ) ⟹ (◯ φ → ◯ ψ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  apply and_impl_iff.
+  rewrite law_78.
+  rewrite !next_or.
+  rewrite and_comm.
+  rewrite and_or.
+  rewrite next_not.
+  now boolean.
+Qed.
 
 Lemma (* 119 *) (*Monotonicity of ◇*) law_119 (φ ψ : t) : □ (φ → ψ) ⟹ (◇ φ → ◇ ψ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  apply and_impl_iff.
+  rewrite law_88.
+  boolean.
+  rewrite law_53.
+  now boolean.
+Qed.
 
 Lemma (* 120 *) (*Monotonicity of □*) law_120 (φ ψ : t) : □ (φ → ψ) ⟹ (□ φ → □ ψ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  apply and_impl_iff.
+  rewrite <- law_99.
+  boolean.
+  rewrite law_99.
+  now boolean.
+Qed.
 
 Lemma (* 121 *) (*Consequence rule of ◯*) law_121 (φ ψ χ ρ : t) : □ ((φ → ψ) ∧ (ψ → ◯ χ) ∧ (χ → ρ)) ⟹ (φ → ◯ ρ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite !law_99.
+  rewrite law_76.
+  rewrite law_76.
+  rewrite <- and_assoc.
+  rewrite impl_trans.
+  rewrite law_118.
+  now rewrite impl_trans.
+Qed.
 
 Lemma (* 122 *) (*Consequence rule of ◇*) law_122 (φ ψ χ ρ : t) : □ ((φ → ψ) ∧ (ψ → ◇ χ) ∧ (χ → ρ)) ⟹ (φ → ◇ ρ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite !law_99.
+  rewrite law_76.
+  rewrite law_76.
+  rewrite <- and_assoc.
+  rewrite impl_trans.
+  rewrite law_119.
+  now rewrite impl_trans.
+Qed.
 
 Lemma (* 123 *) (*Consequence rule of □*) law_123 (φ ψ χ ρ : t) : □ ((φ → ψ) ∧ (ψ → □ χ) ∧ (χ → ρ)) ⟹ (φ → □ ρ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite !law_99.
+  rewrite law_76.
+  rewrite law_76.
+  rewrite <- and_assoc.
+  rewrite impl_trans.
+  rewrite law_120.
+  now rewrite impl_trans.
+Qed.
 
 Lemma (* 124 *) (*Catenation rule of ◇*) law_124 (φ ψ χ : t) : □ ((φ → ◇ ψ) ∧ (ψ → ◇ χ)) ⟹ (φ → ◇ χ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite !law_99.
+  rewrite law_76.
+  rewrite law_119.
+  rewrite impl_trans.
+  now rewrite law_50.
+Qed.
 
 Lemma (* 125 *) (*Catenation rule of □*) law_125 (φ ψ χ : t) : □ ((φ → □ ψ) ∧ (ψ → □ χ)) ⟹ (φ → □ χ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite !law_99.
+  rewrite law_76.
+  rewrite law_120.
+  rewrite impl_trans.
+  now rewrite law_72.
+Qed.
 
 Lemma (* 126 *) (*Catenation rule of U*) law_126 (φ ψ χ ρ : t) : □ ((φ → ψ U χ) ∧ (χ → ψ U ρ)) ⟹ (φ → ψ U ρ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite !law_99.
+  rewrite law_76.
+  rewrite (law_85 _ _ ψ).
+  rewrite impl_trans.
+  now rewrite until_left_absorb.
+Qed.
 
 Lemma (* 127 *) (*U strengthening rule*) law_127 (φ ψ χ ρ : t) : □ ((φ → χ) ∧ (ψ → ρ)) ⟹ (φ U ψ → χ U ρ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite !law_99.
+  rewrite (law_86 _ _ ψ).
+  rewrite (law_85 _ _ χ).
+  now rewrite impl_trans.
+Qed.
 
 Lemma (* 128 *) (*Induction rule ◇*) law_128 (φ ψ : t) : □ (φ ∨ ◯ ψ → ψ) ⟹ (◇ φ → ψ).
 Proof.
+  rewrite not_or.
+  rewrite or_comm at 1.
+  rewrite or_and.
+  rewrite law_99.
+  rewrite !(or_comm ψ).
+  rewrite law_119.
+  rewrite law_61.
+  rewrite (law_120 (next _)).
   (* FILL IN HERE *)
 Admitted.
 
@@ -788,23 +876,51 @@ Admitted.
 
 Lemma (* 132 *) (*Temporal generalization law*) law_132 (φ ψ : t) : □ (□ φ → ψ) ⟹ (□ φ → □ ψ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  apply and_impl_iff.
+  rewrite <- (law_72 φ) at 2.
+  rewrite <- law_99.
+  boolean.
+  rewrite law_99.
+  now boolean.
+Qed.
 
 Lemma (* 133 *) (*Temporal particularization law*) law_133 (φ ψ : t) : □ (φ → ◇ ψ) ⟹ (◇ φ → ◇ ψ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  apply and_impl_iff.
+  rewrite law_88.
+  boolean.
+  rewrite law_53.
+  rewrite law_50.
+  now boolean.
+Qed.
 
 Lemma (* 134 *) law_134 (φ ψ : t) : □ (φ → ◯ ψ) ⟹ (φ → ◇ ψ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  apply and_impl_iff.
+  rewrite (evn_weaken φ) at 2.
+  rewrite law_88.
+  boolean.
+  rewrite law_53.
+  rewrite and_comm, and_proj.
+  rewrite (law_45 ψ).
+  rewrite or_comm, <- or_inj.
+  now rewrite law_51.
+Qed.
 
 Lemma (* 135 *) law_135 (φ : t) : □ (φ → ◯ ¬φ) ⟹ (φ → ¬□ φ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  apply and_impl_iff.
+  rewrite and_proj.
+  rewrite next_not.
+  rewrite <- (not_not (or _ _)).
+  rewrite <- and_def.
+  rewrite law_87.
+  apply contrapositive.
+  rewrite !not_not.
+  rewrite law_99.
+  rewrite <- law_80.
+  now boolean.
+Qed.
 
 (*** 3.7 Proof Metatheorems *)
 
@@ -1608,27 +1724,17 @@ Admitted.
 
 Notation "p ≉ q" := (~ (p ≈ q)) (at level 90, no associativity).
 
-Lemma law_270 (φ ψ : t) : □ φ ⟹ ◇ ψ → φ U ψ.
+Lemma law_270 (φ ψ χ : t) : □ (φ → ¬ψ ∧ ◯ χ) ⟹ φ → ¬(ψ U χ).
 Proof.
   (* FILL IN HERE *)
 Admitted.
 
-Lemma law_271 (φ ψ : t) : □ (φ ∨ ψ) ≈ ⊤ -> exists u, □ ((φ ∧ u) ∨ (ψ ∧ ¬u)) ≈ ⊤.
+Lemma law_271 (φ ψ χ ρ : t) : □ ((φ → ψ U χ) ∧ (χ → ψ U ρ)) ⟹ φ → □ χ.
 Proof.
   (* FILL IN HERE *)
 Admitted.
 
-Lemma law_272 (φ ψ χ : t) : □ (φ → ¬ψ ∧ ◯ χ) ⟹ φ → ¬(ψ U χ).
-Proof.
-  (* FILL IN HERE *)
-Admitted.
-
-Lemma law_273 (φ ψ χ ρ : t) : □ ((φ → ψ U χ) ∧ (χ → ψ U ρ)) ⟹ φ → □ χ.
-Proof.
-  (* FILL IN HERE *)
-Admitted.
-
-Lemma law_274 (φ ψ : t) : ◇ (φ U ψ) ≉ ◇ φ U ◇ ψ.
+Lemma law_272 (φ ψ : t) : ◇ (φ U ψ) ≉ ◇ φ U ◇ ψ.
 Proof.
   (* FILL IN HERE *)
 Admitted.
