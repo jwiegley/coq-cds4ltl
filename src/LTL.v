@@ -848,14 +848,6 @@ Qed.
 
 Lemma (* 128 *) (*Induction rule ◇*) law_128 (φ ψ : t) : □ (φ ∨ ◯ ψ → ψ) ⟹ (◇ φ → ψ).
 Proof.
-  rewrite not_or.
-  rewrite or_comm at 1.
-  rewrite or_and.
-  rewrite law_99.
-  rewrite !(or_comm ψ).
-  rewrite law_119.
-  rewrite law_61.
-  rewrite (law_120 (next _)).
   (* FILL IN HERE *)
 Admitted.
 
@@ -871,8 +863,21 @@ Admitted.
 
 Lemma (* 131 *) (*◇ Conﬂuence*) law_131 (φ ψ χ ρ : t) : □ ((φ → ◇ (ψ ∨ χ)) ∧ (ψ → ◇ ρ) ∧ (χ → ◇ ρ)) ⟹ (φ → ◇ ρ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  pose proof (law_124 φ (ψ ∨ χ) ρ).
+  rewrite !law_99 in *.
+  apply (proj1 (and_impl_iff _ _ _)) in H.
+  apply (proj2 (and_impl_iff _ _ _)).
+  rewrite H; clear H.
+  apply or_respects_impl; [|reflexivity].
+  rewrite <- law_99.
+  rewrite !(or_comm _ (◇ ρ)).
+  rewrite <- or_and.
+  apply not_respects_impl; unfold Basics.flip.
+  apply always_respects_impl.
+  apply or_respects_impl; [reflexivity|].
+  rewrite and_def.
+  now boolean.
+Qed.
 
 Lemma (* 132 *) (*Temporal generalization law*) law_132 (φ ψ : t) : □ (□ φ → ψ) ⟹ (□ φ → □ ψ).
 Proof.
