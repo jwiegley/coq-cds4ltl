@@ -846,20 +846,32 @@ Proof.
   now rewrite impl_trans.
 Qed.
 
+Lemma or_impl (φ ψ χ : t) : (φ → χ) ∧ (ψ → χ) ≈ φ ∨ ψ → χ.
+Admitted.
+
 Lemma (* 128 *) (*Induction rule ◇*) law_128 (φ ψ : t) : □ (φ ∨ ◯ ψ → ψ) ⟹ (◇ φ → ψ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite <- or_impl.
+  rewrite law_99.
+  rewrite evn_induction.
+  rewrite law_119.
+  now apply impl_trans.
+Qed.
 
 Lemma (* 129 *) (*Induction rule □*) law_129 (φ ψ : t) : □ (φ → ψ ∧ ◯ φ) ⟹ (φ → □ ψ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  pose proof (always_until_and_ind φ ψ ⊥).
+  rewrite until_right_bottom in H.
+  rewrite !or_false in H.
+  now rewrite and_comm.
+Qed.
 
 Lemma (* 130 *) (*Induction rule U*) law_130 (φ ψ χ : t) : □ (φ → ¬ψ ∧ ◯ φ) ⟹ (φ → ¬(χ U ψ)).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite law_129.
+  rewrite (law_81 (¬ ψ) χ).
+  now rewrite not_not.
+Qed.
 
 Lemma (* 131 *) (*◇ Conﬂuence*) law_131 (φ ψ χ ρ : t) : □ ((φ → ◇ (ψ ∨ χ)) ∧ (ψ → ◇ ρ) ∧ (χ → ◇ ρ)) ⟹ (φ → ◇ ρ).
 Proof.
