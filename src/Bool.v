@@ -46,13 +46,6 @@ Proof.
   now rewrite not_or.
 Qed.
 
-Lemma and_this_not_that (φ ψ : t) : (φ ∧ ψ) ∨ (φ ∧ ¬ψ) ≈ φ.
-Proof.
-  rewrite !and_def.
-  rewrite not_not.
-  now apply huntington.
-Qed.
-
 Lemma and_true (φ : t) : φ ∧ ⊤ ≈ φ.
 Proof.
   rewrite and_def.
@@ -107,38 +100,29 @@ Qed.
 
 Lemma or_absorb (φ ψ : t) : φ ∨ (φ ∧ ψ) ≈ φ.
 Proof.
-  rewrite <- (and_true φ) at 1.
-  rewrite <- and_or.
-  rewrite or_comm.
-  rewrite or_true.
-  now rewrite and_true.
+  rewrite <- (huntington φ ψ) at 1.
+  rewrite and_def.
+  rewrite <- (or_comm (¬(¬φ ∨ ¬ψ))).
+  rewrite <- or_assoc.
+  rewrite or_idem.
+  now apply huntington.
 Qed.
 
 Lemma and_absorb (φ ψ : t) : φ ∧ (φ ∨ ψ) ≈ φ.
 Proof.
-  rewrite <- (or_false φ) at 1.
-  rewrite <- or_and.
-  rewrite and_comm.
-  rewrite and_false.
-  now rewrite or_false.
+  rewrite and_def.
+  rewrite <- (not_not φ) at 2.
+  rewrite <- (not_not ψ).
+  rewrite <- (and_def (¬φ)).
+  rewrite or_absorb.
+  now rewrite not_not.
 Qed.
 
-Lemma or_and (φ ψ χ : t) : φ ∨ (ψ ∧ χ) ≈ (φ ∨ ψ) ∧ (φ ∨ χ).
+Lemma and_this_not_that (φ ψ : t) : (φ ∧ ψ) ∨ (φ ∧ ¬ψ) ≈ φ.
 Proof.
-  rewrite <- (and_this_not_that (φ ∨ ψ ∧ χ) ψ).
-  rewrite <- (huntington φ ψ) as H1.
   rewrite !and_def.
-  now rewrite or_distr_not.
-Qed.
-
-Lemma and_or (φ ψ χ : t) : φ ∧ (ψ ∨ χ) ≈ (φ ∧ ψ) ∨ (φ ∧ χ).
-Proof.
-  pose proof (and_this_not_that φ ψ) as H1.
-  pose proof (huntington φ ψ) as H2.
-  rewrite !and_def.
-  apply not_swap.
-  rewrite or_distr_not.
-  now rewrite !not_not.
+  rewrite not_not.
+  now apply huntington.
 Qed.
 
 Lemma absurdity (φ : t) : φ ∧ ¬φ ≈ ⊥.
@@ -147,12 +131,60 @@ Proof.
   now rewrite <- false_def.
 Qed.
 
+(** This proof was discovered by Don Monk. *)
+Lemma and_or (φ ψ χ : t) : φ ∧ (ψ ∨ χ) ≈ (φ ∧ ψ) ∨ (φ ∧ χ).
+Proof.
+  rewrite <- (and_this_not_that (φ ∧ (ψ ∨ χ)) ψ).
+  rewrite !and_assoc.
+  rewrite (and_comm _ ψ).
+  rewrite and_absorb.
+  rewrite <- (and_this_not_that (φ ∧ ψ) χ) at 1.
+  rewrite <- (and_this_not_that (φ ∧ (ψ ∨ χ) ∧ ¬ψ) χ).
+  rewrite (and_assoc φ ((ψ ∨ χ) ∧ ¬ψ) χ).
+  rewrite (and_comm ((ψ ∨ χ) ∧ ¬ψ) χ).
+  rewrite (or_comm ψ χ) at 1.
+  rewrite <- (and_assoc χ (χ ∨ ψ)).
+  rewrite and_absorb.
+  rewrite !and_assoc.
+  rewrite <- not_or.
+  rewrite absurdity.
+  rewrite and_false.
+  rewrite or_false.
+  rewrite (and_comm χ (¬ψ)).
+  rewrite <- (or_idem (φ ∧ ψ ∧ χ)).
+  rewrite !or_assoc.
+  rewrite (or_comm (φ ∧ ψ ∧ χ)).
+  rewrite !or_assoc.
+  rewrite (or_comm _ (φ ∧ ψ ∧ χ)).
+  rewrite <- or_assoc.
+  rewrite <- and_assoc.
+  rewrite <- and_assoc.
+  rewrite and_this_not_that.
+  rewrite and_assoc.
+  rewrite !(and_comm _ χ).
+  rewrite <- and_assoc.
+  rewrite <- and_assoc.
+  rewrite and_this_not_that.
+  now rewrite (and_comm _ χ).
+Qed.
+
+Lemma or_and (φ ψ χ : t) : φ ∨ (ψ ∧ χ) ≈ (φ ∨ ψ) ∧ (φ ∨ χ).
+Proof.
+  rewrite <- (not_not φ) at 1.
+  rewrite and_def.
+  rewrite <- (not_not (¬¬φ ∨ ¬(¬ψ ∨ ¬χ))).
+  rewrite <- and_def.
+  rewrite and_or.
+  rewrite <- !not_or.
+  now rewrite <- and_def.
+Qed.
+
 Lemma and_proj (φ ψ : t) : φ ∧ ψ ⟹ φ.
 Proof.
-  apply impl_eqv_denote.
+  apply impl_def.
   rewrite and_def.
-  rewrite or_comm.
   rewrite not_not.
+  rewrite or_comm.
   rewrite <- or_assoc.
   rewrite true_def.
   now rewrite true_or.

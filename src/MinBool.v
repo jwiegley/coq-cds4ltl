@@ -81,7 +81,7 @@ Program Instance not_respects_eqv : Proper (eqv ==> eqv) not.
 Declare Instance or_respects_impl : Proper (impl ==> impl ==> impl) or.
 Program Instance or_respects_eqv : Proper (eqv ==> eqv ==> eqv) or.
 
-Hypothesis impl_denote : forall (φ ψ : t), (φ ≈ ⊤ -> ψ ≈ ⊤) <-> (φ ⟹ ψ).
+Hypothesis impl_def : forall (φ ψ : t), (φ ⟹ ψ) <-> (⊤ ⟹ ¬ φ ∨ ψ).
 Hypothesis true_def : forall (φ : t), φ ∨ ¬φ ≈ ⊤.
 Hypothesis false_def : forall (φ : t), ¬(φ ∨ ¬φ) ≈ ⊥.
 
@@ -236,12 +236,23 @@ Proof.
   now apply not_not.
 Qed.
 
+Lemma contrapositive (φ ψ : t) : φ ⟹ ψ <-> ¬ψ ⟹ ¬φ.
+Proof.
+  split; intro.
+  - rewrite H.
+    reflexivity.
+  - apply not_respects_impl in H.
+    now rewrite !not_not in H.
+Qed.
+
 Lemma or_inj (φ ψ : t) : φ ⟹ φ ∨ ψ.
 Proof.
-  apply impl_denote; intro.
-  rewrite H.
-  rewrite or_comm.
-  now rewrite or_true.
+  apply impl_def.
+  rewrite <- or_assoc.
+  rewrite (or_comm _ φ).
+  rewrite true_def.
+  rewrite true_or.
+  reflexivity.
 Qed.
 
 Lemma true_impl (φ : t) : ⊤ ⟹ φ <-> φ ≈ ⊤.
@@ -257,15 +268,6 @@ Lemma excluded_middle (φ : t) : ⊤ ⟹ φ ∨ ¬φ.
 Proof.
   apply true_impl.
   now rewrite <- true_def.
-Qed.
-
-Lemma contrapositive (φ ψ : t) : φ ⟹ ψ <-> ¬ψ ⟹ ¬φ.
-Proof.
-  split; intro.
-  - rewrite H.
-    reflexivity.
-  - apply not_respects_impl in H.
-    now rewrite !not_not in H.
 Qed.
 
 Lemma impl_true (φ : t) : φ ⟹ ⊤.

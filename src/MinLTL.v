@@ -128,29 +128,18 @@ Qed.
 (37) Right absorption of U : (p U q) U q ≡ p U q
 *)
 
-Hypothesis (* 9 *) next_until : forall (φ ψ : t),
-  ◯ (φ U ψ) ≈ (◯ φ) U (◯ ψ).
-Hypothesis (* 10 *) until_expansion : forall (φ ψ : t),
-  φ U ψ ≈ ψ ∨ (φ ∧ ◯ (φ U ψ)).
-Hypothesis (* 11 *) until_right_bottom : forall (φ : t),
-  φ U ⊥ ≈ ⊥.
-Hypothesis (* 12 *) until_left_or : forall (φ ψ χ : t),
-  φ U (ψ ∨ χ) ≈ (φ U ψ) ∨ (φ U χ).
-Hypothesis (* 13 *) until_right_or : forall (φ ψ χ : t),
-  (φ U χ) ∨ (ψ U χ) ⟹ (φ ∨ ψ) U χ.
-Hypothesis (* 14 *) until_left_and : forall (φ ψ χ : t),
-  φ U (ψ ∧ χ) ⟹ (φ U ψ) ∧ (φ U χ).
-Hypothesis (* 15 *) until_right_and : forall (φ ψ χ : t),
-  (φ ∧ ψ) U χ ≈ (φ U χ) ∧ (ψ U χ).
-Hypothesis (* 16 *) until_impl_order : forall (φ ψ χ : t),
-  (φ U ψ) ∧ (¬ψ U χ) ⟹ φ U χ.
-Hypothesis (* 17 *) until_right_or_order : forall (φ ψ χ : t),
-  φ U (ψ U χ) ⟹ (φ ∨ ψ) U χ.
-Hypothesis (* 18 *) until_right_and_order : forall (φ ψ χ : t),
-  φ U (ψ ∧ χ) ⟹ (φ U ψ) U χ.
+Hypothesis (* 9 *) next_until : forall (φ ψ : t), ◯ (φ U ψ) ≈ (◯ φ) U (◯ ψ).
+Hypothesis (* 10 *) until_expansion : forall (φ ψ : t), φ U ψ ≈ ψ ∨ (φ ∧ ◯ (φ U ψ)).
+Hypothesis (* 11 *) until_right_bottom : forall (φ : t), φ U ⊥ ≈ ⊥.
+Hypothesis (* 12 *) until_left_or : forall (φ ψ χ : t), φ U (ψ ∨ χ) ≈ (φ U ψ) ∨ (φ U χ).
+Hypothesis (* 13 *) until_right_or : forall (φ ψ χ : t), (φ U χ) ∨ (ψ U χ) ⟹ (φ ∨ ψ) U χ.
+Hypothesis (* 14 *) until_left_and : forall (φ ψ χ : t), φ U (ψ ∧ χ) ⟹ (φ U ψ) ∧ (φ U χ).
+Hypothesis (* 15 *) until_right_and : forall (φ ψ χ : t), (φ ∧ ψ) U χ ≈ (φ U χ) ∧ (ψ U χ).
+Hypothesis (* 16 *) until_impl_order : forall (φ ψ χ : t), (φ U ψ) ∧ (¬ψ U χ) ⟹ φ U χ.
+Hypothesis (* 17 *) until_right_or_order : forall (φ ψ χ : t), φ U (ψ U χ) ⟹ (φ ∨ ψ) U χ.
+Hypothesis (* 18 *) until_right_and_order : forall (φ ψ χ : t), φ U (ψ ∧ χ) ⟹ (φ U ψ) U χ.
 
-Lemma (* 19 *) until_right_impl (φ ψ χ : t) :
-  (φ → ψ) U χ ⟹ (φ U χ) → (ψ U χ).
+Lemma (* 19 *) until_right_impl (φ ψ χ : t) : (φ → ψ) U χ ⟹ (φ U χ) → (ψ U χ).
 Proof.
   apply and_impl_iff.
   rewrite <- until_right_and.
