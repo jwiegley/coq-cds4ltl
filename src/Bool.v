@@ -28,26 +28,6 @@ Program Instance and_respects_eqv : Proper (eqv ==> eqv ==> eqv) and.
     equivalent to the more basic definition. *)
 Hypothesis and_def : forall (φ ψ : t), φ ∧ ψ ≈ ¬(¬φ ∨ ¬ψ).
 
-Lemma and_or (φ ψ χ : t) : φ ∧ (ψ ∨ χ) ≈ (φ ∧ ψ) ∨ (φ ∧ χ).
-Proof.
-  rewrite !and_def.
-  apply not_swap.
-  rewrite or_distr_not.
-  now rewrite !not_not.
-Qed.
-
-Lemma or_and (φ ψ χ : t) : φ ∨ (ψ ∧ χ) ≈ (φ ∨ ψ) ∧ (φ ∨ χ).
-Proof.
-  rewrite !and_def.
-  now rewrite or_distr_not.
-Qed.
-
-Lemma absurdity (φ : t) : φ ∧ ¬φ ≈ ⊥.
-Proof.
-  rewrite and_def.
-  now rewrite <- false_def.
-Qed.
-
 Lemma not_or (φ ψ : t) : ¬(φ ∨ ψ) ≈ ¬φ ∧ ¬ψ.
 Proof.
   rewrite and_def.
@@ -58,6 +38,19 @@ Lemma not_and (φ ψ : t) : ¬(φ ∧ ψ) ≈ ¬φ ∨ ¬ψ.
 Proof.
   rewrite and_def.
   now rewrite !not_not.
+Qed.
+
+Lemma or_def (φ ψ : t) : φ ∨ ψ ≈ ¬(¬φ ∧ ¬ψ).
+Proof.
+  rewrite <- (not_not (φ ∨ ψ)).
+  now rewrite not_or.
+Qed.
+
+Lemma and_this_not_that (φ ψ : t) : (φ ∧ ψ) ∨ (φ ∧ ¬ψ) ≈ φ.
+Proof.
+  rewrite !and_def.
+  rewrite not_not.
+  now apply huntington.
 Qed.
 
 Lemma and_true (φ : t) : φ ∧ ⊤ ≈ φ.
@@ -128,6 +121,30 @@ Proof.
   rewrite and_comm.
   rewrite and_false.
   now rewrite or_false.
+Qed.
+
+Lemma or_and (φ ψ χ : t) : φ ∨ (ψ ∧ χ) ≈ (φ ∨ ψ) ∧ (φ ∨ χ).
+Proof.
+  rewrite <- (and_this_not_that (φ ∨ ψ ∧ χ) ψ).
+  rewrite <- (huntington φ ψ) as H1.
+  rewrite !and_def.
+  now rewrite or_distr_not.
+Qed.
+
+Lemma and_or (φ ψ χ : t) : φ ∧ (ψ ∨ χ) ≈ (φ ∧ ψ) ∨ (φ ∧ χ).
+Proof.
+  pose proof (and_this_not_that φ ψ) as H1.
+  pose proof (huntington φ ψ) as H2.
+  rewrite !and_def.
+  apply not_swap.
+  rewrite or_distr_not.
+  now rewrite !not_not.
+Qed.
+
+Lemma absurdity (φ : t) : φ ∧ ¬φ ≈ ⊥.
+Proof.
+  rewrite and_def.
+  now rewrite <- false_def.
 Qed.
 
 Lemma and_proj (φ ψ : t) : φ ∧ ψ ⟹ φ.
