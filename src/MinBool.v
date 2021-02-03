@@ -20,7 +20,7 @@ Definition eqv (x y : t) : Prop := impl x y /\ impl y x.
 
 Notation "¬ p"   := (not p)    (at level 0, right associativity).
 Infix    "∨"     := or         (at level 46, right associativity).
-Notation "p → q" := (¬ p ∨ q)  (at level 51, right associativity, only parsing).
+Notation "p → q" := (¬ p ∨ q)  (at level 51, right associativity).
 Notation "⊤"     := true       (at level 0, no associativity).
 Notation "⊥"     := false      (at level 0, no associativity).
 Infix    "⟹"    := impl       (at level 94, right associativity).

@@ -161,6 +161,31 @@ Proof.
   now apply until_left_and.
 Qed.
 
+Lemma until_and_false (φ ψ : t) : φ U ψ ∧ φ U ¬ψ ≈ ⊥.
+Proof.
+Admitted.
+
+Lemma until_impl (φ ψ χ : t) : φ U (ψ → φ U χ) ⟹ φ U ψ → φ U χ.
+Proof.
+  apply and_impl_iff.
+  rewrite until_left_or.
+  rewrite until_left_absorb.
+  rewrite and_comm.
+  rewrite and_or.
+  rewrite until_and_false.
+  now boolean.
+Qed.
+
+Lemma and_evn (φ : t) : φ ∧ ◇ ¬φ ⟹ ◇ (φ ∧ ¬◯ φ).
+Proof.
+  rewrite !evn_def.
+  apply and_impl_iff.
+  rewrite <- until_left_impl.
+  rewrite <- !evn_def.
+  rewrite <- !evn_weaken.
+  now boolean.
+Qed.
+
 (*** 3.4 Always □ *)
 
 (**
@@ -196,7 +221,7 @@ Qed.
 
 Hypothesis (* 54 *) always_def : forall (φ : t), □ φ ≈ ¬◇ ¬φ.
 
-Lemma kripke_axiom (φ ψ : t) : □ (φ → ψ) ⟹ □ φ → □ ψ.
+Lemma always_monotonic (φ ψ : t) : □ (φ → ψ) ⟹ □ φ → □ ψ.
 Proof.
   rewrite !always_def.
   apply and_impl_iff.
@@ -214,60 +239,52 @@ Proof.
   now boolean.
 Qed.
 
-Lemma impl_apply (φ ψ : t) : (φ → ψ) ∧ φ ⟹ φ ∧ ψ.
-Proof. now boolean. Qed.
+Lemma (* 76 *) law_76 (φ : t) : □ φ ⟹ φ.
+Proof.
+  rewrite always_def.
+  apply contrapositive.
+  rewrite not_not.
+  now apply evn_weaken.
+Qed.
 
 Lemma always_apply (φ ψ : t) : □ (φ → ψ) ∧ φ ⟹ □ (φ → ψ) ∧ φ ∧ ψ.
 Proof.
-  enough (forall φ, φ ∧ □ φ ≈ □ φ).
-    rewrite <- H at 1.
-    rewrite and_assoc.
-    rewrite (and_comm _ φ).
-    rewrite <- and_assoc.
-    rewrite impl_apply.
-    boolean.
-Admitted.
+  rewrite <- (and_idem (□ (φ → ψ) ∧ φ)).
+  rewrite law_76 at 2.
+  rewrite impl_apply.
+  rewrite and_assoc.
+  rewrite <- (and_assoc _ _ ψ).
+  now rewrite and_idem.
+Qed.
 
 Lemma (* 57 *) always_induction (φ : t) : □ (φ → ◯ φ) ⟹ (φ → □ φ).
 Proof.
+  assert (¬φ ∨ □ φ ⟹ ¬□ φ ∨ □ φ).
+    apply impl_def.
+    rewrite not_or.
+    rewrite not_not.
+    rewrite and_comm.
+    rewrite (or_comm _ (□ φ)).
+    rewrite true_def.
+    rewrite or_true.
+    reflexivity.
   rewrite !always_def.
   apply contrapositive.
   rewrite !not_or.
   rewrite !not_not.
-  (* φ ∧ ◇ ¬ φ ⟹ ◇ (φ ∧ ¬ ◯ φ) *)
-Admitted.
+  now apply and_evn.
+Qed.
 
 Lemma always_until_or_ind (φ ψ : t) : □ (φ → ◯ (φ ∨ ψ)) ⟹ φ → □ φ ∨ φ U ψ.
 Proof.
-  pose proof (always_induction φ).
-  rewrite <- or_assoc.
-  rewrite <- H.
-  rewrite (always_def (φ → ◯ φ)).
-  rewrite always_def.
-  apply and_impl_iff.
-  rewrite and_proj.
-  apply contrapositive.
-  rewrite not_or.
-  rewrite !not_not.
-  rewrite
   rewrite !always_def.
   apply contrapositive.
   rewrite !not_or.
   rewrite !not_not.
   rewrite <- and_assoc.
+  rewrite and_evn.
   apply and_impl_iff.
   rewrite not_not.
-  rewrite next_or.
-  rewrite not_or.
-  rewrite <- (law_42 φ (and _ _)).
-  rewrite <- until_left_or.
-  rewrite evn_def.
-  rewrite or_and.
-  rewrite (until_insertion ⊤ φ) at 1.
-  rewrite or_and.
-  rewrite !evn_def.
-  rewrite <-  (until _ _).
-  rewrite (law_45 (and _ _)).
 Admitted.
 
 Hypothesis (* 55 *) always_until_and_ind : forall (φ ψ χ : t),

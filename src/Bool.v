@@ -265,4 +265,27 @@ Proof.
   now boolean.
 Qed.
 
+Lemma impl_apply (φ ψ : t) : (φ → ψ) ∧ φ ⟹ φ ∧ ψ.
+Proof. now boolean. Qed.
+
+Lemma or_impl_iff (φ ψ χ : t) : (φ ∨ ψ ⟹ χ) <-> (φ → χ) ∧ (ψ → χ) ≈ ⊤.
+Proof.
+  split; intros.
+  - rewrite !(or_comm _ χ).
+    rewrite <- or_and.
+    rewrite and_def.
+    rewrite !not_not.
+    split.
+    + now apply impl_true.
+    + rewrite <- H at 1.
+      now rewrite true_def.
+  - rewrite !(or_comm _ χ) in H.
+    rewrite <- or_and in H.
+    rewrite and_def in H.
+    rewrite !not_not in H.
+    rewrite or_comm in H.
+    apply impl_def.
+    now rewrite H.
+Qed.
+
 End BooleanLogic.
