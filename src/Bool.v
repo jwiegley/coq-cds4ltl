@@ -237,6 +237,14 @@ Proof.
   now rewrite <- or_assoc.
 Qed.
 
+Lemma or_impl (φ ψ χ : t) : φ ∨ ψ → χ ≈ (φ → χ) ∧ (ψ → χ).
+Proof.
+  rewrite !(or_comm _ χ).
+  rewrite <- or_and.
+  rewrite and_def.
+  now rewrite !not_not.
+Qed.
+
 Lemma and_impl (φ ψ : t) : φ ∧ (φ → ψ) ≈ φ ∧ ψ.
 Proof. now rewrite and_or; boolean. Qed.
 

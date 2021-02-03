@@ -163,25 +163,7 @@ Proof.
   now apply until_left_and.
 Qed.
 
-Lemma until_induction (φ : t) : φ U ¬φ ≈ ⊥.
-Proof.
-  rewrite until_expansion.
-  rewrite or_and.
-  boolean.
-  rewrite next_until.
-  rewrite next_not.
-  split.
-  - apply impl_def.
-    boolean.
-    rewrite not_or.
-    rewrite not_not.
-    admit.
-  - now apply false_impl.
-Abort.
-
-Lemma until_induction (φ : t) : φ U ¬φ ≈ ⊤.
-Abort.
-
+(** Note that this drops the fact that ψ must have been true. *)
 Lemma until_induction (φ ψ : t) : φ ∧ ψ U ¬φ ⟹ ψ U (φ ∧ ¬◯ φ).
 Admitted.
 
@@ -235,35 +217,35 @@ Proof.
   rewrite and_or.
 Abort.
 
-(* Lemma (* 57 *) always_induction (φ : t) : □ (φ → ◯ φ) ⟹ (φ → □ φ). *)
-(* Proof. *)
-(*   assert (¬φ ∨ □ φ ⟹ ¬□ φ ∨ □ φ). *)
-(*     apply impl_def. *)
-(*     rewrite not_or. *)
-(*     rewrite not_not. *)
-(*     rewrite and_comm. *)
-(*     rewrite (or_comm _ (□ φ)). *)
-(*     rewrite true_def. *)
-(*     rewrite or_true. *)
-(*     reflexivity. *)
-(*   rewrite !always_def. *)
-(*   apply contrapositive. *)
-(*   rewrite !not_or. *)
-(*   rewrite !not_not. *)
-(*   now apply and_evn. *)
-(* Qed. *)
+Lemma (* 57 *) always_induction (φ : t) : □ (φ → ◯ φ) ⟹ (φ → □ φ).
+Proof.
+  rewrite !always_def.
+  apply contrapositive.
+  rewrite !not_or.
+  rewrite !not_not.
+  now apply and_evn.
+Qed.
 
-(* Lemma always_until_or_ind (φ ψ : t) : □ (φ → ◯ (φ ∨ ψ)) ⟹ φ → □ φ ∨ φ U ψ. *)
-(* Proof. *)
-(*   rewrite !always_def. *)
-(*   apply contrapositive. *)
-(*   rewrite !not_or. *)
-(*   rewrite !not_not. *)
-(*   rewrite <- and_assoc. *)
-(*   rewrite and_evn. *)
-(*   apply and_impl_iff. *)
-(*   rewrite not_not. *)
-(* Admitted. *)
+Lemma always_until_or_ind (φ ψ : t) : □ (φ → ◯ (φ ∨ ψ)) ⟹ φ → □ φ ∨ φ U ψ.
+Proof.
+  apply and_impl_iff.
+  rewrite !always_def.
+  rewrite not_or.
+  rewrite not_not.
+  rewrite <- next_not.
+  rewrite not_or.
+  rewrite next_and.
+  rewrite !next_not.
+  apply (proj1 (and_impl_iff _ _ _)).
+  rewrite and_assoc.
+  rewrite and_comm.
+  apply and_impl_iff.
+  rewrite not_not.
+  rewrite <- (not_not (φ U ψ)).
+  rewrite or_comm.
+  apply (proj1 (and_impl_iff _ _ _)).
+  rewrite and_assoc.
+Admitted.
 
 Hypothesis (* 55 *) always_until_and_ind : forall (φ ψ χ : t),
   □ (φ → (◯ φ ∧ ψ) ∨ χ) ⟹ φ → □ ψ ∨ ψ U χ.
@@ -919,12 +901,9 @@ Proof.
   now rewrite impl_trans.
 Qed.
 
-Lemma or_impl (φ ψ χ : t) : (φ → χ) ∧ (ψ → χ) ≈ φ ∨ ψ → χ.
-Admitted.
-
 Lemma (* 128 *) (*Induction rule ◇*) law_128 (φ ψ : t) : □ (φ ∨ ◯ ψ → ψ) ⟹ (◇ φ → ψ).
 Proof.
-  rewrite <- or_impl.
+  rewrite or_impl.
   rewrite law_99.
   rewrite evn_induction.
   rewrite law_119.
@@ -1829,6 +1808,18 @@ Lemma law_273 (φ ψ : t) : ¬◇ (¬φ ∧ ψ) ≈ □ (φ ∨ ¬ψ).
 Proof.
   (* FILL IN HERE *)
 Admitted.
+
+Lemma law_274 (φ ψ : t) : ¬◇ (¬φ ∧ ψ) ≈ □ (φ ∨ ¬ψ).
+Proof.
+  apply impl_def.
+  rewrite not_or.
+  rewrite not_not.
+  rewrite and_comm.
+  rewrite (or_comm _ (□ φ)).
+  rewrite true_def.
+  rewrite or_true.
+  reflexivity.
+Qed.
 
 (* Definition examine {a : Type} (P : a -> t) : t := fun s => P (head s) s. *)
 
