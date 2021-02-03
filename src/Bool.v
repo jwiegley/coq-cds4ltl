@@ -290,4 +290,14 @@ Proof.
     now rewrite H.
 Qed.
 
+Lemma impl_iff (φ ψ : t) : φ ⟹ ψ <-> φ → ψ ≈ ⊤.
+Proof.
+  split; intro.
+  - apply true_impl.
+    rewrite <- H.
+    now boolean.
+  - apply impl_def.
+    now rewrite <- H.
+Qed.
+
 End BooleanLogic.

@@ -163,10 +163,23 @@ Proof.
   now apply until_left_and.
 Qed.
 
-Lemma until_induction (φ : t) : φ U ¬φ ≈ ⊤.
+Lemma until_induction (φ : t) : φ U ¬φ ≈ ⊥.
 Proof.
-  apply true_impl.
-  rewrite <- (until_excl_middle φ φ).
+  rewrite until_expansion.
+  rewrite or_and.
+  boolean.
+  rewrite next_until.
+  rewrite next_not.
+  split.
+  - apply impl_def.
+    boolean.
+    rewrite not_or.
+    rewrite not_not.
+    admit.
+  - now apply false_impl.
+Abort.
+
+Lemma until_induction (φ : t) : φ U ¬φ ≈ ⊤.
 Abort.
 
 Lemma until_induction (φ ψ : t) : φ ∧ ψ U ¬φ ⟹ ψ U (φ ∧ ¬◯ φ).
