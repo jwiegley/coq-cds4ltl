@@ -1,3 +1,5 @@
+Set Warnings "-local-declaration".
+
 Require Import
   Coq.Classes.Morphisms
   LTL.
@@ -72,13 +74,13 @@ Proof.
 Qed.
 
 (* jww (2021-01-26): By end_def, ω ≈ ⊥ always. *)
-Lemma end_excl_middle : (ω ≈ ⊤) \/ (ω ≈ ⊥).
-Proof.
-  rewrite !end_def.
-  rewrite next_true.
-  rewrite not_true.
-  now right.
-Qed.
+(* Lemma end_excl_middle : (ω ≈ ⊤) \/ (ω ≈ ⊥). *)
+(* Proof. *)
+(*   rewrite !end_def. *)
+(*   rewrite next_true. *)
+(*   rewrite not_true. *)
+(*   now right. *)
+(* Qed. *)
 
 Lemma wait_expand (φ ψ : t) : φ W ψ ≈ ψ ∨ (φ ∧ ● (φ W ψ)).
 Proof.

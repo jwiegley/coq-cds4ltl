@@ -11,6 +11,8 @@ Require Import
 Open Scope program_scope.
 Open Scope list_scope.
 
+Import ListNotations.
+
 Generalizable All Variables.
 Set Transparent Obligations.
 Set Decidable Equality Schemes.

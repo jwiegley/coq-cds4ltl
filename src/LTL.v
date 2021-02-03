@@ -1,3 +1,5 @@
+Set Warnings "-local-declaration".
+
 Require Import
   Coq.Classes.Morphisms
   MinLTL.
@@ -161,29 +163,19 @@ Proof.
   now apply until_left_and.
 Qed.
 
-Lemma until_and_false (φ ψ : t) : φ U ψ ∧ φ U ¬ψ ≈ ⊥.
+Lemma until_induction (φ : t) : φ U ¬φ ≈ ⊤.
 Proof.
-Admitted.
+  apply true_impl.
+  rewrite <- (until_excl_middle φ φ).
+Abort.
 
-Lemma until_impl (φ ψ χ : t) : φ U (ψ → φ U χ) ⟹ φ U ψ → φ U χ.
-Proof.
-  apply and_impl_iff.
-  rewrite until_left_or.
-  rewrite until_left_absorb.
-  rewrite and_comm.
-  rewrite and_or.
-  rewrite until_and_false.
-  now boolean.
-Qed.
+Lemma until_induction (φ ψ : t) : φ ∧ ψ U ¬φ ⟹ ψ U (φ ∧ ¬◯ φ).
+Admitted.
 
 Lemma and_evn (φ : t) : φ ∧ ◇ ¬φ ⟹ ◇ (φ ∧ ¬◯ φ).
 Proof.
   rewrite !evn_def.
-  apply and_impl_iff.
-  rewrite <- until_left_impl.
-  rewrite <- !evn_def.
-  rewrite <- !evn_weaken.
-  now boolean.
+  now rewrite until_induction.
 Qed.
 
 (*** 3.4 Always □ *)
@@ -221,71 +213,44 @@ Qed.
 
 Hypothesis (* 54 *) always_def : forall (φ : t), □ φ ≈ ¬◇ ¬φ.
 
-Lemma always_monotonic (φ ψ : t) : □ (φ → ψ) ⟹ □ φ → □ ψ.
+Lemma until_impl (φ ψ χ : t) : φ U (ψ → φ U χ) ⟹ φ U ψ → φ U χ.
 Proof.
-  rewrite !always_def.
   apply and_impl_iff.
-  rewrite not_or.
-  rewrite !not_not.
-  rewrite and_def.
-  apply contrapositive.
-  rewrite !not_not.
-  rewrite <- evn_or.
-  rewrite or_comm.
-  rewrite or_and.
-  boolean.
-  apply eventually_respects_impl.
-  apply and_impl_iff.
-  now boolean.
-Qed.
+  rewrite until_left_or.
+  rewrite until_left_absorb.
+  rewrite and_comm.
+  rewrite and_or.
+Abort.
 
-Lemma (* 76 *) law_76 (φ : t) : □ φ ⟹ φ.
-Proof.
-  rewrite always_def.
-  apply contrapositive.
-  rewrite not_not.
-  now apply evn_weaken.
-Qed.
+(* Lemma (* 57 *) always_induction (φ : t) : □ (φ → ◯ φ) ⟹ (φ → □ φ). *)
+(* Proof. *)
+(*   assert (¬φ ∨ □ φ ⟹ ¬□ φ ∨ □ φ). *)
+(*     apply impl_def. *)
+(*     rewrite not_or. *)
+(*     rewrite not_not. *)
+(*     rewrite and_comm. *)
+(*     rewrite (or_comm _ (□ φ)). *)
+(*     rewrite true_def. *)
+(*     rewrite or_true. *)
+(*     reflexivity. *)
+(*   rewrite !always_def. *)
+(*   apply contrapositive. *)
+(*   rewrite !not_or. *)
+(*   rewrite !not_not. *)
+(*   now apply and_evn. *)
+(* Qed. *)
 
-Lemma always_apply (φ ψ : t) : □ (φ → ψ) ∧ φ ⟹ □ (φ → ψ) ∧ φ ∧ ψ.
-Proof.
-  rewrite <- (and_idem (□ (φ → ψ) ∧ φ)).
-  rewrite law_76 at 2.
-  rewrite impl_apply.
-  rewrite and_assoc.
-  rewrite <- (and_assoc _ _ ψ).
-  now rewrite and_idem.
-Qed.
-
-Lemma (* 57 *) always_induction (φ : t) : □ (φ → ◯ φ) ⟹ (φ → □ φ).
-Proof.
-  assert (¬φ ∨ □ φ ⟹ ¬□ φ ∨ □ φ).
-    apply impl_def.
-    rewrite not_or.
-    rewrite not_not.
-    rewrite and_comm.
-    rewrite (or_comm _ (□ φ)).
-    rewrite true_def.
-    rewrite or_true.
-    reflexivity.
-  rewrite !always_def.
-  apply contrapositive.
-  rewrite !not_or.
-  rewrite !not_not.
-  now apply and_evn.
-Qed.
-
-Lemma always_until_or_ind (φ ψ : t) : □ (φ → ◯ (φ ∨ ψ)) ⟹ φ → □ φ ∨ φ U ψ.
-Proof.
-  rewrite !always_def.
-  apply contrapositive.
-  rewrite !not_or.
-  rewrite !not_not.
-  rewrite <- and_assoc.
-  rewrite and_evn.
-  apply and_impl_iff.
-  rewrite not_not.
-Admitted.
+(* Lemma always_until_or_ind (φ ψ : t) : □ (φ → ◯ (φ ∨ ψ)) ⟹ φ → □ φ ∨ φ U ψ. *)
+(* Proof. *)
+(*   rewrite !always_def. *)
+(*   apply contrapositive. *)
+(*   rewrite !not_or. *)
+(*   rewrite !not_not. *)
+(*   rewrite <- and_assoc. *)
+(*   rewrite and_evn. *)
+(*   apply and_impl_iff. *)
+(*   rewrite not_not. *)
+(* Admitted. *)
 
 Hypothesis (* 55 *) always_until_and_ind : forall (φ ψ χ : t),
   □ (φ → (◯ φ ∧ ψ) ∨ χ) ⟹ φ → □ ψ ∨ ψ U χ.
@@ -459,6 +424,16 @@ Proof.
   now apply evn_weaken.
 Qed.
 
+Lemma always_apply (φ ψ : t) : □ (φ → ψ) ∧ φ ⟹ □ (φ → ψ) ∧ φ ∧ ψ.
+Proof.
+  rewrite <- (and_idem (□ (φ → ψ) ∧ φ)).
+  rewrite law_76 at 2.
+  rewrite impl_apply.
+  rewrite and_assoc.
+  rewrite <- (and_assoc _ _ ψ).
+  now rewrite and_idem.
+Qed.
+
 Lemma (* 77 *) law_77 (φ : t) : □ φ ⟹ ◇ φ.
 Proof.
   rewrite <- evn_weaken.
@@ -501,13 +476,8 @@ Qed.
      You cannot use textual substitution in P₁ or P₂.
 *)
 
-Lemma (* 82 *) temporal_deduction (φ ψ : t) : (φ ≈ ⊤ -> ψ ≈ ⊤) -> □ φ ⟹ ψ.
-Proof.
-  intros.
-  apply impl_denote in H.
-  rewrite H.
-  now apply law_76.
-Qed.
+Hypothesis (* 82 *) temporal_deduction : forall (φ ψ : t),
+  (φ ≈ ⊤ -> ψ ≈ ⊤) -> □ φ ⟹ ψ.
 
 (*** 3.6 Always □, Continued *)
 
@@ -1318,13 +1288,6 @@ Admitted.
 *)
 
 Hypothesis (* 169 *) wait_def : forall (φ ψ : t), φ W ψ ≈ □ φ ∨ φ U ψ.
-
-Lemma (* 170 *) not_wait (φ ψ : t) : ¬(φ W ψ) ≈ ¬ψ U (¬φ ∧ ¬ψ).
-Proof.
-  rewrite wait_def.
-  (* FILL IN HERE *)
-Admitted.
-
 Hypothesis (* 170 *) not_wait : forall (φ ψ : t), ¬(φ W ψ) ≈ ¬ψ U (¬φ ∧ ¬ψ).
 
 Lemma (* 171 *) law_171 (* U in terms of W *) (φ ψ : t) : φ U ψ ≈ φ W ψ ∧ ◇ ψ.
@@ -1662,7 +1625,7 @@ Proof.
   (* FILL IN HERE *)
 Admitted.
 
-Lemma (* 237b *) law (**) (φ ψ : t) : ◇ ψ ⟹ □ φ → φ U ψ.
+Lemma law_237b (φ ψ : t) : ◇ ψ ⟹ □ φ → φ U ψ.
 Proof.
   (* FILL IN HERE *)
 Admitted.
@@ -1845,6 +1808,11 @@ Proof.
 Admitted.
 
 Lemma law_272 (φ ψ : t) : ◇ (φ U ψ) ≉ ◇ φ U ◇ ψ.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
+
+Lemma law_273 (φ ψ : t) : ¬◇ (¬φ ∧ ψ) ≈ □ (φ ∨ ¬ψ).
 Proof.
   (* FILL IN HERE *)
 Admitted.

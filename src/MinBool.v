@@ -1,3 +1,5 @@
+Set Warnings "-local-declaration".
+
 Require Import
   Coq.Classes.Morphisms
   Coq.Setoids.Setoid.

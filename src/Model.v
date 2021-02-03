@@ -1,3 +1,5 @@
+Set Warnings "-local-declaration".
+
 Require Import
   Coq.Classes.Morphisms
   Coq.Program.Program
@@ -7,6 +9,7 @@ Require Import
   Stream
   LTL.
 
+(*
 Module StreamLTL <: LinearTemporalLogic.
 
 Variable a : Type.
@@ -22,4 +25,5 @@ Definition next (p : t) : t := fun s => p (from 1 s).
 Definition until (p q : t) : t :=
   fun s => exists i, q (from i s) /\ forall k, k < i -> p (from k s).
 
-Fail End StreamLTL.
+End StreamLTL.
+*)

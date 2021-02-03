@@ -1,3 +1,5 @@
+Set Warnings "-local-declaration".
+
 Require Import
   Coq.Classes.Equivalence
   Coq.Classes.Morphisms
@@ -288,6 +290,21 @@ Proof.
     now apply until_absorb_u_or.
   - rewrite <- until_right_and_order.
     now rewrite and_idem.
+Qed.
+
+Lemma until_left_and_impl (φ ψ χ : t) : φ U ψ ∧ φ U χ ⟹ φ U (ψ ∨ χ).
+Proof.
+  rewrite until_left_or.
+  rewrite and_proj.
+  rewrite <- or_inj.
+  reflexivity.
+Qed.
+
+Lemma until_or_true (φ ψ : t) : φ U ψ ∨ φ U ¬ψ ≈ ⊤.
+Proof.
+  rewrite <- until_left_or.
+  rewrite true_def.
+  now rewrite until_true.
 Qed.
 
 End MinimalLinearTemporalLogic.
