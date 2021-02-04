@@ -53,7 +53,7 @@ Program Instance strong_release_respects_eqv : Proper (eqv ==> eqv ==> eqv) stro
 (53) Distributivity of ◇ over ∧ : ◇ (p ∧ q) ⇒ ◇ p ∧ ◇ q
 *)
 
-Hypothesis (* 38 *) evn_def : forall (φ : t), ◇ φ ≈ ⊤ U φ.
+Axiom (* 38 *) evn_def : forall (φ : t), ◇ φ ≈ ⊤ U φ.
 
 Lemma (* 39 *) law_39 (φ ψ : t) : (φ U ψ) ∧ ◇ ψ ≈ φ U ψ.
 Proof.
@@ -196,7 +196,7 @@ Qed.
 (81) □ p ⇒ ¬(q U ¬p)
 *)
 
-Hypothesis (* 54 *) always_def : forall (φ : t), □ φ ≈ ¬◇ ¬φ.
+Axiom (* 54 *) always_def : forall (φ : t), □ φ ≈ ¬◇ ¬φ.
 
 Lemma (* 55 *) always_until_and_ind (φ ψ χ : t) : □ (φ → (◯ φ ∧ ψ) ∨ χ) ⟹ φ → □ ψ ∨ ψ U χ.
 Proof.
@@ -495,7 +495,7 @@ Qed.
      You cannot use textual substitution in P₁ or P₂.
 *)
 
-Hypothesis (* 82 *) temporal_deduction : forall (φ ψ : t),
+Axiom (* 82 *) temporal_deduction : forall (φ ψ : t),
   (φ ≈ ⊤ -> ψ ≈ ⊤) -> □ φ ⟹ ψ.
 
 (*** 3.6 Always □, Continued *)
@@ -1313,8 +1313,17 @@ Admitted.
 (254) Lemmon formula: □ (□ p → q) ∨ □ (□ q → p)
 *)
 
-Hypothesis (* 169 *) wait_def : forall (φ ψ : t), φ W ψ ≈ □ φ ∨ φ U ψ.
-Hypothesis (* 170 *) not_wait : forall (φ ψ : t), ¬(φ W ψ) ≈ ¬ψ U (¬φ ∧ ¬ψ).
+Axiom (* 169 *) wait_def : forall (φ ψ : t), φ W ψ ≈ □ φ ∨ φ U ψ.
+
+Lemma (* 170 *) not_wait (φ ψ : t) : ¬(φ W ψ) ≈ ¬ψ U (¬φ ∧ ¬ψ).
+Proof.
+  rewrite wait_def.
+  rewrite not_or.
+  rewrite always_def.
+  rewrite not_not.
+  rewrite not_until.
+  rewrite <- evn_def.
+Admitted.
 
 Lemma (* 171 *) law_171 (* U in terms of W *) (φ ψ : t) : φ U ψ ≈ φ W ψ ∧ ◇ ψ.
 Proof.
@@ -1328,6 +1337,9 @@ Admitted.
 
 Lemma (* 173 *) law_173 (*Distributivity of ¬ over U *) (φ ψ : t) : ¬(φ U ψ) ≈ ¬ψ W (¬φ ∧ ¬ψ).
 Proof.
+  rewrite wait_def.
+  rewrite always_def.
+  rewrite not_not.
   (* FILL IN HERE *)
 Admitted.
 
@@ -1743,7 +1755,7 @@ Admitted.
 
 (*** Release R *)
 
-Hypothesis release_def : forall (φ ψ : t), φ R ψ ≈ ¬(¬φ U ¬ψ).
+Axiom release_def : forall (φ ψ : t), φ R ψ ≈ ¬(¬φ U ¬ψ).
 
 Lemma law_256 (φ ψ : t) : φ U ψ ≈ ¬(¬φ R ¬ψ).
 Proof.
@@ -1797,7 +1809,7 @@ Admitted.
 
 (*** Strong Release M *)
 
-Hypothesis strong_release_def : forall (φ ψ : t), φ M ψ ≈ φ U (ψ ∧ φ).
+Axiom strong_release_def : forall (φ ψ : t), φ M ψ ≈ φ U (ψ ∧ φ).
 
 Lemma law_266 (φ ψ : t) : φ W ψ ≈ ¬(¬φ M ¬ψ).
 Proof.
