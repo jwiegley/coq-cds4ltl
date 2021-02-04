@@ -205,6 +205,7 @@ Proof.
   rewrite !not_or.
   rewrite !not_and.
   rewrite !not_not.
+  rewrite evn_def at 1.
   rewrite not_until.
   rewrite until_expansion.
   rewrite or_excl_middle.
@@ -229,26 +230,22 @@ Proof.
   apply contrapositive.
   rewrite !not_or.
   apply (proj1 (contrapositive _ _)).
+  rewrite evn_def at 1.
   rewrite not_until.
   rewrite until_expansion.
-  rewrite or_excl_middle.
+  rewrite (or_excl_middle (¬φ ∧ ¬ψ)).
   rewrite <- (and_assoc (¬(¬φ ∧ ¬ψ))).
   rewrite <- (and_comm _ (¬(¬φ ∧ ¬ψ))).
   rewrite !and_assoc.
   rewrite until_induction.
   rewrite !and_or.
-  rewrite (and_comm φ).
-  rewrite and_assoc.
-  rewrite (and_comm _ φ).
-  rewrite <- (and_assoc φ).
+  rewrite <- (and_assoc φ (¬φ)).
   boolean.
-  rewrite <- !and_assoc.
   rewrite and_comm at 1.
   rewrite and_proj.
   rewrite evn_def.
   apply until_respects_impl.
     now apply impl_true.
-  rewrite !and_assoc.
   rewrite not_and.
   rewrite !not_not.
   rewrite next_and.
@@ -1318,30 +1315,59 @@ Axiom (* 169 *) wait_def : forall (φ ψ : t), φ W ψ ≈ □ φ ∨ φ U ψ.
 Lemma (* 170 *) not_wait (φ ψ : t) : ¬(φ W ψ) ≈ ¬ψ U (¬φ ∧ ¬ψ).
 Proof.
   rewrite wait_def.
+  rewrite <- not_until.
   rewrite not_or.
   rewrite always_def.
-  rewrite not_not.
-  rewrite not_until.
-  rewrite <- evn_def.
-Admitted.
+  rewrite evn_def.
+  now boolean.
+Qed.
 
 Lemma (* 171 *) law_171 (* U in terms of W *) (φ ψ : t) : φ U ψ ≈ φ W ψ ∧ ◇ ψ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite wait_def.
+  rewrite and_comm.
+  rewrite and_or.
+  rewrite and_comm.
+  split.
+  - rewrite or_comm.
+    rewrite <- or_inj.
+    rewrite and_comm.
+    now rewrite law_39.
+  - rewrite law_84.
+    apply or_impl_iff.
+    boolean.
+    rewrite not_and.
+    rewrite or_assoc.
+    now boolean.
+Qed.
 
 Lemma (* 172 *) law_172 (**) (φ ψ : t) : φ W ψ ≈ □ (φ ∧ ¬ψ) ∨ φ U ψ.
 Proof.
-  (* FILL IN HERE *)
+  rewrite wait_def.
+  split.
+  - rewrite law_99.
+    rewrite (or_comm (and _ _)).
+    rewrite or_and.
+    rewrite <- (and_idem (□ φ ∨ φ U ψ)).
+    apply and_respects_impl.
+      now boolean.
+    rewrite or_comm.
+    admit.
+  - apply or_respects_impl; [|reflexivity].
+    apply always_respects_impl.
+    now boolean.
 Admitted.
 
 Lemma (* 173 *) law_173 (*Distributivity of ¬ over U *) (φ ψ : t) : ¬(φ U ψ) ≈ ¬ψ W (¬φ ∧ ¬ψ).
 Proof.
+  rewrite law_171.
+  rewrite not_and.
+  rewrite not_wait.
   rewrite wait_def.
-  rewrite always_def.
-  rewrite not_not.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite or_comm.
+  apply or_respects_eqv; [|reflexivity].
+  now apply law_61.
+Qed.
 
 Lemma (* 174 *) law_174 (*U implication*) (φ ψ : t) : φ U ψ ⟹ φ W ψ.
 Proof.

@@ -318,6 +318,6 @@ Proof.
   now rewrite <- until_expansion.
 Qed.
 
-Axiom not_until : forall (φ ψ : t), ¬(φ U ψ) ≈ ⊤ U ¬φ ∧ ¬ψ U (¬φ ∧ ¬ψ).
+Axiom not_until : forall (φ ψ : t), ⊤ U ¬φ ∧ ¬(φ U ψ) ≈ ¬ψ U (¬φ ∧ ¬ψ).
 
 End MinimalLinearTemporalLogic.
