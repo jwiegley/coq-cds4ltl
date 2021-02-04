@@ -1843,18 +1843,6 @@ Proof.
   (* FILL IN HERE *)
 Admitted.
 
-Lemma law_274 (φ ψ : t) : ¬◇ (¬φ ∧ ψ) ≈ □ (φ ∨ ¬ψ).
-Proof.
-  apply impl_def.
-  rewrite not_or.
-  rewrite not_not.
-  rewrite and_comm.
-  rewrite (or_comm _ (□ φ)).
-  rewrite true_def.
-  rewrite or_true.
-  reflexivity.
-Qed.
-
 (* Definition examine {a : Type} (P : a -> t) : t := fun s => P (head s) s. *)
 
 End LinearTemporalLogic.
