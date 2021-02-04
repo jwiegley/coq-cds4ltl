@@ -45,8 +45,8 @@ Program Instance until_respects_eqv : Proper (eqv ==> eqv ==> eqv) until.
 (8) Falsehood of ◯ : ◯ false ≡ false
 *)
 
-Hypothesis (* 1 *) next_not : forall (φ : t), ◯ ¬φ ≈ ¬◯ φ.
-Hypothesis (* 2 *) next_impl : forall (φ ψ : t), ◯ (φ → ψ) ≈ ◯ φ → ◯ ψ.
+Axiom (* 1 *) next_not : forall (φ : t), ◯ ¬φ ≈ ¬◯ φ.
+Axiom (* 2 *) next_impl : forall (φ ψ : t), ◯ (φ → ψ) ≈ ◯ φ → ◯ ψ.
 
 Lemma (* 3 *) next_linearity (φ : t) : ◯ φ ≈ ¬◯ ¬φ.
 Proof.
@@ -130,16 +130,16 @@ Qed.
 (37) Right absorption of U : (p U q) U q ≡ p U q
 *)
 
-Hypothesis (* 9 *) next_until : forall (φ ψ : t), ◯ (φ U ψ) ≈ (◯ φ) U (◯ ψ).
-Hypothesis (* 10 *) until_expansion : forall (φ ψ : t), φ U ψ ≈ ψ ∨ (φ ∧ ◯ (φ U ψ)).
-Hypothesis (* 11 *) until_right_bottom : forall (φ : t), φ U ⊥ ≈ ⊥.
-Hypothesis (* 12 *) until_left_or : forall (φ ψ χ : t), φ U (ψ ∨ χ) ≈ (φ U ψ) ∨ (φ U χ).
-Hypothesis (* 13 *) until_right_or : forall (φ ψ χ : t), (φ U χ) ∨ (ψ U χ) ⟹ (φ ∨ ψ) U χ.
-Hypothesis (* 14 *) until_left_and : forall (φ ψ χ : t), φ U (ψ ∧ χ) ⟹ (φ U ψ) ∧ (φ U χ).
-Hypothesis (* 15 *) until_right_and : forall (φ ψ χ : t), (φ ∧ ψ) U χ ≈ (φ U χ) ∧ (ψ U χ).
-Hypothesis (* 16 *) until_impl_order : forall (φ ψ χ : t), (φ U ψ) ∧ (¬ψ U χ) ⟹ φ U χ.
-Hypothesis (* 17 *) until_right_or_order : forall (φ ψ χ : t), φ U (ψ U χ) ⟹ (φ ∨ ψ) U χ.
-Hypothesis (* 18 *) until_right_and_order : forall (φ ψ χ : t), φ U (ψ ∧ χ) ⟹ (φ U ψ) U χ.
+Axiom (* 9 *) next_until : forall (φ ψ : t), ◯ (φ U ψ) ≈ (◯ φ) U (◯ ψ).
+Axiom (* 10 *) until_expansion : forall (φ ψ : t), φ U ψ ≈ ψ ∨ (φ ∧ ◯ (φ U ψ)).
+Axiom (* 11 *) until_right_bottom : forall (φ : t), φ U ⊥ ≈ ⊥.
+Axiom (* 12 *) until_left_or : forall (φ ψ χ : t), φ U (ψ ∨ χ) ≈ (φ U ψ) ∨ (φ U χ).
+Axiom (* 13 *) until_right_or : forall (φ ψ χ : t), (φ U χ) ∨ (ψ U χ) ⟹ (φ ∨ ψ) U χ.
+Axiom (* 14 *) until_left_and : forall (φ ψ χ : t), φ U (ψ ∧ χ) ⟹ (φ U ψ) ∧ (φ U χ).
+Axiom (* 15 *) until_right_and : forall (φ ψ χ : t), (φ ∧ ψ) U χ ≈ (φ U χ) ∧ (ψ U χ).
+Axiom (* 16 *) until_impl_order : forall (φ ψ χ : t), (φ U ψ) ∧ (¬ψ U χ) ⟹ φ U χ.
+Axiom (* 17 *) until_right_or_order : forall (φ ψ χ : t), φ U (ψ U χ) ⟹ (φ ∨ ψ) U χ.
+Axiom (* 18 *) until_right_and_order : forall (φ ψ χ : t), φ U (ψ ∧ χ) ⟹ (φ U ψ) U χ.
 
 Lemma (* 19 *) until_right_impl (φ ψ χ : t) : (φ → ψ) U χ ⟹ (φ U χ) → (ψ U χ).
 Proof.
@@ -300,11 +300,36 @@ Proof.
   reflexivity.
 Qed.
 
-Lemma until_or_true (φ ψ : t) : φ U ψ ∨ φ U ¬ψ ≈ ⊤.
+(* φ U ψ : (φ ∧ ψ) ... *)
+(* φ U ψ : ψ ... *)
+(* ⊤ U ψ : ... ψ *)
+(* ⊥ U ψ : ψ *)
+(* ψ U ⊥ : ⊥ *)
+(* ψ U ⊤ : ⊤ *)
+(* φ U ψ : φ φ φ φ φ ψ ... *)
+(* φ U (¬ψ ∧ ◯ ψ) : φ ψ ... *)
+
+(** Describes the transition point for [until] when there is at least one ¬ψ
+    at the beginning, and thus one or more φ. *)
+(* [φ] ψ *)
+(* [φ] φ ψ *)
+(* [φ] φ φ ψ *)
+Axiom until_induction : forall (φ ψ : t), φ ∧ ¬ψ ∧ ◯ (φ U ψ) ≈ φ U (φ ∧ ¬ψ ∧ ◯ ψ).
+
+Lemma until_transition : forall (φ ψ : t), φ U ψ ≈ ψ ∨ φ ∧ φ U (φ ∧ ¬ψ ∧ ◯ ψ).
 Proof.
-  rewrite <- until_left_or.
-  rewrite true_def.
-  now rewrite until_true.
+  intros.
+  rewrite <- until_induction.
+  rewrite <- and_assoc.
+  rewrite and_idem.
+  rewrite or_and.
+  rewrite or_and.
+  boolean.
+  rewrite <- or_and.
+  now rewrite <- until_expansion.
 Qed.
+
+(* ¬(φ U ψ) : φ φ φ (¬φ ∧ ¬ψ) *)
+Axiom not_until : forall (φ ψ : t), ¬(φ U ψ) ≈ ¬ψ U (¬φ ∧ ¬ψ).
 
 End MinimalLinearTemporalLogic.

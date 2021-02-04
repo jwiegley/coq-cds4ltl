@@ -308,4 +308,10 @@ Proof.
     now rewrite <- H.
 Qed.
 
+Lemma or_excl_middle (φ ψ : t) : φ ∨ ψ ⟹ φ ∨ (¬ φ ∧ ψ).
+Proof.
+  rewrite or_and.
+  now boolean.
+Qed.
+
 End BooleanLogic.
