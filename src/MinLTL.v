@@ -300,20 +300,9 @@ Proof.
   reflexivity.
 Qed.
 
-(* φ U ψ : (φ ∧ ψ) ... *)
-(* φ U ψ : ψ ... *)
-(* ⊤ U ψ : ... ψ *)
-(* ⊥ U ψ : ψ *)
-(* ψ U ⊥ : ⊥ *)
-(* ψ U ⊤ : ⊤ *)
-(* φ U ψ : φ φ φ φ φ ψ ... *)
-(* φ U (¬ψ ∧ ◯ ψ) : φ ψ ... *)
-
 (** Describes the transition point for [until] when there is at least one ¬ψ
-    at the beginning, and thus one or more φ. *)
-(* [φ] ψ *)
-(* [φ] φ ψ *)
-(* [φ] φ φ ψ *)
+    at the beginning, and thus one or more φ. In terms of regular expressions
+    this axiom could be written as: [φ¬ψ]φ*ψ ≡ φ*[φ¬ψ]ψ *)
 Axiom until_induction : forall (φ ψ : t), φ ∧ ¬ψ ∧ ◯ (φ U ψ) ≈ φ U (φ ∧ ¬ψ ∧ ◯ ψ).
 
 Lemma until_transition : forall (φ ψ : t), φ U ψ ≈ ψ ∨ φ ∧ φ U (φ ∧ ¬ψ ∧ ◯ ψ).
