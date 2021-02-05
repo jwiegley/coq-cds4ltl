@@ -1408,13 +1408,38 @@ Qed.
 
 Lemma (* 163 *) law_163 (*Eventual latching*) (φ ψ : t) : ◇ □ (φ → □ ψ) ≈ ◇ □ ¬φ ∨ ◇ □ ψ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  assert (A : ◇ □ (φ → □ ψ) ⟹ ◇ (□ ◇ φ → ◇ □ ψ)). {
+    rewrite <- (evn_weaken (□ ◇ φ → ◇ □ ψ)).
+    rewrite <- (law_50 (□ ψ)).
+    rewrite <- law_104.
+    rewrite <- (law_76 (◇ (◇ φ → ◇ □ ψ))).
+    rewrite <- law_152.
+    apply impl_def.
+    rewrite <- law_157.
+    rewrite <- law_119.
+    boolean.
+    now rewrite law_64.
+  }
+  split.
+  - rewrite A.
+    rewrite law_104.
+    rewrite law_72.
+    rewrite law_50.
+    now rewrite law_63.
+  - rewrite <- (law_72 ψ) at 1.
+    now rewrite law_160.
+Qed.
 
 Lemma (* 164 *) law_164 (**) (φ ψ : t) : □ (□ ◇ φ → ◇ ψ) ≈ ◇ □ ¬φ ∨ □ ◇ ψ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  split.
+  - rewrite law_120.
+    rewrite law_72.
+    now rewrite law_63.
+  - rewrite <- law_100.
+    rewrite law_63.
+    now rewrite <- law_152 at 1.
+Qed.
 
 Lemma (* 165 *) law_165 (**) (φ ψ : t) : □ ((φ ∨ □ ψ) ∧ (□ φ ∨ ψ)) ≈ □ φ ∨ □ ψ.
 Proof.
@@ -1423,18 +1448,46 @@ Admitted.
 
 Lemma (* 166 *) law_166 (**) (φ ψ : t) : ◇ □ φ ∧ □ ◇ ψ ⟹ □ ◇ (φ ∧ ψ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  apply and_impl_iff.
+  rewrite <- (law_72 (◇ ψ)).
+  rewrite <- (law_151 (φ ∧ ψ)).
+  rewrite <- law_104.
+  apply eventually_metatheorem.
+  apply and_impl_iff.
+  rewrite <- law_72.
+  rewrite <- law_99.
+  now rewrite law_88.
+Qed.
 
 Lemma (* 167 *) law_167 (**) (φ ψ χ : t) : □ ((□ φ → ◇ ψ) ∧ (ψ → ◯ χ)) ⟹ (□ φ → ◯ □ ◇ χ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  apply and_impl_iff.
+  rewrite law_99.
+  rewrite (evn_weaken (□ φ)) at 2.
+  rewrite law_157.
+  rewrite law_152.
+  rewrite (and_comm _ (always _)).
+  rewrite and_assoc.
+  rewrite impl_apply.
+  rewrite law_50.
+  rewrite (and_comm _ (always _)).
+  rewrite <- and_assoc.
+  rewrite and_proj.
+  rewrite law_157.
+  rewrite impl_apply.
+  rewrite <- law_51.
+  rewrite <- law_73.
+  now boolean.
+Qed.
 
 Lemma (* 168 *) law_168 (*Progress proof rule*) (φ ψ : t) : ◇ □ φ ∧ □ (□ φ → ◇ ψ) ⟹ ◇ ψ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite law_119.
+  rewrite law_50.
+  rewrite and_comm.
+  rewrite impl_apply.
+  now boolean.
+Qed.
 
 (*** 3.9 Wait W *)
 
