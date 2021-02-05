@@ -1640,38 +1640,55 @@ Qed.
 
 Lemma (* 174 *) law_174 (*U implication*) (φ ψ : t) : φ U ψ ⟹ φ W ψ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite law_171.
+  now boolean.
+Qed.
 
 Lemma (* 175 *) law_175 (*Distributivity of ∧ over W *) (φ ψ χ : t) : □ φ ∧ ψ W χ ⟹ (φ ∧ ψ) W (φ ∧ χ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite wait_def.
+  rewrite and_or.
+  rewrite law_83.
+  rewrite <- law_99.
+  now rewrite <- wait_def.
+Qed.
 
 Lemma (* 176 *) law_176 (*W ◇ equivalence*) (φ ψ : t) : φ W ◇ ψ ≈ □ φ ∨ ◇ ψ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite wait_def.
+  now rewrite until_absorb_evn.
+Qed.
 
 Lemma (* 177 *) law_177 (*W □ implication*) (φ ψ : t) : φ W □ ψ ⟹ □ (φ W ψ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite (wait_def _ ψ).
+  rewrite <- law_100.
+  rewrite law_72.
+  rewrite <- law_140.
+  now rewrite <- wait_def.
+Qed.
 
 Lemma (* 178 *) law_178 (*Absorption of W into □ *) (φ : t) : φ W □ φ ≈ □ φ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite wait_def.
+  rewrite law_141.
+  now boolean.
+Qed.
 
 Lemma (* 179 *) law_179 (*Perpetuity*) (φ ψ : t) : □ φ ⟹ φ W ψ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite (or_inj _ (φ U ψ)).
+  now rewrite <- wait_def.
+Qed.
 
 Lemma (* 180 *) law_180 (*Distributivity of ◯ over W *) (φ ψ : t) : ◯ (φ W ψ) ≈ ◯ φ W ◯ ψ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite wait_def.
+  rewrite next_or.
+  rewrite law_73.
+  rewrite next_until.
+  now rewrite <- wait_def.
+Qed.
 
 Lemma (* 181 *) law_181 (*Expansion of W *) (φ ψ : t) : φ W ψ ≈ ψ ∨ (φ ∧ ◯ (φ W ψ)).
 Proof.
