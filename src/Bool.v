@@ -275,7 +275,7 @@ Proof.
   now boolean.
 Qed.
 
-Lemma impl_apply (φ ψ : t) : (φ → ψ) ∧ φ ⟹ φ ∧ ψ.
+Lemma impl_apply (φ ψ : t) : (φ → ψ) ∧ φ ≈ φ ∧ ψ.
 Proof. now boolean. Qed.
 
 Lemma or_impl_iff (φ ψ χ : t) : (φ ∨ ψ ⟹ χ) <-> (φ → χ) ∧ (ψ → χ) ≈ ⊤.
@@ -308,7 +308,7 @@ Proof.
     now rewrite <- H.
 Qed.
 
-Lemma or_excl_middle (φ ψ : t) : φ ∨ ψ ⟹ φ ∨ (¬ φ ∧ ψ).
+Lemma or_excl_middle (φ ψ : t) : φ ∨ ψ ≈ φ ∨ (¬ φ ∧ ψ).
 Proof.
   rewrite or_and.
   now boolean.

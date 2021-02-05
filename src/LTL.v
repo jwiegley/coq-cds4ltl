@@ -198,27 +198,103 @@ Qed.
 
 Axiom (* 54 *) always_def : forall (φ : t), □ φ ≈ ¬◇ ¬φ.
 
-Lemma (* 55 *) always_until_and_ind (φ ψ χ : t) : □ (φ → (◯ φ ∧ ψ) ∨ χ) ⟹ φ → □ ψ ∨ ψ U χ.
+Lemma (* 55 *) helper0 (φ ψ : t) : □ (φ → ◯ φ ∧ ψ) ⟹ φ → □ (φ ∧ ψ).
 Proof.
   rewrite !always_def.
   apply contrapositive.
   rewrite !not_or.
   rewrite !not_and.
   rewrite !not_not.
-  rewrite evn_def at 1.
-  rewrite not_until.
+  rewrite evn_or.
+  rewrite !evn_def.
+  rewrite (until_expansion _ (¬φ)).
+  rewrite and_or.
+  rewrite and_comm.
+  boolean.
+  rewrite next_until.
+  rewrite next_true.
+  rewrite <- and_or.
+  rewrite <- !evn_def.
+  rewrite <- evn_or.
+  rewrite next_not.
+  remember (◯ φ → ¬ ψ) as χ.
+  rewrite !evn_def.
   rewrite until_expansion.
-  rewrite or_excl_middle.
-  rewrite <- (and_assoc (¬(¬ψ ∧ ¬χ))).
-  rewrite (and_comm (¬ (¬ ψ ∧ ¬ χ))).
-  rewrite !and_assoc.
+  boolean.
+  rewrite (or_excl_middle χ).
+  rewrite <- (true_and (¬χ)).
+  rewrite and_assoc.
   rewrite until_induction.
+  boolean.
+  rewrite and_or.
+Abort.
+
+Lemma (* 55 *) helper (φ ψ χ : t) :
+  □ (φ → (◯ φ ∧ ψ) ∨ χ) ⟹ φ → □ (φ ∧ ψ) ∨ (φ ∧ ψ) U χ.
+Proof.
+  rewrite !always_def.
+  apply contrapositive.
+  rewrite !not_or.
   rewrite !not_and.
   rewrite !not_not.
-  rewrite !next_and.
-  rewrite !next_not.
-  rewrite !and_or.
+  rewrite <- (not_not (¬ φ ∨ ¬ ψ)).
+  rewrite <- and_def.
+  rewrite evn_def.
+  rewrite not_until.
+  rewrite not_and.
+  rewrite until_expansion.
+  rewrite or_excl_middle.
+  rewrite not_and.
+  rewrite not_not.
+  rewrite <- and_assoc.
+  rewrite !(and_comm _ (¬χ)).
+  rewrite !and_assoc.
+  rewrite <- (not_not (((φ → ¬ ψ) → χ))).
+  rewrite not_or.
+  rewrite !not_not.
+  rewrite !(and_comm _ (¬χ)).
+  rewrite until_induction.
+  rewrite and_or.
+  rewrite and_comm.
+  rewrite and_assoc.
+  rewrite impl_apply.
+  rewrite <- and_assoc.
+  rewrite (and_comm (¬χ) φ).
+  rewrite and_assoc.
+  rewrite <- and_or.
+  rewrite not_and.
+  rewrite <- and_assoc.
+  rewrite (and_comm (¬χ) (¬ χ → ¬ (φ → ¬ ψ))).
+  rewrite impl_apply.
+  rewrite and_assoc.
+  rewrite not_or.
+  rewrite !not_not.
+  rewrite and_assoc.
+  rewrite (or_comm _ (until _ _)).
+  rewrite or_and.
+  rewrite !(or_comm (until _ _)).
+  rewrite <- !and_assoc.
+  rewrite !(and_comm φ (¬χ)).
+  rewrite !and_assoc.
+  rewrite until_absorb_or_u.
+  rewrite or_and.
+  boolean.
 Admitted.
+
+Lemma (* 55 *) always_until_and_ind (φ ψ χ : t) : □ (φ → (◯ φ ∧ ψ) ∨ χ) ⟹ φ → □ ψ ∨ ψ U χ.
+Proof.
+  rewrite helper.
+  apply or_respects_impl; [reflexivity|].
+  apply or_respects_impl.
+    rewrite !always_def.
+    apply contrapositive.
+    rewrite !not_not.
+    apply eventually_respects_impl.
+    apply contrapositive.
+    now boolean.
+  rewrite until_right_and.
+  now boolean.
+Qed.
 
 Lemma (* 56 *) always_until_or_ind (φ ψ : t) : □ (φ → ◯ (φ ∨ ψ)) ⟹ φ → □ φ ∨ φ U ψ.
 Proof.
@@ -491,6 +567,12 @@ Qed.
      To prove □ P₁ ∧ □ P₂ ⇒ Q, assume P₁ and P₂, and prove Q.
      You cannot use textual substitution in P₁ or P₂.
 *)
+
+Lemma (* 82 *) temporal_deduction : forall (φ ψ : t),
+  (φ ≈ ⊤ -> ψ ≈ ⊤) -> □ φ ⟹ ψ.
+Proof.
+  intros.
+  apply impl_def.
 
 Axiom (* 82 *) temporal_deduction : forall (φ ψ : t),
   (φ ≈ ⊤ -> ψ ≈ ⊤) -> □ φ ⟹ ψ.
