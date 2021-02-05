@@ -566,16 +566,22 @@ Qed.
 (82) Temporal deduction:
      To prove □ P₁ ∧ □ P₂ ⇒ Q, assume P₁ and P₂, and prove Q.
      You cannot use textual substitution in P₁ or P₂.
-*)
+
+This follows from the axiom impl_denote, which denotes implication (⟹) in
+Coq's own logic.
+ *)
 
 Lemma (* 82 *) temporal_deduction : forall (φ ψ : t),
   (φ ≈ ⊤ -> ψ ≈ ⊤) -> □ φ ⟹ ψ.
 Proof.
   intros.
-  apply impl_def.
-
-Axiom (* 82 *) temporal_deduction : forall (φ ψ : t),
-  (φ ≈ ⊤ -> ψ ≈ ⊤) -> □ φ ⟹ ψ.
+  apply impl_denote; intros.
+  apply H.
+  destruct H0.
+  rewrite law_76 in H1.
+  split; auto.
+  now apply impl_true.
+Qed.
 
 (*** 3.6 Always □, Continued *)
 

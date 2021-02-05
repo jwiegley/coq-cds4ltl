@@ -83,7 +83,9 @@ Program Instance not_respects_eqv : Proper (eqv ==> eqv) not.
 Declare Instance or_respects_impl : Proper (impl ==> impl ==> impl) or.
 Program Instance or_respects_eqv : Proper (eqv ==> eqv ==> eqv) or.
 
-Hypothesis impl_def : forall (φ ψ : t), (φ ⟹ ψ) <-> (⊤ ⟹ ¬ φ ∨ ψ).
+(** Implication must have the same meaning as in Coq's own logic. *)
+Hypothesis impl_denote : forall (φ ψ : t), (φ ⟹ ψ) <-> (φ ≈ ⊤ -> ψ ≈ ⊤).
+
 Hypothesis true_def : forall (φ : t), φ ∨ ¬φ ≈ ⊤.
 Hypothesis false_def : forall (φ : t), ¬(φ ∨ ¬φ) ≈ ⊥.
 
@@ -245,6 +247,23 @@ Proof.
     reflexivity.
   - apply not_respects_impl in H.
     now rewrite !not_not in H.
+Qed.
+
+Lemma impl_def : forall (φ ψ : t), (φ ⟹ ψ) <-> (⊤ ⟹ ¬ φ ∨ ψ).
+Proof.
+  split; intros.
+  - rewrite <- H.
+    rewrite or_comm.
+    rewrite true_def.
+    reflexivity.
+  - apply impl_denote; intros.
+    rewrite H0 in H.
+    rewrite not_true in H.
+    rewrite false_or in H.
+    split; auto.
+    clear.
+    apply impl_denote; intros.
+    reflexivity.
 Qed.
 
 Lemma or_inj (φ ψ : t) : φ ⟹ φ ∨ ψ.
