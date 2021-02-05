@@ -1229,98 +1229,182 @@ Qed.
 
 Lemma (* 144 *) law_144 (*Left ∧ U ordering*) (φ ψ χ : t) : (φ ∧ ψ) U χ ⟹ φ U (ψ U χ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  apply impl_def.
+  rewrite <- law_127.
+  rewrite <- (proj1 (impl_def _ _) (and_proj φ ψ)).
+  rewrite <- until_insertion.
+  boolean.
+  now apply law_64.
+Qed.
 
 Lemma (* 145 *) law_145 (*◇ □ implication*) (φ : t) : ◇ □ φ ⟹ □ ◇ φ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite evn_def.
+  rewrite law_140.
+  now rewrite <- evn_def.
+Qed.
 
 Lemma (* 146 *) law_146 (*□ ◇ excluded middle*) (φ : t) : □ ◇ φ ∨ □ ◇ ¬φ ≈ ⊤.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite <- law_62.
+  apply true_impl.
+  rewrite <- law_145.
+  now boolean.
+Qed.
 
 Lemma (* 147 *) law_147 (*◇ □ contradiction*) (φ : t) : ◇ □ φ ∧ ◇ □ ¬φ ≈ ⊥.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  apply not_inj.
+  rewrite not_and.
+  rewrite law_62.
+  rewrite <- law_63.
+  rewrite not_not.
+  rewrite not_false.
+  rewrite or_comm.
+  now apply law_146.
+Qed.
 
 Lemma (* 148 *) law_148 (*U frame law of ◯*) (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ U ψ)).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite <- next_impl.
+  rewrite <- until_insertion.
+  boolean.
+  rewrite next_true.
+  now apply impl_true.
+Qed.
 
 Lemma (* 149 *) law_149 (*U frame law of ◇*) (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ U ψ)).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  apply and_impl_iff.
+  rewrite law_84.
+  now apply evn_weaken.
+Qed.
 
 Lemma (* 150 *) law_150 (*U frame law of □*) (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ U ψ)).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  apply and_impl_iff.
+  rewrite and_comm.
+  rewrite and_proj.
+  now rewrite <- until_insertion.
+Qed.
 
 Lemma (* 151 *) law_151 (*Absorption of ◇ into □ ◇*) (φ : t) : ◇ □ ◇ φ ≈ □ ◇ φ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  split.
+  - rewrite law_145.
+    now rewrite law_50.
+  - now rewrite evn_weaken at 1.
+Qed.
 
 Lemma (* 152 *) law_152 (*Absorption of □ into ◇ □*) (φ : t) : □ ◇ □ φ ≈ ◇ □ φ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite <- (not_not φ) at 1.
+  rewrite <- law_63.
+  rewrite <- law_61.
+  rewrite law_151.
+  rewrite <- law_62.
+  now boolean.
+Qed.
 
 Lemma (* 153 *) law_153 (*Absorption of □ ◇*) (φ : t) : □ ◇ □ ◇ φ ≈ □ ◇ φ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite law_152.
+  now rewrite law_151.
+Qed.
 
 Lemma (* 154 *) law_154 (*Absorption of ◇ □*) (φ : t) : ◇ □ ◇ □ φ ≈ ◇ □ φ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite law_151.
+  now rewrite law_152.
+Qed.
 
 Lemma (* 155 *) law_155 (*Absorption of ◯ into □ ◇*) (φ : t) : ◯ □ ◇ φ ≈ □ ◇ φ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  split.
+  - rewrite (law_47 (□ ◇ φ)).
+    now rewrite law_151.
+  - now apply law_79.
+Qed.
 
 Lemma (* 156 *) law_156 (*Absorption of ◯ into ◇ □*) (φ : t) : ◯ ◇ □ φ ≈ ◇ □ φ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  split.
+  - rewrite law_47.
+    now rewrite law_50.
+  - rewrite <- (law_78 (◇ □ φ)) at 1.
+    now rewrite law_152.
+Qed.
 
 Lemma (* 157 *) law_157 (*Monotonicity of □ ◇*) (φ ψ : t) : □ (φ → ψ) ⟹ (□ ◇ φ → □ ◇ ψ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  transitivity (□ (◇ φ → ◇ ψ)).
+    rewrite <- law_72.
+    apply always_metatheorem.
+    now rewrite law_119.
+  now rewrite law_120.
+Qed.
 
 Lemma (* 158 *) law_158 (*Monotonicity of ◇ □*) (φ ψ : t) : □ (φ → ψ) ⟹ (◇ □ φ → ◇ □ ψ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  transitivity (□ (□ φ → □ ψ)).
+    rewrite <- law_72.
+    apply always_metatheorem.
+    now rewrite law_120.
+  now rewrite law_119.
+Qed.
 
 Lemma (* 159 *) law_159 (*Distributivity of □ ◇ over ∧*) (φ ψ : t) : □ ◇ (φ ∧ ψ) ⟹ □ ◇ φ ∧ □ ◇ ψ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite law_53.
+  now rewrite law_99.
+Qed.
 
 Lemma (* 160 *) law_160 (*Distributivity of ◇ □ over ∨*) (φ ψ : t) : ◇ □ φ ∨ ◇ □ ψ ⟹ ◇ □ (φ ∨ ψ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite <- evn_or.
+  now rewrite law_100.
+Qed.
 
 Lemma (* 161 *) law_161 (*Distributivity of □ ◇ over ∨*) (φ ψ : t) : □ ◇ (φ ∨ ψ) ≈ □ ◇ φ ∨ □ ◇ ψ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+Proof.
+  split.
+  - assert (A : ◇ (◇ (φ ∨ ψ) ∧ □ ¬φ) ⟹ ◇ ψ).
+      rewrite <- (and_proj (◇ ψ) (◇ ¬φ)).
+      rewrite (and_comm (◇ ψ)).
+      rewrite <- law_53.
+      rewrite <- (law_50 (¬ φ ∧ ψ)).
+      rewrite and_comm.
+      apply eventually_metatheorem.
+      rewrite <- (and_absorb (¬φ) ψ) at 2.
+      rewrite law_88.
+      rewrite and_or.
+      now boolean.
+    pose proof (law_88 (◇ (φ ∨ ψ)) (□ ¬φ)).
+    rewrite A in H.
+    apply always_metatheorem in H.
+    rewrite law_99 in H.
+    rewrite law_72 in H.
+    rewrite law_152 in H.
+    apply and_impl_iff in H.
+    rewrite <- law_63 in H.
+    rewrite not_not in H.
+    now apply H.
+  - rewrite evn_or.
+    now rewrite law_100.
+Qed.
 
 Lemma (* 162 *) law_162 (*Distributivity of ◇ □ over ∧*) (φ ψ : t) : ◇ □ (φ ∧ ψ) ≈ ◇ □ φ ∧ ◇ □ ψ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite <- (not_not φ) at 1.
+  rewrite <- (not_not ψ) at 1.
+  rewrite <- not_or.
+  rewrite <- law_63.
+  rewrite law_161.
+  rewrite <- !law_62.
+  rewrite not_or.
+  now boolean.
+Qed.
 
 Lemma (* 163 *) law_163 (*Eventual latching*) (φ ψ : t) : ◇ □ (φ → □ ψ) ≈ ◇ □ ¬φ ∨ ◇ □ ψ.
 Proof.
