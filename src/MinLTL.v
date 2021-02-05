@@ -7,14 +7,13 @@ Require Import
   Bool.
 
 (***********************************************************************
- *
- * This Linear Temporal Logic follows directly from the paper:
+ * This axiomatization of Linear Temporal Logic follows directly from
+ * the paper:
  *
  * "A Calculational Deductive System for Linear Temporal Logic"
  * https://dl.acm.org/doi/10.1145/3387109
  *
- * by Warford, Vega and Staley
- *)
+ * by Warford, Vega and Staley *)
 
 Module Type MinimalLinearTemporalLogic.
 
@@ -35,9 +34,9 @@ Program Instance until_respects_eqv : Proper (eqv ==> eqv ==> eqv) until.
 (*** 3.1 Next ◯ *)
 
 (**
-(1) Axiom, Self-dual : ◯¬p ≡ ¬◯ p
+(1) Axiom, Self-dual : ◯ ¬p ≡ ¬◯ p
 (2) Axiom, Distributivity of ◯ over ⟹ : ◯ (p ⇒ q) ≡ ◯ p ⇒ ◯ q
-(3) Linearity: ◯ p ≡ ¬◯ ¬p
+(3) Linearity : ◯ p ≡ ¬◯ ¬p
 (4) Distributivity of ◯ over ∨ : ◯ (p ∨ q) ◯ ≡ p ∨ ◯ q
 (5) Distributivity of ◯ over ∧ : ◯ (p ∧ q) ◯ ≡ p ∧ ◯ q
 (6) Distributivity of ◯ over ≡ : ◯ (p ≡ q) ≡ ◯ p ≡ ◯ q
@@ -113,7 +112,7 @@ Qed.
 (20) Right zero of U : p U true ≡ true
 (21) Left identity of U : false U q ≡ q
 (22) Idempotency of U : p U p ≡ p
-(23) U excluded middle: p U q ∨ p U ¬q
+(23) U excluded middle : p U q ∨ p U ¬q
 (24) ¬p U (q U r) ∧ p U r ⇒ q U r
 (25) p U (¬q U r) ∧ q U r ⇒ p U r
 (26) p U q ∧ ¬q U p ⇒ p
@@ -121,11 +120,11 @@ Qed.
 (28) p U q ⇒ p ∨ q
 (29) U insertion: q ⇒ p U q
 (30) p ∧ q ⇒ p U q
-(31) Absorption: p ∨ p U q ≡ p ∨ q
-(32) Absorption: p U q ∨ q ≡ p U q
-(33) Absorption: p U q ∧ q ≡ q
-(34) Absorption: p U q ∨ (p ∧ q) ≡ p U q
-(35) Absorption: p U q ∧ (p ∨ q) ≡ p U q
+(31) Absorption : p ∨ p U q ≡ p ∨ q
+(32) Absorption : p U q ∨ q ≡ p U q
+(33) Absorption : p U q ∧ q ≡ q
+(34) Absorption : p U q ∨ (p ∧ q) ≡ p U q
+(35) Absorption : p U q ∧ (p ∨ q) ≡ p U q
 (36) Left absorption of U : p U (p U q) ≡ p U q
 (37) Right absorption of U : (p U q) U q ≡ p U q
 *)
@@ -292,7 +291,7 @@ Proof.
     now rewrite and_idem.
 Qed.
 
-Lemma until_left_and_impl (φ ψ χ : t) : φ U ψ ∧ φ U χ ⟹ φ U (ψ ∨ χ).
+Lemma (* NEW *) until_left_and_impl (φ ψ χ : t) : φ U ψ ∧ φ U χ ⟹ φ U (ψ ∨ χ).
 Proof.
   rewrite until_left_or.
   rewrite and_proj.
@@ -303,9 +302,10 @@ Qed.
 (** Describes the transition point for [until] when there is at least one ¬ψ
     at the beginning, and thus one or more φ. In terms of regular expressions
     this axiom could be written as: [φ¬ψ]φ*ψ ≡ φ*[φ¬ψ]ψ *)
-Axiom until_induction : forall (φ ψ : t), φ ∧ ¬ψ ∧ ◯ (φ U ψ) ≈ φ U (φ ∧ ¬ψ ∧ ◯ ψ).
+Axiom (* NEW *) until_induction : forall (φ ψ : t),
+  φ ∧ ¬ψ ∧ ◯ (φ U ψ) ≈ φ U (φ ∧ ¬ψ ∧ ◯ ψ).
 
-Lemma until_transition : forall (φ ψ : t), φ U ψ ≈ ψ ∨ φ ∧ φ U (φ ∧ ¬ψ ∧ ◯ ψ).
+Lemma (* NEW *) until_transition (φ ψ : t) : φ U ψ ≈ ψ ∨ φ ∧ φ U (φ ∧ ¬ψ ∧ ◯ ψ).
 Proof.
   intros.
   rewrite <- until_induction.
@@ -318,6 +318,6 @@ Proof.
   now rewrite <- until_expansion.
 Qed.
 
-Axiom not_until : forall (φ ψ : t), ⊤ U ¬φ ∧ ¬(φ U ψ) ≈ ¬ψ U (¬φ ∧ ¬ψ).
+Axiom (* NEW *) not_until : forall (φ ψ : t), ⊤ U ¬φ ∧ ¬(φ U ψ) ≈ ¬ψ U (¬φ ∧ ¬ψ).
 
 End MinimalLinearTemporalLogic.

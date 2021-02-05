@@ -5,12 +5,11 @@ Require Import
   Coq.Setoids.Setoid.
 
 (***********************************************************************
- * This is a minimal Boolean Logic comprised of ∨, ¬ and three axioms.
- *)
+ * This is a minimal Boolean Logic comprised of ∨, ¬ and three axioms. *)
 
 Module Type MinimalBooleanLogic.
 
-Parameter t : Type.
+Parameter t : Type.             (* The type of boolean propositions *)
 
 Parameter not : t -> t.
 Parameter or : t -> t -> t.
@@ -232,7 +231,7 @@ Qed.
 Lemma true_or (φ : t) : ⊤ ∨ φ ≈ ⊤.
 Proof. now rewrite or_comm; apply or_true. Qed.
 
-Lemma not_not_or (φ : t) : ¬(¬φ ∨ ¬⊤) ≈ φ.
+Lemma not_not_or_true (φ : t) : ¬(¬φ ∨ ¬⊤) ≈ φ.
 Proof.
   intros.
   rewrite not_true.

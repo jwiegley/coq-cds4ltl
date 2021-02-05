@@ -8,8 +8,7 @@ Require Import
 (***********************************************************************
  * This Boolean Logic adds the concept of ∧, which although it can be
  * defined simply in terms of ∨, this allows for more optimal choices
- * if meant to be used computationally.
- *)
+ * if meant to be used computationally. *)
 
 Module Type BooleanLogic.
 
@@ -25,8 +24,8 @@ Notation "p ≡ q"   := (p ↔ q)         (at level 80, right associativity, onl
 Declare Instance and_respects_impl : Proper (impl ==> impl ==> impl) and.
 Program Instance and_respects_eqv : Proper (eqv ==> eqv ==> eqv) and.
 
-(** "and" is not fundamental, and can be defined in terms of "or". To allow
-    for efficient choices of "and", we simply require that its behavior be
+(** "and" is not fundamental and can be defined using "or". To allow for
+    efficient choices of "and", we simply require that its behavior be
     equivalent to the more basic definition. *)
 Hypothesis and_def : forall (φ ψ : t), φ ∧ ψ ≈ ¬(¬φ ∨ ¬ψ).
 
@@ -170,6 +169,14 @@ Proof.
   now rewrite (and_comm _ χ).
 Qed.
 
+Lemma and_or_r (φ ψ χ : t) : (ψ ∨ χ) ∧ φ ≈ (ψ ∧ φ) ∨ (χ ∧ φ).
+Proof.
+  rewrite and_comm.
+  rewrite and_or.
+  rewrite !(and_comm φ).
+  reflexivity.
+Qed.
+
 Lemma or_and (φ ψ χ : t) : φ ∨ (ψ ∧ χ) ≈ (φ ∨ ψ) ∧ (φ ∨ χ).
 Proof.
   rewrite <- (not_not φ) at 1.
@@ -179,6 +186,14 @@ Proof.
   rewrite and_or.
   rewrite <- !not_or.
   now rewrite <- and_def.
+Qed.
+
+Lemma or_and_r (φ ψ χ : t) : (ψ ∧ χ) ∨ φ ≈ (ψ ∨ φ) ∧ (χ ∨ φ).
+Proof.
+  rewrite or_comm.
+  rewrite or_and.
+  rewrite !(or_comm φ).
+  reflexivity.
 Qed.
 
 Lemma and_proj (φ ψ : t) : φ ∧ ψ ⟹ φ.
@@ -230,12 +245,15 @@ Ltac boolean :=
     | [ |- ?P ∧ ?Q ⟹ ?Q ∧ ?P ] => rewrite (and_comm P Q)
   end.
 
-Lemma impl_and (φ ψ χ : t) : φ ∧ ψ → χ ≈ φ → (ψ → χ).
+Lemma and_impl (φ ψ χ : t) : φ ∧ ψ → χ ≈ φ → (ψ → χ).
 Proof.
   rewrite and_def.
   rewrite not_not.
   now rewrite <- or_assoc.
 Qed.
+
+Lemma impl_and (φ ψ χ : t) : φ → ψ ∧ χ ≈ (φ → ψ) ∧ (φ → χ).
+Proof. now rewrite <- or_and. Qed.
 
 Lemma or_impl (φ ψ χ : t) : φ ∨ ψ → χ ≈ (φ → χ) ∧ (ψ → χ).
 Proof.
@@ -245,7 +263,7 @@ Proof.
   now rewrite !not_not.
 Qed.
 
-Lemma and_impl (φ ψ : t) : φ ∧ (φ → ψ) ≈ φ ∧ ψ.
+Lemma and_apply (φ ψ : t) : φ ∧ (φ → ψ) ≈ φ ∧ ψ.
 Proof. now rewrite and_or; boolean. Qed.
 
 Lemma and_impl_iff (φ ψ χ : t) : φ ∧ ψ ⟹ χ <-> φ ⟹ (ψ → χ).

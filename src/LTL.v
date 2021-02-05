@@ -166,9 +166,9 @@ Qed.
 (*** 3.4 Always □ *)
 
 (**
-(54) Deﬁnition of □ : □ p ≡ ¬◇ ¬p
-(55) Axiom, U Induction: □ (p ⇒ (◯ p ∧ q) ∨ r) ⇒ (p ⇒ □ q ∨ q U r)
-(56) Axiom, U Induction: □ (p ⇒ ◯ (p ∨ q)) ⇒ (p ⇒ □ p ∨ p U q)
+(54) Definition of □ : □ p ≡ ¬◇ ¬p
+(55) Axiom, U Induction : □ (p ⇒ (◯ p ∧ q) ∨ r) ⇒ (p ⇒ □ q ∨ q U r)
+(56) Axiom, U Induction : □ (p ⇒ ◯ (p ∨ q)) ⇒ (p ⇒ □ p ∨ p U q)
 (57) □ Induction: □ (p → ◯ p) ⇒ (p → □ p)
 (58) ◇ Induction: □ (◯ p → p) ⇒ (◇ p → p)
 (59) ◇ p ≡ ¬□ ¬p
@@ -198,7 +198,7 @@ Qed.
 
 Axiom (* 54 *) always_def : forall (φ : t), □ φ ≈ ¬◇ ¬φ.
 
-Lemma (* 55 *) helper0 (φ ψ : t) : □ (φ → ◯ φ ∧ ψ) ⟹ φ → □ (φ ∧ ψ).
+Lemma (* NEW *) helper0 (φ ψ : t) : □ (φ → ◯ φ ∧ ψ) ⟹ φ → □ (φ ∧ ψ).
 Proof.
   rewrite !always_def.
   apply contrapositive.
@@ -229,7 +229,7 @@ Proof.
   rewrite and_or.
 Abort.
 
-Lemma (* 55 *) helper (φ ψ χ : t) :
+Lemma (* NEW *) helper (φ ψ χ : t) :
   □ (φ → (◯ φ ∧ ψ) ∨ χ) ⟹ φ → □ (φ ∧ ψ) ∨ (φ ∧ ψ) U χ.
 Proof.
   rewrite !always_def.
@@ -516,7 +516,7 @@ Proof.
   now apply evn_weaken.
 Qed.
 
-Lemma always_apply (φ ψ : t) : □ (φ → ψ) ∧ φ ⟹ □ (φ → ψ) ∧ φ ∧ ψ.
+Lemma (* NEW *) always_apply (φ ψ : t) : □ (φ → ψ) ∧ φ ⟹ □ (φ → ψ) ∧ φ ∧ ψ.
 Proof.
   rewrite <- (and_idem (□ (φ → ψ) ∧ φ)).
   rewrite law_76 at 2.
@@ -587,21 +587,21 @@ Qed.
 
 (**
 (83) Distributivity of ∧ over U : □ p ∧ q U r ⇒ (p ∧ q) U (p ∧ r)
-(84) U implication: □ p ∧ ◇ q ⇒ p U q
+(84) U implication : □ p ∧ ◇ q ⇒ p U q
 (85) Right monotonicity of U : □ (p → q) ⇒ (r U p → r U q)
 (86) Left monotonicity of U : □ (p → q) ⇒ (p U r → q U r)
 (87) Distributivity of ¬ over □ : □ ¬p ⇒ ¬□ p
 (88) Distributivity of ◇ over ∧ : □ p ∧ ◇ q ⇒ ◇ (p ∧ q)
-(89) ◇ excluded middle: ◇ p ∨ □ ¬p
-(90) □ excluded middle: □ p ∨ ◇ ¬p
-(91) Temporal excluded middle: ◇ p ∨ ◇ ¬p
-(92) ◇ contradiction: ◇ p ∧ □ ¬p ≡ false
-(93) □ contradiction: □ p ∧ ◇ ¬p ≡ false
-(94) Temporal contradiction: □ p ∧ □ ¬p ≡ false
-(95) □ ◇ excluded middle: □ ◇ p ∨ ◇ □ ¬p
-(96) ◇ □ excluded middle: ◇ □ p ∨ □ ◇ ¬p
-(97) □ ◇ contradiction: □ ◇ p ∧ ◇ □ ¬p ≡ false
-(98) ◇ □ contradiction: ◇ □ p ∧ □ ◇ ¬p ≡ false
+(89) ◇ excluded middle : ◇ p ∨ □ ¬p
+(90) □ excluded middle : □ p ∨ ◇ ¬p
+(91) Temporal excluded middle : ◇ p ∨ ◇ ¬p
+(92) ◇ contradiction : ◇ p ∧ □ ¬p ≡ false
+(93) □ contradiction : □ p ∧ ◇ ¬p ≡ false
+(94) Temporal contradiction : □ p ∧ □ ¬p ≡ false
+(95) □ ◇ excluded middle : □ ◇ p ∨ ◇ □ ¬p
+(96) ◇ □ excluded middle : ◇ □ p ∨ □ ◇ ¬p
+(97) □ ◇ contradiction : □ ◇ p ∧ ◇ □ ¬p ≡ false
+(98) ◇ □ contradiction : ◇ □ p ∧ □ ◇ ¬p ≡ false
 (99) Distributivity of □ over ∧ : □ (p ∧ q) ≡ □ p ∧ □ q
 (100) Distributivity of □ over ∨ : □ p ∨ □ q ⇒ □ (p ∨ q)
 (101) Logical equivalence law of ◯ : □ (p ≡ q) ⇒ (◯ p ≡ ◯ q)
@@ -635,8 +635,8 @@ Qed.
 (129) Induction rule □ : □ (p → q ∧ ◯ p) ⇒ (p → □ q)
 (130) Induction rule U : □ (p → ¬q ∧ ◯ p) ⇒ (p → ¬(r U q))
 (131) ◇ Conﬂuence: □ ((p → ◇ (q ∨ r)) ∧ (q → ◇ t) ∧ (r → ◇ t)) ⇒ (p → ◇ t)
-(132) Temporal generalization law: □ (□ p → q) ⇒ (□ p → □ q)
-(133) Temporal particularization law: □ (p → ◇ q) ⇒ (◇ p → ◇ q)
+(132) Temporal generalization law : □ (□ p → q) ⇒ (□ p → □ q)
+(133) Temporal particularization law : □ (p → ◇ q) ⇒ (◇ p → ◇ q)
 (134) □ (p → ◯ q) ⇒ (p → ◇ q)
 (135) □ (p → ◯ ¬p) ⇒ (p → ¬□ p)
 *)
@@ -657,13 +657,13 @@ Proof.
   now boolean.
 Qed.
 
-Corollary law_84b (φ ψ : t) : □ φ ⟹ ◇ ψ → φ U ψ.
+Corollary (* NEW *) law_84b (φ ψ : t) : □ φ ⟹ ◇ ψ → φ U ψ.
 Proof.
   apply and_impl_iff.
   now apply law_84.
 Qed.
 
-Corollary law_84c (φ ψ : t) : ¬(φ U ψ) ⟹ ◇ ψ → ◇ ¬φ.
+Corollary (* NEW *) law_84c (φ ψ : t) : ¬(φ U ψ) ⟹ ◇ ψ → ◇ ¬φ.
 Proof.
   apply contrapositive.
   rewrite not_or.
@@ -1133,12 +1133,12 @@ Proof. now apply always_respects_impl. Qed.
 (**
 (140) U □ implication: p U □ q ⇒ □ (p U q)
 (141) Absorption of U into □ : p U □ p ≡ □ p
-(142) Right ∧ U strengthening: p U (q ∧ r) ⇒ p U (q U r)
-(143) Left ∧ U strengthening: (p ∧ q) U r ⇒ (p U q) U r
-(144) Left ∧ U ordering: (p ∧ q) U r ⇒ p U (q U r)
-(145) ◇ □ implication: ◇ □ p ⇒ □ ◇ p
-(146) □ ◇ excluded middle: □ ◇ p ∨ □ ◇ ¬p
-(147) ◇ □ contradiction: ◇ □ p ∧ ◇ □ ¬p ≡ false
+(142) Right ∧ U strengthening : p U (q ∧ r) ⇒ p U (q U r)
+(143) Left ∧ U strengthening : (p ∧ q) U r ⇒ (p U q) U r
+(144) Left ∧ U ordering : (p ∧ q) U r ⇒ p U (q U r)
+(145) ◇ □ implication : ◇ □ p ⇒ □ ◇ p
+(146) □ ◇ excluded middle : □ ◇ p ∨ □ ◇ ¬p
+(147) ◇ □ contradiction : ◇ □ p ∧ ◇ □ ¬p ≡ false
 (148) U frame law of ◯ : □ p ⇒ (◯ q → ◯ (p U q))
 (149) U frame law of ◇ : □ p ⇒ (◇ q → ◇ (p U q))
 (150) U frame law of □ : □ p ⇒ (□ q → □ (p U q))
@@ -1154,33 +1154,78 @@ Proof. now apply always_respects_impl. Qed.
 (160) Distributivity of ◇ □ over ∨ : ◇ □ p ∨ ◇ □ q ⇒ ◇ □ (p ∨ q)
 (161) Distributivity of □ ◇ over ∨ : □ ◇ (p ∨ q) ≡ □ ◇ p ∨ □ ◇ q
 (162) Distributivity of ◇ □ over ∧ : ◇ □ (p ∧ q) ≡ ◇ □ p ∧ ◇ □ q
-(163) Eventual latching: ◇ □ (p → □ q) ≡ ◇ □ ¬p ∨ ◇ □ q
+(163) Eventual latching : ◇ □ (p → □ q) ≡ ◇ □ ¬p ∨ ◇ □ q
 (164) □ (□ ◇ p → ◇ q) ≡ ◇ □ ¬p ∨ □ ◇ q
 (165) □ ((p ∨ □ q) ∧ (□ p ∨ q)) ≡ □ p ∨ □ q
 (166) ◇ □ p ∧ □ ◇ q ⇒ □ ◇ (p ∧ q)
 (167) □ ((□ p → ◇ q) ∧ (q → ◯ r)) ⇒ (□ p → ◯ □ ◇ r)
-(168) Progress proof rule: □ p ∧ □ (□ p → ◇ q) ⇒ ◇ q
+(168) Progress proof rule : □ p ∧ □ (□ p → ◇ q) ⇒ ◇ q
 *)
 
 Lemma (* 140 *) law_140 (*U □ implication*) (φ ψ : t) : φ U □ ψ ⟹ □ (φ U ψ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  assert (A : □ (φ U □ ψ → φ U ψ) ≈ ⊤).
+    apply true_impl.
+    rewrite <- (law_85 (□ ψ) ψ φ).
+    pose proof (law_76 ψ).
+    apply impl_def in H.
+    rewrite <- H.
+    now rewrite !law_64.
+  assert (B : □ (φ U □ ψ → ◯ (φ U □ ψ)) ≈ ⊤).
+    rewrite next_until.
+    rewrite <- (until_absorb_u_or (◯ φ)).
+    rewrite (or_comm _ (◯ □ ψ)).
+    rewrite <- next_until.
+    apply true_impl.
+    pose proof (and_proj (◯ □ ψ ∨ ◯ (φ U □ ψ)) (ψ ∨ ◯ (φ U □ ψ))).
+    rewrite <- H.
+    rewrite (and_comm _ (ψ ∨ ◯ (φ U □ ψ))).
+    rewrite <- or_and_r.
+    rewrite <- law_66.
+    pose proof (and_proj (□ ψ ∨ ◯ (φ U □ ψ)) (□ ψ ∨ φ)).
+    rewrite <- H0.
+    rewrite and_comm.
+    rewrite <- or_and.
+    rewrite <- until_expansion.
+    boolean.
+    now rewrite law_64.
+  pose proof (law_129 (φ U □ ψ) (φ U ψ)).
+  apply impl_def.
+  rewrite <- H.
+  rewrite impl_and.
+  rewrite law_99.
+  rewrite A.
+  rewrite B.
+  now boolean.
+Qed.
 
 Lemma (* 141 *) law_141 (*Absorption of U into □*) (φ : t) : φ U □ φ ≈ □ φ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  split.
+  - rewrite law_140.
+    now rewrite until_idem.
+  - now apply until_insertion.
+Qed.
 
 Lemma (* 142 *) law_142 (*Right ∧ U strengthening*) (φ ψ χ : t) : φ U (ψ ∧ χ) ⟹ φ U (ψ U χ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  pose proof (law_85 (ψ ∧ χ) (ψ U χ) φ).
+  apply impl_def.
+  rewrite <- H.
+  rewrite <- until_30.
+  boolean.
+  now apply law_64.
+Qed.
 
 Lemma (* 143 *) law_143 (*Left ∧ U strengthening*) (φ ψ χ : t) : (φ ∧ ψ) U χ ⟹ (φ U ψ) U χ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  pose proof (law_86 (φ ∧ ψ) (φ U ψ)).
+  apply impl_def.
+  rewrite <- H.
+  rewrite <- until_30.
+  boolean.
+  now apply law_64.
+Qed.
 
 Lemma (* 144 *) law_144 (*Left ∧ U ordering*) (φ ψ χ : t) : (φ ∧ ψ) U χ ⟹ φ U (ψ U χ).
 Proof.
@@ -1431,20 +1476,19 @@ Qed.
 
 Lemma (* 172 *) law_172 (**) (φ ψ : t) : φ W ψ ≈ □ (φ ∧ ¬ψ) ∨ φ U ψ.
 Proof.
-  rewrite wait_def.
-  split.
-  - rewrite law_99.
-    rewrite (or_comm (and _ _)).
-    rewrite or_and.
-    rewrite <- (and_idem (□ φ ∨ φ U ψ)).
-    apply and_respects_impl.
-      now boolean.
-    rewrite or_comm.
-    admit.
-  - apply or_respects_impl; [|reflexivity].
-    apply always_respects_impl.
-    now boolean.
-Admitted.
+  rewrite law_99.
+  rewrite or_comm.
+  rewrite or_and.
+  rewrite or_comm.
+  rewrite <- wait_def.
+  rewrite law_171.
+  rewrite or_comm.
+  rewrite or_and.
+  rewrite !(or_comm (always _)).
+  rewrite law_89.
+  rewrite and_true.
+  now rewrite and_absorb.
+Qed.
 
 Lemma (* 173 *) law_173 (*Distributivity of ¬ over U *) (φ ψ : t) : ¬(φ U ψ) ≈ ¬ψ W (¬φ ∧ ¬ψ).
 Proof.
@@ -1777,7 +1821,7 @@ Proof.
   (* FILL IN HERE *)
 Admitted.
 
-Lemma law_237b (φ ψ : t) : ◇ ψ ⟹ □ φ → φ U ψ.
+Lemma (* NEW *) law_237b (φ ψ : t) : ◇ ψ ⟹ □ φ → φ U ψ.
 Proof.
   (* FILL IN HERE *)
 Admitted.
