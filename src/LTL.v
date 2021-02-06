@@ -196,13 +196,69 @@ Qed.
 (81) □ p ⇒ ¬(q U ¬p)
 *)
 
+Axiom until_continue : forall (φ ψ : t), ψ ∧ φ U ◯ ¬ψ ⟹ φ U (ψ ∧ ◯ ¬ψ).
+
 Axiom (* 54 *) always_def : forall (φ : t), □ φ ≈ ¬◇ ¬φ.
 Axiom (* 55 *) always_until_and_ind : forall (φ ψ χ : t),
   □ (φ → (◯ φ ∧ ψ) ∨ χ) ⟹ φ → □ ψ ∨ ψ U χ.
-Axiom (* 56 *) always_until_or_ind : forall (φ ψ : t),
-  □ (φ → ◯ (φ ∨ ψ)) ⟹ φ → □ φ ∨ φ U ψ.
 
-Axiom until_continue : forall (φ ψ : t), ψ ∧ φ U ◯ ¬ψ ⟹ φ U (ψ ∧ ◯ ¬ψ).
+Lemma (* 73 *) law_73 (φ : t) : ◯ □ φ ≈ □ ◯ φ.
+Proof.
+  rewrite !always_def.
+  rewrite next_not.
+  rewrite law_51.
+  now rewrite <- next_not.
+Qed.
+
+Lemma (* 66 *) law_66 (φ : t) : □ φ ≈ φ ∧ ◯ □ φ.
+Proof.
+  rewrite always_def.
+  rewrite law_45 at 1.
+  rewrite not_or.
+  rewrite not_not.
+  now rewrite next_not.
+Qed.
+
+Lemma (* 56 *) always_until_or_ind : forall (φ ψ : t),
+  □ (φ → ◯ (φ ∨ ψ)) ⟹ φ → □ φ ∨ φ U ψ.
+Proof.
+  intros.
+  pose proof (always_until_and_ind φ (◯ φ) (◯ ψ)).
+  rewrite and_idem in H.
+  rewrite <- next_or in H.
+  rewrite H; clear H.
+  (* rewrite (until_expansion φ ψ). *)
+  (* rewrite (law_66 φ). *)
+  (* rewrite law_73. *)
+  (* rewrite next_until. *)
+  (* apply or_respects_impl; [reflexivity|]. *)
+  (* Set Printing Parentheses. *)
+  (* rewrite <- or_assoc. *)
+  (* rewrite (or_comm (and _ _)). *)
+  (* rewrite or_assoc. *)
+  (* rewrite <- and_or. *)
+  (* rewrite or_and. *)
+  (* apply or_respects_impl; [reflexivity|]. *)
+  rewrite <- next_until.
+  rewrite <- law_73.
+  rewrite <- next_or.
+  rewrite law_66 at 2.
+  rewrite until_expansion at 2.
+  rewrite !or_and.
+  rewrite <- !or_assoc.
+  rewrite !or_and.
+  boolean.
+  rewrite <- !or_and.
+  rewrite !or_assoc.
+  rewrite (or_comm ψ).
+  rewrite <- (or_inj _ ψ).
+  rewrite !or_and.
+  rewrite !(or_comm _ φ).
+  rewrite <- !or_assoc.
+  boolean.
+  rewrite or_assoc.
+  now rewrite next_or.
+Qed.
 
 Lemma (* 57 *) always_induction (φ : t) : □ (φ → ◯ φ) ⟹ (φ → □ φ).
 Proof.
