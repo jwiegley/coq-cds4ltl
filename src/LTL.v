@@ -1692,153 +1692,264 @@ Qed.
 
 Lemma (* 181 *) law_181 (*Expansion of W *) (φ ψ : t) : φ W ψ ≈ ψ ∨ (φ ∧ ◯ (φ W ψ)).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite wait_def at 2.
+  rewrite next_or.
+  rewrite and_or.
+  rewrite <- law_66.
+  rewrite <- or_assoc.
+  rewrite (or_comm ψ).
+  rewrite or_assoc.
+  rewrite <- until_expansion.
+  now rewrite <- wait_def.
+Qed.
 
 Lemma (* 182 *) law_182 (*W excluded middle*) (φ ψ : t) : φ W ψ ∨ φ W ¬ψ ≈ ⊤.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite law_181.
+  rewrite (law_181 _ (¬ψ)).
+  rewrite (or_comm ψ).
+  rewrite or_assoc.
+  rewrite !or_and.
+  rewrite <- (or_assoc ψ).
+  boolean.
+  rewrite <- (or_assoc ψ).
+  now boolean.
+Qed.
 
 Lemma (* 183 *) law_183 (*Left zero of W *) (ψ : t) : ⊤ W ψ ≈ ⊤.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite wait_def.
+  rewrite law_64.
+  now boolean.
+Qed.
 
 Lemma (* 184 *) law_184 (*Left distributivity of W over ∨ *) (φ ψ χ : t) : φ W (ψ ∨ χ) ≈ φ W ψ ∨ φ W χ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite wait_def.
+  rewrite until_left_or.
+  rewrite <- (or_idem (□ φ)).
+  rewrite or_assoc.
+  rewrite <- (or_assoc (□ φ) (until _ _)).
+  rewrite or_comm.
+  rewrite !or_assoc.
+  rewrite (or_comm (until _ _) (□ φ)).
+  rewrite <- wait_def.
+  rewrite <- or_assoc.
+  now rewrite <- wait_def.
+Qed.
 
 Lemma (* 185 *) law_185 (*Right distributivity of W over ∨ *) (φ ψ χ : t) : φ W χ ∨ ψ W χ ⟹ (φ ∨ ψ) W χ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite 2 wait_def.
+  rewrite <- or_assoc.
+  rewrite (or_comm _ (□ ψ)).
+  rewrite <- or_assoc.
+  rewrite (or_comm (□ ψ)).
+  rewrite law_100.
+  rewrite !or_assoc.
+  rewrite until_right_or.
+  now rewrite <- wait_def.
+Qed.
 
 Lemma (* 186 *) law_186 (*Left distributivity of W over ∧ *) (φ ψ χ : t) : φ W (ψ ∧ χ) ⟹ φ W ψ ∧ φ W χ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite wait_def.
+  rewrite until_left_and.
+  rewrite or_and.
+  now rewrite <- !wait_def.
+Qed.
 
 Lemma (* 187 *) law_187 (*Right distributivity of W over ∧ *) (φ ψ χ : t) : (φ ∧ ψ) W χ ≈ φ W χ ∧ ψ W χ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite <- not_not.
+  rewrite not_wait.
+  rewrite (and_comm _ (¬χ)).
+  rewrite not_and.
+  rewrite and_or.
+  rewrite !(and_comm (¬χ)).
+  rewrite until_left_or.
+  rewrite <- !not_wait.
+  rewrite <- not_and.
+  now boolean.
+Qed.
 
 Lemma (* 188 *) law_188 (*Right distributivity of W over ⟹ *) (φ ψ χ : t) : (φ → ψ) W χ ⟹ (φ W χ → ψ W χ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  apply and_impl_iff.
+  rewrite <- law_187.
+  rewrite impl_apply.
+  rewrite law_187.
+  now boolean.
+Qed.
 
 Lemma (* 189 *) law_189 (*Disjunction rule of W *) (φ ψ : t) : φ W ψ ≈ (φ ∨ ψ) W ψ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite <- not_not.
+  rewrite not_wait.
+  rewrite law_173.
+  rewrite !not_and.
+  boolean.
+  rewrite or_comm.
+  now rewrite and_absorb.
+Qed.
 
 Lemma (* 190 *) law_190 (*Disjunction rule of U *) (φ ψ : t) : φ U ψ ≈ (φ ∨ ψ) U ψ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite <- not_not.
+  rewrite law_173.
+  rewrite not_wait.
+  rewrite !not_and.
+  boolean.
+  rewrite or_comm.
+  now rewrite and_absorb.
+Qed.
 
 Lemma (* 191 *) law_191 (*Rule of W *) (ψ : t) : ¬ψ W ψ ≈ ⊤.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite law_189.
+  boolean.
+  now rewrite law_183.
+Qed.
 
 Lemma (* 192 *) law_192 (*Rule of U *) (ψ : t) : ¬ψ U ψ ≈ ◇ ψ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite law_190.
+  boolean.
+  now rewrite evn_def.
+Qed.
 
 Lemma (* 193 *) law_193 (**) (φ ψ : t) : (φ → ψ) W φ ≈ ⊤.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  apply true_impl.
+  rewrite <- law_185.
+  rewrite law_191.
+  now boolean.
+Qed.
 
 Lemma (* 194 *) law_194 (**) (φ ψ : t) : ◇ φ ⟹ (φ → ψ) U φ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite <- until_right_or.
+  rewrite <- or_inj.
+  now rewrite <- law_192.
+Qed.
 
 Lemma (* 195 *) law_195 (*Conjunction rule of W *) (φ ψ : t) : φ W ψ ≈ (φ ∧ ¬ψ) W ψ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite law_187.
+  rewrite law_191.
+  now boolean.
+Qed.
 
 Lemma (* 196 *) law_196 (*Conjunction rule of U *) (φ ψ : t) : φ U ψ ≈ (φ ∧ ¬ψ) U ψ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite (law_171 (and _ _)).
+  rewrite <- law_195.
+  now rewrite <- law_171.
+Qed.
 
 Lemma (* 197 *) law_197 (*Distributivity of ¬ over W *) (φ ψ : t) : ¬(φ W ψ) ≈ (φ ∧ ¬ψ) U (¬φ ∧ ¬ψ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite not_wait.
+  rewrite law_196.
+  rewrite not_and.
+  boolean.
+  rewrite and_or.
+  boolean.
+  now rewrite and_comm.
+Qed.
 
 Lemma (* 198 *) law_198 (*Distributivity of ¬ over U *) (φ ψ : t) : ¬(φ U ψ) ≈ (φ ∧ ¬ψ) W (¬φ ∧ ¬ψ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite law_173.
+  rewrite law_195.
+  rewrite not_and.
+  boolean.
+  rewrite and_or.
+  boolean.
+  now rewrite and_comm.
+Qed.
 
 Lemma (* 199 *) law_199 (*Dual of U *) (φ ψ : t) : ¬(¬φ U ¬ψ) ≈ ψ W (φ ∧ ψ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite law_173.
+  now boolean.
+Qed.
 
 Lemma (* 200 *) law_200 (*Dual of U *) (φ ψ : t) : ¬(¬φ U ¬ψ) ≈ (¬φ ∧ ψ) W (φ ∧ ψ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite law_198.
+  now boolean.
+Qed.
 
 Lemma (* 201 *) law_201 (*Dual of W *) (φ ψ : t) : ¬(¬φ W ¬ψ) ≈ ψ U (φ ∧ ψ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite not_wait.
+  now boolean.
+Qed.
 
 Lemma (* 202 *) law_202 (*Dual of W *) (φ ψ : t) : ¬(¬φ W ¬ψ) ≈ (¬φ ∧ ψ) U (φ ∧ ψ).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite law_197.
+  now boolean.
+Qed.
 
 Lemma (* 203 *) law_203 (*Idempotency of W *) (φ : t) : φ W φ ≈ φ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite wait_def.
+  rewrite until_idem.
+  now rewrite law_69.
+Qed.
 
 Lemma (* 204 *) law_204 (*Right zero of W *) (φ : t) : φ W ⊤ ≈ ⊤.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite wait_def.
+  rewrite until_true.
+  now boolean.
+Qed.
 
 Lemma (* 205 *) law_205 (*Left identity of W *) (ψ : t) : ⊥ W ψ ≈ ψ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite wait_def.
+  rewrite false_until.
+  rewrite law_65.
+  now boolean.
+Qed.
 
 Lemma (* 206 *) law_206 (**) (φ ψ : t) : φ W ψ ⟹ φ ∨ ψ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite law_181.
+  rewrite or_and.
+  rewrite or_comm.
+  now boolean.
+Qed.
 
 Lemma (* 207 *) law_207 (**) (φ ψ : t) : □ (φ ∨ ψ) ⟹ φ W ψ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite law_179.
+  now rewrite <- law_189.
+Qed.
 
 Lemma (* 208 *) law_208 (**) (φ ψ : t) : □ (¬ψ → φ) ⟹ φ W ψ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite or_comm.
+  rewrite not_not.
+  now rewrite law_207.
+Qed.
 
 Lemma (* 209 *) law_209 (*W insertion*) (φ ψ : t) : ψ ⟹ φ W ψ.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite law_181.
+  now boolean.
+Qed.
 
 Lemma (* 210 *) law_210 (*W frame law of ◯ *) (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ W ψ)).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite <- next_impl.
+  rewrite <- law_209.
+  boolean.
+  rewrite next_true.
+  now apply impl_true.
+Qed.
 
 Lemma (* 211 *) law_211 (*W frame law of ◇ *) (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ W ψ)).
 Proof.
