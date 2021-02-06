@@ -145,7 +145,7 @@ Proof.
   apply and_impl_iff.
   rewrite <- until_right_and.
   rewrite and_comm.
-  rewrite and_impl.
+  rewrite and_apply.
   rewrite until_right_and.
   rewrite and_comm.
   now apply and_proj.
@@ -297,25 +297,6 @@ Proof.
   rewrite and_proj.
   rewrite <- or_inj.
   reflexivity.
-Qed.
-
-(** Describes the transition point for [until] when there is at least one ¬ψ
-    at the beginning, and thus one or more φ. In terms of regular expressions
-    this axiom could be written as: [φ¬ψ]φ*ψ ≡ φ*[φ¬ψ]ψ *)
-Axiom (* NEW *) until_induction : forall (φ ψ : t),
-  φ ∧ ¬ψ ∧ ◯ (φ U ψ) ≈ φ U (φ ∧ ¬ψ ∧ ◯ ψ).
-
-Lemma (* NEW *) until_transition (φ ψ : t) : φ U ψ ≈ ψ ∨ φ ∧ φ U (φ ∧ ¬ψ ∧ ◯ ψ).
-Proof.
-  intros.
-  rewrite <- until_induction.
-  rewrite <- and_assoc.
-  rewrite and_idem.
-  rewrite or_and.
-  rewrite or_and.
-  boolean.
-  rewrite <- or_and.
-  now rewrite <- until_expansion.
 Qed.
 
 Axiom (* NEW *) not_until : forall (φ ψ : t), ⊤ U ¬φ ∧ ¬(φ U ψ) ≈ ¬ψ U (¬φ ∧ ¬ψ).
