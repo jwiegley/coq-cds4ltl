@@ -196,6 +196,20 @@ Proof.
   reflexivity.
 Qed.
 
+Lemma or_not_absorb (φ ψ : t) : φ ∨ (¬φ ∧ ψ) ≈ φ ∨ ψ.
+Proof.
+  rewrite or_and.
+  rewrite true_def.
+  now rewrite true_and.
+Qed.
+
+Lemma and_not_absorb (φ ψ : t) : φ ∧ (¬φ ∨ ψ) ≈ φ ∧ ψ.
+Proof.
+  rewrite and_or.
+  rewrite absurdity.
+  now rewrite false_or.
+Qed.
+
 Lemma and_proj (φ ψ : t) : φ ∧ ψ ⟹ φ.
 Proof.
   apply impl_def.
@@ -330,6 +344,18 @@ Lemma or_excl_middle (φ ψ : t) : φ ∨ ψ ≈ φ ∨ (¬ φ ∧ ψ).
 Proof.
   rewrite or_and.
   now boolean.
+Qed.
+
+Lemma or_monotonicity (φ ψ χ : t) : (φ → ψ) ⟹ (φ ∨ χ → ψ ∨ χ).
+Proof.
+  rewrite not_or.
+  rewrite <- or_assoc.
+  rewrite !or_and_r.
+  rewrite !(or_comm _ χ).
+  rewrite <- !or_assoc.
+  boolean.
+  rewrite (or_comm χ).
+  now rewrite <- (or_inj _ χ).
 Qed.
 
 End BooleanLogic.
