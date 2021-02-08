@@ -6,6 +6,7 @@ Require Import
   Coq.Sets.Classical_sets
   Coq.Sets.Ensembles
   Coq.Unicode.Utf8
+  Coq.micromega.Lia
   Same_set
   Stream
   LTL.
@@ -35,10 +36,15 @@ Next Obligation.
   now intuition.
 Qed.
 
-Definition next : t -> t :=
-  λ p s, (s, 1) ⊨ p.
+Definition next : t -> t := λ p s,（s, 1）⊨ p.
 
-Theorem next_semantics : ∀ σ j p, (σ, j) ⊨ ◯ p <-> (σ, j + 1) ⊨ p.
+Declare Scope ltl_scope.
+Bind Scope ltl_scope with t.
+Open Scope ltl_scope.
+
+Notation "◯ p"     := (next p)    (at level 75, right associativity) : ltl_scope.
+
+Theorem next_semantics : ∀ σ j p,（σ, j）⊨ (◯ p) <->（σ, j + 1）⊨ p.
 Proof.
   unfold next.
   split; intros.
@@ -49,12 +55,25 @@ Proof.
 Qed.
 
 Definition until : t -> t -> t :=
-  λ p q s, ∃ i, (s, i) ⊨ q /\ ∀ k, k < i -> (s, k) ⊨ p.
+  λ p q s, ∃ i,（s, i）⊨ q /\ ∀ k, k < i ->（s, k）⊨ p.
 
-Definition always     : t -> t := λ p s, ∀ i, (s, i) ⊨ p.
-Definition eventually : t -> t := λ p s, ∃ i, (s, i) ⊨ p.
+Notation "p 'U' q" := (until p q) (at level 79, right associativity) : ltl_scope.
+
+Theorem until_semantics : ∀ σ j p q,
+ （σ, j）⊨ (p U q) <-> ∃ k, k ≥ j ->（σ, k）⊨ q /\ ∀ i, j ≤ i -> i < k ->（σ, i）⊨ p.
+Proof.
+  unfold until.
+  split; intros.
+  - destruct H.
+    destruct H.
+    exists (x + j).
+    intros.
+Admitted.
+
+Definition always     : t -> t := λ p s, ∀ i,（s, i）⊨ p.
+Definition eventually : t -> t := λ p s, ∃ i,（s, i）⊨ p.
 
 Definition wait : t -> t -> t :=
-  λ p q s, ∃ i, (s, i) ⊨ q /\ ∀ k, k < i -> (s, k) ⊨ p.
+  λ p q s, ∃ i,（s, i）⊨ q /\ ∀ k, k < i ->（s, k）⊨ p.
 
 End StreamLTL.

@@ -91,10 +91,10 @@ Proof.
   now rewrite from_S.
 Qed.
 
-Notation "( s , n ) ⊨ P" := (P (from n s)) (at level 85).
+Notation "（ s , n ） ⊨ P" := (P (from n s)) (at level 85).
 
-Definition every (P : Stream -> Prop) (s : Stream) := forall i, (s, i) ⊨ P.
-Definition any   (P : Stream -> Prop) (s : Stream) := exists i, (s, i) ⊨ P.
+Definition every (P : Stream -> Prop) (s : Stream) := forall i,（s, i）⊨ P.
+Definition any   (P : Stream -> Prop) (s : Stream) := exists i,（s, i）⊨ P.
 
 Section stream_eq_coind.
   Variable R : Stream -> Stream -> Prop.
@@ -280,4 +280,4 @@ Arguments tail {a} s.
 Arguments every {a} P s.
 Arguments any {a} P s.
 
-Notation "( s , n ) ⊨ P" := (P (from n s)) (at level 10).
+Notation "（ s , n ） ⊨ P" := (P (from n s)) (at level 75).
