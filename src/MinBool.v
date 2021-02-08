@@ -19,21 +19,30 @@ Parameter impl : t -> t -> Prop.
 
 Definition eqv (x y : t) : Prop := impl x y /\ impl y x.
 
-Notation "¬ p"   := (not p)    (at level 0, right associativity).
-Infix    "∨"     := or         (at level 46, right associativity).
-Notation "p → q" := (¬ p ∨ q)  (at level 51, right associativity).
-Notation "⊤"     := true       (at level 0, no associativity).
-Notation "⊥"     := false      (at level 0, no associativity).
-Infix    "⟹"    := impl       (at level 94, right associativity).
-Infix    "≈"     := eqv        (at level 90, no associativity).
+Declare Scope boolean_scope.
+Bind Scope boolean_scope with t.
+Delimit Scope boolean_scope with boolean.
+Open Scope boolean_scope.
+
+Notation "¬ p"    := (not p)    (at level 75, right associativity) : boolean_scope.
+Infix    "∨"      := or         (at level 85, right associativity) : boolean_scope.
+Notation "p ⇒ q"  := (¬ p ∨ q)  (at level 86, right associativity) : boolean_scope.
+Notation "⊤"      := true       (at level 0, no associativity) : boolean_scope.
+Notation "⊥"      := false      (at level 0, no associativity) : boolean_scope.
+Notation "p ⟹ q" := (impl p q) (at level 99, right associativity) : boolean_scope.
+Notation "p ≈ q"  := (eqv p q)  (at level 90, no associativity) : boolean_scope.
 
 Declare Instance impl_reflexive : Reflexive impl.
 Declare Instance impl_transitive : Transitive impl.
 
-Program Instance eqv_equivalence : Equivalence eqv.
-Next Obligation. intro x; now split. Qed.
-Next Obligation. repeat intro; split; destruct H; now intuition. Qed.
-Next Obligation. repeat intro; split; destruct H, H0; now transitivity y. Qed.
+Definition eqv_equivalence : Equivalence eqv.
+Proof.
+  split.
+  - intro x; now split.
+  - repeat intro; split; destruct H; now intuition.
+  - repeat intro; split; destruct H, H0; now transitivity y.
+Defined.
+Existing Instance eqv_equivalence.
 
 Program Instance impl_respects_impl : Proper (impl --> impl ==> Basics.impl) impl.
 Next Obligation.
@@ -41,7 +50,7 @@ Next Obligation.
   unfold Basics.flip in H.
   rewrite H.
   now rewrite <- H0.
-Qed.
+Defined.
 
 Program Instance impl_respects_eqv : Proper (eqv ==> eqv ==> Basics.impl) impl.
 Next Obligation.
@@ -49,7 +58,7 @@ Next Obligation.
   destruct H, H0.
   transitivity x; auto.
   transitivity x0; auto.
-Qed.
+Defined.
 
 Ltac one_arg :=
   repeat intro;
@@ -239,7 +248,7 @@ Proof.
   now apply not_not.
 Qed.
 
-Theorem contrapositive (φ ψ : t) : φ ⟹ ψ <-> ¬ψ ⟹ ¬φ.
+Theorem contrapositive (φ ψ : t) : (φ ⟹ ψ) <-> (¬ψ ⟹ ¬φ).
 Proof.
   split; intro.
   - rewrite H.
@@ -275,7 +284,7 @@ Proof.
   reflexivity.
 Qed.
 
-Theorem true_impl (φ : t) : ⊤ ⟹ φ <-> φ ≈ ⊤.
+Theorem true_impl (φ : t) : (⊤ ⟹ φ) <-> φ ≈ ⊤.
 Proof.
   split; intro.
   - split; auto.

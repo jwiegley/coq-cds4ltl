@@ -17,14 +17,19 @@ Require Import
 
 Module Type MinimalLinearTemporalLogic.
 
-Declare Module Bool : BooleanLogic.
-Include Bool.
+Include BooleanLogic.
 
 Parameter next : t -> t.
 Parameter until : t -> t -> t.
 
-Notation "◯ p"     := (next p)    (at level 0, right associativity).
-Notation "p 'U' q" := (until p q) (at level 44, right associativity).
+Declare Scope ltl_scope.
+Bind Scope ltl_scope with t.
+Delimit Scope ltl_scope with ltl.
+Open Scope boolean_scope.
+Open Scope ltl_scope.
+
+Notation "◯ p"     := (next p)    (at level 75, right associativity) : ltl_scope.
+Notation "p 'U' q" := (until p q) (at level 79, right associativity) : ltl_scope.
 
 Declare Instance next_respects_impl : Proper (impl ==> impl) next.
 Program Instance next_respects_eqv : Proper (eqv ==> eqv) next.
@@ -45,7 +50,7 @@ Program Instance until_respects_eqv : Proper (eqv ==> eqv ==> eqv) until.
 *)
 
 Axiom (* 1 *) next_not : forall (φ : t), ◯ ¬φ ≈ ¬◯ φ.
-Axiom (* 2 *) next_impl : forall (φ ψ : t), ◯ (φ → ψ) ≈ ◯ φ → ◯ ψ.
+Axiom (* 2 *) next_impl : forall (φ ψ : t), ◯ (φ ⇒ ψ) ≈ ◯ φ ⇒ ◯ ψ.
 
 Theorem (* 3 *) next_linearity (φ : t) : ◯ φ ≈ ¬◯ ¬φ.
 Proof.
@@ -140,7 +145,7 @@ Axiom (* 16 *) until_impl_order : forall (φ ψ χ : t), (φ U ψ) ∧ (¬ψ U �
 Axiom (* 17 *) until_right_or_order : forall (φ ψ χ : t), φ U (ψ U χ) ⟹ (φ ∨ ψ) U χ.
 Axiom (* 18 *) until_right_and_order : forall (φ ψ χ : t), φ U (ψ ∧ χ) ⟹ (φ U ψ) U χ.
 
-Theorem (* 19 *) until_right_impl (φ ψ χ : t) : (φ → ψ) U χ ⟹ (φ U χ) → (ψ U χ).
+Theorem (* 19 *) until_right_impl (φ ψ χ : t) : (φ ⇒ ψ) U χ ⟹ (φ U χ) ⇒ (ψ U χ).
 Proof.
   apply and_impl_iff.
   rewrite <- until_right_and.

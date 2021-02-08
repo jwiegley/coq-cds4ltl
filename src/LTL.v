@@ -6,8 +6,7 @@ Require Import
 
 Module Type LinearTemporalLogic.
 
-Declare Module MinLTL : MinimalLinearTemporalLogic.
-Include MinLTL.
+Include MinimalLinearTemporalLogic.
 
 Parameter eventually : t -> t.
 Parameter always : t -> t.
@@ -15,11 +14,11 @@ Parameter wait : t -> t -> t.
 Parameter release : t -> t -> t.
 Parameter strong_release : t -> t -> t.
 
-Notation "◇ p"     := (eventually p) (at level 0, right associativity).
-Notation "□ p"     := (always p)     (at level 0, right associativity).
-Notation "p 'W' q" := (wait p q)     (at level 44, right associativity).
-Notation "p 'R' q" := (release p q) (at level 45, right associativity).
-Notation "p 'M' q" := (strong_release p q) (at level 45, right associativity).
+Notation "◇ p"     := (eventually p)       (at level 75, right associativity) : ltl_scope.
+Notation "□ p"     := (always p)           (at level 75, right associativity) : ltl_scope.
+Notation "p 'W' q" := (wait p q)           (at level 79, right associativity) : ltl_scope.
+Notation "p 'R' q" := (release p q)        (at level 79, right associativity) : ltl_scope.
+Notation "p 'M' q" := (strong_release p q) (at level 79, right associativity) : ltl_scope.
 
 Declare Instance eventually_respects_impl : Proper (impl ==> impl) eventually.
 Program Instance eventually_respects_eqv : Proper (eqv ==> eqv) eventually.
@@ -169,8 +168,8 @@ Qed.
 (54) Definition of □ : □ p ≡ ¬◇ ¬p
 (55) Axiom, U Induction : □ (p ⇒ (◯ p ∧ q) ∨ r) ⇒ (p ⇒ □ q ∨ q U r)
 (56) Axiom, U Induction : □ (p ⇒ ◯ (p ∨ q)) ⇒ (p ⇒ □ p ∨ p U q)
-(57) □ Induction: □ (p → ◯ p) ⇒ (p → □ p)
-(58) ◇ Induction: □ (◯ p → p) ⇒ (◇ p → p)
+(57) □ Induction: □ (p ⇒ ◯ p) ⇒ (p ⇒ □ p)
+(58) ◇ Induction: □ (◯ p ⇒ p) ⇒ (◇ p ⇒ p)
 (59) ◇ p ≡ ¬□ ¬p
 (60) Dual of □ : ¬□ p ≡ ◇ ¬p
 (61) Dual of ◇ : ¬◇ p ≡ □ ¬p
@@ -186,7 +185,7 @@ Qed.
 (71) Absorption of □ into ◇ : □ p ∨ ◇ p ≡ ◇ p
 (72) Absorption of □ : □ □ p ≡ □ p
 (73) Exchange of ◯ and □ : ◯ □ p ≡ ◯ □ p
-(74) p → □ p ≡ p → ◯ □ p
+(74) p ⇒ □ p ≡ p ⇒ ◯ □ p
 (75) p ∧ ◇ ¬p ⇒ ◇ (p ∧ ◯ ¬p)
 (76) Strengthening of □ : □ p ⇒ p
 (77) Strengthening of □ : □ p ⇒ ◇ p
@@ -200,7 +199,7 @@ Axiom until_continue : forall (φ ψ : t), ψ ∧ φ U ◯ ¬ψ ⟹ φ U (ψ ∧
 
 Axiom (* 54 *) always_def : forall (φ : t), □ φ ≈ ¬◇ ¬φ.
 Axiom (* 55 *) always_until_and_ind : forall (φ ψ χ : t),
-  □ (φ → (◯ φ ∧ ψ) ∨ χ) ⟹ φ → □ ψ ∨ ψ U χ.
+  □ (φ ⇒ (◯ φ ∧ ψ) ∨ χ) ⟹ φ ⇒ □ ψ ∨ ψ U χ.
 
 Theorem (* 73 *) law_73 (φ : t) : ◯ □ φ ≈ □ ◯ φ.
 Proof.
@@ -220,7 +219,7 @@ Proof.
 Qed.
 
 Theorem (* 56 *) always_until_or_ind (φ ψ : t) :
-  □ (φ → ◯ (φ ∨ ψ)) ⟹ φ → □ φ ∨ φ U ψ.
+  □ (φ ⇒ ◯ (φ ∨ ψ)) ⟹ φ ⇒ □ φ ∨ φ U ψ.
 Proof.
   rewrite (* 10 *) (until_expansion φ ψ).
   rewrite (* 66 *) (law_66 φ).
@@ -253,7 +252,7 @@ Proof.
   reflexivity.
 Qed.
 
-Theorem (* 57 *) always_induction (φ : t) : □ (φ → ◯ φ) ⟹ (φ → □ φ).
+Theorem (* 57 *) always_induction (φ : t) : □ (φ ⇒ ◯ φ) ⟹ (φ ⇒ □ φ).
 Proof.
   pose proof (always_until_or_ind φ ⊥).
   rewrite or_false in H.
@@ -262,7 +261,7 @@ Proof.
   now rewrite or_false.
 Qed.
 
-Theorem (* 58 *) evn_induction (φ : t) : □ (◯ φ → φ) ⟹ (◇ φ → φ).
+Theorem (* 58 *) evn_induction (φ : t) : □ (◯ φ ⇒ φ) ⟹ (◇ φ ⇒ φ).
 Proof.
   rewrite !always_def.
   rewrite !evn_def.
@@ -400,7 +399,7 @@ Qed.
 (*   now rewrite <- next_not. *)
 (* Qed. *)
 
-Theorem (* 74 *) law_74 (φ : t) : φ → □ φ ⟹ φ → ◯ □ φ.
+Theorem (* 74 *) law_74 (φ : t) : φ ⇒ □ φ ⟹ φ ⇒ ◯ □ φ.
 Proof.
   rewrite always_def.
   rewrite <- always_def.
@@ -429,7 +428,7 @@ Proof.
   now apply evn_weaken.
 Qed.
 
-Corollary (* NEW *) always_apply (φ ψ : t) : □ (φ → ψ) ∧ φ ⟹ ψ.
+Corollary (* NEW *) always_apply (φ ψ : t) : □ (φ ⇒ ψ) ∧ φ ⟹ ψ.
 Proof.
   rewrite law_76.
   rewrite and_comm.
@@ -499,8 +498,8 @@ Qed.
 (**
 (83) Distributivity of ∧ over U : □ p ∧ q U r ⇒ (p ∧ q) U (p ∧ r)
 (84) U implication : □ p ∧ ◇ q ⇒ p U q
-(85) Right monotonicity of U : □ (p → q) ⇒ (r U p → r U q)
-(86) Left monotonicity of U : □ (p → q) ⇒ (p U r → q U r)
+(85) Right monotonicity of U : □ (p ⇒ q) ⇒ (r U p ⇒ r U q)
+(86) Left monotonicity of U : □ (p ⇒ q) ⇒ (p U r ⇒ q U r)
 (87) Distributivity of ¬ over □ : □ ¬p ⇒ ¬□ p
 (88) Distributivity of ◇ over ∧ : □ p ∧ ◇ q ⇒ ◇ (p ∧ q)
 (89) ◇ excluded middle : ◇ p ∨ □ ¬p
@@ -518,38 +517,38 @@ Qed.
 (101) Logical equivalence law of ◯ : □ (p ≡ q) ⇒ (◯ p ≡ ◯ q)
 (102) Logical equivalence law of ◇ : □ (p ≡ q) ⇒ (◇ p ≡ ◇ q)
 (103) Logical equivalence law of □ : □ (p ≡ q) ⇒ (□ p ≡ □ q)
-(104) Distributivity of ◇ over ⇒ : ◇ (p → q) ≡ (□ p → ◇ q)
-(105) Distributivity of ◇ over ⇒ : (◇ p → ◇ q) ⇒ ◇ (p → q)
-(106) ∧ frame law of ◯ : □ p ⇒ (◯ q → ◯ (p ∧ q))
-(107) ∧ frame law of ◇ : □ p ⇒ (◇ q → ◇ (p ∧ q))
-(108) ∧ frame law of □ : □ p ⇒ (□ q → □ (p ∧ q))
-(109) ∨ frame law of ◯ : □ p ⇒ (◯ q → ◯ (p ∨ q))
-(110) ∨ frame law of ◇ : □ p ⇒ (◇ q → ◇ (p ∨ q))
-(111) ∨ frame law of □ : □ p ⇒ (□ q → □ (p ∨ q))
-(112) ⇒ frame law of ◯ : □ p ⇒ (◯ q → ◯ (p → q))
-(113) ⇒ frame law of ◇ : □ p ⇒ (◇ q → ◇ (p → q))
-(114) ⇒ frame law of □ : □ p ⇒ (□ q → □ (p → q))
-(115) ≡ frame law of ◯ : □ p ⇒ (◯ q → ◯ (p ≡ q))
-(116) ≡ frame law of ◇ : □ p ⇒ (◇ q → ◇ (p ≡ q))
-(117) ≡ frame law of □ : □ p ⇒ (□ q → □ (p ≡ q))
-(118) Monotonicity of ◯ : □ (p → q) ⇒ (◯ p → ◯ q)
-(119) Monotonicity of ◇ : □ (p → q) ⇒ (◇ p → ◇ q)
-(120) Monotonicity of □ : □ (p → q) ⇒ (□ p → □ q)
-(121) Consequence rule of ◯ : □ ((p → q) ∧ (q → ◯ r) ∧ (r → s)) ⇒ (p → ◯ s)
-(122) Consequence rule of ◇ : □ ((p → q) ∧ (q → ◇ r) ∧ (r → s)) ⇒ (p → ◇ s)
-(123) Consequence rule of □ : □ ((p → q) ∧ (q → □ r) ∧ (r → s)) ⇒ (p → □ s)
-(124) Catenation rule of ◇ : □ ((p → ◇ q) ∧ (q → ◇ r)) ⇒ (p → ◇ r)
-(125) Catenation rule of □ : □ ((p → □ q) ∧ (q → □ r)) ⇒ (p → □ r)
-(126) Catenation rule of U : □ ((p → q U r) ∧ (r → q U s)) ⇒ (p → q U s)
-(127) U strengthening rule: □ ((p → r) ∧ (q → s)) ⇒ (p U q → r U s)
-(128) Induction rule ◇ : □ (p ∨ ◯ q → q) ⇒ (◇ p → q)
-(129) Induction rule □ : □ (p → q ∧ ◯ p) ⇒ (p → □ q)
-(130) Induction rule U : □ (p → ¬q ∧ ◯ p) ⇒ (p → ¬(r U q))
-(131) ◇ Conﬂuence: □ ((p → ◇ (q ∨ r)) ∧ (q → ◇ t) ∧ (r → ◇ t)) ⇒ (p → ◇ t)
-(132) Temporal generalization law : □ (□ p → q) ⇒ (□ p → □ q)
-(133) Temporal particularization law : □ (p → ◇ q) ⇒ (◇ p → ◇ q)
-(134) □ (p → ◯ q) ⇒ (p → ◇ q)
-(135) □ (p → ◯ ¬p) ⇒ (p → ¬□ p)
+(104) Distributivity of ◇ over ⇒ : ◇ (p ⇒ q) ≡ (□ p ⇒ ◇ q)
+(105) Distributivity of ◇ over ⇒ : (◇ p ⇒ ◇ q) ⇒ ◇ (p ⇒ q)
+(106) ∧ frame law of ◯ : □ p ⇒ (◯ q ⇒ ◯ (p ∧ q))
+(107) ∧ frame law of ◇ : □ p ⇒ (◇ q ⇒ ◇ (p ∧ q))
+(108) ∧ frame law of □ : □ p ⇒ (□ q ⇒ □ (p ∧ q))
+(109) ∨ frame law of ◯ : □ p ⇒ (◯ q ⇒ ◯ (p ∨ q))
+(110) ∨ frame law of ◇ : □ p ⇒ (◇ q ⇒ ◇ (p ∨ q))
+(111) ∨ frame law of □ : □ p ⇒ (□ q ⇒ □ (p ∨ q))
+(112) ⇒ frame law of ◯ : □ p ⇒ (◯ q ⇒ ◯ (p ⇒ q))
+(113) ⇒ frame law of ◇ : □ p ⇒ (◇ q ⇒ ◇ (p ⇒ q))
+(114) ⇒ frame law of □ : □ p ⇒ (□ q ⇒ □ (p ⇒ q))
+(115) ≡ frame law of ◯ : □ p ⇒ (◯ q ⇒ ◯ (p ≡ q))
+(116) ≡ frame law of ◇ : □ p ⇒ (◇ q ⇒ ◇ (p ≡ q))
+(117) ≡ frame law of □ : □ p ⇒ (□ q ⇒ □ (p ≡ q))
+(118) Monotonicity of ◯ : □ (p ⇒ q) ⇒ (◯ p ⇒ ◯ q)
+(119) Monotonicity of ◇ : □ (p ⇒ q) ⇒ (◇ p ⇒ ◇ q)
+(120) Monotonicity of □ : □ (p ⇒ q) ⇒ (□ p ⇒ □ q)
+(121) Consequence rule of ◯ : □ ((p ⇒ q) ∧ (q ⇒ ◯ r) ∧ (r ⇒ s)) ⇒ (p ⇒ ◯ s)
+(122) Consequence rule of ◇ : □ ((p ⇒ q) ∧ (q ⇒ ◇ r) ∧ (r ⇒ s)) ⇒ (p ⇒ ◇ s)
+(123) Consequence rule of □ : □ ((p ⇒ q) ∧ (q ⇒ □ r) ∧ (r ⇒ s)) ⇒ (p ⇒ □ s)
+(124) Catenation rule of ◇ : □ ((p ⇒ ◇ q) ∧ (q ⇒ ◇ r)) ⇒ (p ⇒ ◇ r)
+(125) Catenation rule of □ : □ ((p ⇒ □ q) ∧ (q ⇒ □ r)) ⇒ (p ⇒ □ r)
+(126) Catenation rule of U : □ ((p ⇒ q U r) ∧ (r ⇒ q U s)) ⇒ (p ⇒ q U s)
+(127) U strengthening rule: □ ((p ⇒ r) ∧ (q ⇒ s)) ⇒ (p U q ⇒ r U s)
+(128) Induction rule ◇ : □ (p ∨ ◯ q ⇒ q) ⇒ (◇ p ⇒ q)
+(129) Induction rule □ : □ (p ⇒ q ∧ ◯ p) ⇒ (p ⇒ □ q)
+(130) Induction rule U : □ (p ⇒ ¬q ∧ ◯ p) ⇒ (p ⇒ ¬(r U q))
+(131) ◇ Conﬂuence: □ ((p ⇒ ◇ (q ∨ r)) ∧ (q ⇒ ◇ t) ∧ (r ⇒ ◇ t)) ⇒ (p ⇒ ◇ t)
+(132) Temporal generalization law : □ (□ p ⇒ q) ⇒ (□ p ⇒ □ q)
+(133) Temporal particularization law : □ (p ⇒ ◇ q) ⇒ (◇ p ⇒ ◇ q)
+(134) □ (p ⇒ ◯ q) ⇒ (p ⇒ ◇ q)
+(135) □ (p ⇒ ◯ ¬p) ⇒ (p ⇒ ¬□ p)
 *)
 
 Theorem (* 83 *) (*Distributivity of ∧ over U*) law_83 (φ ψ χ : t) : □ φ ∧ ψ U χ ⟹ (φ ∧ ψ) U (φ ∧ χ).
@@ -568,13 +567,13 @@ Proof.
   now boolean.
 Qed.
 
-Corollary (* NEW *) law_84b (φ ψ : t) : □ φ ⟹ ◇ ψ → φ U ψ.
+Corollary (* NEW *) law_84b (φ ψ : t) : □ φ ⟹ ◇ ψ ⇒ φ U ψ.
 Proof.
   apply and_impl_iff.
   now apply law_84.
 Qed.
 
-Corollary (* NEW *) law_84c (φ ψ : t) : ¬(φ U ψ) ⟹ ◇ ψ → ◇ ¬φ.
+Corollary (* NEW *) law_84c (φ ψ : t) : ¬(φ U ψ) ⟹ ◇ ψ ⇒ ◇ ¬φ.
 Proof.
   apply contrapositive.
   rewrite not_or.
@@ -584,14 +583,14 @@ Proof.
   now apply law_84.
 Qed.
 
-Theorem (* 85 *) (*Right monotonicity of U*) law_85 (φ ψ χ : t) : □ (φ → ψ) ⟹ (χ U φ → χ U ψ).
+Theorem (* 85 *) (*Right monotonicity of U*) law_85 (φ ψ χ : t) : □ (φ ⇒ ψ) ⟹ (χ U φ ⇒ χ U ψ).
 Proof.
   apply and_impl_iff.
   rewrite law_83.
   now apply until_respects_impl; boolean.
 Qed.
 
-Theorem (* 86 *) (*Left monotonicity of U*) law_86 (φ ψ χ : t) : □ (φ → ψ) ⟹ (φ U χ → ψ U χ).
+Theorem (* 86 *) (*Left monotonicity of U*) law_86 (φ ψ χ : t) : □ (φ ⇒ ψ) ⟹ (φ U χ ⇒ ψ U χ).
 Proof.
   apply and_impl_iff.
   rewrite law_83.
@@ -726,13 +725,13 @@ Proof.
   now boolean.
 Qed.
 
-Theorem (* 104 *) (*Distributivity of ◇ over ⟹*) law_104 (φ ψ : t) : ◇ (φ → ψ) ≈ (□ φ → ◇ ψ).
+Theorem (* 104 *) (*Distributivity of ◇ over ⟹*) law_104 (φ ψ : t) : ◇ (φ ⇒ ψ) ≈ (□ φ ⇒ ◇ ψ).
 Proof.
   rewrite evn_or.
   now rewrite law_60.
 Qed.
 
-Theorem (* 105 *) (*Distributivity of ◇ over ⟹*) law_105 (φ ψ : t) : (◇ φ → ◇ ψ) ⟹ ◇ (φ → ψ).
+Theorem (* 105 *) (*Distributivity of ◇ over ⟹*) law_105 (φ ψ : t) : (◇ φ ⇒ ◇ ψ) ⟹ ◇ (φ ⇒ ψ).
 Proof.
   rewrite evn_or.
   rewrite <- law_60.
@@ -740,26 +739,26 @@ Proof.
   now rewrite law_87.
 Qed.
 
-Theorem (* 106 *) (*∧ frame law of ◯*) law_106 (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ ∧ ψ)).
+Theorem (* 106 *) (*∧ frame law of ◯*) law_106 (φ ψ : t) : □ φ ⟹ (◯ ψ ⇒ ◯ (φ ∧ ψ)).
 Proof.
   apply and_impl_iff.
   rewrite law_78.
   now rewrite next_and.
 Qed.
 
-Theorem (* 107 *) (*∧ frame law of ◇*) law_107 (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ ∧ ψ)).
+Theorem (* 107 *) (*∧ frame law of ◇*) law_107 (φ ψ : t) : □ φ ⟹ (◇ ψ ⇒ ◇ (φ ∧ ψ)).
 Proof.
   apply and_impl_iff.
   now rewrite law_88.
 Qed.
 
-Theorem (* 108 *) (*∧ frame law of □*) law_108 (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ ∧ ψ)).
+Theorem (* 108 *) (*∧ frame law of □*) law_108 (φ ψ : t) : □ φ ⟹ (□ ψ ⇒ □ (φ ∧ ψ)).
 Proof.
   apply and_impl_iff.
   now rewrite law_99.
 Qed.
 
-Theorem (* 109 *) (*∨ frame law of ◯*) law_109 (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ ∨ ψ)).
+Theorem (* 109 *) (*∨ frame law of ◯*) law_109 (φ ψ : t) : □ φ ⟹ (◯ ψ ⇒ ◯ (φ ∨ ψ)).
 Proof.
   apply and_impl_iff.
   rewrite law_78.
@@ -767,7 +766,7 @@ Proof.
   now rewrite and_proj, <- or_inj.
 Qed.
 
-Theorem (* 110 *) (*∨ frame law of ◇*) law_110 (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ ∨ ψ)).
+Theorem (* 110 *) (*∨ frame law of ◇*) law_110 (φ ψ : t) : □ φ ⟹ (◇ ψ ⇒ ◇ (φ ∨ ψ)).
 Proof.
   apply and_impl_iff.
   rewrite law_88.
@@ -776,14 +775,14 @@ Proof.
   now rewrite and_proj, <- or_inj.
 Qed.
 
-Theorem (* 111 *) (*∨ frame law of □*) law_111 (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ ∨ ψ)).
+Theorem (* 111 *) (*∨ frame law of □*) law_111 (φ ψ : t) : □ φ ⟹ (□ ψ ⇒ □ (φ ∨ ψ)).
 Proof.
   apply and_impl_iff.
   rewrite <- law_100.
   now rewrite and_proj, <- or_inj.
 Qed.
 
-Theorem (* 112 *) (*⟹ frame law of ◯*) law_112 (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ → ψ)).
+Theorem (* 112 *) (*⟹ frame law of ◯*) law_112 (φ ψ : t) : □ φ ⟹ (◯ ψ ⇒ ◯ (φ ⇒ ψ)).
 Proof.
   apply and_impl_iff.
   rewrite law_78.
@@ -791,7 +790,7 @@ Proof.
   now rewrite and_comm, and_proj, or_comm, <- or_inj.
 Qed.
 
-Theorem (* 113 *) (*⟹ frame law of ◇*) law_113 (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ → ψ)).
+Theorem (* 113 *) (*⟹ frame law of ◇*) law_113 (φ ψ : t) : □ φ ⟹ (◇ ψ ⇒ ◇ (φ ⇒ ψ)).
 Proof.
   apply and_impl_iff.
   rewrite law_88.
@@ -800,14 +799,14 @@ Proof.
   now rewrite and_comm, and_proj, or_comm, <- or_inj.
 Qed.
 
-Theorem (* 114 *) (*⟹ frame law of □*) law_114 (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ → ψ)).
+Theorem (* 114 *) (*⟹ frame law of □*) law_114 (φ ψ : t) : □ φ ⟹ (□ ψ ⇒ □ (φ ⇒ ψ)).
 Proof.
   apply and_impl_iff.
   rewrite <- law_100.
   now rewrite and_comm, and_proj, or_comm, <- or_inj.
 Qed.
 
-Theorem (* 115 *) (*≡ frame law of ◯*) law_115 (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ ≡ ψ)).
+Theorem (* 115 *) (*≡ frame law of ◯*) law_115 (φ ψ : t) : □ φ ⟹ (◯ ψ ⇒ ◯ (φ ≡ ψ)).
 Proof.
   apply and_impl_iff.
   rewrite law_78.
@@ -816,7 +815,7 @@ Proof.
   now rewrite and_proj, (or_comm _ (_ φ)), or_comm, <- !or_inj.
 Qed.
 
-Theorem (* 116 *) (*≡ frame law of ◇*) law_116 (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ ≡ ψ)).
+Theorem (* 116 *) (*≡ frame law of ◇*) law_116 (φ ψ : t) : □ φ ⟹ (◇ ψ ⇒ ◇ (φ ≡ ψ)).
 Proof.
   apply and_impl_iff.
   rewrite law_88.
@@ -826,7 +825,7 @@ Proof.
   now rewrite and_proj, (or_comm _ (_ φ)), or_comm, <- !or_inj.
 Qed.
 
-Theorem (* 117 *) (*≡ frame law of □*) law_117 (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ ≡ ψ)).
+Theorem (* 117 *) (*≡ frame law of □*) law_117 (φ ψ : t) : □ φ ⟹ (□ ψ ⇒ □ (φ ≡ ψ)).
 Proof.
   apply and_impl_iff.
   rewrite <- !law_100.
@@ -834,7 +833,7 @@ Proof.
   now rewrite and_proj, (or_comm _ (_ φ)), or_comm, <- !or_inj.
 Qed.
 
-Theorem (* 118 *) (*Monotonicity of ◯*) law_118 (φ ψ : t) : □ (φ → ψ) ⟹ (◯ φ → ◯ ψ).
+Theorem (* 118 *) (*Monotonicity of ◯*) law_118 (φ ψ : t) : □ (φ ⇒ ψ) ⟹ (◯ φ ⇒ ◯ ψ).
 Proof.
   apply and_impl_iff.
   rewrite law_78.
@@ -845,7 +844,7 @@ Proof.
   now boolean.
 Qed.
 
-Theorem (* 119 *) (*Monotonicity of ◇*) law_119 (φ ψ : t) : □ (φ → ψ) ⟹ (◇ φ → ◇ ψ).
+Theorem (* 119 *) (*Monotonicity of ◇*) law_119 (φ ψ : t) : □ (φ ⇒ ψ) ⟹ (◇ φ ⇒ ◇ ψ).
 Proof.
   apply and_impl_iff.
   rewrite law_88.
@@ -854,7 +853,7 @@ Proof.
   now boolean.
 Qed.
 
-Theorem (* 120 *) (*Monotonicity of □*) law_120 (φ ψ : t) : □ (φ → ψ) ⟹ (□ φ → □ ψ).
+Theorem (* 120 *) (*Monotonicity of □*) law_120 (φ ψ : t) : □ (φ ⇒ ψ) ⟹ (□ φ ⇒ □ ψ).
 Proof.
   apply and_impl_iff.
   rewrite <- law_99.
@@ -863,7 +862,7 @@ Proof.
   now boolean.
 Qed.
 
-Theorem (* 121 *) (*Consequence rule of ◯*) law_121 (φ ψ χ ρ : t) : □ ((φ → ψ) ∧ (ψ → ◯ χ) ∧ (χ → ρ)) ⟹ (φ → ◯ ρ).
+Theorem (* 121 *) (*Consequence rule of ◯*) law_121 (φ ψ χ ρ : t) : □ ((φ ⇒ ψ) ∧ (ψ ⇒ ◯ χ) ∧ (χ ⇒ ρ)) ⟹ (φ ⇒ ◯ ρ).
 Proof.
   rewrite !law_99.
   rewrite law_76.
@@ -874,7 +873,7 @@ Proof.
   now rewrite impl_trans.
 Qed.
 
-Theorem (* 122 *) (*Consequence rule of ◇*) law_122 (φ ψ χ ρ : t) : □ ((φ → ψ) ∧ (ψ → ◇ χ) ∧ (χ → ρ)) ⟹ (φ → ◇ ρ).
+Theorem (* 122 *) (*Consequence rule of ◇*) law_122 (φ ψ χ ρ : t) : □ ((φ ⇒ ψ) ∧ (ψ ⇒ ◇ χ) ∧ (χ ⇒ ρ)) ⟹ (φ ⇒ ◇ ρ).
 Proof.
   rewrite !law_99.
   rewrite law_76.
@@ -885,7 +884,7 @@ Proof.
   now rewrite impl_trans.
 Qed.
 
-Theorem (* 123 *) (*Consequence rule of □*) law_123 (φ ψ χ ρ : t) : □ ((φ → ψ) ∧ (ψ → □ χ) ∧ (χ → ρ)) ⟹ (φ → □ ρ).
+Theorem (* 123 *) (*Consequence rule of □*) law_123 (φ ψ χ ρ : t) : □ ((φ ⇒ ψ) ∧ (ψ ⇒ □ χ) ∧ (χ ⇒ ρ)) ⟹ (φ ⇒ □ ρ).
 Proof.
   rewrite !law_99.
   rewrite law_76.
@@ -896,7 +895,7 @@ Proof.
   now rewrite impl_trans.
 Qed.
 
-Theorem (* 124 *) (*Catenation rule of ◇*) law_124 (φ ψ χ : t) : □ ((φ → ◇ ψ) ∧ (ψ → ◇ χ)) ⟹ (φ → ◇ χ).
+Theorem (* 124 *) (*Catenation rule of ◇*) law_124 (φ ψ χ : t) : □ ((φ ⇒ ◇ ψ) ∧ (ψ ⇒ ◇ χ)) ⟹ (φ ⇒ ◇ χ).
 Proof.
   rewrite !law_99.
   rewrite law_76.
@@ -905,7 +904,7 @@ Proof.
   now rewrite law_50.
 Qed.
 
-Theorem (* 125 *) (*Catenation rule of □*) law_125 (φ ψ χ : t) : □ ((φ → □ ψ) ∧ (ψ → □ χ)) ⟹ (φ → □ χ).
+Theorem (* 125 *) (*Catenation rule of □*) law_125 (φ ψ χ : t) : □ ((φ ⇒ □ ψ) ∧ (ψ ⇒ □ χ)) ⟹ (φ ⇒ □ χ).
 Proof.
   rewrite !law_99.
   rewrite law_76.
@@ -914,7 +913,7 @@ Proof.
   now rewrite law_72.
 Qed.
 
-Theorem (* 126 *) (*Catenation rule of U*) law_126 (φ ψ χ ρ : t) : □ ((φ → ψ U χ) ∧ (χ → ψ U ρ)) ⟹ (φ → ψ U ρ).
+Theorem (* 126 *) (*Catenation rule of U*) law_126 (φ ψ χ ρ : t) : □ ((φ ⇒ ψ U χ) ∧ (χ ⇒ ψ U ρ)) ⟹ (φ ⇒ ψ U ρ).
 Proof.
   rewrite !law_99.
   rewrite law_76.
@@ -923,7 +922,7 @@ Proof.
   now rewrite until_left_absorb.
 Qed.
 
-Theorem (* 127 *) (*U strengthening rule*) law_127 (φ ψ χ ρ : t) : □ ((φ → χ) ∧ (ψ → ρ)) ⟹ (φ U ψ → χ U ρ).
+Theorem (* 127 *) (*U strengthening rule*) law_127 (φ ψ χ ρ : t) : □ ((φ ⇒ χ) ∧ (ψ ⇒ ρ)) ⟹ (φ U ψ ⇒ χ U ρ).
 Proof.
   rewrite !law_99.
   rewrite (law_86 _ _ ψ).
@@ -931,7 +930,7 @@ Proof.
   now rewrite impl_trans.
 Qed.
 
-Theorem (* 128 *) (*Induction rule ◇*) law_128 (φ ψ : t) : □ (φ ∨ ◯ ψ → ψ) ⟹ (◇ φ → ψ).
+Theorem (* 128 *) (*Induction rule ◇*) law_128 (φ ψ : t) : □ (φ ∨ ◯ ψ ⇒ ψ) ⟹ (◇ φ ⇒ ψ).
 Proof.
   rewrite or_impl.
   rewrite law_99.
@@ -940,7 +939,7 @@ Proof.
   now apply impl_trans.
 Qed.
 
-Theorem (* 129 *) (*Induction rule □*) law_129 (φ ψ : t) : □ (φ → ψ ∧ ◯ φ) ⟹ (φ → □ ψ).
+Theorem (* 129 *) (*Induction rule □*) law_129 (φ ψ : t) : □ (φ ⇒ ψ ∧ ◯ φ) ⟹ (φ ⇒ □ ψ).
 Proof.
   pose proof (always_until_and_ind φ ψ ⊥).
   rewrite until_right_bottom in H.
@@ -948,14 +947,14 @@ Proof.
   now rewrite and_comm.
 Qed.
 
-Theorem (* 130 *) (*Induction rule U*) law_130 (φ ψ χ : t) : □ (φ → ¬ψ ∧ ◯ φ) ⟹ (φ → ¬(χ U ψ)).
+Theorem (* 130 *) (*Induction rule U*) law_130 (φ ψ χ : t) : □ (φ ⇒ ¬ψ ∧ ◯ φ) ⟹ (φ ⇒ ¬(χ U ψ)).
 Proof.
   rewrite law_129.
   rewrite (law_81 (¬ ψ) χ).
   now rewrite not_not.
 Qed.
 
-Theorem (* 131 *) (*◇ Conﬂuence*) law_131 (φ ψ χ ρ : t) : □ ((φ → ◇ (ψ ∨ χ)) ∧ (ψ → ◇ ρ) ∧ (χ → ◇ ρ)) ⟹ (φ → ◇ ρ).
+Theorem (* 131 *) (*◇ Conﬂuence*) law_131 (φ ψ χ ρ : t) : □ ((φ ⇒ ◇ (ψ ∨ χ)) ∧ (ψ ⇒ ◇ ρ) ∧ (χ ⇒ ◇ ρ)) ⟹ (φ ⇒ ◇ ρ).
 Proof.
   pose proof (law_124 φ (ψ ∨ χ) ρ).
   rewrite !law_99 in *.
@@ -973,7 +972,7 @@ Proof.
   now boolean.
 Qed.
 
-Theorem (* 132 *) (*Temporal generalization law*) law_132 (φ ψ : t) : □ (□ φ → ψ) ⟹ (□ φ → □ ψ).
+Theorem (* 132 *) (*Temporal generalization law*) law_132 (φ ψ : t) : □ (□ φ ⇒ ψ) ⟹ (□ φ ⇒ □ ψ).
 Proof.
   apply and_impl_iff.
   rewrite <- (law_72 φ) at 2.
@@ -983,7 +982,7 @@ Proof.
   now boolean.
 Qed.
 
-Theorem (* 133 *) (*Temporal particularization law*) law_133 (φ ψ : t) : □ (φ → ◇ ψ) ⟹ (◇ φ → ◇ ψ).
+Theorem (* 133 *) (*Temporal particularization law*) law_133 (φ ψ : t) : □ (φ ⇒ ◇ ψ) ⟹ (◇ φ ⇒ ◇ ψ).
 Proof.
   apply and_impl_iff.
   rewrite law_88.
@@ -993,7 +992,7 @@ Proof.
   now boolean.
 Qed.
 
-Theorem (* 134 *) law_134 (φ ψ : t) : □ (φ → ◯ ψ) ⟹ (φ → ◇ ψ).
+Theorem (* 134 *) law_134 (φ ψ : t) : □ (φ ⇒ ◯ ψ) ⟹ (φ ⇒ ◇ ψ).
 Proof.
   apply and_impl_iff.
   rewrite (evn_weaken φ) at 2.
@@ -1006,7 +1005,7 @@ Proof.
   now rewrite law_51.
 Qed.
 
-Theorem (* 135 *) law_135 (φ : t) : □ (φ → ◯ ¬φ) ⟹ (φ → ¬□ φ).
+Theorem (* 135 *) law_135 (φ : t) : □ (φ ⇒ ◯ ¬φ) ⟹ (φ ⇒ ¬□ φ).
 Proof.
   apply and_impl_iff.
   rewrite and_proj.
@@ -1030,7 +1029,7 @@ Qed.
 (139) Metatheorem □ : If P ⇒ Q is a theorem then □ P ⇒ □ Q is a theorem.
 *)
 
-Theorem (* 136 *) law_136 (φ ψ : t) : φ ⟹ ψ <-> ⊤ ⟹ □ (φ → ψ).
+Theorem (* 136 *) law_136 (φ ψ : t) : (φ ⟹ ψ) <-> (⊤ ⟹ □ (φ ⇒ ψ)).
 Proof.
   split; intros.
   - rewrite H.
@@ -1041,17 +1040,17 @@ Proof.
     now apply law_76.
 Qed.
 
-Theorem (* 137 *) next_metatheorem (φ ψ : t) : φ ⟹ ψ -> ◯ φ ⟹ ◯ ψ.
+Theorem (* 137 *) next_metatheorem (φ ψ : t) : (φ ⟹ ψ) -> (◯ φ ⟹ ◯ ψ).
 Proof.
   now apply next_respects_impl.
 Qed.
 
-Theorem (* 138 *) eventually_metatheorem (φ ψ : t) : φ ⟹ ψ -> ◇ φ ⟹ ◇ ψ.
+Theorem (* 138 *) eventually_metatheorem (φ ψ : t) : (φ ⟹ ψ) -> (◇ φ ⟹ ◇ ψ).
 Proof.
   now apply eventually_respects_impl.
 Qed.
 
-Theorem (* 139 *) always_metatheorem (φ ψ : t) : φ ⟹ ψ -> □ φ ⟹ □ ψ.
+Theorem (* 139 *) always_metatheorem (φ ψ : t) : (φ ⟹ ψ) -> (□ φ ⟹ □ ψ).
 Proof.
   now apply always_respects_impl.
 Qed.
@@ -1067,39 +1066,39 @@ Qed.
 (145) ◇ □ implication : ◇ □ p ⇒ □ ◇ p
 (146) □ ◇ excluded middle : □ ◇ p ∨ □ ◇ ¬p
 (147) ◇ □ contradiction : ◇ □ p ∧ ◇ □ ¬p ≡ false
-(148) U frame law of ◯ : □ p ⇒ (◯ q → ◯ (p U q))
-(149) U frame law of ◇ : □ p ⇒ (◇ q → ◇ (p U q))
-(150) U frame law of □ : □ p ⇒ (□ q → □ (p U q))
+(148) U frame law of ◯ : □ p ⇒ (◯ q ⇒ ◯ (p U q))
+(149) U frame law of ◇ : □ p ⇒ (◇ q ⇒ ◇ (p U q))
+(150) U frame law of □ : □ p ⇒ (□ q ⇒ □ (p U q))
 (151) Absorption of ◇ into □ ◇ : ◇ □ ◇ p ≡ □ ◇ p
 (152) Absorption of □ into ◇ □ : □ ◇ □ p ≡ ◇ □ p
 (153) Absorption of □ ◇ : □ ◇ □ ◇ p ≡ □ ◇ p
 (154) Absorption of ◇ □ : ◇ □ ◇ □ p ≡ ◇ □ p
 (155) Absorption of ◯ into □ ◇ : ◯ □ ◇ p ≡ □ ◇ p
 (156) Absorption of ◯ into ◇ □ : ◯ ◇ □ p ≡ ◇ □ p
-(157) Monotonicity of □ ◇ : □ (p → q) ⇒ (□ ◇ p → □ ◇ q)
-(158) Monotonicity of ◇ □ : □ (p → q) ⇒ (◇ □ p → ◇ □ q)
+(157) Monotonicity of □ ◇ : □ (p ⇒ q) ⇒ (□ ◇ p ⇒ □ ◇ q)
+(158) Monotonicity of ◇ □ : □ (p ⇒ q) ⇒ (◇ □ p ⇒ ◇ □ q)
 (159) Distributivity of □ ◇ over ∧ : □ ◇ (p ∧ q) ⇒ □ ◇ p ∧ □ ◇ q
 (160) Distributivity of ◇ □ over ∨ : ◇ □ p ∨ ◇ □ q ⇒ ◇ □ (p ∨ q)
 (161) Distributivity of □ ◇ over ∨ : □ ◇ (p ∨ q) ≡ □ ◇ p ∨ □ ◇ q
 (162) Distributivity of ◇ □ over ∧ : ◇ □ (p ∧ q) ≡ ◇ □ p ∧ ◇ □ q
-(163) Eventual latching : ◇ □ (p → □ q) ≡ ◇ □ ¬p ∨ ◇ □ q
-(164) □ (□ ◇ p → ◇ q) ≡ ◇ □ ¬p ∨ □ ◇ q
+(163) Eventual latching : ◇ □ (p ⇒ □ q) ≡ ◇ □ ¬p ∨ ◇ □ q
+(164) □ (□ ◇ p ⇒ ◇ q) ≡ ◇ □ ¬p ∨ □ ◇ q
 (165) □ ((p ∨ □ q) ∧ (□ p ∨ q)) ≡ □ p ∨ □ q
 (166) ◇ □ p ∧ □ ◇ q ⇒ □ ◇ (p ∧ q)
-(167) □ ((□ p → ◇ q) ∧ (q → ◯ r)) ⇒ (□ p → ◯ □ ◇ r)
-(168) Progress proof rule : □ p ∧ □ (□ p → ◇ q) ⇒ ◇ q
+(167) □ ((□ p ⇒ ◇ q) ∧ (q ⇒ ◯ r)) ⇒ (□ p ⇒ ◯ □ ◇ r)
+(168) Progress proof rule : □ p ∧ □ (□ p ⇒ ◇ q) ⇒ ◇ q
 *)
 
 Theorem (* 140 *) law_140 (*U □ implication*) (φ ψ : t) : φ U □ ψ ⟹ □ (φ U ψ).
 Proof.
-  assert (A : □ (φ U □ ψ → φ U ψ) ≈ ⊤).
+  assert (A : □ (φ U □ ψ ⇒ φ U ψ) ≈ ⊤).
     apply true_impl.
     rewrite <- (law_85 (□ ψ) ψ φ).
     pose proof (law_76 ψ).
     apply impl_def in H.
     rewrite <- H.
     now rewrite !law_64.
-  assert (B : □ (φ U □ ψ → ◯ (φ U □ ψ)) ≈ ⊤).
+  assert (B : □ (φ U □ ψ ⇒ ◯ (φ U □ ψ)) ≈ ⊤).
     rewrite next_until.
     rewrite <- (until_absorb_u_or (◯ φ)).
     rewrite (or_comm _ (◯ □ ψ)).
@@ -1192,7 +1191,7 @@ Proof.
   now apply law_146.
 Qed.
 
-Theorem (* 148 *) law_148 (*U frame law of ◯*) (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ U ψ)).
+Theorem (* 148 *) law_148 (*U frame law of ◯*) (φ ψ : t) : □ φ ⟹ (◯ ψ ⇒ ◯ (φ U ψ)).
 Proof.
   rewrite <- next_impl.
   rewrite <- until_insertion.
@@ -1201,14 +1200,14 @@ Proof.
   now apply impl_true.
 Qed.
 
-Theorem (* 149 *) law_149 (*U frame law of ◇*) (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ U ψ)).
+Theorem (* 149 *) law_149 (*U frame law of ◇*) (φ ψ : t) : □ φ ⟹ (◇ ψ ⇒ ◇ (φ U ψ)).
 Proof.
   apply and_impl_iff.
   rewrite law_84.
   now apply evn_weaken.
 Qed.
 
-Theorem (* 150 *) law_150 (*U frame law of □*) (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ U ψ)).
+Theorem (* 150 *) law_150 (*U frame law of □*) (φ ψ : t) : □ φ ⟹ (□ ψ ⇒ □ (φ U ψ)).
 Proof.
   apply and_impl_iff.
   rewrite and_comm.
@@ -1263,18 +1262,18 @@ Proof.
     now rewrite law_152.
 Qed.
 
-Theorem (* 157 *) law_157 (*Monotonicity of □ ◇*) (φ ψ : t) : □ (φ → ψ) ⟹ (□ ◇ φ → □ ◇ ψ).
+Theorem (* 157 *) law_157 (*Monotonicity of □ ◇*) (φ ψ : t) : □ (φ ⇒ ψ) ⟹ (□ ◇ φ ⇒ □ ◇ ψ).
 Proof.
-  transitivity (□ (◇ φ → ◇ ψ)).
+  transitivity (□ (◇ φ ⇒ ◇ ψ)).
     rewrite <- law_72.
     apply always_metatheorem.
     now rewrite law_119.
   now rewrite law_120.
 Qed.
 
-Theorem (* 158 *) law_158 (*Monotonicity of ◇ □*) (φ ψ : t) : □ (φ → ψ) ⟹ (◇ □ φ → ◇ □ ψ).
+Theorem (* 158 *) law_158 (*Monotonicity of ◇ □*) (φ ψ : t) : □ (φ ⇒ ψ) ⟹ (◇ □ φ ⇒ ◇ □ ψ).
 Proof.
-  transitivity (□ (□ φ → □ ψ)).
+  transitivity (□ (□ φ ⇒ □ ψ)).
     rewrite <- law_72.
     apply always_metatheorem.
     now rewrite law_120.
@@ -1334,13 +1333,13 @@ Proof.
   now boolean.
 Qed.
 
-Theorem (* 163 *) law_163 (*Eventual latching*) (φ ψ : t) : ◇ □ (φ → □ ψ) ≈ ◇ □ ¬φ ∨ ◇ □ ψ.
+Theorem (* 163 *) law_163 (*Eventual latching*) (φ ψ : t) : ◇ □ (φ ⇒ □ ψ) ≈ ◇ □ ¬φ ∨ ◇ □ ψ.
 Proof.
-  assert (A : ◇ □ (φ → □ ψ) ⟹ ◇ (□ ◇ φ → ◇ □ ψ)). {
-    rewrite <- (evn_weaken (□ ◇ φ → ◇ □ ψ)).
+  assert (A : ◇ □ (φ ⇒ □ ψ) ⟹ ◇ (□ ◇ φ ⇒ ◇ □ ψ)). {
+    rewrite <- (evn_weaken (□ ◇ φ ⇒ ◇ □ ψ)).
     rewrite <- (law_50 (□ ψ)).
     rewrite <- law_104.
-    rewrite <- (law_76 (◇ (◇ φ → ◇ □ ψ))).
+    rewrite <- (law_76 (◇ (◇ φ ⇒ ◇ □ ψ))).
     rewrite <- law_152.
     apply impl_def.
     rewrite <- law_157.
@@ -1358,7 +1357,7 @@ Proof.
     now rewrite law_160.
 Qed.
 
-Theorem (* 164 *) law_164 (**) (φ ψ : t) : □ (□ ◇ φ → ◇ ψ) ≈ ◇ □ ¬φ ∨ □ ◇ ψ.
+Theorem (* 164 *) law_164 (**) (φ ψ : t) : □ (□ ◇ φ ⇒ ◇ ψ) ≈ ◇ □ ¬φ ∨ □ ◇ ψ.
 Proof.
   split.
   - rewrite law_120.
@@ -1496,7 +1495,7 @@ Proof.
   now rewrite law_88.
 Qed.
 
-Theorem (* 167 *) law_167 (**) (φ ψ χ : t) : □ ((□ φ → ◇ ψ) ∧ (ψ → ◯ χ)) ⟹ (□ φ → ◯ □ ◇ χ).
+Theorem (* 167 *) law_167 (**) (φ ψ χ : t) : □ ((□ φ ⇒ ◇ ψ) ∧ (ψ ⇒ ◯ χ)) ⟹ (□ φ ⇒ ◯ □ ◇ χ).
 Proof.
   apply and_impl_iff.
   rewrite law_99.
@@ -1517,7 +1516,7 @@ Proof.
   now boolean.
 Qed.
 
-Theorem (* 168 *) law_168 (*Progress proof rule*) (φ ψ : t) : ◇ □ φ ∧ □ (□ φ → ◇ ψ) ⟹ ◇ ψ.
+Theorem (* 168 *) law_168 (*Progress proof rule*) (φ ψ : t) : ◇ □ φ ∧ □ (□ φ ⇒ ◇ ψ) ⟹ ◇ ψ.
 Proof.
   rewrite law_119.
   rewrite law_50.
@@ -1548,13 +1547,13 @@ Qed.
 (185) Right distributivity of W over ∨ : p W r ∨ q W r ⇒ (p ∨ q) W r
 (186) Left distributivity of W over ∧ : p W (q ∧ r) ⇒ p W q ∧ p W r
 (187) Right distributivity of W over ∧ : (p ∧ q) W r ≡ p W r ∧ q W r
-(188) Right distributivity of W over ⇒ : (p → q) W r ⇒ (p W r → q W r)
+(188) Right distributivity of W over ⇒ : (p ⇒ q) W r ⇒ (p W r ⇒ q W r)
 (189) Disjunction rule of W : p W q ≡ (p ∨ q) W q
 (190) Disjunction rule of U : p U q ≡ (p ∨ q) U q
 (191) Rule of W : ¬q W q
 (192) Rule of U : ¬q U q ≡ ◇ q
 (193) (p ⇒ q) W p
-(194) ◇ p ⇒ (p → q) U p
+(194) ◇ p ⇒ (p ⇒ q) U p
 (195) Conjunction rule of W : p W q ≡ (p ∧ ¬q) W q
 (196) Conjunction rule of U : p U q ≡ (p ∧ ¬q) U q
 (197) Distributivity of ¬ over W : ¬(p W q) ≡ (p ∧ ¬q) U (¬p ∧ ¬q)
@@ -1568,15 +1567,15 @@ Qed.
 (205) Left identity of W : false W q ≡ q
 (206) p W q ⇒ p ∨ q
 (207) □ (p ∨ q) ⇒ p W q
-(208) □ (¬q → p) ⇒ p W q
+(208) □ (¬q ⇒ p) ⇒ p W q
 (209) W insertion: q ⇒ p W q
-(210) W frame law of ◯ : □ p ⇒ (◯ q → ◯ (p W q))
-(211) W frame law of ◇ : □ p ⇒ (◇ q → ◇ (p W q))
-(212) W frame law of □ : □ p ⇒ (□ q → □ (p W q))
-(213) W induction: □ (p → (◯ p ∧ q) ∨ r) ⇒ (p → q W r)
-(214) W induction: □ (p → ◯ (p ∨ q)) ⇒ (p → p W q)
-(215) W induction: □ (p → ◯ p) ⇒ (p → p W q)
-(216) W induction: □ (p → q ∧ ◯ p) ⇒ (p → p W q)
+(210) W frame law of ◯ : □ p ⇒ (◯ q ⇒ ◯ (p W q))
+(211) W frame law of ◇ : □ p ⇒ (◇ q ⇒ ◇ (p W q))
+(212) W frame law of □ : □ p ⇒ (□ q ⇒ □ (p W q))
+(213) W induction: □ (p ⇒ (◯ p ∧ q) ∨ r) ⇒ (p ⇒ q W r)
+(214) W induction: □ (p ⇒ ◯ (p ∨ q)) ⇒ (p ⇒ p W q)
+(215) W induction: □ (p ⇒ ◯ p) ⇒ (p ⇒ p W q)
+(216) W induction: □ (p ⇒ q ∧ ◯ p) ⇒ (p ⇒ p W q)
 (217) Absorption: p ∨ p W q ≡ p ∨ q
 (218) Absorption: p W q ∨ q ≡ p W q
 (219) Absorption: p W q ∧ q ≡ q
@@ -1598,10 +1597,10 @@ Qed.
 (235) □ p ⇒ p U q ∨ □ ¬q
 (236) ¬□ p ∧ p W q ⇒ ◇ q
 (237) ◇ q ⇒ ¬□ p ∨ p U q
-(238) Left monotonicity of W : □ (p → q) ⇒ (p W r → q W r)
-(239) Right monotonicity of W : □ (p → q) ⇒ (r W p → r W q)
-(240) W strengthening rule : □ ((p → r) ∧ (q → s)) ⇒ (p W q → r W s)
-(241) W catenation rule: □ ((p → q W r) ∧ (r → q W s)) ⇒ (p → q W s)
+(238) Left monotonicity of W : □ (p ⇒ q) ⇒ (p W r ⇒ q W r)
+(239) Right monotonicity of W : □ (p ⇒ q) ⇒ (r W p ⇒ r W q)
+(240) W strengthening rule : □ ((p ⇒ r) ∧ (q ⇒ s)) ⇒ (p W q ⇒ r W s)
+(241) W catenation rule: □ ((p ⇒ q W r) ∧ (r ⇒ q W s)) ⇒ (p ⇒ q W s)
 (242) Left U W implication: (p U q) W r ⇒ (p W q) W r
 (243) Right W U implication: p W (q U r) ⇒ p W (q W r)
 (244) Right U U implication: p U (q U r) ⇒ p U (q W r)
@@ -1614,7 +1613,7 @@ Qed.
 (251) U ordering: ¬p U q ∨ ¬q U p ≡ ◇ (p ∨ q)
 (252) W ordering: ¬p W q ∨ ¬q W p
 (253) W implication ordering: p W q ∧ ¬q W r ⇒ p W r
-(254) Lemmon formula: □ (□ p → q) ∨ □ (□ q → p)
+(254) Lemmon formula: □ (□ p ⇒ q) ∨ □ (□ q ⇒ p)
 *)
 
 Axiom (* 169 *) wait_def : forall (φ ψ : t), φ W ψ ≈ □ φ ∨ φ U ψ.
@@ -1810,7 +1809,7 @@ Proof.
   now boolean.
 Qed.
 
-Theorem (* 188 *) law_188 (*Right distributivity of W over ⟹ *) (φ ψ χ : t) : (φ → ψ) W χ ⟹ (φ W χ → ψ W χ).
+Theorem (* 188 *) law_188 (*Right distributivity of W over ⟹ *) (φ ψ χ : t) : (φ ⇒ ψ) W χ ⟹ (φ W χ ⇒ ψ W χ).
 Proof.
   apply and_impl_iff.
   rewrite <- law_187.
@@ -1855,7 +1854,7 @@ Proof.
   now rewrite evn_def.
 Qed.
 
-Theorem (* 193 *) law_193 (**) (φ ψ : t) : (φ → ψ) W φ ≈ ⊤.
+Theorem (* 193 *) law_193 (**) (φ ψ : t) : (φ ⇒ ψ) W φ ≈ ⊤.
 Proof.
   apply true_impl.
   rewrite <- law_185.
@@ -1863,7 +1862,7 @@ Proof.
   now boolean.
 Qed.
 
-Theorem (* 194 *) law_194 (**) (φ ψ : t) : ◇ φ ⟹ (φ → ψ) U φ.
+Theorem (* 194 *) law_194 (**) (φ ψ : t) : ◇ φ ⟹ (φ ⇒ ψ) U φ.
 Proof.
   rewrite <- until_right_or.
   rewrite <- or_inj.
@@ -1966,7 +1965,7 @@ Proof.
   now rewrite <- law_189.
 Qed.
 
-Theorem (* 208 *) law_208 (**) (φ ψ : t) : □ (¬ψ → φ) ⟹ φ W ψ.
+Theorem (* 208 *) law_208 (**) (φ ψ : t) : □ (¬ψ ⇒ φ) ⟹ φ W ψ.
 Proof.
   rewrite or_comm.
   rewrite not_not.
@@ -1979,7 +1978,7 @@ Proof.
   now boolean.
 Qed.
 
-Theorem (* 210 *) law_210 (*W frame law of ◯ *) (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ W ψ)).
+Theorem (* 210 *) law_210 (*W frame law of ◯ *) (φ ψ : t) : □ φ ⟹ (◯ ψ ⇒ ◯ (φ W ψ)).
 Proof.
   rewrite <- next_impl.
   rewrite <- law_209.
@@ -1988,7 +1987,7 @@ Proof.
   now apply impl_true.
 Qed.
 
-Theorem (* 211 *) law_211 (*W frame law of ◇ *) (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ W ψ)).
+Theorem (* 211 *) law_211 (*W frame law of ◇ *) (φ ψ : t) : □ φ ⟹ (◇ ψ ⇒ ◇ (φ W ψ)).
 Proof.
   apply and_impl_iff.
   rewrite law_84.
@@ -1996,7 +1995,7 @@ Proof.
   now apply evn_weaken.
 Qed.
 
-Theorem (* 212 *) law_212 (*W frame law of □ *) (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ W ψ)).
+Theorem (* 212 *) law_212 (*W frame law of □ *) (φ ψ : t) : □ φ ⟹ (□ ψ ⇒ □ (φ W ψ)).
 Proof.
   apply and_impl_iff.
   rewrite and_comm.
@@ -2005,25 +2004,25 @@ Proof.
   now rewrite <- law_177.
 Qed.
 
-Theorem (* 213 *) law_213 (*W induction*) (φ ψ χ : t) : □ (φ → (◯ φ ∧ ψ) ∨ χ) ⟹ (φ → ψ W χ).
+Theorem (* 213 *) law_213 (*W induction*) (φ ψ χ : t) : □ (φ ⇒ (◯ φ ∧ ψ) ∨ χ) ⟹ (φ ⇒ ψ W χ).
 Proof.
   rewrite wait_def.
   now rewrite always_until_and_ind.
 Qed.
 
-Theorem (* 214 *) law_214 (*W induction*) (φ ψ : t) : □ (φ → ◯ (φ ∨ ψ)) ⟹ (φ → φ W ψ).
+Theorem (* 214 *) law_214 (*W induction*) (φ ψ : t) : □ (φ ⇒ ◯ (φ ∨ ψ)) ⟹ (φ ⇒ φ W ψ).
 Proof.
   rewrite always_until_or_ind.
   now rewrite <- wait_def.
 Qed.
 
-Theorem (* 215 *) law_215 (*W induction*) (φ ψ : t) : □ (φ → ◯ φ) ⟹ (φ → φ W ψ).
+Theorem (* 215 *) law_215 (*W induction*) (φ ψ : t) : □ (φ ⇒ ◯ φ) ⟹ (φ ⇒ φ W ψ).
 Proof.
   rewrite always_induction.
   now rewrite <- law_179.
 Qed.
 
-Theorem (* 216 *) law_216 (*W induction*) (φ ψ : t) : □ (φ → ψ ∧ ◯ φ) ⟹ (φ → φ W ψ).
+Theorem (* 216 *) law_216 (*W induction*) (φ ψ : t) : □ (φ ⇒ ψ ∧ ◯ φ) ⟹ (φ ⇒ φ W ψ).
 Proof.
   rewrite impl_and.
   rewrite law_99.
@@ -2215,14 +2214,14 @@ Proof.
   now rewrite law_84.
 Qed.
 
-Theorem (* NEW *) law_237b (φ ψ : t) : ◇ ψ ⟹ □ φ → φ U ψ.
+Theorem (* NEW *) law_237b (φ ψ : t) : ◇ ψ ⟹ □ φ ⇒ φ U ψ.
 Proof.
   apply and_impl_iff.
   rewrite and_comm.
   now rewrite law_84.
 Qed.
 
-Theorem (* 238 *) law_238 (*Left monotonicity of W *) (φ ψ χ : t) : □ (φ → ψ) ⟹ (φ W χ → ψ W χ).
+Theorem (* 238 *) law_238 (*Left monotonicity of W *) (φ ψ χ : t) : □ (φ ⇒ ψ) ⟹ (φ W χ ⇒ ψ W χ).
 Proof.
   apply and_impl_iff.
   rewrite law_175.
@@ -2235,7 +2234,7 @@ Proof.
   now boolean.
 Qed.
 
-Theorem (* 239 *) law_239 (*Right monotonicity of W *) (φ ψ χ : t) : □ (φ → ψ) ⟹ (χ W φ → χ W ψ).
+Theorem (* 239 *) law_239 (*Right monotonicity of W *) (φ ψ χ : t) : □ (φ ⇒ ψ) ⟹ (χ W φ ⇒ χ W ψ).
 Proof.
   rewrite !wait_def.
   rewrite !(or_comm (□ χ)).
@@ -2243,7 +2242,7 @@ Proof.
   now rewrite <- law_85.
 Qed.
 
-Theorem (* 240 *) law_240 (*W strengthening rule *) (φ ψ χ ρ : t) : □ ((φ → χ) ∧ (ψ → ρ)) ⟹ (φ W ψ → χ W ρ).
+Theorem (* 240 *) law_240 (*W strengthening rule *) (φ ψ χ ρ : t) : □ ((φ ⇒ χ) ∧ (ψ ⇒ ρ)) ⟹ (φ W ψ ⇒ χ W ρ).
 Proof.
   apply and_impl_iff.
   rewrite law_99.
@@ -2259,7 +2258,7 @@ Proof.
   now boolean.
 Qed.
 
-Theorem (* 241 *) law_241 (*W catenation rule*) (φ ψ χ ρ : t) : □ ((φ → ψ W χ) ∧ (χ → ψ W ρ)) ⟹ (φ → ψ W ρ).
+Theorem (* 241 *) law_241 (*W catenation rule*) (φ ψ χ ρ : t) : □ ((φ ⇒ ψ W χ) ∧ (χ ⇒ ψ W ρ)) ⟹ (φ ⇒ ψ W ρ).
 Proof.
   apply and_impl_iff.
   rewrite law_99.
@@ -2399,7 +2398,7 @@ Proof.
   now boolean.
 Qed.
 
-Theorem (* 254 *) law_254 (*Lemmon formula*) (φ ψ : t) : □ (□ φ → ψ) ∨ □ (□ ψ → φ) ≈ ⊤.
+Theorem (* 254 *) law_254 (*Lemmon formula*) (φ ψ : t) : □ (□ φ ⇒ ψ) ∨ □ (□ ψ ⇒ φ) ≈ ⊤.
 Proof.
   apply true_impl.
   rewrite <- (law_206 _ ψ).
@@ -2408,7 +2407,7 @@ Proof.
   now rewrite law_252.
 Qed.
 
-Theorem dummett (φ : t) : □ (□ (φ → □ φ) → φ) ⟹ (◇ □ φ → □ φ).
+Theorem dummett (φ : t) : □ (□ (φ ⇒ □ φ) ⇒ φ) ⟹ (◇ □ φ ⇒ □ φ).
 Proof.
   rewrite or_comm.
   rewrite (always_def (or (¬φ) _)).
@@ -2423,16 +2422,15 @@ Proof.
   rewrite (and_proj _ φ).
   rewrite law_50.
 
-  enough (□ (φ ∨ ◇ (φ ∧ ◇ ¬ φ)) ⟹ □ φ ∨ □ ◇ ¬φ).
-    rewrite H.
-    rewrite and_or_r.
-    rewrite and_proj.
-    rewrite and_comm.
-    rewrite law_98.
-    now boolean.
+  (* enough (□ (φ ∨ ◇ (φ ∧ ◇ ¬ φ)) ⟹ □ φ ∨ □ ◇ ¬φ). *)
+  (*   rewrite H. *)
+  (*   rewrite and_or_r. *)
+  (*   rewrite and_proj. *)
+  (*   rewrite and_comm. *)
+  (*   rewrite law_98. *)
+  (*   now boolean. *)
 
-  apply always_respects_impl.
-  (* FILL IN HERE *)
+  (* apply always_respects_impl. *)
 Admitted.
 
 (*** Release R *)
@@ -2517,12 +2515,12 @@ Admitted.
 
 Notation "p ≉ q" := (~ (p ≈ q)) (at level 90, no associativity).
 
-Theorem law_270 (φ ψ χ : t) : □ (φ → ¬ψ ∧ ◯ χ) ⟹ φ → ¬(ψ U χ).
+Theorem law_270 (φ ψ χ : t) : □ (φ ⇒ ¬ψ ∧ ◯ χ) ⟹ φ ⇒ ¬(ψ U χ).
 Proof.
   (* FILL IN HERE *)
 Admitted.
 
-Theorem law_271 (φ ψ χ ρ : t) : □ ((φ → ψ U χ) ∧ (χ → ψ U ρ)) ⟹ φ → □ χ.
+Theorem law_271 (φ ψ χ ρ : t) : □ ((φ ⇒ ψ U χ) ∧ (χ ⇒ ψ U ρ)) ⟹ φ ⇒ □ χ.
 Proof.
   (* FILL IN HERE *)
 Admitted.

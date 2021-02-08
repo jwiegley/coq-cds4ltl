@@ -12,14 +12,12 @@ Require Import
 
 Module Type BooleanLogic.
 
-Declare Module MinBool : MinimalBooleanLogic.
-Include MinBool.
+Include MinimalBooleanLogic.
 
 Parameter and : t -> t -> t.
 
-Infix    "∧"       := and             (at level 45, right associativity).
-Notation "p ↔ q"   := (p → q ∧ q → p) (at level 80, right associativity, only parsing).
-Notation "p ≡ q"   := (p ↔ q)         (at level 80, right associativity, only parsing).
+Infix    "∧"       := and             (at level 80, right associativity) : boolean_scope.
+Notation "p ≡ q"   := (p ⇒ q ∧ q ⇒ p) (at level 89, right associativity, only parsing) : boolean_scope.
 
 Declare Instance and_respects_impl : Proper (impl ==> impl ==> impl) and.
 Program Instance and_respects_eqv : Proper (eqv ==> eqv ==> eqv) and.
@@ -259,17 +257,17 @@ Ltac boolean :=
     | [ |- ?P ∧ ?Q ⟹ ?Q ∧ ?P ] => rewrite (and_comm P Q)
   end.
 
-Theorem and_impl (φ ψ χ : t) : φ ∧ ψ → χ ≈ φ → (ψ → χ).
+Theorem and_impl (φ ψ χ : t) : φ ∧ ψ ⇒ χ ≈ φ ⇒ (ψ ⇒ χ).
 Proof.
   rewrite and_def.
   rewrite not_not.
   now rewrite <- or_assoc.
 Qed.
 
-Theorem impl_and (φ ψ χ : t) : φ → ψ ∧ χ ≈ (φ → ψ) ∧ (φ → χ).
+Theorem impl_and (φ ψ χ : t) : φ ⇒ ψ ∧ χ ≈ (φ ⇒ ψ) ∧ (φ ⇒ χ).
 Proof. now rewrite <- or_and. Qed.
 
-Theorem or_impl (φ ψ χ : t) : φ ∨ ψ → χ ≈ (φ → χ) ∧ (ψ → χ).
+Theorem or_impl (φ ψ χ : t) : φ ∨ ψ ⇒ χ ≈ (φ ⇒ χ) ∧ (ψ ⇒ χ).
 Proof.
   rewrite !(or_comm _ χ).
   rewrite <- or_and.
@@ -277,10 +275,10 @@ Proof.
   now rewrite !not_not.
 Qed.
 
-Theorem and_apply (φ ψ : t) : φ ∧ (φ → ψ) ≈ φ ∧ ψ.
+Theorem and_apply (φ ψ : t) : φ ∧ (φ ⇒ ψ) ≈ φ ∧ ψ.
 Proof. now rewrite and_or; boolean. Qed.
 
-Theorem and_impl_iff (φ ψ χ : t) : φ ∧ ψ ⟹ χ <-> φ ⟹ (ψ → χ).
+Theorem and_impl_iff (φ ψ χ : t) : (φ ∧ ψ ⟹ χ) <-> (φ ⟹ (ψ ⇒ χ)).
 Proof.
   split; intro.
   - rewrite <- H; clear H.
@@ -293,7 +291,7 @@ Proof.
     now boolean.
 Qed.
 
-Theorem impl_trans (φ ψ χ : t) : (φ → ψ) ∧ (ψ → χ) ⟹ (φ → χ).
+Theorem impl_trans (φ ψ χ : t) : (φ ⇒ ψ) ∧ (ψ ⇒ χ) ⟹ (φ ⇒ χ).
 Proof.
   apply and_impl_iff.
   rewrite (or_comm _ (_ ∨ _)).
@@ -307,10 +305,10 @@ Proof.
   now boolean.
 Qed.
 
-Theorem impl_apply (φ ψ : t) : (φ → ψ) ∧ φ ≈ φ ∧ ψ.
+Theorem impl_apply (φ ψ : t) : (φ ⇒ ψ) ∧ φ ≈ φ ∧ ψ.
 Proof. now boolean. Qed.
 
-Theorem or_impl_iff (φ ψ χ : t) : (φ ∨ ψ ⟹ χ) <-> (φ → χ) ∧ (ψ → χ) ≈ ⊤.
+Theorem or_impl_iff (φ ψ χ : t) : (φ ∨ ψ ⟹ χ) <-> (φ ⇒ χ) ∧ (ψ ⇒ χ) ≈ ⊤.
 Proof.
   split; intros.
   - rewrite !(or_comm _ χ).
@@ -330,7 +328,7 @@ Proof.
     now rewrite H.
 Qed.
 
-Theorem impl_iff (φ ψ : t) : φ ⟹ ψ <-> φ → ψ ≈ ⊤.
+Theorem impl_iff (φ ψ : t) : (φ ⟹ ψ) <-> (φ ⇒ ψ ≈ ⊤).
 Proof.
   split; intro.
   - apply true_impl.
@@ -346,7 +344,7 @@ Proof.
   now boolean.
 Qed.
 
-Theorem or_monotonicity (φ ψ χ : t) : (φ → ψ) ⟹ (φ ∨ χ → ψ ∨ χ).
+Theorem or_monotonicity (φ ψ χ : t) : (φ ⇒ ψ) ⟹ (φ ∨ χ ⇒ ψ ∨ χ).
 Proof.
   rewrite not_or.
   rewrite <- or_assoc.

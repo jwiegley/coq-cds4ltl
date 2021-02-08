@@ -1,17 +1,11 @@
 Require Import
-  Program
-  Coq.Relations.Relation_Definitions
   Coq.Classes.Equivalence
-  Coq.Classes.SetoidClass
-  Coq.Classes.RelationClasses
   Coq.Classes.Morphisms
-  Coq.Setoids.Setoid
+  Coq.Classes.SetoidClass
+  Coq.Arith.PeanoNat
+  Coq.Program.Basics
   Coq.Sets.Ensembles
   Same_set.
-
-Generalizable All Variables.
-Set Transparent Obligations.
-Set Decidable Equality Schemes.
 
 Section Stream.
 
@@ -33,14 +27,15 @@ Qed.
 Definition head (s : Stream) : a :=
   match s with Cons x _ => x end.
 
-Definition tail (s : Stream) : Stream :=
-  match s with Cons _ xs => xs end.
-
 Fixpoint from (i : nat) (s : Stream) : Stream :=
   match i with
   | O => s
-  | S n => from n (tail s)
+  | S n =>
+    match s with Cons _ xs => from n xs end
   end.
+
+Definition tail : Stream -> Stream := from 1.
+Arguments tail s /.
 
 Lemma from_cons i x s : from (S i) (Cons x s) = from i s.
 Proof. now induction i. Qed.
@@ -61,14 +56,13 @@ Qed.
 Lemma from_tail_S i s : from i (tail s) = from (S i) s.
 Proof.
   revert s.
-  induction i; intros; auto.
+  induction i; intros; destruct s; auto.
 Qed.
 
 Lemma from_tail i s : from i (tail s) = tail (from i s).
 Proof.
   revert s.
-  induction i; intros; auto.
-  destruct s; auto.
+  induction i; intros; destruct s; auto.
   now rewrite tail_from_S, from_tail_S.
 Qed.
 
@@ -76,19 +70,7 @@ Lemma tail_from i s : tail (from i s) = from i (tail s).
 Proof. symmetry. now apply from_tail. Qed.
 
 Lemma from_S i j s : from i (from (S j) s) = from (S i) (from j s).
-Proof.
-  generalize dependent j.
-  induction i; intros; auto.
-  - destruct s; auto.
-    rewrite from_cons.
-    simpl.
-    now rewrite tail_from.
-  - rewrite <- IHi.
-    destruct s; auto.
-    rewrite from_cons.
-    simpl.
-    now rewrite !tail_from.
-Qed.
+Proof. now rewrite <- !from_tail_S, !from_tail. Qed.
 
 Lemma from_from i j s : from i (from j s) = from j (from i s).
 Proof.
@@ -106,15 +88,13 @@ Proof.
   induction i; intros; auto.
   rewrite PeanoNat.Nat.add_succ_comm.
   rewrite <- IHi.
-  simpl.
-  now rewrite tail_from.
+  now rewrite from_S.
 Qed.
 
-Definition every (P : Stream -> Prop) (s : Stream) : Prop :=
-  forall i, P (from i s).
+Notation "( s , n ) ⊨ P" := (P (from n s)) (at level 100).
 
-Definition any (P : Stream -> Prop) (s : Stream) : Prop :=
-  exists i, P (from i s).
+Definition every (P : Stream -> Prop) (s : Stream) := forall i, (s, i) ⊨ P.
+Definition any   (P : Stream -> Prop) (s : Stream) := exists i, (s, i) ⊨ P.
 
 Section stream_eq_coind.
   Variable R : Stream -> Stream -> Prop.
@@ -130,23 +110,6 @@ Section stream_eq_coind.
     apply (Cons_case_tl _ _ H).
   Qed.
 End stream_eq_coind.
-
-Section stream_eq_onequant.
-  Variables B : Type.
-
-  Variables f g : B -> Stream.
-
-  Hypothesis Cons_case_hd : forall x, head (f x) = head (g x).
-  Hypothesis Cons_case_tl : forall x,
-    exists y, tail (f x) = f y /\ tail (g x) = g y.
-
-  Theorem stream_eq_onequant : forall x, stream_eq (f x) (g x).
-    intro.
-    apply (stream_eq_coind (fun s1 s2 => exists x, s1 = f x /\ s2 = g x));
-    firstorder; subst; auto.
-    now exists x.
-  Qed.
-End stream_eq_onequant.
 
 Global Program Instance stream_eq_Equivalence : Equivalence stream_eq.
 Next Obligation.
@@ -291,6 +254,23 @@ Proof.
   now destruct s.
 Qed.
 
+Section stream_eq_onequant.
+  Variables B : Type.
+
+  Variables f g : B -> Stream.
+
+  Hypothesis Cons_case_hd : forall x, head (f x) = head (g x).
+  Hypothesis Cons_case_tl : forall x,
+    exists y, tail (f x) = f y /\ tail (g x) = g y.
+
+  Theorem stream_eq_onequant : forall x, stream_eq (f x) (g x).
+    intro.
+    apply (stream_eq_coind (fun s1 s2 => exists x, s1 = f x /\ s2 = g x));
+    firstorder; subst; auto.
+    now exists x.
+  Qed.
+End stream_eq_onequant.
+
 End Stream.
 
 Arguments Cons {a} x s.
@@ -299,3 +279,5 @@ Arguments from {a} i s.
 Arguments tail {a} s.
 Arguments every {a} P s.
 Arguments any {a} P s.
+
+Notation "( s , n ) ⊨ P" := (P (from n s)) (at level 10).
