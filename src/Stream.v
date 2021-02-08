@@ -91,7 +91,7 @@ Proof.
   now rewrite from_S.
 Qed.
 
-Notation "( s , n ) ⊨ P" := (P (from n s)) (at level 100).
+Notation "( s , n ) ⊨ P" := (P (from n s)) (at level 85).
 
 Definition every (P : Stream -> Prop) (s : Stream) := forall i, (s, i) ⊨ P.
 Definition any   (P : Stream -> Prop) (s : Stream) := exists i, (s, i) ⊨ P.

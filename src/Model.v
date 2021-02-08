@@ -22,7 +22,6 @@ Definition true  := Full_set (Stream a).
 Definition false := Empty_set (Stream a).
 Definition and   := Intersection (Stream a).
 Definition impl  := Included (Stream a).
-Definition eqv   := Same_set (Stream a).
 
 Program Instance impl_reflexive : Reflexive impl.
 Next Obligation.
@@ -36,17 +35,26 @@ Next Obligation.
   now intuition.
 Qed.
 
-Instance eqv_equivalence : Equivalence eqv.
-Proof.
-  split.
-  - intro x; now split.
-  - repeat intro; split; destruct H; now intuition.
-  - repeat intro; split; destruct H, H0; now transitivity y.
-Defined.
-
 Definition next : t -> t :=
   λ p s, (s, 1) ⊨ p.
+
+Theorem next_semantics : ∀ σ j p, (σ, j) ⊨ ◯ p <-> (σ, j + 1) ⊨ p.
+Proof.
+  unfold next.
+  split; intros.
+  - rewrite PeanoNat.Nat.add_comm.
+    now rewrite <- from_plus.
+  - rewrite PeanoNat.Nat.add_comm in H.
+    now rewrite <- from_plus in H.
+Qed.
+
 Definition until : t -> t -> t :=
+  λ p q s, ∃ i, (s, i) ⊨ q /\ ∀ k, k < i -> (s, k) ⊨ p.
+
+Definition always     : t -> t := λ p s, ∀ i, (s, i) ⊨ p.
+Definition eventually : t -> t := λ p s, ∃ i, (s, i) ⊨ p.
+
+Definition wait : t -> t -> t :=
   λ p q s, ∃ i, (s, i) ⊨ q /\ ∀ k, k < i -> (s, k) ⊨ p.
 
 End StreamLTL.
