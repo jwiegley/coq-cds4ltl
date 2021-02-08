@@ -29,25 +29,25 @@ Program Instance and_respects_eqv : Proper (eqv ==> eqv ==> eqv) and.
     equivalent to the more basic definition. *)
 Hypothesis and_def : forall (φ ψ : t), φ ∧ ψ ≈ ¬(¬φ ∨ ¬ψ).
 
-Lemma not_or (φ ψ : t) : ¬(φ ∨ ψ) ≈ ¬φ ∧ ¬ψ.
+Theorem not_or (φ ψ : t) : ¬(φ ∨ ψ) ≈ ¬φ ∧ ¬ψ.
 Proof.
   rewrite and_def.
   now rewrite !not_not.
 Qed.
 
-Lemma not_and (φ ψ : t) : ¬(φ ∧ ψ) ≈ ¬φ ∨ ¬ψ.
+Theorem not_and (φ ψ : t) : ¬(φ ∧ ψ) ≈ ¬φ ∨ ¬ψ.
 Proof.
   rewrite and_def.
   now rewrite !not_not.
 Qed.
 
-Lemma or_def (φ ψ : t) : φ ∨ ψ ≈ ¬(¬φ ∧ ¬ψ).
+Theorem or_def (φ ψ : t) : φ ∨ ψ ≈ ¬(¬φ ∧ ¬ψ).
 Proof.
   rewrite <- (not_not (φ ∨ ψ)).
   now rewrite not_or.
 Qed.
 
-Lemma and_true (φ : t) : φ ∧ ⊤ ≈ φ.
+Theorem and_true (φ : t) : φ ∧ ⊤ ≈ φ.
 Proof.
   rewrite and_def.
   rewrite not_true.
@@ -55,7 +55,7 @@ Proof.
   now apply not_not.
 Qed.
 
-Lemma and_false (φ : t) : φ ∧ ⊥ ≈ ⊥.
+Theorem and_false (φ : t) : φ ∧ ⊥ ≈ ⊥.
 Proof.
   rewrite and_def.
   rewrite not_false.
@@ -63,7 +63,7 @@ Proof.
   now apply not_true.
 Qed.
 
-Lemma true_and (φ : t) : ⊤ ∧ φ ≈ φ.
+Theorem true_and (φ : t) : ⊤ ∧ φ ≈ φ.
 Proof.
   rewrite and_def.
   rewrite not_true.
@@ -71,7 +71,7 @@ Proof.
   now apply not_not.
 Qed.
 
-Lemma false_and (φ : t) : ⊥ ∧ φ ≈ ⊥.
+Theorem false_and (φ : t) : ⊥ ∧ φ ≈ ⊥.
 Proof.
   rewrite and_def.
   rewrite not_false.
@@ -79,27 +79,27 @@ Proof.
   now apply not_true.
 Qed.
 
-Lemma and_idem (φ : t) : φ ∧ φ ≈ φ.
+Theorem and_idem (φ : t) : φ ∧ φ ≈ φ.
 Proof.
   rewrite and_def.
   rewrite or_idem.
   now apply not_not.
 Qed.
 
-Lemma and_comm (φ ψ : t) : φ ∧ ψ ≈ ψ ∧ φ.
+Theorem and_comm (φ ψ : t) : φ ∧ ψ ≈ ψ ∧ φ.
 Proof.
   rewrite !and_def.
   now rewrite or_comm.
 Qed.
 
-Lemma and_assoc (φ ψ χ : t) : (φ ∧ ψ) ∧ χ ≈ φ ∧ (ψ ∧ χ).
+Theorem and_assoc (φ ψ χ : t) : (φ ∧ ψ) ∧ χ ≈ φ ∧ (ψ ∧ χ).
 Proof.
   rewrite !and_def.
   rewrite !not_not.
   now rewrite or_assoc.
 Qed.
 
-Lemma or_absorb (φ ψ : t) : φ ∨ (φ ∧ ψ) ≈ φ.
+Theorem or_absorb (φ ψ : t) : φ ∨ (φ ∧ ψ) ≈ φ.
 Proof.
   rewrite <- (huntington φ ψ) at 1.
   rewrite and_def.
@@ -109,7 +109,7 @@ Proof.
   now apply huntington.
 Qed.
 
-Lemma and_absorb (φ ψ : t) : φ ∧ (φ ∨ ψ) ≈ φ.
+Theorem and_absorb (φ ψ : t) : φ ∧ (φ ∨ ψ) ≈ φ.
 Proof.
   rewrite and_def.
   rewrite <- (not_not φ) at 2.
@@ -119,21 +119,21 @@ Proof.
   now rewrite not_not.
 Qed.
 
-Lemma and_this_not_that (φ ψ : t) : (φ ∧ ψ) ∨ (φ ∧ ¬ψ) ≈ φ.
+Theorem and_this_not_that (φ ψ : t) : (φ ∧ ψ) ∨ (φ ∧ ¬ψ) ≈ φ.
 Proof.
   rewrite !and_def.
   rewrite not_not.
   now apply huntington.
 Qed.
 
-Lemma absurdity (φ : t) : φ ∧ ¬φ ≈ ⊥.
+Theorem absurdity (φ : t) : φ ∧ ¬φ ≈ ⊥.
 Proof.
   rewrite and_def.
   now rewrite <- false_def.
 Qed.
 
 (** This proof was discovered by Don Monk. *)
-Lemma and_or (φ ψ χ : t) : φ ∧ (ψ ∨ χ) ≈ (φ ∧ ψ) ∨ (φ ∧ χ).
+Theorem and_or (φ ψ χ : t) : φ ∧ (ψ ∨ χ) ≈ (φ ∧ ψ) ∨ (φ ∧ χ).
 Proof.
   rewrite <- (and_this_not_that (φ ∧ (ψ ∨ χ)) ψ).
   rewrite !and_assoc.
@@ -169,7 +169,7 @@ Proof.
   now rewrite (and_comm _ χ).
 Qed.
 
-Lemma and_or_r (φ ψ χ : t) : (ψ ∨ χ) ∧ φ ≈ (ψ ∧ φ) ∨ (χ ∧ φ).
+Theorem and_or_r (φ ψ χ : t) : (ψ ∨ χ) ∧ φ ≈ (ψ ∧ φ) ∨ (χ ∧ φ).
 Proof.
   rewrite and_comm.
   rewrite and_or.
@@ -177,7 +177,7 @@ Proof.
   reflexivity.
 Qed.
 
-Lemma or_and (φ ψ χ : t) : φ ∨ (ψ ∧ χ) ≈ (φ ∨ ψ) ∧ (φ ∨ χ).
+Theorem or_and (φ ψ χ : t) : φ ∨ (ψ ∧ χ) ≈ (φ ∨ ψ) ∧ (φ ∨ χ).
 Proof.
   rewrite <- (not_not φ) at 1.
   rewrite and_def.
@@ -188,7 +188,7 @@ Proof.
   now rewrite <- and_def.
 Qed.
 
-Lemma or_and_r (φ ψ χ : t) : (ψ ∧ χ) ∨ φ ≈ (ψ ∨ φ) ∧ (χ ∨ φ).
+Theorem or_and_r (φ ψ χ : t) : (ψ ∧ χ) ∨ φ ≈ (ψ ∨ φ) ∧ (χ ∨ φ).
 Proof.
   rewrite or_comm.
   rewrite or_and.
@@ -196,21 +196,21 @@ Proof.
   reflexivity.
 Qed.
 
-Lemma or_not_absorb (φ ψ : t) : φ ∨ (¬φ ∧ ψ) ≈ φ ∨ ψ.
+Theorem or_not_absorb (φ ψ : t) : φ ∨ (¬φ ∧ ψ) ≈ φ ∨ ψ.
 Proof.
   rewrite or_and.
   rewrite true_def.
   now rewrite true_and.
 Qed.
 
-Lemma and_not_absorb (φ ψ : t) : φ ∧ (¬φ ∨ ψ) ≈ φ ∧ ψ.
+Theorem and_not_absorb (φ ψ : t) : φ ∧ (¬φ ∨ ψ) ≈ φ ∧ ψ.
 Proof.
   rewrite and_or.
   rewrite absurdity.
   now rewrite false_or.
 Qed.
 
-Lemma and_proj (φ ψ : t) : φ ∧ ψ ⟹ φ.
+Theorem and_proj (φ ψ : t) : φ ∧ ψ ⟹ φ.
 Proof.
   apply impl_def.
   rewrite and_def.
@@ -259,17 +259,17 @@ Ltac boolean :=
     | [ |- ?P ∧ ?Q ⟹ ?Q ∧ ?P ] => rewrite (and_comm P Q)
   end.
 
-Lemma and_impl (φ ψ χ : t) : φ ∧ ψ → χ ≈ φ → (ψ → χ).
+Theorem and_impl (φ ψ χ : t) : φ ∧ ψ → χ ≈ φ → (ψ → χ).
 Proof.
   rewrite and_def.
   rewrite not_not.
   now rewrite <- or_assoc.
 Qed.
 
-Lemma impl_and (φ ψ χ : t) : φ → ψ ∧ χ ≈ (φ → ψ) ∧ (φ → χ).
+Theorem impl_and (φ ψ χ : t) : φ → ψ ∧ χ ≈ (φ → ψ) ∧ (φ → χ).
 Proof. now rewrite <- or_and. Qed.
 
-Lemma or_impl (φ ψ χ : t) : φ ∨ ψ → χ ≈ (φ → χ) ∧ (ψ → χ).
+Theorem or_impl (φ ψ χ : t) : φ ∨ ψ → χ ≈ (φ → χ) ∧ (ψ → χ).
 Proof.
   rewrite !(or_comm _ χ).
   rewrite <- or_and.
@@ -277,10 +277,10 @@ Proof.
   now rewrite !not_not.
 Qed.
 
-Lemma and_apply (φ ψ : t) : φ ∧ (φ → ψ) ≈ φ ∧ ψ.
+Theorem and_apply (φ ψ : t) : φ ∧ (φ → ψ) ≈ φ ∧ ψ.
 Proof. now rewrite and_or; boolean. Qed.
 
-Lemma and_impl_iff (φ ψ χ : t) : φ ∧ ψ ⟹ χ <-> φ ⟹ (ψ → χ).
+Theorem and_impl_iff (φ ψ χ : t) : φ ∧ ψ ⟹ χ <-> φ ⟹ (ψ → χ).
 Proof.
   split; intro.
   - rewrite <- H; clear H.
@@ -293,7 +293,7 @@ Proof.
     now boolean.
 Qed.
 
-Lemma impl_trans (φ ψ χ : t) : (φ → ψ) ∧ (ψ → χ) ⟹ (φ → χ).
+Theorem impl_trans (φ ψ χ : t) : (φ → ψ) ∧ (ψ → χ) ⟹ (φ → χ).
 Proof.
   apply and_impl_iff.
   rewrite (or_comm _ (_ ∨ _)).
@@ -307,10 +307,10 @@ Proof.
   now boolean.
 Qed.
 
-Lemma impl_apply (φ ψ : t) : (φ → ψ) ∧ φ ≈ φ ∧ ψ.
+Theorem impl_apply (φ ψ : t) : (φ → ψ) ∧ φ ≈ φ ∧ ψ.
 Proof. now boolean. Qed.
 
-Lemma or_impl_iff (φ ψ χ : t) : (φ ∨ ψ ⟹ χ) <-> (φ → χ) ∧ (ψ → χ) ≈ ⊤.
+Theorem or_impl_iff (φ ψ χ : t) : (φ ∨ ψ ⟹ χ) <-> (φ → χ) ∧ (ψ → χ) ≈ ⊤.
 Proof.
   split; intros.
   - rewrite !(or_comm _ χ).
@@ -330,7 +330,7 @@ Proof.
     now rewrite H.
 Qed.
 
-Lemma impl_iff (φ ψ : t) : φ ⟹ ψ <-> φ → ψ ≈ ⊤.
+Theorem impl_iff (φ ψ : t) : φ ⟹ ψ <-> φ → ψ ≈ ⊤.
 Proof.
   split; intro.
   - apply true_impl.
@@ -340,13 +340,13 @@ Proof.
     now rewrite <- H.
 Qed.
 
-Lemma or_excl_middle (φ ψ : t) : φ ∨ ψ ≈ φ ∨ (¬ φ ∧ ψ).
+Theorem or_excl_middle (φ ψ : t) : φ ∨ ψ ≈ φ ∨ (¬ φ ∧ ψ).
 Proof.
   rewrite or_and.
   now boolean.
 Qed.
 
-Lemma or_monotonicity (φ ψ χ : t) : (φ → ψ) ⟹ (φ ∨ χ → ψ ∨ χ).
+Theorem or_monotonicity (φ ψ χ : t) : (φ → ψ) ⟹ (φ ∨ χ → ψ ∨ χ).
 Proof.
   rewrite not_or.
   rewrite <- or_assoc.
@@ -356,6 +356,32 @@ Proof.
   boolean.
   rewrite (or_comm χ).
   now rewrite <- (or_inj _ χ).
+Qed.
+
+Theorem or_and_or (φ ψ χ ρ : t) :
+  (φ ∨ ψ) ∧ (χ ∨ ρ) ≈ (φ ∧ χ) ∨ (φ ∧ ρ) ∨ (χ ∧ ψ) ∨ (ρ ∧ ψ).
+Proof.
+  rewrite and_or.
+  rewrite !and_or_r.
+  rewrite !or_assoc.
+  apply or_respects_eqv; [reflexivity|].
+  rewrite <- !or_assoc.
+  apply or_respects_eqv; [|now boolean].
+  rewrite or_comm.
+  now apply or_respects_eqv; boolean.
+Qed.
+
+Theorem and_or_and (φ ψ χ ρ : t) :
+  (φ ∧ ψ) ∨ (χ ∧ ρ) ≈ (φ ∨ χ) ∧ (φ ∨ ρ) ∧ (χ ∨ ψ) ∧ (ρ ∨ ψ).
+Proof.
+  rewrite or_and.
+  rewrite !or_and_r.
+  rewrite !and_assoc.
+  apply and_respects_eqv; [reflexivity|].
+  rewrite <- !and_assoc.
+  apply and_respects_eqv; [|now boolean].
+  rewrite and_comm.
+  now apply and_respects_eqv; boolean.
 Qed.
 
 End BooleanLogic.

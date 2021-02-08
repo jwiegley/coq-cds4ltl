@@ -107,7 +107,7 @@ Hypothesis huntington : forall (φ ψ : t), ¬(¬φ ∨ ¬ψ) ∨ ¬(¬φ ∨ ψ
 (** Many of the following proofs are based on work from:
     "A Complete Proof of the Robbins Conjecture", by Allen L. Mann
     May 25, 2003 *)
-Lemma or_not (φ : t) : φ ∨ ¬φ ≈ ¬φ ∨ ¬¬φ.
+Theorem or_not (φ : t) : φ ∨ ¬φ ≈ ¬φ ∨ ¬¬φ.
 Proof.
   pose proof (huntington φ (¬¬ φ)) as H1.
   pose proof (huntington (¬ φ) (¬¬ φ)) as H2.
@@ -132,7 +132,7 @@ Proof.
   now rewrite or_comm.
 Qed.
 
-Lemma not_not (φ : t) : ¬¬φ ≈ φ.
+Theorem not_not (φ : t) : ¬¬φ ≈ φ.
 Proof.
   pose proof (huntington (¬¬ φ) (¬ φ)) as H1.
   pose proof (huntington φ (¬¬ φ)) as H2.
@@ -143,7 +143,7 @@ Proof.
   now apply huntington.
 Qed.
 
-Lemma not_swap (φ ψ : t) : ¬φ ≈ ψ <-> φ ≈ ¬ψ.
+Theorem not_swap (φ ψ : t) : ¬φ ≈ ψ <-> φ ≈ ¬ψ.
 Proof.
   split; intro.
   - rewrite <- not_not.
@@ -152,7 +152,7 @@ Proof.
     now apply not_not.
 Qed.
 
-Lemma not_inj (φ ψ : t) : ¬φ ≈ ¬ψ -> φ ≈ ψ.
+Theorem not_inj (φ ψ : t) : ¬φ ≈ ¬ψ -> φ ≈ ψ.
 Proof.
   intro.
   rewrite <- (not_not φ).
@@ -160,16 +160,16 @@ Proof.
   now rewrite H.
 Qed.
 
-Lemma not_true : ¬⊤ ≈ ⊥.
+Theorem not_true : ¬⊤ ≈ ⊥.
 Proof. now rewrite <- (true_def ⊥), false_def. Qed.
 
-Lemma not_false : ¬⊥ ≈ ⊤.
+Theorem not_false : ¬⊥ ≈ ⊤.
 Proof.
   rewrite <- (false_def ⊤), true_def.
   now apply not_not.
 Qed.
 
-Lemma or_false (φ : t) : φ ∨ ⊥ ≈ φ.
+Theorem or_false (φ : t) : φ ∨ ⊥ ≈ φ.
 Proof.
   pose proof (huntington ⊥ ⊥) as H1.
   rewrite (or_comm _ ⊥) in H1.
@@ -203,10 +203,10 @@ Proof.
   now rewrite huntington.
 Qed.
 
-Lemma false_or (φ : t) : ⊥ ∨ φ ≈ φ.
+Theorem false_or (φ : t) : ⊥ ∨ φ ≈ φ.
 Proof. now rewrite or_comm; apply or_false. Qed.
 
-Lemma or_idem (φ : t) : φ ∨ φ ≈ φ.
+Theorem or_idem (φ : t) : φ ∨ φ ≈ φ.
 Proof.
   assert (H1 : forall φ, ¬ (¬ φ ∨ ¬ φ) ≈ φ).
     intro p.
@@ -220,7 +220,7 @@ Proof.
   exact H1.
 Qed.
 
-Lemma or_true (φ : t) : φ ∨ ⊤ ≈ ⊤.
+Theorem or_true (φ : t) : φ ∨ ⊤ ≈ ⊤.
 Proof.
   rewrite <- (true_def φ) at 1.
   rewrite <- or_assoc.
@@ -228,10 +228,10 @@ Proof.
   now apply true_def.
 Qed.
 
-Lemma true_or (φ : t) : ⊤ ∨ φ ≈ ⊤.
+Theorem true_or (φ : t) : ⊤ ∨ φ ≈ ⊤.
 Proof. now rewrite or_comm; apply or_true. Qed.
 
-Lemma not_not_or_true (φ : t) : ¬(¬φ ∨ ¬⊤) ≈ φ.
+Theorem not_not_or_true (φ : t) : ¬(¬φ ∨ ¬⊤) ≈ φ.
 Proof.
   intros.
   rewrite not_true.
@@ -239,7 +239,7 @@ Proof.
   now apply not_not.
 Qed.
 
-Lemma contrapositive (φ ψ : t) : φ ⟹ ψ <-> ¬ψ ⟹ ¬φ.
+Theorem contrapositive (φ ψ : t) : φ ⟹ ψ <-> ¬ψ ⟹ ¬φ.
 Proof.
   split; intro.
   - rewrite H.
@@ -248,7 +248,7 @@ Proof.
     now rewrite !not_not in H.
 Qed.
 
-Lemma impl_def : forall (φ ψ : t), (φ ⟹ ψ) <-> (⊤ ⟹ ¬ φ ∨ ψ).
+Theorem impl_def : forall (φ ψ : t), (φ ⟹ ψ) <-> (⊤ ⟹ ¬ φ ∨ ψ).
 Proof.
   split; intros.
   - rewrite <- H.
@@ -265,7 +265,7 @@ Proof.
     reflexivity.
 Qed.
 
-Lemma or_inj (φ ψ : t) : φ ⟹ φ ∨ ψ.
+Theorem or_inj (φ ψ : t) : φ ⟹ φ ∨ ψ.
 Proof.
   apply impl_def.
   rewrite <- or_assoc.
@@ -275,7 +275,7 @@ Proof.
   reflexivity.
 Qed.
 
-Lemma true_impl (φ : t) : ⊤ ⟹ φ <-> φ ≈ ⊤.
+Theorem true_impl (φ : t) : ⊤ ⟹ φ <-> φ ≈ ⊤.
 Proof.
   split; intro.
   - split; auto.
@@ -284,19 +284,19 @@ Proof.
   - now rewrite H.
 Qed.
 
-Lemma excluded_middle (φ : t) : ⊤ ⟹ φ ∨ ¬φ.
+Theorem excluded_middle (φ : t) : ⊤ ⟹ φ ∨ ¬φ.
 Proof.
   apply true_impl.
   now rewrite <- true_def.
 Qed.
 
-Lemma impl_true (φ : t) : φ ⟹ ⊤.
+Theorem impl_true (φ : t) : φ ⟹ ⊤.
 Proof.
   rewrite <- (true_def φ).
   now apply or_inj.
 Qed.
 
-Lemma false_impl (φ : t) : ⊥ ⟹ φ.
+Theorem false_impl (φ : t) : ⊥ ⟹ φ.
 Proof.
   rewrite <- (false_def φ).
   apply contrapositive.

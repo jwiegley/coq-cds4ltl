@@ -55,14 +55,14 @@ Program Instance strong_release_respects_eqv : Proper (eqv ==> eqv ==> eqv) stro
 
 Axiom (* 38 *) evn_def : forall (φ : t), ◇ φ ≈ ⊤ U φ.
 
-Lemma (* 39 *) law_39 (φ ψ : t) : (φ U ψ) ∧ ◇ ψ ≈ φ U ψ.
+Theorem (* 39 *) law_39 (φ ψ : t) : (φ U ψ) ∧ ◇ ψ ≈ φ U ψ.
 Proof.
   rewrite evn_def.
   rewrite <- until_right_and.
   now rewrite and_true.
 Qed.
 
-Lemma (* 40 *) until_absorb_or_evn (φ ψ : t) : (φ U ψ) ∨ ◇ ψ ≈ ◇ ψ.
+Theorem (* 40 *) until_absorb_or_evn (φ ψ : t) : (φ U ψ) ∨ ◇ ψ ≈ ◇ ψ.
 Proof.
   rewrite evn_def.
   split.
@@ -72,7 +72,7 @@ Proof.
     now apply or_inj.
 Qed.
 
-Lemma (* 41 *) until_absorb_evn (φ ψ : t) : φ U ◇ ψ ≈ ◇ ψ.
+Theorem (* 41 *) until_absorb_evn (φ ψ : t) : φ U ◇ ψ ≈ ◇ ψ.
 Proof.
   rewrite evn_def.
   split.
@@ -81,7 +81,7 @@ Proof.
   - now apply until_insertion.
 Qed.
 
-Lemma (* 42 *) law_42 (φ ψ : t) : φ U ψ ⟹ ◇ ψ.
+Theorem (* 42 *) law_42 (φ ψ : t) : φ U ψ ⟹ ◇ ψ.
 Proof.
   rewrite <- (until_absorb_evn φ).
   apply until_respects_impl; [reflexivity|].
@@ -89,32 +89,32 @@ Proof.
   now rewrite <- until_insertion.
 Qed.
 
-Lemma (* 43 *) law_43 : ◇ ⊤ ≈ ⊤.
+Theorem (* 43 *) law_43 : ◇ ⊤ ≈ ⊤.
 Proof.
   rewrite evn_def.
   now apply until_true.
 Qed.
 
-Lemma (* 44 *) law_44 : ◇ ⊥ ≈ ⊥.
+Theorem (* 44 *) law_44 : ◇ ⊥ ≈ ⊥.
 Proof.
   rewrite evn_def.
   now apply until_right_bottom.
 Qed.
 
-Lemma (* 45 *) law_45 (φ : t) : ◇ φ ≈ φ ∨ ◯ ◇ φ.
+Theorem (* 45 *) law_45 (φ : t) : ◇ φ ≈ φ ∨ ◯ ◇ φ.
 Proof.
   rewrite evn_def.
   rewrite until_expansion at 1.
   now rewrite true_and.
 Qed.
 
-Lemma (* 46 *) evn_weaken (φ : t) : φ ⟹ ◇ φ.
+Theorem (* 46 *) evn_weaken (φ : t) : φ ⟹ ◇ φ.
 Proof.
   rewrite evn_def.
   now rewrite <- until_insertion.
 Qed.
 
-Lemma (* 47 *) law_47 (φ : t) : ◯ φ ⟹ ◇ φ.
+Theorem (* 47 *) law_47 (φ : t) : ◯ φ ⟹ ◇ φ.
 Proof.
   rewrite evn_def.
   rewrite until_expansion.
@@ -126,38 +126,38 @@ Proof.
   apply evn_weaken.
 Qed.
 
-Lemma (* 48 *) law_48 (φ : t) : φ ∨ ◇ φ ≈ ◇ φ.
+Theorem (* 48 *) law_48 (φ : t) : φ ∨ ◇ φ ≈ ◇ φ.
 Proof.
   rewrite <- (false_until φ) at 1.
   now apply until_absorb_or_evn.
 Qed.
 
-Lemma (* 49 *) law_49 (φ : t) : ◇ φ ∧ φ ≈ φ.
+Theorem (* 49 *) law_49 (φ : t) : ◇ φ ∧ φ ≈ φ.
 Proof.
   rewrite evn_def.
   now apply until_absorb_u_and.
 Qed.
 
-Lemma (* 50 *) law_50 (φ : t) : ◇ ◇ φ ≈ ◇ φ.
+Theorem (* 50 *) law_50 (φ : t) : ◇ ◇ φ ≈ ◇ φ.
 Proof.
   rewrite !evn_def.
   now apply until_left_absorb.
 Qed.
 
-Lemma (* 51 *) law_51 (φ : t) : ◯ ◇ φ ≈ ◇ ◯ φ.
+Theorem (* 51 *) law_51 (φ : t) : ◯ ◇ φ ≈ ◇ ◯ φ.
 Proof.
   rewrite !evn_def.
   rewrite next_until.
   now rewrite next_true.
 Qed.
 
-Lemma (* 52 *) evn_or (φ ψ : t) : ◇ (φ ∨ ψ) ≈ ◇ φ ∨ ◇ ψ.
+Theorem (* 52 *) evn_or (φ ψ : t) : ◇ (φ ∨ ψ) ≈ ◇ φ ∨ ◇ ψ.
 Proof.
   rewrite !evn_def.
   now apply until_left_or.
 Qed.
 
-Lemma (* 53 *) law_53 (φ ψ : t) : ◇ (φ ∧ ψ) ⟹ ◇ φ ∧ ◇ ψ.
+Theorem (* 53 *) law_53 (φ ψ : t) : ◇ (φ ∧ ψ) ⟹ ◇ φ ∧ ◇ ψ.
 Proof.
   rewrite !evn_def.
   now apply until_left_and.
@@ -202,7 +202,7 @@ Axiom (* 54 *) always_def : forall (φ : t), □ φ ≈ ¬◇ ¬φ.
 Axiom (* 55 *) always_until_and_ind : forall (φ ψ χ : t),
   □ (φ → (◯ φ ∧ ψ) ∨ χ) ⟹ φ → □ ψ ∨ ψ U χ.
 
-Lemma (* 73 *) law_73 (φ : t) : ◯ □ φ ≈ □ ◯ φ.
+Theorem (* 73 *) law_73 (φ : t) : ◯ □ φ ≈ □ ◯ φ.
 Proof.
   rewrite !always_def.
   rewrite next_not.
@@ -210,7 +210,7 @@ Proof.
   now rewrite <- next_not.
 Qed.
 
-Lemma (* 66 *) law_66 (φ : t) : □ φ ≈ φ ∧ ◯ □ φ.
+Theorem (* 66 *) law_66 (φ : t) : □ φ ≈ φ ∧ ◯ □ φ.
 Proof.
   rewrite always_def.
   rewrite law_45 at 1.
@@ -219,7 +219,7 @@ Proof.
   now rewrite next_not.
 Qed.
 
-Lemma (* 56 *) always_until_or_ind (φ ψ : t) :
+Theorem (* 56 *) always_until_or_ind (φ ψ : t) :
   □ (φ → ◯ (φ ∨ ψ)) ⟹ φ → □ φ ∨ φ U ψ.
 Proof.
   rewrite (* 10 *) (until_expansion φ ψ).
@@ -253,7 +253,7 @@ Proof.
   reflexivity.
 Qed.
 
-Lemma (* 57 *) always_induction (φ : t) : □ (φ → ◯ φ) ⟹ (φ → □ φ).
+Theorem (* 57 *) always_induction (φ : t) : □ (φ → ◯ φ) ⟹ (φ → □ φ).
 Proof.
   pose proof (always_until_or_ind φ ⊥).
   rewrite or_false in H.
@@ -262,7 +262,7 @@ Proof.
   now rewrite or_false.
 Qed.
 
-Lemma (* 58 *) evn_induction (φ : t) : □ (◯ φ → φ) ⟹ (◇ φ → φ).
+Theorem (* 58 *) evn_induction (φ : t) : □ (◯ φ → φ) ⟹ (◇ φ → φ).
 Proof.
   rewrite !always_def.
   rewrite !evn_def.
@@ -282,22 +282,22 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 59 *) law_59 (φ : t) : ◇ φ ≈ ¬□ ¬φ.
+Theorem (* 59 *) law_59 (φ : t) : ◇ φ ≈ ¬□ ¬φ.
 Proof. now rewrite always_def; boolean. Qed.
 
-Lemma (* 60 *) law_60 (φ : t) : ¬□ φ ≈ ◇ ¬φ.
+Theorem (* 60 *) law_60 (φ : t) : ¬□ φ ≈ ◇ ¬φ.
 Proof. now rewrite always_def; boolean. Qed.
 
-Lemma (* 61 *) law_61 (φ : t) : ¬◇ φ ≈ □ ¬φ.
+Theorem (* 61 *) law_61 (φ : t) : ¬◇ φ ≈ □ ¬φ.
 Proof. now rewrite always_def; boolean. Qed.
 
-Lemma (* 62 *) law_62 (φ : t) : ¬◇ □ φ ≈ □ ◇ ¬φ.
+Theorem (* 62 *) law_62 (φ : t) : ¬◇ □ φ ≈ □ ◇ ¬φ.
 Proof. now rewrite !always_def. Qed.
 
-Lemma (* 63 *) law_63 (φ : t) : ¬□ ◇ φ ≈ ◇ □ ¬φ.
+Theorem (* 63 *) law_63 (φ : t) : ¬□ ◇ φ ≈ ◇ □ ¬φ.
 Proof. now rewrite !always_def; boolean. Qed.
 
-Lemma (* 64 *) law_64 : □ ⊤ ≈ ⊤.
+Theorem (* 64 *) law_64 : □ ⊤ ≈ ⊤.
 Proof.
   rewrite always_def.
   rewrite not_true.
@@ -305,7 +305,7 @@ Proof.
   now rewrite not_false.
 Qed.
 
-Lemma (* 65 *) law_65 : □ ⊥ ≈ ⊥.
+Theorem (* 65 *) law_65 : □ ⊥ ≈ ⊥.
 Proof.
   rewrite always_def.
   rewrite not_false.
@@ -313,7 +313,7 @@ Proof.
   now rewrite not_true.
 Qed.
 
-(* Lemma (* 66 *) law_66 (φ : t) : □ φ ≈ φ ∧ ◯ □ φ. *)
+(* Theorem (* 66 *) law_66 (φ : t) : □ φ ≈ φ ∧ ◯ □ φ. *)
 (* Proof. *)
 (*   rewrite always_def. *)
 (*   rewrite law_45 at 1. *)
@@ -322,7 +322,7 @@ Qed.
 (*   now rewrite next_not. *)
 (* Qed. *)
 
-Lemma (* 67 *) law_67 (φ : t) : □ φ ≈ φ ∧ ◯ φ ∧ ◯ □ φ.
+Theorem (* 67 *) law_67 (φ : t) : □ φ ≈ φ ∧ ◯ φ ∧ ◯ □ φ.
 Proof.
   split.
   - rewrite <- next_and.
@@ -340,7 +340,7 @@ Proof.
     now apply and_proj.
 Qed.
 
-Lemma (* 68 *) law_68 (φ : t) : φ ∧ □ φ ≈ □ φ.
+Theorem (* 68 *) law_68 (φ : t) : φ ∧ □ φ ≈ □ φ.
 Proof.
   split.
   - rewrite always_def.
@@ -351,7 +351,7 @@ Proof.
     now rewrite and_idem.
 Qed.
 
-Lemma (* 69 *) law_69 (φ : t) : □ φ ∨ φ ≈ φ.
+Theorem (* 69 *) law_69 (φ : t) : □ φ ∨ φ ≈ φ.
 Proof.
   split.
   - rewrite <- law_68.
@@ -363,7 +363,7 @@ Proof.
     now apply or_inj.
 Qed.
 
-Lemma (* 70 *) law_70 (φ : t) : ◇ φ ∧ □ φ ≈ □ φ.
+Theorem (* 70 *) law_70 (φ : t) : ◇ φ ∧ □ φ ≈ □ φ.
 Proof.
   split.
   - rewrite and_comm.
@@ -372,7 +372,7 @@ Proof.
     now rewrite <- evn_weaken.
 Qed.
 
-Lemma (* 71 *) law_71 (φ : t) : □ φ ∨ ◇ φ ≈ ◇ φ.
+Theorem (* 71 *) law_71 (φ : t) : □ φ ∨ ◇ φ ≈ ◇ φ.
 Proof.
   split.
   - rewrite always_def.
@@ -384,7 +384,7 @@ Proof.
     now apply or_inj.
 Qed.
 
-Lemma (* 72 *) law_72 (φ : t) : □ □ φ ≈ □ φ.
+Theorem (* 72 *) law_72 (φ : t) : □ □ φ ≈ □ φ.
 Proof.
   rewrite always_def.
   rewrite law_60.
@@ -392,7 +392,7 @@ Proof.
   now rewrite <- always_def.
 Qed.
 
-(* Lemma (* 73 *) law_73 (φ : t) : ◯ □ φ ≈ □ ◯ φ. *)
+(* Theorem (* 73 *) law_73 (φ : t) : ◯ □ φ ≈ □ ◯ φ. *)
 (* Proof. *)
 (*   rewrite !always_def. *)
 (*   rewrite next_not. *)
@@ -400,7 +400,7 @@ Qed.
 (*   now rewrite <- next_not. *)
 (* Qed. *)
 
-Lemma (* 74 *) law_74 (φ : t) : φ → □ φ ⟹ φ → ◯ □ φ.
+Theorem (* 74 *) law_74 (φ : t) : φ → □ φ ⟹ φ → ◯ □ φ.
 Proof.
   rewrite always_def.
   rewrite <- always_def.
@@ -411,7 +411,7 @@ Proof.
   now rewrite true_and.
 Qed.
 
-Lemma (* 75 *) law_75 (φ : t) : φ ∧ ◇ ¬φ ⟹ ◇ (φ ∧ ◯ ¬φ).
+Theorem (* 75 *) law_75 (φ : t) : φ ∧ ◇ ¬φ ⟹ ◇ (φ ∧ ◯ ¬φ).
 Proof.
   apply contrapositive.
   rewrite !and_def.
@@ -421,7 +421,7 @@ Proof.
   now apply always_induction.
 Qed.
 
-Lemma (* 76 *) law_76 (φ : t) : □ φ ⟹ φ.
+Theorem (* 76 *) law_76 (φ : t) : □ φ ⟹ φ.
 Proof.
   rewrite always_def.
   apply contrapositive.
@@ -429,23 +429,21 @@ Proof.
   now apply evn_weaken.
 Qed.
 
-Lemma (* NEW *) always_apply (φ ψ : t) : □ (φ → ψ) ∧ φ ⟹ □ (φ → ψ) ∧ φ ∧ ψ.
+Corollary (* NEW *) always_apply (φ ψ : t) : □ (φ → ψ) ∧ φ ⟹ ψ.
 Proof.
-  rewrite <- (and_idem (□ (φ → ψ) ∧ φ)).
-  rewrite law_76 at 2.
-  rewrite impl_apply.
-  rewrite and_assoc.
-  rewrite <- (and_assoc _ _ ψ).
-  now rewrite and_idem.
+  rewrite law_76.
+  rewrite and_comm.
+  rewrite and_apply.
+  now boolean.
 Qed.
 
-Lemma (* 77 *) law_77 (φ : t) : □ φ ⟹ ◇ φ.
+Theorem (* 77 *) law_77 (φ : t) : □ φ ⟹ ◇ φ.
 Proof.
   rewrite <- evn_weaken.
   now apply law_76.
 Qed.
 
-Lemma (* 78 *) law_78 (φ : t) : □ φ ⟹ ◯ φ.
+Theorem (* 78 *) law_78 (φ : t) : □ φ ⟹ ◯ φ.
 Proof.
   rewrite law_67.
   rewrite and_comm.
@@ -453,19 +451,19 @@ Proof.
   now apply and_proj.
 Qed.
 
-Lemma (* 79 *) law_79 (φ : t) : □ φ ⟹ ◯ □ φ.
+Theorem (* 79 *) law_79 (φ : t) : □ φ ⟹ ◯ □ φ.
 Proof.
   rewrite <- law_78.
   now rewrite law_72.
 Qed.
 
-Lemma (* 80 *) law_80 (φ : t) : □ φ ⟹ □ ◯ φ.
+Theorem (* 80 *) law_80 (φ : t) : □ φ ⟹ □ ◯ φ.
 Proof.
   rewrite <- law_73.
   now apply law_79.
 Qed.
 
-Lemma (* 81 *) law_81 (φ ψ : t) : □ φ ⟹ ¬(ψ U ¬φ).
+Theorem (* 81 *) law_81 (φ ψ : t) : □ φ ⟹ ¬(ψ U ¬φ).
 Proof.
   rewrite always_def.
   apply contrapositive.
@@ -484,7 +482,7 @@ This follows from the axiom impl_denote, which denotes implication (⟹) in
 Coq's own logic.
  *)
 
-Lemma (* 82 *) temporal_deduction : forall (φ ψ : t),
+Theorem (* 82 *) temporal_deduction : forall (φ ψ : t),
   (φ ≈ ⊤ -> ψ ≈ ⊤) -> □ φ ⟹ ψ.
 Proof.
   intros.
@@ -554,14 +552,14 @@ Qed.
 (135) □ (p → ◯ ¬p) ⇒ (p → ¬□ p)
 *)
 
-Lemma (* 83 *) (*Distributivity of ∧ over U*) law_83 (φ ψ χ : t) : □ φ ∧ ψ U χ ⟹ (φ ∧ ψ) U (φ ∧ χ).
+Theorem (* 83 *) (*Distributivity of ∧ over U*) law_83 (φ ψ χ : t) : □ φ ∧ ψ U χ ⟹ (φ ∧ ψ) U (φ ∧ χ).
 Proof.
   apply and_impl_iff.
   apply temporal_deduction; intro H; rewrite H.
   now boolean.
 Qed.
 
-Lemma (* 84 *) (*U implication*) law_84 (φ ψ : t) : □ φ ∧ ◇ ψ ⟹ φ U ψ.
+Theorem (* 84 *) (*U implication*) law_84 (φ ψ : t) : □ φ ∧ ◇ ψ ⟹ φ U ψ.
 Proof.
   rewrite evn_def.
   rewrite law_83.
@@ -586,21 +584,21 @@ Proof.
   now apply law_84.
 Qed.
 
-Lemma (* 85 *) (*Right monotonicity of U*) law_85 (φ ψ χ : t) : □ (φ → ψ) ⟹ (χ U φ → χ U ψ).
+Theorem (* 85 *) (*Right monotonicity of U*) law_85 (φ ψ χ : t) : □ (φ → ψ) ⟹ (χ U φ → χ U ψ).
 Proof.
   apply and_impl_iff.
   rewrite law_83.
   now apply until_respects_impl; boolean.
 Qed.
 
-Lemma (* 86 *) (*Left monotonicity of U*) law_86 (φ ψ χ : t) : □ (φ → ψ) ⟹ (φ U χ → ψ U χ).
+Theorem (* 86 *) (*Left monotonicity of U*) law_86 (φ ψ χ : t) : □ (φ → ψ) ⟹ (φ U χ → ψ U χ).
 Proof.
   apply and_impl_iff.
   rewrite law_83.
   now apply until_respects_impl; boolean.
 Qed.
 
-Lemma (* 87 *) (*Distributivity of ¬ over □*) law_87 (φ : t) : □ ¬φ ⟹ ¬□ φ.
+Theorem (* 87 *) (*Distributivity of ¬ over □*) law_87 (φ : t) : □ ¬φ ⟹ ¬□ φ.
 Proof.
   rewrite !always_def.
   boolean.
@@ -608,7 +606,7 @@ Proof.
   now apply evn_weaken.
 Qed.
 
-Lemma (* 88 *) (*Distributivity of ◇ over ∧*) law_88 (φ ψ : t) : □ φ ∧ ◇ ψ ⟹ ◇ (φ ∧ ψ).
+Theorem (* 88 *) (*Distributivity of ◇ over ∧*) law_88 (φ ψ : t) : □ φ ∧ ◇ ψ ⟹ ◇ (φ ∧ ψ).
 Proof.
   rewrite !evn_def.
   rewrite law_83.
@@ -616,37 +614,37 @@ Proof.
   now apply until_respects_impl; boolean.
 Qed.
 
-Lemma (* 89 *) (*◇ excluded middle*) law_89 (φ : t) : ◇ φ ∨ □ ¬φ ≈ ⊤.
+Theorem (* 89 *) (*◇ excluded middle*) law_89 (φ : t) : ◇ φ ∨ □ ¬φ ≈ ⊤.
 Proof.
   rewrite always_def.
   now boolean.
 Qed.
 
-Lemma (* 90 *) (*□ excluded middle*) law_90 (φ : t) : □ φ ∨ ◇ ¬φ ≈ ⊤.
+Theorem (* 90 *) (*□ excluded middle*) law_90 (φ : t) : □ φ ∨ ◇ ¬φ ≈ ⊤.
 Proof.
   rewrite always_def.
   now boolean.
 Qed.
 
-Lemma (* 91 *) (*Temporal excluded middle*) law_91 (φ : t) : ◇ φ ∨ ◇ ¬φ ≈ ⊤.
+Theorem (* 91 *) (*Temporal excluded middle*) law_91 (φ : t) : ◇ φ ∨ ◇ ¬φ ≈ ⊤.
 Proof.
   rewrite !evn_def.
   now apply until_excl_middle.
 Qed.
 
-Lemma (* 92 *) (*◇ contradiction*) law_92 (φ : t) : ◇ φ ∧ □ ¬φ ≈ ⊥.
+Theorem (* 92 *) (*◇ contradiction*) law_92 (φ : t) : ◇ φ ∧ □ ¬φ ≈ ⊥.
 Proof.
   rewrite always_def.
   now boolean.
 Qed.
 
-Lemma (* 93 *) (*□ contradiction*) law_93 (φ : t) : □ φ ∧ ◇ ¬φ ≈ ⊥.
+Theorem (* 93 *) (*□ contradiction*) law_93 (φ : t) : □ φ ∧ ◇ ¬φ ≈ ⊥.
 Proof.
   rewrite always_def.
   now boolean.
 Qed.
 
-Lemma (* 94 *) (*Temporal contradiction*) law_94 (φ : t) : □ φ ∧ □ ¬φ ≈ ⊥.
+Theorem (* 94 *) (*Temporal contradiction*) law_94 (φ : t) : □ φ ∧ □ ¬φ ≈ ⊥.
 Proof.
   rewrite <- law_61.
   rewrite always_def.
@@ -659,31 +657,31 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 95 *) (*□ ◇ excluded middle*) law_95 (φ : t) : □ ◇ φ ∨ ◇ □ ¬φ ≈ ⊤.
+Theorem (* 95 *) (*□ ◇ excluded middle*) law_95 (φ : t) : □ ◇ φ ∨ ◇ □ ¬φ ≈ ⊤.
 Proof.
   rewrite <- law_63.
   now boolean.
 Qed.
 
-Lemma (* 96 *) (*◇ □ excluded middle*) law_96 (φ : t) : ◇ □ φ ∨ □ ◇ ¬φ ≈ ⊤.
+Theorem (* 96 *) (*◇ □ excluded middle*) law_96 (φ : t) : ◇ □ φ ∨ □ ◇ ¬φ ≈ ⊤.
 Proof.
   rewrite <- law_62.
   now boolean.
 Qed.
 
-Lemma (* 97 *) (*□ ◇ contradiction*) law_97 (φ : t) : □ ◇ φ ∧ ◇ □ ¬φ ≈ ⊥.
+Theorem (* 97 *) (*□ ◇ contradiction*) law_97 (φ : t) : □ ◇ φ ∧ ◇ □ ¬φ ≈ ⊥.
 Proof.
   rewrite <- law_63.
   now boolean.
 Qed.
 
-Lemma (* 98 *) (*◇ □ contradiction*) law_98 (φ : t) : ◇ □ φ ∧ □ ◇ ¬φ ≈ ⊥.
+Theorem (* 98 *) (*◇ □ contradiction*) law_98 (φ : t) : ◇ □ φ ∧ □ ◇ ¬φ ≈ ⊥.
 Proof.
   rewrite <- law_62.
   now boolean.
 Qed.
 
-Lemma (* 99 *) (*Distributivity of □ over ∧*) law_99 (φ ψ : t) : □ (φ ∧ ψ) ≈ □ φ ∧ □ ψ.
+Theorem (* 99 *) (*Distributivity of □ over ∧*) law_99 (φ ψ : t) : □ (φ ∧ ψ) ≈ □ φ ∧ □ ψ.
 Proof.
   rewrite !always_def.
   rewrite not_and.
@@ -691,7 +689,7 @@ Proof.
   now rewrite not_or.
 Qed.
 
-Lemma (* 100 *) (*Distributivity of □ over ∨*) law_100 (φ ψ : t) : □ φ ∨ □ ψ ⟹ □ (φ ∨ ψ).
+Theorem (* 100 *) (*Distributivity of □ over ∨*) law_100 (φ ψ : t) : □ φ ∨ □ ψ ⟹ □ (φ ∨ ψ).
 Proof.
   rewrite !always_def.
   apply contrapositive.
@@ -701,7 +699,7 @@ Proof.
   now rewrite <- and_def.
 Qed.
 
-Lemma (* 101 *) (*Logical equivalence law of ◯*) law_101 (φ ψ : t) : □ (φ ≡ ψ) ⟹ (◯ φ ≡ ◯ ψ).
+Theorem (* 101 *) (*Logical equivalence law of ◯*) law_101 (φ ψ : t) : □ (φ ≡ ψ) ⟹ (◯ φ ≡ ◯ ψ).
 Proof.
   boolean.
   rewrite (or_comm _ φ).
@@ -710,7 +708,7 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 102 *) (*Logical equivalence law of ◇*) law_102 (φ ψ : t) : □ (φ ≡ ψ) ⟹ (◇ φ ≡ ◇ ψ).
+Theorem (* 102 *) (*Logical equivalence law of ◇*) law_102 (φ ψ : t) : □ (φ ≡ ψ) ⟹ (◇ φ ≡ ◇ ψ).
 Proof.
   boolean.
   rewrite (or_comm _ φ).
@@ -719,7 +717,7 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 103 *) (*Logical equivalence law of □*) law_103 (φ ψ : t) : □ (φ ≡ ψ) ⟹ (□ φ ≡ □ ψ).
+Theorem (* 103 *) (*Logical equivalence law of □*) law_103 (φ ψ : t) : □ (φ ≡ ψ) ⟹ (□ φ ≡ □ ψ).
 Proof.
   boolean.
   rewrite (or_comm _ φ).
@@ -728,13 +726,13 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 104 *) (*Distributivity of ◇ over ⟹*) law_104 (φ ψ : t) : ◇ (φ → ψ) ≈ (□ φ → ◇ ψ).
+Theorem (* 104 *) (*Distributivity of ◇ over ⟹*) law_104 (φ ψ : t) : ◇ (φ → ψ) ≈ (□ φ → ◇ ψ).
 Proof.
   rewrite evn_or.
   now rewrite law_60.
 Qed.
 
-Lemma (* 105 *) (*Distributivity of ◇ over ⟹*) law_105 (φ ψ : t) : (◇ φ → ◇ ψ) ⟹ ◇ (φ → ψ).
+Theorem (* 105 *) (*Distributivity of ◇ over ⟹*) law_105 (φ ψ : t) : (◇ φ → ◇ ψ) ⟹ ◇ (φ → ψ).
 Proof.
   rewrite evn_or.
   rewrite <- law_60.
@@ -742,26 +740,26 @@ Proof.
   now rewrite law_87.
 Qed.
 
-Lemma (* 106 *) (*∧ frame law of ◯*) law_106 (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ ∧ ψ)).
+Theorem (* 106 *) (*∧ frame law of ◯*) law_106 (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ ∧ ψ)).
 Proof.
   apply and_impl_iff.
   rewrite law_78.
   now rewrite next_and.
 Qed.
 
-Lemma (* 107 *) (*∧ frame law of ◇*) law_107 (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ ∧ ψ)).
+Theorem (* 107 *) (*∧ frame law of ◇*) law_107 (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ ∧ ψ)).
 Proof.
   apply and_impl_iff.
   now rewrite law_88.
 Qed.
 
-Lemma (* 108 *) (*∧ frame law of □*) law_108 (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ ∧ ψ)).
+Theorem (* 108 *) (*∧ frame law of □*) law_108 (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ ∧ ψ)).
 Proof.
   apply and_impl_iff.
   now rewrite law_99.
 Qed.
 
-Lemma (* 109 *) (*∨ frame law of ◯*) law_109 (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ ∨ ψ)).
+Theorem (* 109 *) (*∨ frame law of ◯*) law_109 (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ ∨ ψ)).
 Proof.
   apply and_impl_iff.
   rewrite law_78.
@@ -769,7 +767,7 @@ Proof.
   now rewrite and_proj, <- or_inj.
 Qed.
 
-Lemma (* 110 *) (*∨ frame law of ◇*) law_110 (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ ∨ ψ)).
+Theorem (* 110 *) (*∨ frame law of ◇*) law_110 (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ ∨ ψ)).
 Proof.
   apply and_impl_iff.
   rewrite law_88.
@@ -778,14 +776,14 @@ Proof.
   now rewrite and_proj, <- or_inj.
 Qed.
 
-Lemma (* 111 *) (*∨ frame law of □*) law_111 (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ ∨ ψ)).
+Theorem (* 111 *) (*∨ frame law of □*) law_111 (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ ∨ ψ)).
 Proof.
   apply and_impl_iff.
   rewrite <- law_100.
   now rewrite and_proj, <- or_inj.
 Qed.
 
-Lemma (* 112 *) (*⟹ frame law of ◯*) law_112 (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ → ψ)).
+Theorem (* 112 *) (*⟹ frame law of ◯*) law_112 (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ → ψ)).
 Proof.
   apply and_impl_iff.
   rewrite law_78.
@@ -793,7 +791,7 @@ Proof.
   now rewrite and_comm, and_proj, or_comm, <- or_inj.
 Qed.
 
-Lemma (* 113 *) (*⟹ frame law of ◇*) law_113 (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ → ψ)).
+Theorem (* 113 *) (*⟹ frame law of ◇*) law_113 (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ → ψ)).
 Proof.
   apply and_impl_iff.
   rewrite law_88.
@@ -802,14 +800,14 @@ Proof.
   now rewrite and_comm, and_proj, or_comm, <- or_inj.
 Qed.
 
-Lemma (* 114 *) (*⟹ frame law of □*) law_114 (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ → ψ)).
+Theorem (* 114 *) (*⟹ frame law of □*) law_114 (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ → ψ)).
 Proof.
   apply and_impl_iff.
   rewrite <- law_100.
   now rewrite and_comm, and_proj, or_comm, <- or_inj.
 Qed.
 
-Lemma (* 115 *) (*≡ frame law of ◯*) law_115 (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ ≡ ψ)).
+Theorem (* 115 *) (*≡ frame law of ◯*) law_115 (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ ≡ ψ)).
 Proof.
   apply and_impl_iff.
   rewrite law_78.
@@ -818,7 +816,7 @@ Proof.
   now rewrite and_proj, (or_comm _ (_ φ)), or_comm, <- !or_inj.
 Qed.
 
-Lemma (* 116 *) (*≡ frame law of ◇*) law_116 (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ ≡ ψ)).
+Theorem (* 116 *) (*≡ frame law of ◇*) law_116 (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ ≡ ψ)).
 Proof.
   apply and_impl_iff.
   rewrite law_88.
@@ -828,7 +826,7 @@ Proof.
   now rewrite and_proj, (or_comm _ (_ φ)), or_comm, <- !or_inj.
 Qed.
 
-Lemma (* 117 *) (*≡ frame law of □*) law_117 (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ ≡ ψ)).
+Theorem (* 117 *) (*≡ frame law of □*) law_117 (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ ≡ ψ)).
 Proof.
   apply and_impl_iff.
   rewrite <- !law_100.
@@ -836,7 +834,7 @@ Proof.
   now rewrite and_proj, (or_comm _ (_ φ)), or_comm, <- !or_inj.
 Qed.
 
-Lemma (* 118 *) (*Monotonicity of ◯*) law_118 (φ ψ : t) : □ (φ → ψ) ⟹ (◯ φ → ◯ ψ).
+Theorem (* 118 *) (*Monotonicity of ◯*) law_118 (φ ψ : t) : □ (φ → ψ) ⟹ (◯ φ → ◯ ψ).
 Proof.
   apply and_impl_iff.
   rewrite law_78.
@@ -847,7 +845,7 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 119 *) (*Monotonicity of ◇*) law_119 (φ ψ : t) : □ (φ → ψ) ⟹ (◇ φ → ◇ ψ).
+Theorem (* 119 *) (*Monotonicity of ◇*) law_119 (φ ψ : t) : □ (φ → ψ) ⟹ (◇ φ → ◇ ψ).
 Proof.
   apply and_impl_iff.
   rewrite law_88.
@@ -856,7 +854,7 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 120 *) (*Monotonicity of □*) law_120 (φ ψ : t) : □ (φ → ψ) ⟹ (□ φ → □ ψ).
+Theorem (* 120 *) (*Monotonicity of □*) law_120 (φ ψ : t) : □ (φ → ψ) ⟹ (□ φ → □ ψ).
 Proof.
   apply and_impl_iff.
   rewrite <- law_99.
@@ -865,7 +863,7 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 121 *) (*Consequence rule of ◯*) law_121 (φ ψ χ ρ : t) : □ ((φ → ψ) ∧ (ψ → ◯ χ) ∧ (χ → ρ)) ⟹ (φ → ◯ ρ).
+Theorem (* 121 *) (*Consequence rule of ◯*) law_121 (φ ψ χ ρ : t) : □ ((φ → ψ) ∧ (ψ → ◯ χ) ∧ (χ → ρ)) ⟹ (φ → ◯ ρ).
 Proof.
   rewrite !law_99.
   rewrite law_76.
@@ -876,7 +874,7 @@ Proof.
   now rewrite impl_trans.
 Qed.
 
-Lemma (* 122 *) (*Consequence rule of ◇*) law_122 (φ ψ χ ρ : t) : □ ((φ → ψ) ∧ (ψ → ◇ χ) ∧ (χ → ρ)) ⟹ (φ → ◇ ρ).
+Theorem (* 122 *) (*Consequence rule of ◇*) law_122 (φ ψ χ ρ : t) : □ ((φ → ψ) ∧ (ψ → ◇ χ) ∧ (χ → ρ)) ⟹ (φ → ◇ ρ).
 Proof.
   rewrite !law_99.
   rewrite law_76.
@@ -887,7 +885,7 @@ Proof.
   now rewrite impl_trans.
 Qed.
 
-Lemma (* 123 *) (*Consequence rule of □*) law_123 (φ ψ χ ρ : t) : □ ((φ → ψ) ∧ (ψ → □ χ) ∧ (χ → ρ)) ⟹ (φ → □ ρ).
+Theorem (* 123 *) (*Consequence rule of □*) law_123 (φ ψ χ ρ : t) : □ ((φ → ψ) ∧ (ψ → □ χ) ∧ (χ → ρ)) ⟹ (φ → □ ρ).
 Proof.
   rewrite !law_99.
   rewrite law_76.
@@ -898,7 +896,7 @@ Proof.
   now rewrite impl_trans.
 Qed.
 
-Lemma (* 124 *) (*Catenation rule of ◇*) law_124 (φ ψ χ : t) : □ ((φ → ◇ ψ) ∧ (ψ → ◇ χ)) ⟹ (φ → ◇ χ).
+Theorem (* 124 *) (*Catenation rule of ◇*) law_124 (φ ψ χ : t) : □ ((φ → ◇ ψ) ∧ (ψ → ◇ χ)) ⟹ (φ → ◇ χ).
 Proof.
   rewrite !law_99.
   rewrite law_76.
@@ -907,7 +905,7 @@ Proof.
   now rewrite law_50.
 Qed.
 
-Lemma (* 125 *) (*Catenation rule of □*) law_125 (φ ψ χ : t) : □ ((φ → □ ψ) ∧ (ψ → □ χ)) ⟹ (φ → □ χ).
+Theorem (* 125 *) (*Catenation rule of □*) law_125 (φ ψ χ : t) : □ ((φ → □ ψ) ∧ (ψ → □ χ)) ⟹ (φ → □ χ).
 Proof.
   rewrite !law_99.
   rewrite law_76.
@@ -916,7 +914,7 @@ Proof.
   now rewrite law_72.
 Qed.
 
-Lemma (* 126 *) (*Catenation rule of U*) law_126 (φ ψ χ ρ : t) : □ ((φ → ψ U χ) ∧ (χ → ψ U ρ)) ⟹ (φ → ψ U ρ).
+Theorem (* 126 *) (*Catenation rule of U*) law_126 (φ ψ χ ρ : t) : □ ((φ → ψ U χ) ∧ (χ → ψ U ρ)) ⟹ (φ → ψ U ρ).
 Proof.
   rewrite !law_99.
   rewrite law_76.
@@ -925,7 +923,7 @@ Proof.
   now rewrite until_left_absorb.
 Qed.
 
-Lemma (* 127 *) (*U strengthening rule*) law_127 (φ ψ χ ρ : t) : □ ((φ → χ) ∧ (ψ → ρ)) ⟹ (φ U ψ → χ U ρ).
+Theorem (* 127 *) (*U strengthening rule*) law_127 (φ ψ χ ρ : t) : □ ((φ → χ) ∧ (ψ → ρ)) ⟹ (φ U ψ → χ U ρ).
 Proof.
   rewrite !law_99.
   rewrite (law_86 _ _ ψ).
@@ -933,7 +931,7 @@ Proof.
   now rewrite impl_trans.
 Qed.
 
-Lemma (* 128 *) (*Induction rule ◇*) law_128 (φ ψ : t) : □ (φ ∨ ◯ ψ → ψ) ⟹ (◇ φ → ψ).
+Theorem (* 128 *) (*Induction rule ◇*) law_128 (φ ψ : t) : □ (φ ∨ ◯ ψ → ψ) ⟹ (◇ φ → ψ).
 Proof.
   rewrite or_impl.
   rewrite law_99.
@@ -942,7 +940,7 @@ Proof.
   now apply impl_trans.
 Qed.
 
-Lemma (* 129 *) (*Induction rule □*) law_129 (φ ψ : t) : □ (φ → ψ ∧ ◯ φ) ⟹ (φ → □ ψ).
+Theorem (* 129 *) (*Induction rule □*) law_129 (φ ψ : t) : □ (φ → ψ ∧ ◯ φ) ⟹ (φ → □ ψ).
 Proof.
   pose proof (always_until_and_ind φ ψ ⊥).
   rewrite until_right_bottom in H.
@@ -950,14 +948,14 @@ Proof.
   now rewrite and_comm.
 Qed.
 
-Lemma (* 130 *) (*Induction rule U*) law_130 (φ ψ χ : t) : □ (φ → ¬ψ ∧ ◯ φ) ⟹ (φ → ¬(χ U ψ)).
+Theorem (* 130 *) (*Induction rule U*) law_130 (φ ψ χ : t) : □ (φ → ¬ψ ∧ ◯ φ) ⟹ (φ → ¬(χ U ψ)).
 Proof.
   rewrite law_129.
   rewrite (law_81 (¬ ψ) χ).
   now rewrite not_not.
 Qed.
 
-Lemma (* 131 *) (*◇ Conﬂuence*) law_131 (φ ψ χ ρ : t) : □ ((φ → ◇ (ψ ∨ χ)) ∧ (ψ → ◇ ρ) ∧ (χ → ◇ ρ)) ⟹ (φ → ◇ ρ).
+Theorem (* 131 *) (*◇ Conﬂuence*) law_131 (φ ψ χ ρ : t) : □ ((φ → ◇ (ψ ∨ χ)) ∧ (ψ → ◇ ρ) ∧ (χ → ◇ ρ)) ⟹ (φ → ◇ ρ).
 Proof.
   pose proof (law_124 φ (ψ ∨ χ) ρ).
   rewrite !law_99 in *.
@@ -975,7 +973,7 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 132 *) (*Temporal generalization law*) law_132 (φ ψ : t) : □ (□ φ → ψ) ⟹ (□ φ → □ ψ).
+Theorem (* 132 *) (*Temporal generalization law*) law_132 (φ ψ : t) : □ (□ φ → ψ) ⟹ (□ φ → □ ψ).
 Proof.
   apply and_impl_iff.
   rewrite <- (law_72 φ) at 2.
@@ -985,7 +983,7 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 133 *) (*Temporal particularization law*) law_133 (φ ψ : t) : □ (φ → ◇ ψ) ⟹ (◇ φ → ◇ ψ).
+Theorem (* 133 *) (*Temporal particularization law*) law_133 (φ ψ : t) : □ (φ → ◇ ψ) ⟹ (◇ φ → ◇ ψ).
 Proof.
   apply and_impl_iff.
   rewrite law_88.
@@ -995,7 +993,7 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 134 *) law_134 (φ ψ : t) : □ (φ → ◯ ψ) ⟹ (φ → ◇ ψ).
+Theorem (* 134 *) law_134 (φ ψ : t) : □ (φ → ◯ ψ) ⟹ (φ → ◇ ψ).
 Proof.
   apply and_impl_iff.
   rewrite (evn_weaken φ) at 2.
@@ -1008,7 +1006,7 @@ Proof.
   now rewrite law_51.
 Qed.
 
-Lemma (* 135 *) law_135 (φ : t) : □ (φ → ◯ ¬φ) ⟹ (φ → ¬□ φ).
+Theorem (* 135 *) law_135 (φ : t) : □ (φ → ◯ ¬φ) ⟹ (φ → ¬□ φ).
 Proof.
   apply and_impl_iff.
   rewrite and_proj.
@@ -1032,14 +1030,31 @@ Qed.
 (139) Metatheorem □ : If P ⇒ Q is a theorem then □ P ⇒ □ Q is a theorem.
 *)
 
-Lemma (* 137 *) next_metatheorem (φ ψ : t) : φ ⟹ ψ -> ◯ φ ⟹ ◯ ψ.
-Proof. now apply next_respects_impl. Qed.
+Theorem (* 136 *) law_136 (φ ψ : t) : φ ⟹ ψ <-> ⊤ ⟹ □ (φ → ψ).
+Proof.
+  split; intros.
+  - rewrite H.
+    boolean.
+    now rewrite law_64.
+  - apply impl_def.
+    rewrite H.
+    now apply law_76.
+Qed.
 
-Lemma (* 138 *) eventually_metatheorem (φ ψ : t) : φ ⟹ ψ -> ◇ φ ⟹ ◇ ψ.
-Proof. now apply eventually_respects_impl. Qed.
+Theorem (* 137 *) next_metatheorem (φ ψ : t) : φ ⟹ ψ -> ◯ φ ⟹ ◯ ψ.
+Proof.
+  now apply next_respects_impl.
+Qed.
 
-Lemma (* 139 *) always_metatheorem (φ ψ : t) : φ ⟹ ψ -> □ φ ⟹ □ ψ.
-Proof. now apply always_respects_impl. Qed.
+Theorem (* 138 *) eventually_metatheorem (φ ψ : t) : φ ⟹ ψ -> ◇ φ ⟹ ◇ ψ.
+Proof.
+  now apply eventually_respects_impl.
+Qed.
+
+Theorem (* 139 *) always_metatheorem (φ ψ : t) : φ ⟹ ψ -> □ φ ⟹ □ ψ.
+Proof.
+  now apply always_respects_impl.
+Qed.
 
 (*** 3.8 Always □, Continued *)
 
@@ -1075,7 +1090,7 @@ Proof. now apply always_respects_impl. Qed.
 (168) Progress proof rule : □ p ∧ □ (□ p → ◇ q) ⇒ ◇ q
 *)
 
-Lemma (* 140 *) law_140 (*U □ implication*) (φ ψ : t) : φ U □ ψ ⟹ □ (φ U ψ).
+Theorem (* 140 *) law_140 (*U □ implication*) (φ ψ : t) : φ U □ ψ ⟹ □ (φ U ψ).
 Proof.
   assert (A : □ (φ U □ ψ → φ U ψ) ≈ ⊤).
     apply true_impl.
@@ -1112,7 +1127,7 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 141 *) law_141 (*Absorption of U into □*) (φ : t) : φ U □ φ ≈ □ φ.
+Theorem (* 141 *) law_141 (*Absorption of U into □*) (φ : t) : φ U □ φ ≈ □ φ.
 Proof.
   split.
   - rewrite law_140.
@@ -1120,7 +1135,7 @@ Proof.
   - now apply until_insertion.
 Qed.
 
-Lemma (* 142 *) law_142 (*Right ∧ U strengthening*) (φ ψ χ : t) : φ U (ψ ∧ χ) ⟹ φ U (ψ U χ).
+Theorem (* 142 *) law_142 (*Right ∧ U strengthening*) (φ ψ χ : t) : φ U (ψ ∧ χ) ⟹ φ U (ψ U χ).
 Proof.
   pose proof (law_85 (ψ ∧ χ) (ψ U χ) φ).
   apply impl_def.
@@ -1130,7 +1145,7 @@ Proof.
   now apply law_64.
 Qed.
 
-Lemma (* 143 *) law_143 (*Left ∧ U strengthening*) (φ ψ χ : t) : (φ ∧ ψ) U χ ⟹ (φ U ψ) U χ.
+Theorem (* 143 *) law_143 (*Left ∧ U strengthening*) (φ ψ χ : t) : (φ ∧ ψ) U χ ⟹ (φ U ψ) U χ.
 Proof.
   pose proof (law_86 (φ ∧ ψ) (φ U ψ)).
   apply impl_def.
@@ -1140,7 +1155,7 @@ Proof.
   now apply law_64.
 Qed.
 
-Lemma (* 144 *) law_144 (*Left ∧ U ordering*) (φ ψ χ : t) : (φ ∧ ψ) U χ ⟹ φ U (ψ U χ).
+Theorem (* 144 *) law_144 (*Left ∧ U ordering*) (φ ψ χ : t) : (φ ∧ ψ) U χ ⟹ φ U (ψ U χ).
 Proof.
   apply impl_def.
   rewrite <- law_127.
@@ -1150,14 +1165,14 @@ Proof.
   now apply law_64.
 Qed.
 
-Lemma (* 145 *) law_145 (*◇ □ implication*) (φ : t) : ◇ □ φ ⟹ □ ◇ φ.
+Theorem (* 145 *) law_145 (*◇ □ implication*) (φ : t) : ◇ □ φ ⟹ □ ◇ φ.
 Proof.
   rewrite evn_def.
   rewrite law_140.
   now rewrite <- evn_def.
 Qed.
 
-Lemma (* 146 *) law_146 (*□ ◇ excluded middle*) (φ : t) : □ ◇ φ ∨ □ ◇ ¬φ ≈ ⊤.
+Theorem (* 146 *) law_146 (*□ ◇ excluded middle*) (φ : t) : □ ◇ φ ∨ □ ◇ ¬φ ≈ ⊤.
 Proof.
   rewrite <- law_62.
   apply true_impl.
@@ -1165,7 +1180,7 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 147 *) law_147 (*◇ □ contradiction*) (φ : t) : ◇ □ φ ∧ ◇ □ ¬φ ≈ ⊥.
+Theorem (* 147 *) law_147 (*◇ □ contradiction*) (φ : t) : ◇ □ φ ∧ ◇ □ ¬φ ≈ ⊥.
 Proof.
   apply not_inj.
   rewrite not_and.
@@ -1177,7 +1192,7 @@ Proof.
   now apply law_146.
 Qed.
 
-Lemma (* 148 *) law_148 (*U frame law of ◯*) (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ U ψ)).
+Theorem (* 148 *) law_148 (*U frame law of ◯*) (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ U ψ)).
 Proof.
   rewrite <- next_impl.
   rewrite <- until_insertion.
@@ -1186,14 +1201,14 @@ Proof.
   now apply impl_true.
 Qed.
 
-Lemma (* 149 *) law_149 (*U frame law of ◇*) (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ U ψ)).
+Theorem (* 149 *) law_149 (*U frame law of ◇*) (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ U ψ)).
 Proof.
   apply and_impl_iff.
   rewrite law_84.
   now apply evn_weaken.
 Qed.
 
-Lemma (* 150 *) law_150 (*U frame law of □*) (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ U ψ)).
+Theorem (* 150 *) law_150 (*U frame law of □*) (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ U ψ)).
 Proof.
   apply and_impl_iff.
   rewrite and_comm.
@@ -1201,7 +1216,7 @@ Proof.
   now rewrite <- until_insertion.
 Qed.
 
-Lemma (* 151 *) law_151 (*Absorption of ◇ into □ ◇*) (φ : t) : ◇ □ ◇ φ ≈ □ ◇ φ.
+Theorem (* 151 *) law_151 (*Absorption of ◇ into □ ◇*) (φ : t) : ◇ □ ◇ φ ≈ □ ◇ φ.
 Proof.
   split.
   - rewrite law_145.
@@ -1209,7 +1224,7 @@ Proof.
   - now rewrite evn_weaken at 1.
 Qed.
 
-Lemma (* 152 *) law_152 (*Absorption of □ into ◇ □*) (φ : t) : □ ◇ □ φ ≈ ◇ □ φ.
+Theorem (* 152 *) law_152 (*Absorption of □ into ◇ □*) (φ : t) : □ ◇ □ φ ≈ ◇ □ φ.
 Proof.
   rewrite <- (not_not φ) at 1.
   rewrite <- law_63.
@@ -1219,19 +1234,19 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 153 *) law_153 (*Absorption of □ ◇*) (φ : t) : □ ◇ □ ◇ φ ≈ □ ◇ φ.
+Theorem (* 153 *) law_153 (*Absorption of □ ◇*) (φ : t) : □ ◇ □ ◇ φ ≈ □ ◇ φ.
 Proof.
   rewrite law_152.
   now rewrite law_151.
 Qed.
 
-Lemma (* 154 *) law_154 (*Absorption of ◇ □*) (φ : t) : ◇ □ ◇ □ φ ≈ ◇ □ φ.
+Theorem (* 154 *) law_154 (*Absorption of ◇ □*) (φ : t) : ◇ □ ◇ □ φ ≈ ◇ □ φ.
 Proof.
   rewrite law_151.
   now rewrite law_152.
 Qed.
 
-Lemma (* 155 *) law_155 (*Absorption of ◯ into □ ◇*) (φ : t) : ◯ □ ◇ φ ≈ □ ◇ φ.
+Theorem (* 155 *) law_155 (*Absorption of ◯ into □ ◇*) (φ : t) : ◯ □ ◇ φ ≈ □ ◇ φ.
 Proof.
   split.
   - rewrite (law_47 (□ ◇ φ)).
@@ -1239,7 +1254,7 @@ Proof.
   - now apply law_79.
 Qed.
 
-Lemma (* 156 *) law_156 (*Absorption of ◯ into ◇ □*) (φ : t) : ◯ ◇ □ φ ≈ ◇ □ φ.
+Theorem (* 156 *) law_156 (*Absorption of ◯ into ◇ □*) (φ : t) : ◯ ◇ □ φ ≈ ◇ □ φ.
 Proof.
   split.
   - rewrite law_47.
@@ -1248,7 +1263,7 @@ Proof.
     now rewrite law_152.
 Qed.
 
-Lemma (* 157 *) law_157 (*Monotonicity of □ ◇*) (φ ψ : t) : □ (φ → ψ) ⟹ (□ ◇ φ → □ ◇ ψ).
+Theorem (* 157 *) law_157 (*Monotonicity of □ ◇*) (φ ψ : t) : □ (φ → ψ) ⟹ (□ ◇ φ → □ ◇ ψ).
 Proof.
   transitivity (□ (◇ φ → ◇ ψ)).
     rewrite <- law_72.
@@ -1257,7 +1272,7 @@ Proof.
   now rewrite law_120.
 Qed.
 
-Lemma (* 158 *) law_158 (*Monotonicity of ◇ □*) (φ ψ : t) : □ (φ → ψ) ⟹ (◇ □ φ → ◇ □ ψ).
+Theorem (* 158 *) law_158 (*Monotonicity of ◇ □*) (φ ψ : t) : □ (φ → ψ) ⟹ (◇ □ φ → ◇ □ ψ).
 Proof.
   transitivity (□ (□ φ → □ ψ)).
     rewrite <- law_72.
@@ -1266,19 +1281,19 @@ Proof.
   now rewrite law_119.
 Qed.
 
-Lemma (* 159 *) law_159 (*Distributivity of □ ◇ over ∧*) (φ ψ : t) : □ ◇ (φ ∧ ψ) ⟹ □ ◇ φ ∧ □ ◇ ψ.
+Theorem (* 159 *) law_159 (*Distributivity of □ ◇ over ∧*) (φ ψ : t) : □ ◇ (φ ∧ ψ) ⟹ □ ◇ φ ∧ □ ◇ ψ.
 Proof.
   rewrite law_53.
   now rewrite law_99.
 Qed.
 
-Lemma (* 160 *) law_160 (*Distributivity of ◇ □ over ∨*) (φ ψ : t) : ◇ □ φ ∨ ◇ □ ψ ⟹ ◇ □ (φ ∨ ψ).
+Theorem (* 160 *) law_160 (*Distributivity of ◇ □ over ∨*) (φ ψ : t) : ◇ □ φ ∨ ◇ □ ψ ⟹ ◇ □ (φ ∨ ψ).
 Proof.
   rewrite <- evn_or.
   now rewrite law_100.
 Qed.
 
-Lemma (* 161 *) law_161 (*Distributivity of □ ◇ over ∨*) (φ ψ : t) : □ ◇ (φ ∨ ψ) ≈ □ ◇ φ ∨ □ ◇ ψ.
+Theorem (* 161 *) law_161 (*Distributivity of □ ◇ over ∨*) (φ ψ : t) : □ ◇ (φ ∨ ψ) ≈ □ ◇ φ ∨ □ ◇ ψ.
 Proof.
 Proof.
   split.
@@ -1307,7 +1322,7 @@ Proof.
     now rewrite law_100.
 Qed.
 
-Lemma (* 162 *) law_162 (*Distributivity of ◇ □ over ∧*) (φ ψ : t) : ◇ □ (φ ∧ ψ) ≈ ◇ □ φ ∧ ◇ □ ψ.
+Theorem (* 162 *) law_162 (*Distributivity of ◇ □ over ∧*) (φ ψ : t) : ◇ □ (φ ∧ ψ) ≈ ◇ □ φ ∧ ◇ □ ψ.
 Proof.
   rewrite <- (not_not φ) at 1.
   rewrite <- (not_not ψ) at 1.
@@ -1319,7 +1334,7 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 163 *) law_163 (*Eventual latching*) (φ ψ : t) : ◇ □ (φ → □ ψ) ≈ ◇ □ ¬φ ∨ ◇ □ ψ.
+Theorem (* 163 *) law_163 (*Eventual latching*) (φ ψ : t) : ◇ □ (φ → □ ψ) ≈ ◇ □ ¬φ ∨ ◇ □ ψ.
 Proof.
   assert (A : ◇ □ (φ → □ ψ) ⟹ ◇ (□ ◇ φ → ◇ □ ψ)). {
     rewrite <- (evn_weaken (□ ◇ φ → ◇ □ ψ)).
@@ -1343,7 +1358,7 @@ Proof.
     now rewrite law_160.
 Qed.
 
-Lemma (* 164 *) law_164 (**) (φ ψ : t) : □ (□ ◇ φ → ◇ ψ) ≈ ◇ □ ¬φ ∨ □ ◇ ψ.
+Theorem (* 164 *) law_164 (**) (φ ψ : t) : □ (□ ◇ φ → ◇ ψ) ≈ ◇ □ ¬φ ∨ □ ◇ ψ.
 Proof.
   split.
   - rewrite law_120.
@@ -1354,30 +1369,97 @@ Proof.
     now rewrite <- law_152 at 1.
 Qed.
 
-Lemma (* 165 *) law_165 (**) (φ ψ : t) : □ ((φ ∨ □ ψ) ∧ (□ φ ∨ ψ)) ≈ □ φ ∨ □ ψ.
+Theorem (* 165 *) law_165 (**) (φ ψ : t) : □ ((φ ∨ □ ψ) ∧ (□ φ ∨ ψ)) ≈ □ φ ∨ □ ψ.
 Proof.
   set (χ := (φ ∨ □ ψ) ∧ (□ φ ∨ ψ)).
 
   assert (A : χ ≈ □ φ ∨ □ ψ ∨ (φ ∧ ψ)).
-    admit.
+    unfold χ.
+    rewrite or_and_or.
+    rewrite 2 law_68.
+    rewrite (or_comm _ (□ ψ)).
+    rewrite (and_comm _ (□ ψ)).
+    rewrite or_absorb.
+    rewrite (or_comm _ (□ ψ)).
+    reflexivity.
 
   assert (B : □ χ ∧ ¬□ φ ∧ ¬□ ψ ⟹ ◯ (□ χ ∧ ¬□ φ ∧ ¬□ ψ)).
-    admit.
+    rewrite law_66 at 1.
+    rewrite (and_comm χ).
+    rewrite A at 2.
+    rewrite and_assoc.
+    rewrite <- (and_assoc _ (¬ □ φ)).
+    rewrite (and_comm _ (¬ □ φ)).
+    rewrite <- (not_not (□ φ)) at 2.
+    rewrite and_apply.
+    rewrite and_assoc.
+    rewrite (and_comm _ (¬ □ ψ)).
+    rewrite <- (not_not (□ ψ)) at 2.
+    rewrite and_apply.
+    rewrite <- !and_assoc.
+    rewrite and_assoc.
+    rewrite (and_assoc (◯ □ χ)).
+    rewrite and_comm.
+    rewrite <- !and_assoc.
+    rewrite (and_comm _ (◯ □ χ)).
+    rewrite !and_assoc.
+    rewrite (law_66 φ) at 1.
+    rewrite (law_66 ψ) at 1.
+    rewrite 2 not_and.
+    rewrite <- (and_assoc ψ).
+    rewrite (and_comm ψ).
+    rewrite !and_assoc.
+    rewrite and_apply.
+    rewrite <- (and_assoc φ).
+    rewrite and_apply.
+    rewrite (and_comm φ).
+    rewrite (and_comm ψ).
+    rewrite (and_proj _ φ).
+    rewrite (and_proj _ ψ).
+    rewrite <- !next_not.
+    rewrite <- !next_and.
+    reflexivity.
 
   assert (C : □ χ ∧ ¬□ φ ∧ ¬□ ψ ⟹ □ (□ χ ∧ ¬□ φ ∧ ¬□ ψ)).
-    admit.
+    apply impl_def in B.
+    apply always_respects_impl in B.
+    rewrite always_induction in B.
+    rewrite law_64 in B.
+    apply impl_def in B.
+    exact B.
 
   assert (D : □ (□ χ ∧ ¬□ φ ∧ ¬□ ψ) ⟹ □ φ ∧ □ ψ).
-    admit.
+    rewrite <- law_99.
+    apply impl_def.
+    rewrite <- law_120.
+    apply (proj1 (law_136 _ _)).
+    apply and_impl_iff.
+    rewrite not_and.
+    rewrite !not_not.
+    rewrite or_assoc.
+    rewrite <- A.
+    now apply law_76.
 
   assert (E : □ χ ∧ ¬□ φ ∧ ¬□ ψ ⟹ □ φ ∧ □ ψ).
-    admit.
+    rewrite C.
+    now rewrite D.
 
   assert (F : □ φ ∨ □ ψ ⟹ ◯ (□ φ ∨ □ ψ)).
-    admit.
+    rewrite (law_66 φ) at 1.
+    rewrite (law_66 ψ) at 1.
+    rewrite (and_comm φ).
+    rewrite (and_comm ψ).
+    rewrite (and_proj _ φ).
+    rewrite (and_proj _ ψ).
+    now rewrite <- next_or.
 
   assert (G : □ (□ φ ∨ □ ψ) ⟹ □ χ).
-    admit.
+    apply impl_def.
+    rewrite <- law_120.
+    apply (proj1 (law_136 _ _)).
+    rewrite A.
+    rewrite <- or_assoc.
+    now rewrite <- (or_inj _ (φ ∧ ψ)).
 
   split.
   - apply impl_def.
@@ -1399,9 +1481,9 @@ Proof.
     rewrite <- F.
     boolean.
     now rewrite law_64.
-Admitted.
+Qed.
 
-Lemma (* 166 *) law_166 (**) (φ ψ : t) : ◇ □ φ ∧ □ ◇ ψ ⟹ □ ◇ (φ ∧ ψ).
+Theorem (* 166 *) law_166 (**) (φ ψ : t) : ◇ □ φ ∧ □ ◇ ψ ⟹ □ ◇ (φ ∧ ψ).
 Proof.
   apply and_impl_iff.
   rewrite <- (law_72 (◇ ψ)).
@@ -1414,7 +1496,7 @@ Proof.
   now rewrite law_88.
 Qed.
 
-Lemma (* 167 *) law_167 (**) (φ ψ χ : t) : □ ((□ φ → ◇ ψ) ∧ (ψ → ◯ χ)) ⟹ (□ φ → ◯ □ ◇ χ).
+Theorem (* 167 *) law_167 (**) (φ ψ χ : t) : □ ((□ φ → ◇ ψ) ∧ (ψ → ◯ χ)) ⟹ (□ φ → ◯ □ ◇ χ).
 Proof.
   apply and_impl_iff.
   rewrite law_99.
@@ -1435,7 +1517,7 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 168 *) law_168 (*Progress proof rule*) (φ ψ : t) : ◇ □ φ ∧ □ (□ φ → ◇ ψ) ⟹ ◇ ψ.
+Theorem (* 168 *) law_168 (*Progress proof rule*) (φ ψ : t) : ◇ □ φ ∧ □ (□ φ → ◇ ψ) ⟹ ◇ ψ.
 Proof.
   rewrite law_119.
   rewrite law_50.
@@ -1537,7 +1619,7 @@ Qed.
 
 Axiom (* 169 *) wait_def : forall (φ ψ : t), φ W ψ ≈ □ φ ∨ φ U ψ.
 
-Lemma (* 170 *) not_wait (φ ψ : t) : ¬(φ W ψ) ≈ ¬ψ U (¬φ ∧ ¬ψ).
+Theorem (* 170 *) not_wait (φ ψ : t) : ¬(φ W ψ) ≈ ¬ψ U (¬φ ∧ ¬ψ).
 Proof.
   rewrite wait_def.
   rewrite <- not_until.
@@ -1547,7 +1629,7 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 171 *) law_171 (* U in terms of W *) (φ ψ : t) : φ U ψ ≈ φ W ψ ∧ ◇ ψ.
+Theorem (* 171 *) law_171 (* U in terms of W *) (φ ψ : t) : φ U ψ ≈ φ W ψ ∧ ◇ ψ.
 Proof.
   rewrite wait_def.
   rewrite and_comm.
@@ -1566,7 +1648,7 @@ Proof.
     now boolean.
 Qed.
 
-Lemma (* 172 *) law_172 (**) (φ ψ : t) : φ W ψ ≈ □ (φ ∧ ¬ψ) ∨ φ U ψ.
+Theorem (* 172 *) law_172 (**) (φ ψ : t) : φ W ψ ≈ □ (φ ∧ ¬ψ) ∨ φ U ψ.
 Proof.
   rewrite law_99.
   rewrite or_comm.
@@ -1582,7 +1664,7 @@ Proof.
   now rewrite and_absorb.
 Qed.
 
-Lemma (* 173 *) law_173 (*Distributivity of ¬ over U *) (φ ψ : t) : ¬(φ U ψ) ≈ ¬ψ W (¬φ ∧ ¬ψ).
+Theorem (* 173 *) law_173 (*Distributivity of ¬ over U *) (φ ψ : t) : ¬(φ U ψ) ≈ ¬ψ W (¬φ ∧ ¬ψ).
 Proof.
   rewrite law_171.
   rewrite not_and.
@@ -1593,13 +1675,13 @@ Proof.
   now apply law_61.
 Qed.
 
-Lemma (* 174 *) law_174 (*U implication*) (φ ψ : t) : φ U ψ ⟹ φ W ψ.
+Theorem (* 174 *) law_174 (*U implication*) (φ ψ : t) : φ U ψ ⟹ φ W ψ.
 Proof.
   rewrite law_171.
   now boolean.
 Qed.
 
-Lemma (* 175 *) law_175 (*Distributivity of ∧ over W *) (φ ψ χ : t) : □ φ ∧ ψ W χ ⟹ (φ ∧ ψ) W (φ ∧ χ).
+Theorem (* 175 *) law_175 (*Distributivity of ∧ over W *) (φ ψ χ : t) : □ φ ∧ ψ W χ ⟹ (φ ∧ ψ) W (φ ∧ χ).
 Proof.
   rewrite wait_def.
   rewrite and_or.
@@ -1608,13 +1690,13 @@ Proof.
   now rewrite <- wait_def.
 Qed.
 
-Lemma (* 176 *) law_176 (*W ◇ equivalence*) (φ ψ : t) : φ W ◇ ψ ≈ □ φ ∨ ◇ ψ.
+Theorem (* 176 *) law_176 (*W ◇ equivalence*) (φ ψ : t) : φ W ◇ ψ ≈ □ φ ∨ ◇ ψ.
 Proof.
   rewrite wait_def.
   now rewrite until_absorb_evn.
 Qed.
 
-Lemma (* 177 *) law_177 (*W □ implication*) (φ ψ : t) : φ W □ ψ ⟹ □ (φ W ψ).
+Theorem (* 177 *) law_177 (*W □ implication*) (φ ψ : t) : φ W □ ψ ⟹ □ (φ W ψ).
 Proof.
   rewrite (wait_def _ ψ).
   rewrite <- law_100.
@@ -1623,20 +1705,20 @@ Proof.
   now rewrite <- wait_def.
 Qed.
 
-Lemma (* 178 *) law_178 (*Absorption of W into □ *) (φ : t) : φ W □ φ ≈ □ φ.
+Theorem (* 178 *) law_178 (*Absorption of W into □ *) (φ : t) : φ W □ φ ≈ □ φ.
 Proof.
   rewrite wait_def.
   rewrite law_141.
   now boolean.
 Qed.
 
-Lemma (* 179 *) law_179 (*Perpetuity*) (φ ψ : t) : □ φ ⟹ φ W ψ.
+Theorem (* 179 *) law_179 (*Perpetuity*) (φ ψ : t) : □ φ ⟹ φ W ψ.
 Proof.
   rewrite (or_inj _ (φ U ψ)).
   now rewrite <- wait_def.
 Qed.
 
-Lemma (* 180 *) law_180 (*Distributivity of ◯ over W *) (φ ψ : t) : ◯ (φ W ψ) ≈ ◯ φ W ◯ ψ.
+Theorem (* 180 *) law_180 (*Distributivity of ◯ over W *) (φ ψ : t) : ◯ (φ W ψ) ≈ ◯ φ W ◯ ψ.
 Proof.
   rewrite wait_def.
   rewrite next_or.
@@ -1645,7 +1727,7 @@ Proof.
   now rewrite <- wait_def.
 Qed.
 
-Lemma (* 181 *) law_181 (*Expansion of W *) (φ ψ : t) : φ W ψ ≈ ψ ∨ (φ ∧ ◯ (φ W ψ)).
+Theorem (* 181 *) law_181 (*Expansion of W *) (φ ψ : t) : φ W ψ ≈ ψ ∨ (φ ∧ ◯ (φ W ψ)).
 Proof.
   rewrite wait_def at 2.
   rewrite next_or.
@@ -1658,7 +1740,7 @@ Proof.
   now rewrite <- wait_def.
 Qed.
 
-Lemma (* 182 *) law_182 (*W excluded middle*) (φ ψ : t) : φ W ψ ∨ φ W ¬ψ ≈ ⊤.
+Theorem (* 182 *) law_182 (*W excluded middle*) (φ ψ : t) : φ W ψ ∨ φ W ¬ψ ≈ ⊤.
 Proof.
   rewrite law_181.
   rewrite (law_181 _ (¬ψ)).
@@ -1671,14 +1753,14 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 183 *) law_183 (*Left zero of W *) (ψ : t) : ⊤ W ψ ≈ ⊤.
+Theorem (* 183 *) law_183 (*Left zero of W *) (ψ : t) : ⊤ W ψ ≈ ⊤.
 Proof.
   rewrite wait_def.
   rewrite law_64.
   now boolean.
 Qed.
 
-Lemma (* 184 *) law_184 (*Left distributivity of W over ∨ *) (φ ψ χ : t) : φ W (ψ ∨ χ) ≈ φ W ψ ∨ φ W χ.
+Theorem (* 184 *) law_184 (*Left distributivity of W over ∨ *) (φ ψ χ : t) : φ W (ψ ∨ χ) ≈ φ W ψ ∨ φ W χ.
 Proof.
   rewrite wait_def.
   rewrite until_left_or.
@@ -1693,7 +1775,7 @@ Proof.
   now rewrite <- wait_def.
 Qed.
 
-Lemma (* 185 *) law_185 (*Right distributivity of W over ∨ *) (φ ψ χ : t) : φ W χ ∨ ψ W χ ⟹ (φ ∨ ψ) W χ.
+Theorem (* 185 *) law_185 (*Right distributivity of W over ∨ *) (φ ψ χ : t) : φ W χ ∨ ψ W χ ⟹ (φ ∨ ψ) W χ.
 Proof.
   rewrite 2 wait_def.
   rewrite <- or_assoc.
@@ -1706,7 +1788,7 @@ Proof.
   now rewrite <- wait_def.
 Qed.
 
-Lemma (* 186 *) law_186 (*Left distributivity of W over ∧ *) (φ ψ χ : t) : φ W (ψ ∧ χ) ⟹ φ W ψ ∧ φ W χ.
+Theorem (* 186 *) law_186 (*Left distributivity of W over ∧ *) (φ ψ χ : t) : φ W (ψ ∧ χ) ⟹ φ W ψ ∧ φ W χ.
 Proof.
   rewrite wait_def.
   rewrite until_left_and.
@@ -1714,7 +1796,7 @@ Proof.
   now rewrite <- !wait_def.
 Qed.
 
-Lemma (* 187 *) law_187 (*Right distributivity of W over ∧ *) (φ ψ χ : t) : (φ ∧ ψ) W χ ≈ φ W χ ∧ ψ W χ.
+Theorem (* 187 *) law_187 (*Right distributivity of W over ∧ *) (φ ψ χ : t) : (φ ∧ ψ) W χ ≈ φ W χ ∧ ψ W χ.
 Proof.
   rewrite <- not_not.
   rewrite not_wait.
@@ -1728,7 +1810,7 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 188 *) law_188 (*Right distributivity of W over ⟹ *) (φ ψ χ : t) : (φ → ψ) W χ ⟹ (φ W χ → ψ W χ).
+Theorem (* 188 *) law_188 (*Right distributivity of W over ⟹ *) (φ ψ χ : t) : (φ → ψ) W χ ⟹ (φ W χ → ψ W χ).
 Proof.
   apply and_impl_iff.
   rewrite <- law_187.
@@ -1737,7 +1819,7 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 189 *) law_189 (*Disjunction rule of W *) (φ ψ : t) : φ W ψ ≈ (φ ∨ ψ) W ψ.
+Theorem (* 189 *) law_189 (*Disjunction rule of W *) (φ ψ : t) : φ W ψ ≈ (φ ∨ ψ) W ψ.
 Proof.
   rewrite <- not_not.
   rewrite not_wait.
@@ -1748,7 +1830,7 @@ Proof.
   now rewrite and_absorb.
 Qed.
 
-Lemma (* 190 *) law_190 (*Disjunction rule of U *) (φ ψ : t) : φ U ψ ≈ (φ ∨ ψ) U ψ.
+Theorem (* 190 *) law_190 (*Disjunction rule of U *) (φ ψ : t) : φ U ψ ≈ (φ ∨ ψ) U ψ.
 Proof.
   rewrite <- not_not.
   rewrite law_173.
@@ -1759,21 +1841,21 @@ Proof.
   now rewrite and_absorb.
 Qed.
 
-Lemma (* 191 *) law_191 (*Rule of W *) (ψ : t) : ¬ψ W ψ ≈ ⊤.
+Theorem (* 191 *) law_191 (*Rule of W *) (ψ : t) : ¬ψ W ψ ≈ ⊤.
 Proof.
   rewrite law_189.
   boolean.
   now rewrite law_183.
 Qed.
 
-Lemma (* 192 *) law_192 (*Rule of U *) (ψ : t) : ¬ψ U ψ ≈ ◇ ψ.
+Theorem (* 192 *) law_192 (*Rule of U *) (ψ : t) : ¬ψ U ψ ≈ ◇ ψ.
 Proof.
   rewrite law_190.
   boolean.
   now rewrite evn_def.
 Qed.
 
-Lemma (* 193 *) law_193 (**) (φ ψ : t) : (φ → ψ) W φ ≈ ⊤.
+Theorem (* 193 *) law_193 (**) (φ ψ : t) : (φ → ψ) W φ ≈ ⊤.
 Proof.
   apply true_impl.
   rewrite <- law_185.
@@ -1781,28 +1863,28 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 194 *) law_194 (**) (φ ψ : t) : ◇ φ ⟹ (φ → ψ) U φ.
+Theorem (* 194 *) law_194 (**) (φ ψ : t) : ◇ φ ⟹ (φ → ψ) U φ.
 Proof.
   rewrite <- until_right_or.
   rewrite <- or_inj.
   now rewrite <- law_192.
 Qed.
 
-Lemma (* 195 *) law_195 (*Conjunction rule of W *) (φ ψ : t) : φ W ψ ≈ (φ ∧ ¬ψ) W ψ.
+Theorem (* 195 *) law_195 (*Conjunction rule of W *) (φ ψ : t) : φ W ψ ≈ (φ ∧ ¬ψ) W ψ.
 Proof.
   rewrite law_187.
   rewrite law_191.
   now boolean.
 Qed.
 
-Lemma (* 196 *) law_196 (*Conjunction rule of U *) (φ ψ : t) : φ U ψ ≈ (φ ∧ ¬ψ) U ψ.
+Theorem (* 196 *) law_196 (*Conjunction rule of U *) (φ ψ : t) : φ U ψ ≈ (φ ∧ ¬ψ) U ψ.
 Proof.
   rewrite (law_171 (and _ _)).
   rewrite <- law_195.
   now rewrite <- law_171.
 Qed.
 
-Lemma (* 197 *) law_197 (*Distributivity of ¬ over W *) (φ ψ : t) : ¬(φ W ψ) ≈ (φ ∧ ¬ψ) U (¬φ ∧ ¬ψ).
+Theorem (* 197 *) law_197 (*Distributivity of ¬ over W *) (φ ψ : t) : ¬(φ W ψ) ≈ (φ ∧ ¬ψ) U (¬φ ∧ ¬ψ).
 Proof.
   rewrite not_wait.
   rewrite law_196.
@@ -1813,7 +1895,7 @@ Proof.
   now rewrite and_comm.
 Qed.
 
-Lemma (* 198 *) law_198 (*Distributivity of ¬ over U *) (φ ψ : t) : ¬(φ U ψ) ≈ (φ ∧ ¬ψ) W (¬φ ∧ ¬ψ).
+Theorem (* 198 *) law_198 (*Distributivity of ¬ over U *) (φ ψ : t) : ¬(φ U ψ) ≈ (φ ∧ ¬ψ) W (¬φ ∧ ¬ψ).
 Proof.
   rewrite law_173.
   rewrite law_195.
@@ -1824,45 +1906,45 @@ Proof.
   now rewrite and_comm.
 Qed.
 
-Lemma (* 199 *) law_199 (*Dual of U *) (φ ψ : t) : ¬(¬φ U ¬ψ) ≈ ψ W (φ ∧ ψ).
+Theorem (* 199 *) law_199 (*Dual of U *) (φ ψ : t) : ¬(¬φ U ¬ψ) ≈ ψ W (φ ∧ ψ).
 Proof.
   rewrite law_173.
   now boolean.
 Qed.
 
-Lemma (* 200 *) law_200 (*Dual of U *) (φ ψ : t) : ¬(¬φ U ¬ψ) ≈ (¬φ ∧ ψ) W (φ ∧ ψ).
+Theorem (* 200 *) law_200 (*Dual of U *) (φ ψ : t) : ¬(¬φ U ¬ψ) ≈ (¬φ ∧ ψ) W (φ ∧ ψ).
 Proof.
   rewrite law_198.
   now boolean.
 Qed.
 
-Lemma (* 201 *) law_201 (*Dual of W *) (φ ψ : t) : ¬(¬φ W ¬ψ) ≈ ψ U (φ ∧ ψ).
+Theorem (* 201 *) law_201 (*Dual of W *) (φ ψ : t) : ¬(¬φ W ¬ψ) ≈ ψ U (φ ∧ ψ).
 Proof.
   rewrite not_wait.
   now boolean.
 Qed.
 
-Lemma (* 202 *) law_202 (*Dual of W *) (φ ψ : t) : ¬(¬φ W ¬ψ) ≈ (¬φ ∧ ψ) U (φ ∧ ψ).
+Theorem (* 202 *) law_202 (*Dual of W *) (φ ψ : t) : ¬(¬φ W ¬ψ) ≈ (¬φ ∧ ψ) U (φ ∧ ψ).
 Proof.
   rewrite law_197.
   now boolean.
 Qed.
 
-Lemma (* 203 *) law_203 (*Idempotency of W *) (φ : t) : φ W φ ≈ φ.
+Theorem (* 203 *) law_203 (*Idempotency of W *) (φ : t) : φ W φ ≈ φ.
 Proof.
   rewrite wait_def.
   rewrite until_idem.
   now rewrite law_69.
 Qed.
 
-Lemma (* 204 *) law_204 (*Right zero of W *) (φ : t) : φ W ⊤ ≈ ⊤.
+Theorem (* 204 *) law_204 (*Right zero of W *) (φ : t) : φ W ⊤ ≈ ⊤.
 Proof.
   rewrite wait_def.
   rewrite until_true.
   now boolean.
 Qed.
 
-Lemma (* 205 *) law_205 (*Left identity of W *) (ψ : t) : ⊥ W ψ ≈ ψ.
+Theorem (* 205 *) law_205 (*Left identity of W *) (ψ : t) : ⊥ W ψ ≈ ψ.
 Proof.
   rewrite wait_def.
   rewrite false_until.
@@ -1870,7 +1952,7 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 206 *) law_206 (**) (φ ψ : t) : φ W ψ ⟹ φ ∨ ψ.
+Theorem (* 206 *) law_206 (**) (φ ψ : t) : φ W ψ ⟹ φ ∨ ψ.
 Proof.
   rewrite law_181.
   rewrite or_and.
@@ -1878,26 +1960,26 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 207 *) law_207 (**) (φ ψ : t) : □ (φ ∨ ψ) ⟹ φ W ψ.
+Theorem (* 207 *) law_207 (**) (φ ψ : t) : □ (φ ∨ ψ) ⟹ φ W ψ.
 Proof.
   rewrite law_179.
   now rewrite <- law_189.
 Qed.
 
-Lemma (* 208 *) law_208 (**) (φ ψ : t) : □ (¬ψ → φ) ⟹ φ W ψ.
+Theorem (* 208 *) law_208 (**) (φ ψ : t) : □ (¬ψ → φ) ⟹ φ W ψ.
 Proof.
   rewrite or_comm.
   rewrite not_not.
   now rewrite law_207.
 Qed.
 
-Lemma (* 209 *) law_209 (*W insertion*) (φ ψ : t) : ψ ⟹ φ W ψ.
+Theorem (* 209 *) law_209 (*W insertion*) (φ ψ : t) : ψ ⟹ φ W ψ.
 Proof.
   rewrite law_181.
   now boolean.
 Qed.
 
-Lemma (* 210 *) law_210 (*W frame law of ◯ *) (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ W ψ)).
+Theorem (* 210 *) law_210 (*W frame law of ◯ *) (φ ψ : t) : □ φ ⟹ (◯ ψ → ◯ (φ W ψ)).
 Proof.
   rewrite <- next_impl.
   rewrite <- law_209.
@@ -1906,7 +1988,7 @@ Proof.
   now apply impl_true.
 Qed.
 
-Lemma (* 211 *) law_211 (*W frame law of ◇ *) (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ W ψ)).
+Theorem (* 211 *) law_211 (*W frame law of ◇ *) (φ ψ : t) : □ φ ⟹ (◇ ψ → ◇ (φ W ψ)).
 Proof.
   apply and_impl_iff.
   rewrite law_84.
@@ -1914,7 +1996,7 @@ Proof.
   now apply evn_weaken.
 Qed.
 
-Lemma (* 212 *) law_212 (*W frame law of □ *) (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ W ψ)).
+Theorem (* 212 *) law_212 (*W frame law of □ *) (φ ψ : t) : □ φ ⟹ (□ ψ → □ (φ W ψ)).
 Proof.
   apply and_impl_iff.
   rewrite and_comm.
@@ -1923,25 +2005,25 @@ Proof.
   now rewrite <- law_177.
 Qed.
 
-Lemma (* 213 *) law_213 (*W induction*) (φ ψ χ : t) : □ (φ → (◯ φ ∧ ψ) ∨ χ) ⟹ (φ → ψ W χ).
+Theorem (* 213 *) law_213 (*W induction*) (φ ψ χ : t) : □ (φ → (◯ φ ∧ ψ) ∨ χ) ⟹ (φ → ψ W χ).
 Proof.
   rewrite wait_def.
   now rewrite always_until_and_ind.
 Qed.
 
-Lemma (* 214 *) law_214 (*W induction*) (φ ψ : t) : □ (φ → ◯ (φ ∨ ψ)) ⟹ (φ → φ W ψ).
+Theorem (* 214 *) law_214 (*W induction*) (φ ψ : t) : □ (φ → ◯ (φ ∨ ψ)) ⟹ (φ → φ W ψ).
 Proof.
   rewrite always_until_or_ind.
   now rewrite <- wait_def.
 Qed.
 
-Lemma (* 215 *) law_215 (*W induction*) (φ ψ : t) : □ (φ → ◯ φ) ⟹ (φ → φ W ψ).
+Theorem (* 215 *) law_215 (*W induction*) (φ ψ : t) : □ (φ → ◯ φ) ⟹ (φ → φ W ψ).
 Proof.
   rewrite always_induction.
   now rewrite <- law_179.
 Qed.
 
-Lemma (* 216 *) law_216 (*W induction*) (φ ψ : t) : □ (φ → ψ ∧ ◯ φ) ⟹ (φ → φ W ψ).
+Theorem (* 216 *) law_216 (*W induction*) (φ ψ : t) : □ (φ → ψ ∧ ◯ φ) ⟹ (φ → φ W ψ).
 Proof.
   rewrite impl_and.
   rewrite law_99.
@@ -1951,7 +2033,7 @@ Proof.
   now rewrite <- law_179.
 Qed.
 
-Lemma (* 217 *) law_217 (*Absorption*) (φ ψ : t) : φ ∨ φ W ψ ≈ φ ∨ ψ.
+Theorem (* 217 *) law_217 (*Absorption*) (φ ψ : t) : φ ∨ φ W ψ ≈ φ ∨ ψ.
 Proof.
   rewrite wait_def.
   rewrite <- or_assoc.
@@ -1960,7 +2042,7 @@ Proof.
   now rewrite until_absorb_or_u.
 Qed.
 
-Lemma (* 218 *) law_218 (*Absorption*) (φ ψ : t) : φ W ψ ∨ ψ ≈ φ W ψ.
+Theorem (* 218 *) law_218 (*Absorption*) (φ ψ : t) : φ W ψ ∨ ψ ≈ φ W ψ.
 Proof.
   split.
   - rewrite wait_def.
@@ -1969,7 +2051,7 @@ Proof.
   - now boolean.
 Qed.
 
-Lemma (* 219 *) law_219 (*Absorption*) (φ ψ : t) : φ W ψ ∧ ψ ≈ ψ.
+Theorem (* 219 *) law_219 (*Absorption*) (φ ψ : t) : φ W ψ ∧ ψ ≈ ψ.
 Proof.
   split.
   - now boolean.
@@ -1980,7 +2062,7 @@ Proof.
     now rewrite <- or_inj.
 Qed.
 
-Lemma (* 220 *) law_220 (*Absorption*) (φ ψ : t) : φ W ψ ∧ (φ ∨ ψ) ≈ φ W ψ.
+Theorem (* 220 *) law_220 (*Absorption*) (φ ψ : t) : φ W ψ ∧ (φ ∨ ψ) ≈ φ W ψ.
 Proof.
   split.
   - now boolean.
@@ -1993,7 +2075,7 @@ Proof.
     now rewrite law_68.
 Qed.
 
-Lemma (* 221 *) law_221 (*Absorption*) (φ ψ : t) : φ W ψ ∨ (φ ∧ ψ) ≈ φ W ψ.
+Theorem (* 221 *) law_221 (*Absorption*) (φ ψ : t) : φ W ψ ∨ (φ ∧ ψ) ≈ φ W ψ.
 Proof.
   rewrite law_181 at 1.
   rewrite (and_comm _ ψ).
@@ -2004,7 +2086,7 @@ Proof.
   now rewrite <- law_181.
 Qed.
 
-Lemma (* 222 *) law_222 (*Left absorption of W *) (φ ψ : t) : φ W (φ W ψ) ≈ φ W ψ.
+Theorem (* 222 *) law_222 (*Left absorption of W *) (φ ψ : t) : φ W (φ W ψ) ≈ φ W ψ.
 Proof.
   rewrite !wait_def.
   rewrite until_left_or.
@@ -2014,7 +2096,7 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 223 *) law_223 (*Right absorption of W *) (φ ψ : t) : (φ W ψ) W ψ ≈ φ W ψ.
+Theorem (* 223 *) law_223 (*Right absorption of W *) (φ ψ : t) : (φ W ψ) W ψ ≈ φ W ψ.
 Proof.
   split.
   - rewrite law_206.
@@ -2028,40 +2110,40 @@ Proof.
     now rewrite <- wait_def.
 Qed.
 
-Lemma (* 224 *) law_224 (*□ to W law*) (φ : t) : □ φ ≈ φ W ⊥.
+Theorem (* 224 *) law_224 (*□ to W law*) (φ : t) : □ φ ≈ φ W ⊥.
 Proof.
   rewrite wait_def.
   rewrite until_right_bottom.
   now boolean.
 Qed.
 
-Lemma (* 225 *) law_225 (*◇ to W law*) (φ : t) : ◇ φ ≈ ¬(¬φ W ⊥).
+Theorem (* 225 *) law_225 (*◇ to W law*) (φ : t) : ◇ φ ≈ ¬(¬φ W ⊥).
 Proof.
   rewrite <- law_224.
   now rewrite <- law_59.
 Qed.
 
-Lemma (* 226 *) law_226 (*W implication*) (φ ψ : t) : φ W ψ ⟹ □ φ ∨ ◇ ψ.
+Theorem (* 226 *) law_226 (*W implication*) (φ ψ : t) : φ W ψ ⟹ □ φ ∨ ◇ ψ.
 Proof.
   rewrite wait_def.
   now rewrite law_42.
 Qed.
 
-Lemma (* 227 *) law_227 (*Absorption*) (φ ψ : t) : φ W (φ U ψ) ≈ φ W ψ.
+Theorem (* 227 *) law_227 (*Absorption*) (φ ψ : t) : φ W (φ U ψ) ≈ φ W ψ.
 Proof.
   rewrite wait_def.
   rewrite until_left_absorb.
   now rewrite <- wait_def.
 Qed.
 
-Lemma (* 228 *) law_228 (*Absorption*) (φ ψ : t) : (φ U ψ) W ψ ≈ φ U ψ.
+Theorem (* 228 *) law_228 (*Absorption*) (φ ψ : t) : (φ U ψ) W ψ ≈ φ U ψ.
 Proof.
   rewrite wait_def.
   rewrite until_right_absorb.
   now rewrite law_69.
 Qed.
 
-Lemma (* 229 *) law_229 (*Absorption*) (φ ψ : t) : φ U (φ W ψ) ≈ φ W ψ.
+Theorem (* 229 *) law_229 (*Absorption*) (φ ψ : t) : φ U (φ W ψ) ≈ φ W ψ.
 Proof.
   rewrite wait_def.
   rewrite until_left_or.
@@ -2069,33 +2151,33 @@ Proof.
   now rewrite law_141.
 Qed.
 
-Lemma (* 230 *) law_230 (*Absorption*) (φ ψ : t) : (φ W ψ) U ψ ≈ φ U ψ.
+Theorem (* 230 *) law_230 (*Absorption*) (φ ψ : t) : (φ W ψ) U ψ ≈ φ U ψ.
 Proof.
   rewrite law_171.
   rewrite law_223.
   now rewrite law_171.
 Qed.
 
-Lemma (* 231 *) law_231 (*Absorption of W into ◇ *) (ψ : t) : ◇ ψ W ψ ≈ ◇ ψ.
+Theorem (* 231 *) law_231 (*Absorption of W into ◇ *) (ψ : t) : ◇ ψ W ψ ≈ ◇ ψ.
 Proof.
   rewrite evn_def.
   now rewrite law_228.
 Qed.
 
-Lemma (* 232 *) law_232 (*Absorption of W into □ *) (φ ψ : t) : □ φ ∧ φ W ψ ≈ □ φ.
+Theorem (* 232 *) law_232 (*Absorption of W into □ *) (φ ψ : t) : □ φ ∧ φ W ψ ≈ □ φ.
 Proof.
   rewrite wait_def.
   now rewrite and_absorb.
 Qed.
 
-Lemma (* 233 *) law_233 (*Absorption of □ into W *) (φ ψ : t) : □ φ ∨ φ W ψ ≈ φ W ψ.
+Theorem (* 233 *) law_233 (*Absorption of □ into W *) (φ ψ : t) : □ φ ∨ φ W ψ ≈ φ W ψ.
 Proof.
   rewrite wait_def.
   rewrite <- or_assoc.
   now boolean.
 Qed.
 
-Lemma (* 234 *) law_234 (**) (φ ψ : t) : φ W ψ ∧ □ ¬ψ ⟹ □ φ.
+Theorem (* 234 *) law_234 (**) (φ ψ : t) : φ W ψ ∧ □ ¬ψ ⟹ □ φ.
 Proof.
   rewrite law_226.
   rewrite <- law_61.
@@ -2107,7 +2189,7 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 235 *) law_235 (**) (φ ψ : t) : □ φ ⟹ φ U ψ ∨ □ ¬ψ.
+Theorem (* 235 *) law_235 (**) (φ ψ : t) : □ φ ⟹ φ U ψ ∨ □ ¬ψ.
 Proof.
   rewrite <- law_84.
   rewrite <- law_61.
@@ -2118,7 +2200,7 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 236 *) law_236 (**) (φ ψ : t) : ¬□ φ ∧ φ W ψ ⟹ ◇ ψ.
+Theorem (* 236 *) law_236 (**) (φ ψ : t) : ¬□ φ ∧ φ W ψ ⟹ ◇ ψ.
 Proof.
   rewrite and_comm.
   apply and_impl_iff.
@@ -2126,21 +2208,21 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 237 *) law_237 (**) (φ ψ : t) : ◇ ψ ⟹ ¬□ φ ∨ φ U ψ.
+Theorem (* 237 *) law_237 (**) (φ ψ : t) : ◇ ψ ⟹ ¬□ φ ∨ φ U ψ.
 Proof.
   apply and_impl_iff.
   rewrite and_comm.
   now rewrite law_84.
 Qed.
 
-Lemma (* NEW *) law_237b (φ ψ : t) : ◇ ψ ⟹ □ φ → φ U ψ.
+Theorem (* NEW *) law_237b (φ ψ : t) : ◇ ψ ⟹ □ φ → φ U ψ.
 Proof.
   apply and_impl_iff.
   rewrite and_comm.
   now rewrite law_84.
 Qed.
 
-Lemma (* 238 *) law_238 (*Left monotonicity of W *) (φ ψ χ : t) : □ (φ → ψ) ⟹ (φ W χ → ψ W χ).
+Theorem (* 238 *) law_238 (*Left monotonicity of W *) (φ ψ χ : t) : □ (φ → ψ) ⟹ (φ W χ → ψ W χ).
 Proof.
   apply and_impl_iff.
   rewrite law_175.
@@ -2153,7 +2235,7 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 239 *) law_239 (*Right monotonicity of W *) (φ ψ χ : t) : □ (φ → ψ) ⟹ (χ W φ → χ W ψ).
+Theorem (* 239 *) law_239 (*Right monotonicity of W *) (φ ψ χ : t) : □ (φ → ψ) ⟹ (χ W φ → χ W ψ).
 Proof.
   rewrite !wait_def.
   rewrite !(or_comm (□ χ)).
@@ -2161,7 +2243,7 @@ Proof.
   now rewrite <- law_85.
 Qed.
 
-Lemma (* 240 *) law_240 (*W strengthening rule *) (φ ψ χ ρ : t) : □ ((φ → χ) ∧ (ψ → ρ)) ⟹ (φ W ψ → χ W ρ).
+Theorem (* 240 *) law_240 (*W strengthening rule *) (φ ψ χ ρ : t) : □ ((φ → χ) ∧ (ψ → ρ)) ⟹ (φ W ψ → χ W ρ).
 Proof.
   apply and_impl_iff.
   rewrite law_99.
@@ -2177,7 +2259,7 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 241 *) law_241 (*W catenation rule*) (φ ψ χ ρ : t) : □ ((φ → ψ W χ) ∧ (χ → ψ W ρ)) ⟹ (φ → ψ W ρ).
+Theorem (* 241 *) law_241 (*W catenation rule*) (φ ψ χ ρ : t) : □ ((φ → ψ W χ) ∧ (χ → ψ W ρ)) ⟹ (φ → ψ W ρ).
 Proof.
   apply and_impl_iff.
   rewrite law_99.
@@ -2193,27 +2275,27 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 242 *) law_242 (*Left U W implication*) (φ ψ χ : t) : (φ U ψ) W χ ⟹ (φ W ψ) W χ.
+Theorem (* 242 *) law_242 (*Left U W implication*) (φ ψ χ : t) : (φ U ψ) W χ ⟹ (φ W ψ) W χ.
 Proof.
   now rewrite law_174.
 Qed.
 
-Lemma (* 243 *) law_243 (*Right W U implication*) (φ ψ χ : t) : φ W (ψ U χ) ⟹ φ W (ψ W χ).
+Theorem (* 243 *) law_243 (*Right W U implication*) (φ ψ χ : t) : φ W (ψ U χ) ⟹ φ W (ψ W χ).
 Proof.
   now rewrite law_174.
 Qed.
 
-Lemma (* 244 *) law_244 (*Right U U implication*) (φ ψ χ : t) : φ U (ψ U χ) ⟹ φ U (ψ W χ).
+Theorem (* 244 *) law_244 (*Right U U implication*) (φ ψ χ : t) : φ U (ψ U χ) ⟹ φ U (ψ W χ).
 Proof.
   now rewrite <- law_174.
 Qed.
 
-Lemma (* 245 *) law_245 (*Left U U implication*) (φ ψ χ : t) : (φ U ψ) U χ ⟹ (φ W ψ) U χ.
+Theorem (* 245 *) law_245 (*Left U U implication*) (φ ψ χ : t) : (φ U ψ) U χ ⟹ (φ W ψ) U χ.
 Proof.
   now rewrite <- law_174.
 Qed.
 
-Lemma (* 246 *) law_246 (*Left U ∨ strengthening*) (φ ψ χ : t) : (φ U ψ) U χ ⟹ (φ ∨ ψ) U χ.
+Theorem (* 246 *) law_246 (*Left U ∨ strengthening*) (φ ψ χ : t) : (φ U ψ) U χ ⟹ (φ ∨ ψ) U χ.
 Proof.
   apply impl_def.
   rewrite <- (law_86 (φ U ψ) (φ ∨ ψ)).
@@ -2222,7 +2304,7 @@ Proof.
   now rewrite law_64.
 Qed.
 
-Lemma (* 247 *) law_247 (*Left W ∨ strengthening*) (φ ψ χ : t) : (φ W ψ) W χ ⟹ (φ ∨ ψ) W χ.
+Theorem (* 247 *) law_247 (*Left W ∨ strengthening*) (φ ψ χ : t) : (φ W ψ) W χ ⟹ (φ ∨ ψ) W χ.
 Proof.
   apply impl_def.
   rewrite <- (law_238 (φ W ψ) (φ ∨ ψ)).
@@ -2231,7 +2313,7 @@ Proof.
   now rewrite law_64.
 Qed.
 
-Lemma (* 248 *) law_248 (*Right W ∨ strengthening*) (φ ψ χ : t) : φ W (ψ W χ) ⟹ φ W (ψ ∨ χ).
+Theorem (* 248 *) law_248 (*Right W ∨ strengthening*) (φ ψ χ : t) : φ W (ψ W χ) ⟹ φ W (ψ ∨ χ).
 Proof.
   apply impl_def.
   rewrite <- (law_239 (ψ W χ) (ψ ∨ χ) φ).
@@ -2240,7 +2322,7 @@ Proof.
   now rewrite law_64.
 Qed.
 
-Lemma (* 249 *) law_249 (*Right W ∨ ordering*) (φ ψ χ : t) : φ W (ψ W χ) ⟹ (φ ∨ ψ) W χ.
+Theorem (* 249 *) law_249 (*Right W ∨ ordering*) (φ ψ χ : t) : φ W (ψ W χ) ⟹ (φ ∨ ψ) W χ.
 Proof.
   rewrite 2 wait_def.
   rewrite until_left_or.
@@ -2252,7 +2334,7 @@ Proof.
   now rewrite <- wait_def.
 Qed.
 
-Lemma (* 250 *) law_250 (*Right ∧ W ordering*) (φ ψ χ : t) : φ W (ψ ∧ χ) ⟹ (φ W ψ) W χ.
+Theorem (* 250 *) law_250 (*Right ∧ W ordering*) (φ ψ χ : t) : φ W (ψ ∧ χ) ⟹ (φ W ψ) W χ.
 Proof.
   rewrite (wait_def φ ψ).
   rewrite <- law_185.
@@ -2268,7 +2350,7 @@ Proof.
   now rewrite <- wait_def.
 Qed.
 
-Lemma (* 251 *) law_251 (*U ordering*) (φ ψ : t) : ¬φ U ψ ∨ ¬ψ U φ ≈ ◇ (φ ∨ ψ).
+Theorem (* 251 *) law_251 (*U ordering*) (φ ψ : t) : ¬φ U ψ ∨ ¬ψ U φ ≈ ◇ (φ ∨ ψ).
 Proof.
   rewrite (law_196 _ ψ).
   rewrite (law_196 _ φ).
@@ -2279,7 +2361,7 @@ Proof.
   now rewrite or_comm.
 Qed.
 
-Lemma (* 252 *) law_252 (*W ordering*) (φ ψ : t) : ¬φ W ψ ∨ ¬ψ W φ ≈ ⊤.
+Theorem (* 252 *) law_252 (*W ordering*) (φ ψ : t) : ¬φ W ψ ∨ ¬ψ W φ ≈ ⊤.
 Proof.
   rewrite (law_195 _ ψ).
   rewrite (law_195 _ φ).
@@ -2289,7 +2371,7 @@ Proof.
   now rewrite law_191.
 Qed.
 
-Lemma (* 253 *) law_253 (*W implication ordering*) (φ ψ χ : t) : φ W ψ ∧ ¬ψ W χ ⟹ φ W χ.
+Theorem (* 253 *) law_253 (*W implication ordering*) (φ ψ χ : t) : φ W ψ ∧ ¬ψ W χ ⟹ φ W χ.
 Proof.
   assert (A : φ U ψ ∧ □ ¬ψ ≈ ⊥).
     rewrite law_171.
@@ -2317,7 +2399,7 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 254 *) law_254 (*Lemmon formula*) (φ ψ : t) : □ (□ φ → ψ) ∨ □ (□ ψ → φ) ≈ ⊤.
+Theorem (* 254 *) law_254 (*Lemmon formula*) (φ ψ : t) : □ (□ φ → ψ) ∨ □ (□ ψ → φ) ≈ ⊤.
 Proof.
   apply true_impl.
   rewrite <- (law_206 _ ψ).
@@ -2326,19 +2408,30 @@ Proof.
   now rewrite law_252.
 Qed.
 
-Lemma dummett (φ : t) : □ (□ (φ → □ φ) → □ φ) ⟹ (◇ □ φ → □ φ).
+Theorem dummett (φ : t) : □ (□ (φ → □ φ) → φ) ⟹ (◇ □ φ → □ φ).
 Proof.
-  rewrite (law_114 (□ (φ → □ φ) → □ φ) (◇ φ)). (* lossy *)
+  rewrite or_comm.
+  rewrite (always_def (or (¬φ) _)).
+  rewrite not_or.
+  rewrite !not_not.
+  rewrite law_60.
+  apply and_impl_iff.
+  (* q p q p q p q p p p p p .... *)
+  (* □ (φ ∨ ◇ (φ ∧ ◇ ¬ φ)) ∧ ◇ □ φ ⟹ □ φ *)
 
-  apply or_respects_impl.
-    apply (proj1 (contrapositive _ _)).
-    apply law_145.          (* lossy *)
+  rewrite (and_comm φ).
+  rewrite (and_proj _ φ).
+  rewrite law_50.
+
+  enough (□ (φ ∨ ◇ (φ ∧ ◇ ¬ φ)) ⟹ □ φ ∨ □ ◇ ¬φ).
+    rewrite H.
+    rewrite and_or_r.
+    rewrite and_proj.
+    rewrite and_comm.
+    rewrite law_98.
+    now boolean.
 
   apply always_respects_impl.
-  rewrite not_or.
-  rewrite not_not.
-  rewrite or_and_r.
-  rewrite <- law_104.
   (* FILL IN HERE *)
 Admitted.
 
@@ -2346,52 +2439,52 @@ Admitted.
 
 Axiom release_def : forall (φ ψ : t), φ R ψ ≈ ¬(¬φ U ¬ψ).
 
-Lemma law_256 (φ ψ : t) : φ U ψ ≈ ¬(¬φ R ¬ψ).
+Theorem law_256 (φ ψ : t) : φ U ψ ≈ ¬(¬φ R ¬ψ).
 Proof.
   (* FILL IN HERE *)
 Admitted.
 
-Lemma law_257 (φ ψ : t) : φ W ψ ≈ ψ R (ψ ∨ φ).
+Theorem law_257 (φ ψ : t) : φ W ψ ≈ ψ R (ψ ∨ φ).
 Proof.
   (* FILL IN HERE *)
 Admitted.
 
-Lemma law_258 (φ ψ : t) : φ R ψ ≈ ψ W (ψ ∧ φ).
+Theorem law_258 (φ ψ : t) : φ R ψ ≈ ψ W (ψ ∧ φ).
 Proof.
   (* FILL IN HERE *)
 Admitted.
 
-Lemma law_259 (φ ψ : t) : φ R ψ ≈ ψ ∧ (φ ∨ ◯ (φ R ψ)).
+Theorem law_259 (φ ψ : t) : φ R ψ ≈ ψ ∧ (φ ∨ ◯ (φ R ψ)).
 Proof.
   (* FILL IN HERE *)
 Admitted.
 
-Lemma law_260 (φ ψ χ : t) : φ R (ψ ∨ χ) ≈ (φ R ψ) ∨ (φ R χ).
+Theorem law_260 (φ ψ χ : t) : φ R (ψ ∨ χ) ≈ (φ R ψ) ∨ (φ R χ).
 Proof.
   (* FILL IN HERE *)
 Admitted.
 
-Lemma law_261 (φ ψ χ : t) : (φ ∧ ψ) R χ ≈ (φ R χ) ∧ (ψ R χ).
+Theorem law_261 (φ ψ χ : t) : (φ ∧ ψ) R χ ≈ (φ R χ) ∧ (ψ R χ).
 Proof.
   (* FILL IN HERE *)
 Admitted.
 
-Lemma law_262 (φ ψ : t) : ◯ (φ R ψ) ≈ ◯ φ R ◯ ψ.
+Theorem law_262 (φ ψ : t) : ◯ (φ R ψ) ≈ ◯ φ R ◯ ψ.
 Proof.
   (* FILL IN HERE *)
 Admitted.
 
-Lemma law_263 (φ ψ : t) : □ ψ ≈ ⊥ R ψ.
+Theorem law_263 (φ ψ : t) : □ ψ ≈ ⊥ R ψ.
 Proof.
   (* FILL IN HERE *)
 Admitted.
 
-Lemma law_264 (φ ψ : t) : ¬(φ U ψ) ≈ ¬φ R ¬ψ.
+Theorem law_264 (φ ψ : t) : ¬(φ U ψ) ≈ ¬φ R ¬ψ.
 Proof.
   (* FILL IN HERE *)
 Admitted.
 
-Lemma law_265 (φ ψ : t) : ¬(φ R ψ) ≈ ¬φ U ¬ψ.
+Theorem law_265 (φ ψ : t) : ¬(φ R ψ) ≈ ¬φ U ¬ψ.
 Proof.
   (* FILL IN HERE *)
 Admitted.
@@ -2400,22 +2493,22 @@ Admitted.
 
 Axiom strong_release_def : forall (φ ψ : t), φ M ψ ≈ φ U (ψ ∧ φ).
 
-Lemma law_266 (φ ψ : t) : φ W ψ ≈ ¬(¬φ M ¬ψ).
+Theorem law_266 (φ ψ : t) : φ W ψ ≈ ¬(¬φ M ¬ψ).
 Proof.
   (* FILL IN HERE *)
 Admitted.
 
-Lemma law_267 (φ ψ : t) : φ M ψ ≈ ¬(¬φ W ¬ψ).
+Theorem law_267 (φ ψ : t) : φ M ψ ≈ ¬(¬φ W ¬ψ).
 Proof.
   (* FILL IN HERE *)
 Admitted.
 
-Lemma law_268 (φ ψ : t) : φ M ψ ≈ φ R ψ ∧ ◇ φ.
+Theorem law_268 (φ ψ : t) : φ M ψ ≈ φ R ψ ∧ ◇ φ.
 Proof.
   (* FILL IN HERE *)
 Admitted.
 
-Lemma law_269 (φ ψ : t) : φ M ψ ≈ φ R (ψ ∧ ◇ φ).
+Theorem law_269 (φ ψ : t) : φ M ψ ≈ φ R (ψ ∧ ◇ φ).
 Proof.
   (* FILL IN HERE *)
 Admitted.
@@ -2424,22 +2517,22 @@ Admitted.
 
 Notation "p ≉ q" := (~ (p ≈ q)) (at level 90, no associativity).
 
-Lemma law_270 (φ ψ χ : t) : □ (φ → ¬ψ ∧ ◯ χ) ⟹ φ → ¬(ψ U χ).
+Theorem law_270 (φ ψ χ : t) : □ (φ → ¬ψ ∧ ◯ χ) ⟹ φ → ¬(ψ U χ).
 Proof.
   (* FILL IN HERE *)
 Admitted.
 
-Lemma law_271 (φ ψ χ ρ : t) : □ ((φ → ψ U χ) ∧ (χ → ψ U ρ)) ⟹ φ → □ χ.
+Theorem law_271 (φ ψ χ ρ : t) : □ ((φ → ψ U χ) ∧ (χ → ψ U ρ)) ⟹ φ → □ χ.
 Proof.
   (* FILL IN HERE *)
 Admitted.
 
-Lemma law_272 (φ ψ : t) : ◇ (φ U ψ) ≉ ◇ φ U ◇ ψ.
+Theorem law_272 (φ ψ : t) : ◇ (φ U ψ) ≉ ◇ φ U ◇ ψ.
 Proof.
   (* FILL IN HERE *)
 Admitted.
 
-Lemma law_273 (φ ψ : t) : ¬◇ (¬φ ∧ ψ) ≈ □ (φ ∨ ¬ψ).
+Theorem law_273 (φ ψ : t) : ¬◇ (¬φ ∧ ψ) ≈ □ (φ ∨ ¬ψ).
 Proof.
   (* FILL IN HERE *)
 Admitted.

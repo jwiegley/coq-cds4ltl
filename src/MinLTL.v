@@ -47,20 +47,20 @@ Program Instance until_respects_eqv : Proper (eqv ==> eqv ==> eqv) until.
 Axiom (* 1 *) next_not : forall (φ : t), ◯ ¬φ ≈ ¬◯ φ.
 Axiom (* 2 *) next_impl : forall (φ ψ : t), ◯ (φ → ψ) ≈ ◯ φ → ◯ ψ.
 
-Lemma (* 3 *) next_linearity (φ : t) : ◯ φ ≈ ¬◯ ¬φ.
+Theorem (* 3 *) next_linearity (φ : t) : ◯ φ ≈ ¬◯ ¬φ.
 Proof.
   rewrite next_not.
   now apply not_swap.
 Qed.
 
-Lemma (* 4 *) next_or (φ ψ : t) : ◯ (φ ∨ ψ) ≈ ◯ φ ∨ ◯ ψ.
+Theorem (* 4 *) next_or (φ ψ : t) : ◯ (φ ∨ ψ) ≈ ◯ φ ∨ ◯ ψ.
 Proof.
   pose proof (next_impl (¬φ) ψ) as H; rewrite not_not in H.
   rewrite H.
   now rewrite <- next_linearity.
 Qed.
 
-Lemma (* 5 *) next_and (φ ψ : t) : ◯ (φ ∧ ψ) ≈ ◯ φ ∧ ◯ ψ.
+Theorem (* 5 *) next_and (φ ψ : t) : ◯ (φ ∧ ψ) ≈ ◯ φ ∧ ◯ ψ.
 Proof.
   rewrite <- (not_not φ) at 1.
   rewrite <- (not_not ψ) at 1.
@@ -71,14 +71,14 @@ Proof.
   now rewrite <- !next_linearity.
 Qed.
 
-Lemma (* 6 *) next_eqv (φ ψ : t) : ◯ (φ ≡ ψ) ≈ ◯ φ ≡ ◯ ψ.
+Theorem (* 6 *) next_eqv (φ ψ : t) : ◯ (φ ≡ ψ) ≈ ◯ φ ≡ ◯ ψ.
 Proof.
   rewrite !next_or.
   rewrite !next_not.
   now rewrite next_and.
 Qed.
 
-Lemma (* 7 *) next_true : ◯ ⊤ ≈ ⊤.
+Theorem (* 7 *) next_true : ◯ ⊤ ≈ ⊤.
 Proof.
   rewrite <- (true_def ⊤) at 1.
   rewrite next_or.
@@ -86,7 +86,7 @@ Proof.
   now rewrite true_def.
 Qed.
 
-Lemma (* 8 *) next_false : ◯ ⊥ ≈ ⊥.
+Theorem (* 8 *) next_false : ◯ ⊥ ≈ ⊥.
 Proof.
   rewrite <- (false_def ⊥) at 1.
   rewrite next_not.
@@ -140,7 +140,7 @@ Axiom (* 16 *) until_impl_order : forall (φ ψ χ : t), (φ U ψ) ∧ (¬ψ U �
 Axiom (* 17 *) until_right_or_order : forall (φ ψ χ : t), φ U (ψ U χ) ⟹ (φ ∨ ψ) U χ.
 Axiom (* 18 *) until_right_and_order : forall (φ ψ χ : t), φ U (ψ ∧ χ) ⟹ (φ U ψ) U χ.
 
-Lemma (* 19 *) until_right_impl (φ ψ χ : t) : (φ → ψ) U χ ⟹ (φ U χ) → (ψ U χ).
+Theorem (* 19 *) until_right_impl (φ ψ χ : t) : (φ → ψ) U χ ⟹ (φ U χ) → (ψ U χ).
 Proof.
   apply and_impl_iff.
   rewrite <- until_right_and.
@@ -151,33 +151,33 @@ Proof.
   now apply and_proj.
 Qed.
 
-Lemma (* 20 *) until_true (φ : t) : φ U ⊤ ≈ ⊤.
+Theorem (* 20 *) until_true (φ : t) : φ U ⊤ ≈ ⊤.
 Proof.
   rewrite until_expansion.
   now rewrite true_or.
 Qed.
 
-Lemma (* 21 *) false_until (φ : t) : ⊥ U φ ≈ φ.
+Theorem (* 21 *) false_until (φ : t) : ⊥ U φ ≈ φ.
 Proof.
   rewrite until_expansion.
   rewrite false_and.
   now rewrite or_false.
 Qed.
 
-Lemma (* 22 *) until_idem (φ : t) : φ U φ ≈ φ.
+Theorem (* 22 *) until_idem (φ : t) : φ U φ ≈ φ.
 Proof.
   rewrite until_expansion.
   now rewrite or_absorb.
 Qed.
 
-Lemma (* 23 *) until_excl_middle (φ ψ : t) : (φ U ψ) ∨ (φ U ¬ψ) ≈ ⊤.
+Theorem (* 23 *) until_excl_middle (φ ψ : t) : (φ U ψ) ∨ (φ U ¬ψ) ≈ ⊤.
 Proof.
   rewrite <- until_left_or.
   rewrite true_def.
   now apply until_true.
 Qed.
 
-Lemma (* 24 *) until_24 (φ ψ χ : t) : (¬φ U (ψ U χ)) ∧ (φ U χ) ⟹ ψ U χ.
+Theorem (* 24 *) until_24 (φ ψ χ : t) : (¬φ U (ψ U χ)) ∧ (φ U χ) ⟹ ψ U χ.
 Proof.
   rewrite until_right_or_order.
   rewrite until_right_impl.
@@ -186,7 +186,7 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 25 *) until_25 (φ ψ χ : t) : (φ U (¬ψ U χ)) ∧ (ψ U χ) ⟹ φ U χ.
+Theorem (* 25 *) until_25 (φ ψ χ : t) : (φ U (¬ψ U χ)) ∧ (ψ U χ) ⟹ φ U χ.
 Proof.
   rewrite until_right_or_order.
   rewrite or_comm.
@@ -196,13 +196,13 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 26 *) until_26 (φ ψ : t) : (φ U ψ) ∧ (¬ψ U φ) ⟹ φ.
+Theorem (* 26 *) until_26 (φ ψ : t) : (φ U ψ) ∧ (¬ψ U φ) ⟹ φ.
 Proof.
   rewrite until_impl_order.
   now rewrite until_idem.
 Qed.
 
-Lemma (* 27 *) until_27 (φ ψ : t) : φ ∧ (¬φ U ψ) ⟹ ψ.
+Theorem (* 27 *) until_27 (φ ψ : t) : φ ∧ (¬φ U ψ) ⟹ ψ.
 Proof.
   rewrite until_expansion.
   rewrite and_or.
@@ -210,7 +210,7 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* 28 *) until_28 (φ ψ : t) : φ U ψ ⟹ φ ∨ ψ.
+Theorem (* 28 *) until_28 (φ ψ : t) : φ U ψ ⟹ φ ∨ ψ.
 Proof.
   rewrite until_expansion.
   rewrite or_and.
@@ -218,13 +218,13 @@ Proof.
   now rewrite or_comm.
 Qed.
 
-Lemma (* 29 *) until_insertion (φ ψ : t) : ψ ⟹ φ U ψ.
+Theorem (* 29 *) until_insertion (φ ψ : t) : ψ ⟹ φ U ψ.
 Proof.
   rewrite until_expansion.
   now apply or_inj.
 Qed.
 
-Lemma (* 30 *) until_30 (φ ψ : t) : φ ∧ ψ ⟹ φ U ψ.
+Theorem (* 30 *) until_30 (φ ψ : t) : φ ∧ ψ ⟹ φ U ψ.
 Proof.
   rewrite until_expansion.
   rewrite <- or_inj.
@@ -232,7 +232,7 @@ Proof.
   now apply and_proj.
 Qed.
 
-Lemma (* 31 *) until_absorb_or_u (φ ψ : t) : φ ∨ (φ U ψ) ≈ φ ∨ ψ.
+Theorem (* 31 *) until_absorb_or_u (φ ψ : t) : φ ∨ (φ U ψ) ≈ φ ∨ ψ.
 Proof.
   split.
   - rewrite (until_28 φ ψ) at 1.
@@ -241,7 +241,7 @@ Proof.
   - now rewrite <- until_insertion.
 Qed.
 
-Lemma (* 32 *) until_absorb_u_or (φ ψ : t) : (φ U ψ) ∨ ψ ≈ φ U ψ.
+Theorem (* 32 *) until_absorb_u_or (φ ψ : t) : (φ U ψ) ∨ ψ ≈ φ U ψ.
 Proof.
   rewrite until_expansion.
   rewrite or_comm at 1.
@@ -249,7 +249,7 @@ Proof.
   now rewrite or_idem.
 Qed.
 
-Lemma (* 33 *) until_absorb_u_and (φ ψ : t) : (φ U ψ) ∧ ψ ≈ ψ.
+Theorem (* 33 *) until_absorb_u_and (φ ψ : t) : (φ U ψ) ∧ ψ ≈ ψ.
 Proof.
   split.
   - rewrite and_comm.
@@ -258,7 +258,7 @@ Proof.
     now rewrite (until_insertion φ ψ) at 1.
 Qed.
 
-Lemma (* 34 *) until_absorb_u_or_and (φ ψ : t) : (φ U ψ) ∨ (φ ∧ ψ) ≈ φ U ψ.
+Theorem (* 34 *) until_absorb_u_or_and (φ ψ : t) : (φ U ψ) ∨ (φ ∧ ψ) ≈ φ U ψ.
 Proof.
   split.
   - rewrite until_30.
@@ -266,7 +266,7 @@ Proof.
   - now rewrite <- or_inj.
 Qed.
 
-Lemma (* 35 *) until_absorb_u_and_or (φ ψ : t) : (φ U ψ) ∧ (φ ∨ ψ) ≈ φ U ψ.
+Theorem (* 35 *) until_absorb_u_and_or (φ ψ : t) : (φ U ψ) ∧ (φ ∨ ψ) ≈ φ U ψ.
 Proof.
   split.
   - now apply and_proj.
@@ -274,7 +274,7 @@ Proof.
     now rewrite and_idem.
 Qed.
 
-Lemma (* 36 *) until_left_absorb (φ ψ : t) : φ U (φ U ψ) ≈ φ U ψ.
+Theorem (* 36 *) until_left_absorb (φ ψ : t) : φ U (φ U ψ) ≈ φ U ψ.
 Proof.
   split.
   - rewrite until_right_or_order.
@@ -282,7 +282,7 @@ Proof.
   - now apply until_insertion.
 Qed.
 
-Lemma (* 37 *) until_right_absorb (φ ψ : t) : (φ U ψ) U ψ ≈ φ U ψ.
+Theorem (* 37 *) until_right_absorb (φ ψ : t) : (φ U ψ) U ψ ≈ φ U ψ.
 Proof.
   split.
   - rewrite until_28.
@@ -291,7 +291,7 @@ Proof.
     now rewrite and_idem.
 Qed.
 
-Lemma (* NEW *) until_left_and_impl (φ ψ χ : t) : φ U ψ ∧ φ U χ ⟹ φ U (ψ ∨ χ).
+Theorem (* NEW *) until_left_and_impl (φ ψ χ : t) : φ U ψ ∧ φ U χ ⟹ φ U (ψ ∨ χ).
 Proof.
   rewrite until_left_or.
   rewrite and_proj.
