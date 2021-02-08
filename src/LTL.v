@@ -2407,9 +2407,11 @@ Proof.
   now rewrite law_252.
 Qed.
 
-Theorem dummett (φ : t) : □ (□ (φ ⇒ □ φ) ⇒ φ) ⟹ (◇ □ φ ⇒ □ φ).
+Definition F (p q : t) := □ (p ⇒ □ q).
+
+Theorem Dummett (φ : t) : F (F φ φ) φ ⟹ (◇ □ φ ⇒ □ φ).
 Proof.
-  rewrite or_comm.
+  unfold F.
   rewrite (always_def (or (¬φ) _)).
   rewrite not_or.
   rewrite !not_not.
