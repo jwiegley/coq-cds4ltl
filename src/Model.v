@@ -55,25 +55,46 @@ Proof.
 Qed.
 
 Definition until : t -> t -> t :=
-  λ p q s, ∃ i,（s, i）⊨ q /\ ∀ k, k < i ->（s, k）⊨ p.
+  λ p q s, ∃ k,（s, k）⊨ q /\ ∀ i, i < k ->（s, i）⊨ p.
 
 Notation "p 'U' q" := (until p q) (at level 79, right associativity) : ltl_scope.
 
 Theorem until_semantics : ∀ σ j p q,
- （σ, j）⊨ (p U q) <-> ∃ k, k ≥ j ->（σ, k）⊨ q /\ ∀ i, j ≤ i -> i < k ->（σ, i）⊨ p.
+ （σ, j）⊨ (p U q) <-> ∃ k, k ≥ j /\（σ, k）⊨ q /\ ∀ i, j ≤ i -> i < k ->（σ, i）⊨ p.
 Proof.
   unfold until.
+  repeat setoid_rewrite from_plus.
   split; intros.
   - destruct H.
     destruct H.
     exists (x + j).
+    split.
+      lia.
+    split; auto.
     intros.
-Admitted.
+    specialize (H0 (i - j)).
+    rewrite PeanoNat.Nat.sub_add in H0.
+      apply H0.
+      lia.
+    lia.
+  - destruct H.
+    destruct H.
+    destruct H0.
+    exists (x - j).
+    rewrite PeanoNat.Nat.sub_add.
+      split; auto.
+      intros.
+      specialize (H1 (i + j)).
+      apply H1.
+        lia.
+      lia.
+    lia.
+Qed.
 
 Definition always     : t -> t := λ p s, ∀ i,（s, i）⊨ p.
 Definition eventually : t -> t := λ p s, ∃ i,（s, i）⊨ p.
 
 Definition wait : t -> t -> t :=
-  λ p q s, ∃ i,（s, i）⊨ q /\ ∀ k, k < i ->（s, k）⊨ p.
+  λ p q s, ∃ k,（s, k）⊨ q /\ ∀ i, i < k ->（s, i）⊨ p.
 
 End StreamLTL.
