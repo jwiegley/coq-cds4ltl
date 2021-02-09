@@ -48,8 +48,8 @@ Axiom truth_true : truth ⊤.
 Axiom impl_denote : forall (p q : t), (p ⟹ q) <-> (truth p -> truth q).
 
 (** These two axioms establish the definition of the syntactic terms. *)
-Axiom true_def  : forall (p : t),   p ∨ ¬p ≈ ⊤.
-Axiom false_def : forall (p : t),   ¬(p ∨ ¬p) ≈ ⊥.
+Axiom true_def  : forall (p : t), p ∨ ¬p ≈ ⊤.
+Axiom false_def : forall (p : t), ¬(p ∨ ¬p) ≈ ⊥.
 
 (** This is one set of fundamental axioms of boolean algebra.
  *

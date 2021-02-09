@@ -281,3 +281,6 @@ Arguments every {a} P s.
 Arguments any {a} P s.
 
 Notation "（ s , n ） ⊨ P" := (P (from n s)) (at level 75).
+
+CoFixpoint constant {a : Type} (x : a) : Stream a := Cons x (constant x).
+

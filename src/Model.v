@@ -21,16 +21,18 @@ Definition t := Ensemble (Stream a).
 Definition truth := Inhabited (Stream a).
 Definition not   := Complement (Stream a).
 Definition or    := Union (Stream a).
-Definition impl  := Included (Stream a).
+(* Definition impl  := Included (Stream a). *)
+Definition impl  := fun x y => truth x -> truth y.
 Definition true  := Full_set (Stream a).
 Definition false := Empty_set (Stream a).
-Definition eqv   := Same_set (Stream a).
+(* Definition eqv   := Same_set (Stream a). *)
+Definition eqv   := fun x y => truth x <-> truth y.
 Definition and   := Intersection (Stream a).
 
 Program Instance impl_reflexive : Reflexive impl.
 Next Obligation.
   unfold impl.
-  now repeat intro.
+  now intro.
 Qed.
 
 Program Instance impl_transitive : Transitive impl.
@@ -43,19 +45,22 @@ Qed.
 Program Instance truth_respects_impl : Proper (impl ==> Basics.impl) truth.
 Next Obligation.
   unfold impl, truth.
-  repeat intro.
-  destruct H0.
-  exists x0.
-  now apply H.
+  repeat intro; auto.
 Qed.
 
 Program Instance not_respects_impl : Proper (impl --> impl) not | 1.
 Next Obligation.
   unfold flip, impl.
   repeat intro.
+  unfold truth in *.
+  destruct H0.
+  exists x0.
+  intro.
   apply H0.
-  now apply H.
-Qed.
+  destruct H.
+    now exists x0.
+  admit.
+Admitted.
 
 Program Instance or_respects_impl : Proper (impl ==> impl ==> impl) or.
 Next Obligation.
