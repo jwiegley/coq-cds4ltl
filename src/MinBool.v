@@ -42,15 +42,14 @@ Notation "⊥"      := false      (at level 0, no associativity) : boolean_scope
 Notation "p ⟹ q" := (impl p q) (at level 99, right associativity) : boolean_scope.
 Notation "p ≈ q"  := (eqv p q)  (at level 90, no associativity) : boolean_scope.
 
-Axiom truth_def : truth ⊤.
-
-(** These three axioms establish the definition of the syntactic terms. *)
-Axiom impl_def  : forall (p q : t), (p ⟹ q) <-> truth (¬p ∨ q).
-Axiom true_def  : forall (p : t),   p ∨ ¬p ≈ ⊤.
-Axiom false_def : forall (p : t),   ¬(p ∨ ¬p) ≈ ⊥.
+Axiom truth_true : truth ⊤.
 
 (** This axiom denotes implication into Coq's logic. *)
 Axiom impl_denote : forall (p q : t), (p ⟹ q) <-> (truth p -> truth q).
+
+(** These two axioms establish the definition of the syntactic terms. *)
+Axiom true_def  : forall (p : t),   p ∨ ¬p ≈ ⊤.
+Axiom false_def : forall (p : t),   ¬(p ∨ ¬p) ≈ ⊥.
 
 (** This is one set of fundamental axioms of boolean algebra.
  *
@@ -92,21 +91,12 @@ Next Obligation.
 Qed.
 
 Program Instance impl_reflexive : Reflexive impl.
-Next Obligation.
-  apply impl_def.
-  rewrite or_comm.
-  rewrite true_def.
-  exact truth_def.
-Qed.
+Next Obligation. now apply impl_denote; auto. Qed.
 
 Program Instance impl_transitive : Transitive impl.
 Next Obligation.
-  apply impl_def.
-  rewrite <- H0.
-  rewrite <- H.
-  rewrite or_comm.
-  rewrite true_def.
-  exact truth_def.
+  apply impl_denote; intros.
+  now rewrite <- H0, <- H.
 Qed.
 
 Program Instance eqv_equivalence : Equivalence eqv.
@@ -305,6 +295,43 @@ Proof.
     reflexivity.
   - apply not_respects_impl in H.
     now rewrite !not_not in H.
+Qed.
+
+Lemma impl_def  : forall (p q : t), (p ⟹ q) <-> truth (¬p ∨ q).
+Proof.
+  split; intros.
+  - rewrite <- H.
+    rewrite or_comm.
+    rewrite true_def.
+    exact truth_true.
+  - apply contrapositive.
+    rewrite <- (huntington (¬q) (¬p)).
+    rewrite (or_comm _ (¬p)).
+    rewrite not_not.
+    enough (forall r, truth r <-> r ≈ ⊤).
+      apply H0 in H.
+      rewrite H.
+      rewrite not_true.
+      rewrite or_false.
+      apply contrapositive.
+      rewrite !not_not.
+      apply impl_denote; intros.
+      apply H0 in H1.
+      rewrite H1.
+      rewrite <- H.
+      rewrite or_comm.
+      rewrite or_assoc.
+      rewrite or_idem.
+      rewrite H.
+      exact truth_true.
+    split; intros.
+    + split.
+      * apply impl_denote; intros.
+        exact truth_true.
+      * apply impl_denote; auto.
+    + destruct H0.
+      apply impl_denote in H1; auto.
+      exact truth_true.
 Qed.
 
 Theorem impl_true_impl : forall (p q : t), (p ⟹ q) <-> (⊤ ⟹ ¬ p ∨ q).

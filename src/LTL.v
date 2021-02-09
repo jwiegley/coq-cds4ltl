@@ -514,7 +514,7 @@ Proof.
   intros.
   apply impl_denote; intros.
   rewrite H.
-  - now apply truth_def.
+  - now apply truth_true.
   - rewrite law_76 in H0.
     apply true_impl.
     apply impl_def.
