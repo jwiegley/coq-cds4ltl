@@ -18,13 +18,14 @@ Variable a : Type.
 
 Definition t := Ensemble (Stream a).
 
+Definition truth := Inhabited (Stream a).
 Definition not   := Complement (Stream a).
 Definition or    := Union (Stream a).
+Definition impl  := Included (Stream a).
 Definition true  := Full_set (Stream a).
 Definition false := Empty_set (Stream a).
-Definition and   := Intersection (Stream a).
-Definition impl  := Included (Stream a).
 Definition eqv   := Same_set (Stream a).
+Definition and   := Intersection (Stream a).
 
 Program Instance impl_reflexive : Reflexive impl.
 Next Obligation.
@@ -37,6 +38,15 @@ Next Obligation.
   unfold impl, Included in *.
   repeat intro.
   now intuition.
+Qed.
+
+Program Instance truth_respects_impl : Proper (impl ==> Basics.impl) truth.
+Next Obligation.
+  unfold impl, truth.
+  repeat intro.
+  destruct H0.
+  exists x0.
+  now apply H.
 Qed.
 
 Program Instance not_respects_impl : Proper (impl --> impl) not | 1.
@@ -83,6 +93,24 @@ Notation "p ≈ q"  := (eqv p q)  (at level 90, no associativity) : boolean_scop
 Infix    "∧"       := and             (at level 80, right associativity) : boolean_scope.
 Notation "p ≡ q"   := (p ⇒ q ∧ q ⇒ p) (at level 89, right associativity, only parsing) : boolean_scope.
 
+Theorem truth_true : truth ⊤.
+Proof.
+  eexists ?[a].
+  constructor.
+Abort.
+
+Theorem impl_denote (p q : t) : (p ⟹ q) <-> (truth p -> truth q).
+Proof.
+  split; intros.
+  - now rewrite <- H.
+  - repeat intro.
+    unfold truth in H.
+    pose proof (Inhabited_intro (Stream a) _ _ H0).
+    intuition.
+    destruct H2.
+Abort.
+
+(*
 Theorem eqv_true (p : t) : (p ≈ ⊤) <-> (forall s, p s).
 Proof.
   split; intros.
@@ -101,8 +129,6 @@ Proof.
     now apply H.
 Qed.
 
-Axiom truth_irrelevance : forall (p : t), p ≈ ⊤ <-> Inhabited (Stream a) p.
-
 Theorem means_impl (p q : t) : (p ≈ ⊤ -> q ≈ ⊤) <-> (forall s, p s -> q s).
 Proof.
   split; intros.
@@ -117,6 +143,7 @@ Qed.
 
 (** Cannot be proven for sets, so must take it as an axiom in Coq. *)
 Axiom excluded_middle : forall (p : t), Included (Stream a) ⊤ (p ∨ ¬ p).
+*)
 
 Theorem true_def (p : t) : p ∨ ¬p ≈ ⊤.
 Proof.
