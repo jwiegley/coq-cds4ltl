@@ -218,7 +218,7 @@ Qed.
 
 Theorem and_proj (p q : t) : p ∧ q ⟹ p.
 Proof.
-  apply impl_true_impl.
+  apply impl_def.
   rewrite and_def.
   rewrite not_not.
   rewrite or_comm.
@@ -332,7 +332,7 @@ Proof.
     rewrite and_def in H.
     rewrite !not_not in H.
     rewrite or_comm in H.
-    apply impl_true_impl.
+    apply impl_def.
     now rewrite H.
 Qed.
 
@@ -342,7 +342,7 @@ Proof.
   - apply true_impl.
     rewrite <- H.
     now boolean.
-  - apply impl_true_impl.
+  - apply impl_def.
     now rewrite <- H.
 Qed.
 

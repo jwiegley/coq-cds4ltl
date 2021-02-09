@@ -18,15 +18,12 @@ Variable a : Type.
 
 Definition t := Ensemble (Stream a).
 
-Definition truth := Inhabited (Stream a).
 Definition not   := Complement (Stream a).
 Definition or    := Union (Stream a).
-(* Definition impl  := Included (Stream a). *)
-Definition impl  := fun x y => truth x -> truth y.
+Definition impl  := Included (Stream a).
 Definition true  := Full_set (Stream a).
 Definition false := Empty_set (Stream a).
-(* Definition eqv   := Same_set (Stream a). *)
-Definition eqv   := fun x y => truth x <-> truth y.
+Definition eqv   := Same_set (Stream a).
 Definition and   := Intersection (Stream a).
 
 Program Instance impl_reflexive : Reflexive impl.
@@ -42,25 +39,13 @@ Next Obligation.
   now intuition.
 Qed.
 
-Program Instance truth_respects_impl : Proper (impl ==> Basics.impl) truth.
-Next Obligation.
-  unfold impl, truth.
-  repeat intro; auto.
-Qed.
-
 Program Instance not_respects_impl : Proper (impl --> impl) not | 1.
 Next Obligation.
   unfold flip, impl.
   repeat intro.
-  unfold truth in *.
-  destruct H0.
-  exists x0.
-  intro.
   apply H0.
-  destruct H.
-    now exists x0.
-  admit.
-Admitted.
+  now apply H.
+Qed.
 
 Program Instance or_respects_impl : Proper (impl ==> impl ==> impl) or.
 Next Obligation.
@@ -98,64 +83,30 @@ Notation "p ≈ q"  := (eqv p q)  (at level 90, no associativity) : boolean_scop
 Infix    "∧"       := and             (at level 80, right associativity) : boolean_scope.
 Notation "p ≡ q"   := (p ⇒ q ∧ q ⇒ p) (at level 89, right associativity, only parsing) : boolean_scope.
 
-Theorem truth_true : truth ⊤.
-Proof.
-  eexists ?[a].
-  constructor.
-Abort.
-
-Theorem impl_denote (p q : t) : (p ⟹ q) <-> (truth p -> truth q).
+Theorem impl_denote (p q : t) : (p ⟹ q) <-> (p ≈ ⊤ -> q ≈ ⊤).
 Proof.
   split; intros.
-  - now rewrite <- H.
-  - repeat intro.
-    unfold truth in H.
-    pose proof (Inhabited_intro (Stream a) _ _ H0).
-    intuition.
-    destruct H2.
-Abort.
-
-(*
-Theorem eqv_true (p : t) : (p ≈ ⊤) <-> (forall s, p s).
-Proof.
-  split; intros.
-  - apply H.
-    now constructor.
-  - split; repeat intro.
-    + now constructor.
-    + now apply H.
-Qed.
-
-Theorem impl_means (p q : t) : (p ⟹ q) <-> (forall s, p s -> q s).
-Proof.
-  split; intros.
-  - now apply H.
-  - repeat intro.
-    now apply H.
-Qed.
-
-Theorem means_impl (p q : t) : (p ≈ ⊤ -> q ≈ ⊤) <-> (forall s, p s -> q s).
-Proof.
-  split; intros.
-  - apply H; [|constructor].
-    apply truth.
-    exists s.
-    exact H0.
-  - split; [constructor|].
+  - destruct H0.
+    split; intros.
+    + constructor.
+    + unfold impl in H.
+      now transitivity p; auto.
+  - unfold impl.
     repeat intro.
-    now apply H, H0.
-Qed.
-
-(** Cannot be proven for sets, so must take it as an axiom in Coq. *)
-Axiom excluded_middle : forall (p : t), Included (Stream a) ⊤ (p ∨ ¬ p).
-*)
+    rewrite H.
+    + constructor.
+    + split.
+      * constructor.
+      * repeat intro.
+        (* We run afoul of a mismatch between existential witnesses *)
+Admitted.
 
 Theorem true_def (p : t) : p ∨ ¬p ≈ ⊤.
 Proof.
   split; intros.
   - constructor.
-  - apply excluded_middle.
-Qed.
+  - (* The goal is the axiom of the excluded middle. *)
+Admitted.
 
 Theorem false_def (p : t) : ¬(p ∨ ¬p) ≈ ⊥.
 Proof.
@@ -183,9 +134,11 @@ Qed.
 
 Theorem and_def (p q : t) : p ∧ q ≈ ¬(¬p ∨ ¬q).
 Proof.
+  unfold and, or, not.
   split; repeat intro.
   - destruct H, H0; contradiction.
-  - admit.
+  - unfold Complement, In, Logic.not in *.
+    (* The goal should be a simple fact of logic. *)
 Admitted.
 
 Theorem huntington (p q : t) : ¬(¬p ∨ ¬q) ∨ ¬(¬p ∨ q) ≈ p.
@@ -234,55 +187,14 @@ Next Obligation.
     now apply H2.
 Qed.
 
-Theorem (* 1 *) next_not (p : t) : ◯ ¬p ≈ ¬◯ p.
-Theorem (* 2 *) next_impl (p q : t) : ◯ (p ⇒ q) ≈ ◯ p ⇒ ◯ q.
+Declare Scope ltl_scope.
+Bind Scope ltl_scope with t.
+Delimit Scope ltl_scope with ltl.
+Open Scope boolean_scope.
+Open Scope ltl_scope.
 
-Theorem (* 9 *) next_until (p q : t) : ◯ (p U q) ≈ (◯ p) U (◯ q).
-Theorem (* 10 *) until_expansion (p q : t) : p U q ≈ q ∨ (p ∧ ◯ (p U q)).
-Theorem (* 11 *) until_right_bottom (p : t) : p U ⊥ ≈ ⊥.
-Theorem (* 12 *) until_left_or (p q r : t) : p U (q ∨ r) ≈ (p U q) ∨ (p U r).
-Theorem (* 13 *) until_right_or (p q r : t) : (p U r) ∨ (q U r) ⟹ (p ∨ q) U r.
-Theorem (* 14 *) until_left_and (p q r : t) : p U (q ∧ r) ⟹ (p U q) ∧ (p U r).
-Theorem (* 15 *) until_right_and (p q r : t) : (p ∧ q) U r ≈ (p U r) ∧ (q U r).
-Theorem (* 16 *) until_impl_order (p q r : t) : (p U q) ∧ (¬q U r) ⟹ p U r.
-Theorem (* 17 *) until_right_or_order (p q r : t) : p U (q U r) ⟹ (p ∨ q) U r.
-Theorem (* 18 *) until_right_and_order (p q r : t) : p U (q ∧ r) ⟹ (p U q) U r.
-
-(** jww (2021-02-08): This axiom is just an idea a work in progress *)
-Theorem (* NEW *) until_continue (p q : t) : q ∧ p U ◯ ¬q ⟹ p U (q ∧ ◯ ¬q).
-Theorem (* NEW *) not_until (p q : t) : ⊤ U ¬p ∧ ¬(p U q) ≈ ¬q U (¬p ∧ ¬q).
-
-Definition eventually : t -> t.
-Definition always : t -> t.
-Definition wait : t -> t -> t.
-Definition release : t -> t -> t.
-Definition strong_release : t -> t -> t.
-
-Notation "◇ p"     := (eventually p)       (at level 75, right associativity) : ltl_scope.
-Notation "□ p"     := (always p)           (at level 75, right associativity) : ltl_scope.
-Notation "p 'W' q" := (wait p q)           (at level 79, right associativity) : ltl_scope.
-Notation "p 'R' q" := (release p q)        (at level 79, right associativity) : ltl_scope.
-Notation "p 'M' q" := (strong_release p q) (at level 79, right associativity) : ltl_scope.
-
-Program Instance eventually_respects_impl : Proper (impl ==> impl) eventually.
-Program Instance always_respects_impl : Proper (impl ==> impl) always.
-Program Instance wait_respects_impl : Proper (impl ==> impl ==> impl) wait.
-Program Instance release_respects_impl : Proper (impl ==> impl ==> impl) release.
-Program Instance strong_release_respects_impl : Proper (impl ==> impl ==> impl) strong_release.
-
-Theorem evn_def (p : t) : ◇ p ≈ ⊤ U p.
-Theorem always_def (p : t) : □ p ≈ ¬◇ ¬p.
-Theorem always_until_and_ind (p q r : t) :
-  □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r.
-Theorem wait_def (p q : t) : p W q ≈ □ p ∨ p U q.
-Theorem release_def (p q : t) : p R q ≈ ¬(¬p U ¬q).
-Theorem strong_release_def (p q : t) : p M q ≈ p U (q ∧ p).
-
-Include LinearTemporalLogicFacts.
-
-End StreamLTL.
-
-Module StreamLTLFacts.
+Notation "◯ p"     := (next p)    (at level 75, right associativity) : ltl_scope.
+Notation "p 'U' q" := (until p q) (at level 79, right associativity) : ltl_scope.
 
 Theorem next_semantics : ∀ σ j p,（σ, j）⊨ (◯ p) <->（σ, j + 1）⊨ p.
 Proof.
@@ -293,8 +205,6 @@ Proof.
   - rewrite PeanoNat.Nat.add_comm in H.
     now rewrite <- from_plus in H.
 Qed.
-
-Notation "p 'U' q" := (until p q) (at level 79, right associativity) : ltl_scope.
 
 Theorem until_semantics : ∀ σ j p q,
  （σ, j）⊨ (p U q) <-> ∃ k, k ≥ j /\（σ, k）⊨ q /\ ∀ i, j ≤ i -> i < k ->（σ, i）⊨ p.
@@ -328,10 +238,106 @@ Proof.
     lia.
 Qed.
 
-Definition always     : t -> t := λ p s, ∀ i,（s, i）⊨ p.
-Definition eventually : t -> t := λ p s, ∃ i,（s, i）⊨ p.
+Theorem (* 1 *) next_not (p : t) : ◯ ¬p ≈ ¬◯ p.
+Proof.
+Admitted.
 
-Definition wait : t -> t -> t :=
-  λ p q s, ∃ k,（s, k）⊨ q /\ ∀ i, i < k ->（s, i）⊨ p.
+Theorem (* 2 *) next_impl (p q : t) : ◯ (p ⇒ q) ≈ ◯ p ⇒ ◯ q.
+Proof.
+Admitted.
 
-End StreamLTLFacts.
+Theorem (* 9 *) next_until (p q : t) : ◯ (p U q) ≈ (◯ p) U (◯ q).
+Proof.
+Admitted.
+
+Theorem (* 10 *) until_expansion (p q : t) : p U q ≈ q ∨ (p ∧ ◯ (p U q)).
+Proof.
+Admitted.
+
+Theorem (* 11 *) until_right_bottom (p : t) : p U ⊥ ≈ ⊥.
+Proof.
+Admitted.
+
+Theorem (* 12 *) until_left_or (p q r : t) : p U (q ∨ r) ≈ (p U q) ∨ (p U r).
+Proof.
+Admitted.
+
+Theorem (* 13 *) until_right_or (p q r : t) : (p U r) ∨ (q U r) ⟹ (p ∨ q) U r.
+Proof.
+Admitted.
+
+Theorem (* 14 *) until_left_and (p q r : t) : p U (q ∧ r) ⟹ (p U q) ∧ (p U r).
+Proof.
+Admitted.
+
+Theorem (* 15 *) until_right_and (p q r : t) : (p ∧ q) U r ≈ (p U r) ∧ (q U r).
+Proof.
+Admitted.
+
+Theorem (* 16 *) until_impl_order (p q r : t) : (p U q) ∧ (¬q U r) ⟹ p U r.
+Proof.
+Admitted.
+
+Theorem (* 17 *) until_right_or_order (p q r : t) : p U (q U r) ⟹ (p ∨ q) U r.
+Proof.
+Admitted.
+
+Theorem (* 18 *) until_right_and_order (p q r : t) : p U (q ∧ r) ⟹ (p U q) U r.
+Proof.
+Admitted.
+
+(** jww (2021-02-08): This axiom is just an idea a work in progress *)
+Theorem (* NEW *) until_continue (p q : t) : q ∧ p U ◯ ¬q ⟹ p U (q ∧ ◯ ¬q).
+Proof.
+Admitted.
+
+Theorem (* NEW *) not_until (p q : t) : ⊤ U ¬p ∧ ¬(p U q) ≈ ¬q U (¬p ∧ ¬q).
+Proof.
+Admitted.
+
+Definition eventually : t -> t := any.
+Definition always : t -> t := every.
+Definition wait : t -> t -> t.
+Definition release : t -> t -> t.
+Definition strong_release : t -> t -> t.
+
+Notation "◇ p"     := (eventually p)       (at level 75, right associativity) : ltl_scope.
+Notation "□ p"     := (always p)           (at level 75, right associativity) : ltl_scope.
+Notation "p 'W' q" := (wait p q)           (at level 79, right associativity) : ltl_scope.
+Notation "p 'R' q" := (release p q)        (at level 79, right associativity) : ltl_scope.
+Notation "p 'M' q" := (strong_release p q) (at level 79, right associativity) : ltl_scope.
+
+Program Instance eventually_respects_impl : Proper (impl ==> impl) eventually.
+Program Instance always_respects_impl : Proper (impl ==> impl) always.
+Program Instance wait_respects_impl : Proper (impl ==> impl ==> impl) wait.
+Program Instance release_respects_impl : Proper (impl ==> impl ==> impl) release.
+Program Instance strong_release_respects_impl : Proper (impl ==> impl ==> impl) strong_release.
+
+Theorem evn_def (p : t) : ◇ p ≈ ⊤ U p.
+Proof.
+Admitted.
+
+Theorem always_def (p : t) : □ p ≈ ¬◇ ¬p.
+Proof.
+Admitted.
+
+Theorem always_until_and_ind (p q r : t) :
+  □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r.
+Proof.
+Admitted.
+
+Theorem wait_def (p q : t) : p W q ≈ □ p ∨ p U q.
+Proof.
+Admitted.
+
+Theorem release_def (p q : t) : p R q ≈ ¬(¬p U ¬q).
+Proof.
+Admitted.
+
+Theorem strong_release_def (p q : t) : p M q ≈ p U (q ∧ p).
+Proof.
+Admitted.
+
+Include LinearTemporalLogicFacts.
+
+End StreamLTL.

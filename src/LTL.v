@@ -232,12 +232,12 @@ Qed.
 Theorem (* 56 *) always_until_or_ind (p q : t) :
   □ (p ⇒ ◯ (p ∨ q)) ⟹ p ⇒ □ p ∨ p U q.
 Proof.
-  apply impl_true_impl.
+  apply impl_def.
   set (consequent := □ (p ⇒ ◯ (p ∨ q)) ⇒ p ⇒ □ p ∨ p U q).
 
   (* true *)
   pose proof (always_until_and_ind p (◯ p) (◯ q)) as law_55.
-  apply impl_true_impl in law_55.
+  apply impl_def in law_55.
   rewrite law_55.
 
   (* => □ (p ⇒ ◯ p ∧ ◯ p ∨ ◯ q) ⇒ p ⇒ □ ◯ p ∨ ◯ p U ◯ q *)
@@ -513,13 +513,10 @@ Theorem (* 82 *) temporal_deduction (p q : t) :
 Proof.
   intros.
   apply impl_denote; intros.
-  rewrite H.
-  - now apply truth_true.
-  - rewrite law_76 in H0.
-    apply true_impl.
-    apply impl_def.
-    rewrite not_true.
-    now rewrite false_or.
+  apply H.
+  revert H0.
+  apply impl_denote.
+  now apply law_76.
 Qed.
 
 (*** 3.6 Always □, Continued *)
@@ -1065,7 +1062,7 @@ Proof.
   - rewrite H.
     boolean.
     now rewrite law_64.
-  - apply impl_true_impl.
+  - apply impl_def.
     rewrite H.
     now apply law_76.
 Qed.
@@ -1125,7 +1122,7 @@ Proof.
     apply true_impl.
     rewrite <- (law_85 (□ q) q p).
     pose proof (law_76 q).
-    apply impl_true_impl in H.
+    apply impl_def in H.
     rewrite <- H.
     now rewrite !law_64.
   assert (B : □ (p U □ q ⇒ ◯ (p U □ q)) ≈ ⊤).
@@ -1147,7 +1144,7 @@ Proof.
     boolean.
     now rewrite law_64.
   pose proof (law_129 (p U □ q) (p U q)).
-  apply impl_true_impl.
+  apply impl_def.
   rewrite <- H.
   rewrite impl_and.
   rewrite law_99.
@@ -1167,7 +1164,7 @@ Qed.
 Theorem (* 142 *) law_142 (*Right ∧ U strengthening*) (p q r : t) : p U (q ∧ r) ⟹ p U (q U r).
 Proof.
   pose proof (law_85 (q ∧ r) (q U r) p).
-  apply impl_true_impl.
+  apply impl_def.
   rewrite <- H.
   rewrite <- until_30.
   boolean.
@@ -1177,7 +1174,7 @@ Qed.
 Theorem (* 143 *) law_143 (*Left ∧ U strengthening*) (p q r : t) : (p ∧ q) U r ⟹ (p U q) U r.
 Proof.
   pose proof (law_86 (p ∧ q) (p U q)).
-  apply impl_true_impl.
+  apply impl_def.
   rewrite <- H.
   rewrite <- until_30.
   boolean.
@@ -1186,9 +1183,9 @@ Qed.
 
 Theorem (* 144 *) law_144 (*Left ∧ U ordering*) (p q r : t) : (p ∧ q) U r ⟹ p U (q U r).
 Proof.
-  apply impl_true_impl.
+  apply impl_def.
   rewrite <- law_127.
-  rewrite <- (proj1 (impl_true_impl _ _) (and_proj p q)).
+  rewrite <- (proj1 (impl_def _ _) (and_proj p q)).
   rewrite <- until_insertion.
   boolean.
   now apply law_64.
@@ -1371,7 +1368,7 @@ Proof.
     rewrite <- law_104.
     rewrite <- (law_76 (◇ (◇ p ⇒ ◇ □ q))).
     rewrite <- law_152.
-    apply impl_true_impl.
+    apply impl_def.
     rewrite <- law_157.
     rewrite <- law_119.
     boolean.
@@ -1450,16 +1447,16 @@ Proof.
     reflexivity.
 
   assert (C : □ r ∧ ¬□ p ∧ ¬□ q ⟹ □ (□ r ∧ ¬□ p ∧ ¬□ q)).
-    apply impl_true_impl in B.
+    apply impl_def in B.
     apply always_respects_impl in B.
     rewrite always_induction in B.
     rewrite law_64 in B.
-    apply impl_true_impl in B.
+    apply impl_def in B.
     exact B.
 
   assert (D : □ (□ r ∧ ¬□ p ∧ ¬□ q) ⟹ □ p ∧ □ q).
     rewrite <- law_99.
-    apply impl_true_impl.
+    apply impl_def.
     rewrite <- law_120.
     apply (proj1 (law_136 _ _)).
     apply and_impl_iff.
@@ -1483,7 +1480,7 @@ Proof.
     now rewrite <- next_or.
 
   assert (G : □ (□ p ∨ □ q) ⟹ □ r).
-    apply impl_true_impl.
+    apply impl_def.
     rewrite <- law_120.
     apply (proj1 (law_136 _ _)).
     rewrite A.
@@ -1491,7 +1488,7 @@ Proof.
     now rewrite <- (or_inj _ (p ∧ q)).
 
   split.
-  - apply impl_true_impl.
+  - apply impl_def.
     apply contrapositive.
     rewrite not_true.
     rewrite !not_or.
@@ -1505,7 +1502,7 @@ Proof.
     now boolean.
 
   - rewrite <- G.
-    apply impl_true_impl.
+    apply impl_def.
     rewrite <- always_induction.
     rewrite <- F.
     boolean.
@@ -2311,7 +2308,7 @@ Qed.
 
 Theorem (* 246 *) law_246 (*Left U ∨ strengthening*) (p q r : t) : (p U q) U r ⟹ (p ∨ q) U r.
 Proof.
-  apply impl_true_impl.
+  apply impl_def.
   rewrite <- (law_86 (p U q) (p ∨ q)).
   rewrite until_28.
   boolean.
@@ -2320,7 +2317,7 @@ Qed.
 
 Theorem (* 247 *) law_247 (*Left W ∨ strengthening*) (p q r : t) : (p W q) W r ⟹ (p ∨ q) W r.
 Proof.
-  apply impl_true_impl.
+  apply impl_def.
   rewrite <- (law_238 (p W q) (p ∨ q)).
   rewrite law_206.
   boolean.
@@ -2329,7 +2326,7 @@ Qed.
 
 Theorem (* 248 *) law_248 (*Right W ∨ strengthening*) (p q r : t) : p W (q W r) ⟹ p W (q ∨ r).
 Proof.
-  apply impl_true_impl.
+  apply impl_def.
   rewrite <- (law_239 (q W r) (q ∨ r) p).
   rewrite law_206.
   boolean.

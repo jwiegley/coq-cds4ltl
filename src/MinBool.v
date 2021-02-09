@@ -12,7 +12,6 @@ Module Type MinimalBooleanLogic.
 Parameter t : Type.             (* The type of boolean propositions *)
 
 (** The following three parameters are fundamental to this development. *)
-Parameter truth : t -> Prop.    (* The propositional meaning of truth *)
 Parameter not : t -> t.
 Parameter or : t -> t -> t.
 
@@ -23,7 +22,6 @@ Parameter impl : t -> t -> Prop.
 Parameter true : t.
 Parameter false : t.
 
-Declare Instance truth_respects_impl : Proper (impl ==> Basics.impl) truth.
 Declare Instance not_respects_impl : Proper (impl --> impl) not | 1.
 Declare Instance or_respects_impl : Proper (impl ==> impl ==> impl) or.
 
@@ -42,10 +40,8 @@ Notation "⊥"      := false      (at level 0, no associativity) : boolean_scope
 Notation "p ⟹ q" := (impl p q) (at level 99, right associativity) : boolean_scope.
 Notation "p ≈ q"  := (eqv p q)  (at level 90, no associativity) : boolean_scope.
 
-Axiom truth_true : truth ⊤.
-
 (** This axiom denotes implication into Coq's logic. *)
-Axiom impl_denote : forall (p q : t), (p ⟹ q) <-> (truth p -> truth q).
+Axiom impl_denote : forall (p q : t), (p ⟹ q) <-> (p ≈ ⊤ -> q ≈ ⊤).
 
 (** These two axioms establish the definition of the syntactic terms. *)
 Axiom true_def  : forall (p : t), p ∨ ¬p ≈ ⊤.
@@ -73,30 +69,14 @@ Module MinimalBooleanLogicFacts (B : MinimalBooleanLogic).
 
 Import B.
 
-Program Instance truth_respects_flip_impl :
-  Proper (impl --> Basics.flip Basics.impl) truth.
-Next Obligation.
-  repeat intro.
-  unfold Basics.flip in *.
-  now rewrite <- H.
-Qed.
-
-Program Instance truth_respects_eqv : Proper (eqv ==> iff) truth.
-Next Obligation.
-  split; repeat intro.
-  - destruct H.
-    now rewrite <- H.
-  - destruct H.
-    now rewrite <- H1.
-Qed.
-
 Program Instance impl_reflexive : Reflexive impl.
 Next Obligation. now apply impl_denote; auto. Qed.
 
 Program Instance impl_transitive : Transitive impl.
 Next Obligation.
   apply impl_denote; intros.
-  now rewrite <- H0, <- H.
+  apply impl_denote in H; auto.
+  apply impl_denote in H0; auto.
 Qed.
 
 Program Instance eqv_equivalence : Equivalence eqv.
@@ -297,61 +277,23 @@ Proof.
     now rewrite !not_not in H.
 Qed.
 
-Lemma impl_def  : forall (p q : t), (p ⟹ q) <-> truth (¬p ∨ q).
-Proof.
-  split; intros.
-  - rewrite <- H.
-    rewrite or_comm.
-    rewrite true_def.
-    exact truth_true.
-  - apply contrapositive.
-    rewrite <- (huntington (¬q) (¬p)).
-    rewrite (or_comm _ (¬p)).
-    rewrite not_not.
-    enough (forall r, truth r <-> r ≈ ⊤).
-      apply H0 in H.
-      rewrite H.
-      rewrite not_true.
-      rewrite or_false.
-      apply contrapositive.
-      rewrite !not_not.
-      apply impl_denote; intros.
-      apply H0 in H1.
-      rewrite H1.
-      rewrite <- H.
-      rewrite or_comm.
-      rewrite or_assoc.
-      rewrite or_idem.
-      rewrite H.
-      exact truth_true.
-    split; intros.
-    + split.
-      * apply impl_denote; intros.
-        exact truth_true.
-      * apply impl_denote; auto.
-    + destruct H0.
-      apply impl_denote in H1; auto.
-      exact truth_true.
-Qed.
-
-Theorem impl_true_impl : forall (p q : t), (p ⟹ q) <-> (⊤ ⟹ ¬ p ∨ q).
+Theorem impl_def : forall (p q : t), (p ⟹ q) <-> (⊤ ⟹ ¬ p ∨ q).
 Proof.
   split; intros.
   - rewrite <- H.
     rewrite or_comm.
     rewrite true_def.
     reflexivity.
-  - apply impl_def in H.
-    rewrite <- (true_def p) in H.
-    rewrite <- or_assoc in H.
-    rewrite false_def in H.
-    rewrite false_or in H.
-    now apply impl_def.
+  - apply impl_denote in H; [|reflexivity].
+    apply impl_denote; intros.
+    rewrite H0 in H; clear H0.
+    rewrite not_true in H.
+    now rewrite false_or in H.
 Qed.
 
 Theorem or_inj (p q : t) : p ⟹ p ∨ q.
 Proof.
-  apply impl_true_impl.
+  apply impl_def.
   rewrite <- or_assoc.
   rewrite (or_comm _ p).
   rewrite true_def.
