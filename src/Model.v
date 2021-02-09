@@ -39,21 +39,10 @@ Next Obligation.
   now intuition.
 Qed.
 
-(* Theorem Inhabited_not x : Inhabited (Stream a) (not x) <-> ~ Inhabited (Stream a) x. *)
-(* Proof. *)
-(*   split; intros. *)
-(*   - destruct H. *)
-(*     intro. *)
-(*     destruct H0. *)
-(*     apply H. *)
-
 Program Instance not_respects_impl : Proper (impl --> impl) not | 1.
 Next Obligation.
   unfold flip, impl.
   repeat intro.
-  destruct H0.
-  exists x0.
-  intro.
   apply H0.
   now apply H.
 Qed.
@@ -112,24 +101,28 @@ Proof.
     now apply H.
 Qed.
 
-Theorem impl_denote (p q : t) : (p ⟹ q) <-> (p ≈ ⊤ -> q ≈ ⊤).
+Axiom truth_irrelevance : forall (p : t), p ≈ ⊤ <-> Inhabited (Stream a) p.
+
+Theorem means_impl (p q : t) : (p ≈ ⊤ -> q ≈ ⊤) <-> (forall s, p s -> q s).
 Proof.
   split; intros.
-  - split; repeat intro.
-    + now constructor.
-    + now apply H, H0.
-  - apply impl_means; intros.
-    apply H.
-    + split; intros.
-      * constructor.
-      * repeat intro.
-      apply eqv_true.
-    rewrite H.
-    + now exists p.
-    + split; repeat intro.
-      * now exists p.
-      * destruct H1.
-Admitted.
+  - apply H; [|constructor].
+    apply truth.
+    exists s.
+    exact H0.
+  - split; [constructor|].
+    repeat intro.
+    now apply H, H0.
+Qed.
+
+Theorem impl_denote (p q : t) : (p ⟹ q) <-> (p ≈ ⊤ -> q ≈ ⊤).
+Proof.
+  split; intro.
+  - apply means_impl.
+    now apply impl_means.
+  - apply impl_means.
+    now apply means_impl.
+Qed.
 
 (** Cannot be proven for sets, so must take it as an axiom in Coq. *)
 Axiom excluded_middle : forall (p : t), Included (Stream a) ⊤ (p ∨ ¬ p).
