@@ -25,7 +25,7 @@ Program Instance and_respects_eqv : Proper (eqv ==> eqv ==> eqv) and.
 (** "and" is not fundamental and can be defined using "or". To allow for
     efficient choices of "and", we simply require that its behavior be
     equivalent to the more basic definition. *)
-Hypothesis and_def : forall (φ ψ : t), φ ∧ ψ ≈ ¬(¬φ ∨ ¬ψ).
+Axiom and_def : forall (φ ψ : t), φ ∧ ψ ≈ ¬(¬φ ∨ ¬ψ).
 
 Theorem not_or (φ ψ : t) : ¬(φ ∨ ψ) ≈ ¬φ ∧ ¬ψ.
 Proof.
@@ -381,5 +381,30 @@ Proof.
   rewrite and_comm.
   now apply and_respects_eqv; boolean.
 Qed.
+
+Theorem or_eqv_impl (p q : t) : (p ∨ q ≈ q) <-> (p ⟹ q).
+Proof.
+  split; intro.
+  - destruct H.
+    now rewrite <- H; boolean.
+  - split.
+    + rewrite H.
+      now boolean.
+    + now boolean.
+Qed.
+
+Theorem and_eqv_impl (p q : t) : (p ∧ q ≈ p) <-> (p ⟹ q).
+Proof.
+  split; intro.
+  - destruct H.
+    now rewrite H0; boolean.
+  - split.
+    + now boolean.
+    + rewrite <- H.
+      now boolean.
+Qed.
+
+Theorem impl_refl (p : t) : p ⇒ p ≈ ⊤.
+Proof. now boolean. Qed.
 
 End BooleanLogic.

@@ -92,10 +92,10 @@ Declare Instance or_respects_impl : Proper (impl ==> impl ==> impl) or.
 Program Instance or_respects_eqv : Proper (eqv ==> eqv ==> eqv) or.
 
 (** Implication must have the same meaning as in Coq's own logic. *)
-Hypothesis impl_denote : forall (φ ψ : t), (φ ⟹ ψ) <-> (φ ≈ ⊤ -> ψ ≈ ⊤).
+Axiom impl_denote : forall (φ ψ : t), (φ ⟹ ψ) <-> (φ ≈ ⊤ -> ψ ≈ ⊤).
 
-Hypothesis true_def : forall (φ : t), φ ∨ ¬φ ≈ ⊤.
-Hypothesis false_def : forall (φ : t), ¬(φ ∨ ¬φ) ≈ ⊥.
+Axiom true_def : forall (φ : t), φ ∨ ¬φ ≈ ⊤.
+Axiom false_def : forall (φ : t), ¬(φ ∨ ¬φ) ≈ ⊥.
 
 (** This is one set of fundamental axioms of boolean algebra.
  *
@@ -109,9 +109,9 @@ Hypothesis false_def : forall (φ : t), ¬(φ ∨ ¬φ) ≈ ⊥.
  * notes may be found in the paper "Short Single Axioms for Boolean Algebra"
  * by McCune, et al.
  *)
-Hypothesis or_comm : forall (φ ψ : t), φ ∨ ψ ≈ ψ ∨ φ.
-Hypothesis or_assoc : forall (φ ψ χ : t), (φ ∨ ψ) ∨ χ ≈ φ ∨ (ψ ∨ χ).
-Hypothesis huntington : forall (φ ψ : t), ¬(¬φ ∨ ¬ψ) ∨ ¬(¬φ ∨ ψ) ≈ φ.
+Axiom or_comm : forall (φ ψ : t), φ ∨ ψ ≈ ψ ∨ φ.
+Axiom or_assoc : forall (φ ψ χ : t), (φ ∨ ψ) ∨ χ ≈ φ ∨ (ψ ∨ χ).
+Axiom huntington : forall (φ ψ : t), ¬(¬φ ∨ ¬ψ) ∨ ¬(¬φ ∨ ψ) ≈ φ.
 
 (** Many of the following proofs are based on work from:
     "A Complete Proof of the Robbins Conjecture", by Allen L. Mann

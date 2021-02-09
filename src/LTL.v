@@ -102,8 +102,9 @@ Qed.
 
 Theorem (* 45 *) law_45 (φ : t) : ◇ φ ≈ φ ∨ ◯ ◇ φ.
 Proof.
-  rewrite evn_def.
+  rewrite evn_def at 1.
   rewrite until_expansion at 1.
+  rewrite <- evn_def at 1.
   now rewrite true_and.
 Qed.
 
@@ -198,6 +199,10 @@ Qed.
 Axiom until_continue : forall (φ ψ : t), ψ ∧ φ U ◯ ¬ψ ⟹ φ U (ψ ∧ ◯ ¬ψ).
 
 Axiom (* 54 *) always_def : forall (φ : t), □ φ ≈ ¬◇ ¬φ.
+
+(* Theorem (* 55 *) always_until_and_ind (φ ψ χ : t) : *)
+(*   □ (φ ⇒ (◯ φ ∧ ψ) ∨ χ) ⟹ φ ⇒ □ ψ ∨ ψ U χ. *)
+
 Axiom (* 55 *) always_until_and_ind : forall (φ ψ χ : t),
   □ (φ ⇒ (◯ φ ∧ ψ) ∨ χ) ⟹ φ ⇒ □ ψ ∨ ψ U χ.
 
@@ -218,37 +223,53 @@ Proof.
   now rewrite next_not.
 Qed.
 
-Theorem (* 56 *) always_until_or_ind (φ ψ : t) :
-  □ (φ ⇒ ◯ (φ ∨ ψ)) ⟹ φ ⇒ □ φ ∨ φ U ψ.
+Theorem (* 56 *) always_until_or_ind (p q : t) :
+  □ (p ⇒ ◯ (p ∨ q)) ⟹ p ⇒ □ p ∨ p U q.
 Proof.
-  rewrite (* 10 *) (until_expansion φ ψ).
-  rewrite (* 66 *) (law_66 φ).
-  rewrite (* 73 *) law_73.
-  rewrite (* 9 *) next_until.
+  apply impl_def.
+  set (consequent := □ (p ⇒ ◯ (p ∨ q)) ⇒ p ⇒ □ p ∨ p U q).
 
-  set (a := □ ◯ φ).
-  set (b := (◯ φ U ◯ ψ)).
-  rewrite <- or_assoc.
-  rewrite or_and.
-  rewrite (or_comm (¬φ) φ).
-  rewrite true_def.
-  rewrite true_and.
-  rewrite (or_comm ψ).
-  rewrite <- or_assoc.
-  rewrite or_and.
-  rewrite (or_comm _ φ).
-  rewrite <- or_assoc.
-  rewrite true_def.
-  rewrite true_or.
-  rewrite true_and.
-  rewrite <- (or_inj (or _ _) ψ).
-  rewrite or_assoc.
+  (* true *)
+  pose proof (always_until_and_ind p (◯ p) (◯ q)) as law_55.
+  apply impl_def in law_55.
+  rewrite law_55.
+
+  (* □ (p ⇒ ◯ p ∧ ◯ p ∨ ◯ q) ⇒ p ⇒ □ ◯ p ∨ ◯ p U ◯ q *)
+  rewrite and_idem.
+  (* □ (p ⇒ ◯ p ∨ ◯ q) ⇒ p ⇒ □ ◯ p ∨ ◯ p U ◯ q *)
+  rewrite (* 4 *) <- next_or.
+
+  (* □ (p ⇒ ◯ (p ∨ q)) ⇒ p ⇒ □ ◯ p ∨ ◯ p U ◯ q*)
+  set (a := □ ◯ p).
+  set (b := (◯ p U ◯ q)).
+
+  (* □ (p ⇒ ◯ (p ∨ q)) ⇒ p ⇒ a ∨ b *)
+  rewrite <- (true_and (p ⇒ a ∨ b)).
+  (* □ (p ⇒ ◯ (p ∨ q)) ⇒ ⊤ ∧ (p ⇒ a ∨ b) *)
+  rewrite <- (impl_refl p).
+  (* □ (p ⇒ ◯ (p ∨ q)) ⇒ (p ⇒ p) ∧ (p ⇒ a ∨ b) *)
+  rewrite <- or_and.
+  (* □ (p ⇒ ◯ (p ∨ q)) ⇒ p ⇒ p ∧ (a ∨ b) *)
+  rewrite and_or.
+  (* □ (p ⇒ ◯ (p ∨ q)) ⇒ p ⇒ p ∧ a ∨ p ∧ b *)
+  rewrite (or_inj (p ∧ b) q).
+  (* □ (p ⇒ ◯ (p ∨ q)) ⇒ p ⇒ p ∧ a ∨ p ∧ b ∨ a *)
+  rewrite (or_comm (p ∧ b) q).
+  (* □ (p ⇒ ◯ (p ∨ q)) ⇒ p ⇒ p ∧ a ∨ q ∨ p ∧ b *)
+
   unfold a.
   unfold b.
 
-  rewrite <- always_until_and_ind.
-  rewrite and_idem.
-  rewrite (* 4 *) <- next_or.
+  (* □ (p ⇒ ◯ (p ∨ q)) ⇒ p ⇒ p ∧ □ ◯ p ∨ q ∨ p ∧ ◯ p U ◯ q *)
+  rewrite (* 9 *) <- next_until.
+  (* □ (p ⇒ ◯ (p ∨ q)) ⇒ p ⇒ p ∧ □ ◯ p ∨ q ∨ p ∧ ◯ (p U q) *)
+  rewrite (* 73 *) <- law_73.
+
+  (* □ (p ⇒ ◯ (p ∨ q)) ⇒ p ⇒ p ∧ ◯ □ p ∨ q ∨ p ∧ ◯ (p U q) *)
+  rewrite (* 10 *) <- (until_expansion p q).
+  (* □ (p ⇒ ◯ (p ∨ q)) ⇒ p ⇒ p ∧ ◯ □ p ∨ p U q *)
+  rewrite (* 66 *) <- (law_66 p).
+  (* □ (p ⇒ ◯ (p ∨ q)) ⇒ p ⇒ □ p ∨ p U q *)
   reflexivity.
 Qed.
 
@@ -2043,35 +2064,22 @@ Qed.
 
 Theorem (* 218 *) law_218 (*Absorption*) (φ ψ : t) : φ W ψ ∨ ψ ≈ φ W ψ.
 Proof.
-  split.
-  - rewrite wait_def.
-    rewrite or_assoc.
-    now rewrite until_absorb_u_or.
-  - now boolean.
+  rewrite or_comm.
+  apply or_eqv_impl.
+  now apply law_209.
 Qed.
 
 Theorem (* 219 *) law_219 (*Absorption*) (φ ψ : t) : φ W ψ ∧ ψ ≈ ψ.
 Proof.
-  split.
-  - now boolean.
-  - rewrite wait_def.
-    rewrite and_or_r.
-    rewrite until_absorb_u_and.
-    rewrite or_comm.
-    now rewrite <- or_inj.
+  rewrite and_comm.
+  apply and_eqv_impl.
+  now apply law_209.
 Qed.
 
 Theorem (* 220 *) law_220 (*Absorption*) (φ ψ : t) : φ W ψ ∧ (φ ∨ ψ) ≈ φ W ψ.
 Proof.
-  split.
-  - now boolean.
-  - rewrite wait_def.
-    rewrite and_or_r.
-    rewrite until_absorb_u_and_or.
-    rewrite and_or.
-    rewrite <- (or_inj (□ φ ∧ φ)).
-    rewrite and_comm.
-    now rewrite law_68.
+  apply and_eqv_impl.
+  now apply law_206.
 Qed.
 
 Theorem (* 221 *) law_221 (*Absorption*) (φ ψ : t) : φ W ψ ∨ (φ ∧ ψ) ≈ φ W ψ.
