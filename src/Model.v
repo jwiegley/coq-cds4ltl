@@ -115,15 +115,6 @@ Proof.
     now apply H, H0.
 Qed.
 
-Theorem impl_denote (p q : t) : (p ⟹ q) <-> (p ≈ ⊤ -> q ≈ ⊤).
-Proof.
-  split; intro.
-  - apply means_impl.
-    now apply impl_means.
-  - apply impl_means.
-    now apply means_impl.
-Qed.
-
 (** Cannot be proven for sets, so must take it as an axiom in Coq. *)
 Axiom excluded_middle : forall (p : t), Included (Stream a) ⊤ (p ∨ ¬ p).
 

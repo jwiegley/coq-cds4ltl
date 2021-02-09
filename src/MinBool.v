@@ -11,13 +11,23 @@ Module Type MinimalBooleanLogic.
 
 Parameter t : Type.             (* The type of boolean propositions *)
 
+(** The following three parameters are fundamental to this development. *)
+Parameter truth : t -> Prop.    (* The propositional meaning of truth *)
 Parameter not : t -> t.
 Parameter or : t -> t -> t.
+
+(** The next three parameters are syntactic terms whose defined may be
+    expressed in terms of the fundamentals above. They are allowed here as
+    parameters so module authors may chose more economical definitions. *)
+Parameter impl : t -> t -> Prop.
 Parameter true : t.
 Parameter false : t.
-Parameter impl : t -> t -> Prop.
 
-Definition eqv (x y : t) : Prop := impl x y /\ impl y x.
+Declare Instance truth_respects_impl : Proper (impl ==> Basics.impl) truth.
+Declare Instance not_respects_impl : Proper (impl --> impl) not | 1.
+Declare Instance or_respects_impl : Proper (impl ==> impl ==> impl) or.
+
+Definition eqv  (x y : t) : Prop := impl x y /\ impl y x.
 
 Declare Scope boolean_scope.
 Bind Scope boolean_scope with t.
@@ -26,22 +36,21 @@ Open Scope boolean_scope.
 
 Notation "¬ p"    := (not p)    (at level 75, right associativity) : boolean_scope.
 Infix    "∨"      := or         (at level 85, right associativity) : boolean_scope.
-Notation "p ⇒ q"  := (¬ p ∨ q)  (at level 86, right associativity) : boolean_scope.
+Notation "p ⇒ q"  := (¬ p ∨ q)  (at level 86, right associativity, only parsing) : boolean_scope.
 Notation "⊤"      := true       (at level 0, no associativity) : boolean_scope.
 Notation "⊥"      := false      (at level 0, no associativity) : boolean_scope.
 Notation "p ⟹ q" := (impl p q) (at level 99, right associativity) : boolean_scope.
 Notation "p ≈ q"  := (eqv p q)  (at level 90, no associativity) : boolean_scope.
 
-Declare Instance impl_reflexive : Reflexive impl.
-Declare Instance impl_transitive : Transitive impl.
-Declare Instance not_respects_impl : Proper (impl --> impl) not | 1.
-Declare Instance or_respects_impl : Proper (impl ==> impl ==> impl) or.
+Axiom truth_def : truth ⊤.
 
-(** Implication must have the same meaning as in Coq's own logic. *)
-Axiom impl_denote : forall (p q : t), (p ⟹ q) <-> (p ≈ ⊤ -> q ≈ ⊤).
+(** These three axioms establish the definition of the syntactic terms. *)
+Axiom impl_def  : forall (p q : t), (p ⟹ q) <-> truth (¬p ∨ q).
+Axiom true_def  : forall (p : t),   p ∨ ¬p ≈ ⊤.
+Axiom false_def : forall (p : t),   ¬(p ∨ ¬p) ≈ ⊥.
 
-Axiom true_def : forall (p : t), p ∨ ¬p ≈ ⊤.
-Axiom false_def : forall (p : t), ¬(p ∨ ¬p) ≈ ⊥.
+(** This axiom denotes implication into Coq's logic. *)
+Axiom impl_denote : forall (p q : t), (p ⟹ q) <-> (truth p -> truth q).
 
 (** This is one set of fundamental axioms of boolean algebra.
  *
@@ -55,15 +64,50 @@ Axiom false_def : forall (p : t), ¬(p ∨ ¬p) ≈ ⊥.
  * notes may be found in the paper "Short Single Axioms for Boolean Algebra"
  * by McCune, et al.
  *)
-Axiom or_comm : forall (p q : t), p ∨ q ≈ q ∨ p.
-Axiom or_assoc : forall (p q r : t), (p ∨ q) ∨ r ≈ p ∨ (q ∨ r).
-Axiom huntington : forall (p q : t), ¬(¬p ∨ ¬q) ∨ ¬(¬p ∨ q) ≈ p.
+Axiom or_comm    : forall (p q : t),   p ∨ q ≈ q ∨ p.
+Axiom or_assoc   : forall (p q r : t), (p ∨ q) ∨ r ≈ p ∨ (q ∨ r).
+Axiom huntington : forall (p q : t),   ¬(¬p ∨ ¬q) ∨ ¬(¬p ∨ q) ≈ p.
 
 End MinimalBooleanLogic.
 
 Module MinimalBooleanLogicFacts (B : MinimalBooleanLogic).
 
 Import B.
+
+Program Instance truth_respects_flip_impl :
+  Proper (impl --> Basics.flip Basics.impl) truth.
+Next Obligation.
+  repeat intro.
+  unfold Basics.flip in *.
+  now rewrite <- H.
+Qed.
+
+Program Instance truth_respects_eqv : Proper (eqv ==> iff) truth.
+Next Obligation.
+  split; repeat intro.
+  - destruct H.
+    now rewrite <- H.
+  - destruct H.
+    now rewrite <- H1.
+Qed.
+
+Program Instance impl_reflexive : Reflexive impl.
+Next Obligation.
+  apply impl_def.
+  rewrite or_comm.
+  rewrite true_def.
+  exact truth_def.
+Qed.
+
+Program Instance impl_transitive : Transitive impl.
+Next Obligation.
+  apply impl_def.
+  rewrite <- H0.
+  rewrite <- H.
+  rewrite or_comm.
+  rewrite true_def.
+  exact truth_def.
+Qed.
 
 Program Instance eqv_equivalence : Equivalence eqv.
 Next Obligation.
@@ -80,16 +124,14 @@ Program Instance impl_respects_impl : Proper (impl --> impl ==> Basics.impl) imp
 Next Obligation.
   repeat intro.
   unfold Basics.flip in H.
-  rewrite H.
-  now rewrite <- H0.
+  now rewrite <- H0, <- H1.
 Qed.
 
 Program Instance impl_respects_eqv : Proper (eqv ==> eqv ==> Basics.impl) impl.
 Next Obligation.
   repeat intro.
   destruct H, H0.
-  transitivity x; auto.
-  transitivity x0; auto.
+  now rewrite <- H0, <- H1, <- H2.
 Qed.
 
 Ltac one_arg :=
@@ -265,26 +307,24 @@ Proof.
     now rewrite !not_not in H.
 Qed.
 
-Theorem impl_def : forall (p q : t), (p ⟹ q) <-> (⊤ ⟹ ¬ p ∨ q).
+Theorem impl_true_impl : forall (p q : t), (p ⟹ q) <-> (⊤ ⟹ ¬ p ∨ q).
 Proof.
   split; intros.
   - rewrite <- H.
     rewrite or_comm.
     rewrite true_def.
     reflexivity.
-  - apply impl_denote; intros.
-    rewrite H0 in H.
-    rewrite not_true in H.
+  - apply impl_def in H.
+    rewrite <- (true_def p) in H.
+    rewrite <- or_assoc in H.
+    rewrite false_def in H.
     rewrite false_or in H.
-    split; auto.
-    clear.
-    apply impl_denote; intros.
-    reflexivity.
+    now apply impl_def.
 Qed.
 
 Theorem or_inj (p q : t) : p ⟹ p ∨ q.
 Proof.
-  apply impl_def.
+  apply impl_true_impl.
   rewrite <- or_assoc.
   rewrite (or_comm _ p).
   rewrite true_def.

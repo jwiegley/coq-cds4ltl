@@ -48,7 +48,7 @@ Proof.
   rewrite end_def.
   rewrite next_true.
   rewrite not_not.
-  apply impl_def.
+  apply impl_true_impl.
   now rewrite or_true.
 Qed.
 
