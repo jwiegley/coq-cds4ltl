@@ -92,47 +92,47 @@ Declare Instance or_respects_impl : Proper (impl ==> impl ==> impl) or.
 Program Instance or_respects_eqv : Proper (eqv ==> eqv ==> eqv) or.
 
 (** Implication must have the same meaning as in Coq's own logic. *)
-Axiom impl_denote : forall (φ ψ : t), (φ ⟹ ψ) <-> (φ ≈ ⊤ -> ψ ≈ ⊤).
+Axiom impl_denote : forall (p q : t), (p ⟹ q) <-> (p ≈ ⊤ -> q ≈ ⊤).
 
-Axiom true_def : forall (φ : t), φ ∨ ¬φ ≈ ⊤.
-Axiom false_def : forall (φ : t), ¬(φ ∨ ¬φ) ≈ ⊥.
+Axiom true_def : forall (p : t), p ∨ ¬p ≈ ⊤.
+Axiom false_def : forall (p : t), ¬(p ∨ ¬p) ≈ ⊥.
 
 (** This is one set of fundamental axioms of boolean algebra.
  *
  * NOTE: It is possible to formulate the following using a single axiom:
  *
- *   forall (φ ψ χ ρ : t),
- *     ¬(¬(¬(φ ∨ ψ) ∨ χ) ∨ ¬(φ ∨ ¬(¬χ ∨ ¬(χ ∨ ρ)))) ≈ χ
+ *   forall (p q r s : t),
+ *     ¬(¬(¬(p ∨ q) ∨ r) ∨ ¬(p ∨ ¬(¬r ∨ ¬(r ∨ s)))) ≈ r
  *
  * However, the proofs of the three axioms below in terms of this single one
  * are laborious and left as an exercise to the motivated reader. Further
  * notes may be found in the paper "Short Single Axioms for Boolean Algebra"
  * by McCune, et al.
  *)
-Axiom or_comm : forall (φ ψ : t), φ ∨ ψ ≈ ψ ∨ φ.
-Axiom or_assoc : forall (φ ψ χ : t), (φ ∨ ψ) ∨ χ ≈ φ ∨ (ψ ∨ χ).
-Axiom huntington : forall (φ ψ : t), ¬(¬φ ∨ ¬ψ) ∨ ¬(¬φ ∨ ψ) ≈ φ.
+Axiom or_comm : forall (p q : t), p ∨ q ≈ q ∨ p.
+Axiom or_assoc : forall (p q r : t), (p ∨ q) ∨ r ≈ p ∨ (q ∨ r).
+Axiom huntington : forall (p q : t), ¬(¬p ∨ ¬q) ∨ ¬(¬p ∨ q) ≈ p.
 
 (** Many of the following proofs are based on work from:
     "A Complete Proof of the Robbins Conjecture", by Allen L. Mann
     May 25, 2003 *)
-Theorem or_not (φ : t) : φ ∨ ¬φ ≈ ¬φ ∨ ¬¬φ.
+Theorem or_not (p : t) : p ∨ ¬p ≈ ¬p ∨ ¬¬p.
 Proof.
-  pose proof (huntington φ (¬¬ φ)) as H1.
-  pose proof (huntington (¬ φ) (¬¬ φ)) as H2.
-  pose proof (huntington (¬ φ) (¬ φ)) as H3.
-  pose proof (huntington (¬¬ φ) (¬ φ)) as H4.
+  pose proof (huntington p (¬¬ p)) as H1.
+  pose proof (huntington (¬ p) (¬¬ p)) as H2.
+  pose proof (huntington (¬ p) (¬ p)) as H3.
+  pose proof (huntington (¬¬ p) (¬ p)) as H4.
   rewrite <- H4.
   rewrite <- H3 at 2.
   rewrite <- H2 at 1.
   rewrite <- H1 at 1.
   rewrite <- !or_assoc.
-  rewrite (or_comm _ (¬ (¬ ¬ ¬ φ ∨ ¬ φ))).
+  rewrite (or_comm _ (¬ (¬ ¬ ¬ p ∨ ¬ p))).
   rewrite !or_assoc.
   apply or_respects_eqv.
     now rewrite or_comm.
   rewrite <- !or_assoc.
-  rewrite (or_comm _ (¬ (¬ ¬ φ ∨ ¬ ¬ φ))).
+  rewrite (or_comm _ (¬ (¬ ¬ p ∨ ¬ ¬ p))).
   rewrite !or_assoc.
   apply or_respects_eqv.
     reflexivity.
@@ -141,18 +141,18 @@ Proof.
   now rewrite or_comm.
 Qed.
 
-Theorem not_not (φ : t) : ¬¬φ ≈ φ.
+Theorem not_not (p : t) : ¬¬p ≈ p.
 Proof.
-  pose proof (huntington (¬¬ φ) (¬ φ)) as H1.
-  pose proof (huntington φ (¬¬ φ)) as H2.
+  pose proof (huntington (¬¬ p) (¬ p)) as H1.
+  pose proof (huntington p (¬¬ p)) as H2.
   rewrite <- H1.
-  rewrite (or_comm _ (¬¬φ)), <- or_not.
+  rewrite (or_comm _ (¬¬p)), <- or_not.
   rewrite or_comm.
-  rewrite (or_comm _ (¬φ)).
+  rewrite (or_comm _ (¬p)).
   now apply huntington.
 Qed.
 
-Theorem not_swap (φ ψ : t) : ¬φ ≈ ψ <-> φ ≈ ¬ψ.
+Theorem not_swap (p q : t) : ¬p ≈ q <-> p ≈ ¬q.
 Proof.
   split; intro.
   - rewrite <- not_not.
@@ -161,11 +161,11 @@ Proof.
     now apply not_not.
 Qed.
 
-Theorem not_inj (φ ψ : t) : ¬φ ≈ ¬ψ -> φ ≈ ψ.
+Theorem not_inj (p q : t) : ¬p ≈ ¬q -> p ≈ q.
 Proof.
   intro.
-  rewrite <- (not_not φ).
-  rewrite <- (not_not ψ).
+  rewrite <- (not_not p).
+  rewrite <- (not_not q).
   now rewrite H.
 Qed.
 
@@ -178,7 +178,7 @@ Proof.
   now apply not_not.
 Qed.
 
-Theorem or_false (φ : t) : φ ∨ ⊥ ≈ φ.
+Theorem or_false (p : t) : p ∨ ⊥ ≈ p.
 Proof.
   pose proof (huntington ⊥ ⊥) as H1.
   rewrite (or_comm _ ⊥) in H1.
@@ -202,45 +202,45 @@ Proof.
     rewrite <- H3 at 1.
     rewrite not_true.
     exact H1.
-  rewrite <- (huntington φ φ) at 2.
-  rewrite (or_comm _ φ).
+  rewrite <- (huntington p p) at 2.
+  rewrite (or_comm _ p).
   rewrite false_def.
   rewrite <- H4 at 2.
-  rewrite <- (false_def φ) at 2.
+  rewrite <- (false_def p) at 2.
   rewrite <- or_assoc.
-  rewrite (or_comm φ (¬φ)).
+  rewrite (or_comm p (¬p)).
   now rewrite huntington.
 Qed.
 
-Theorem false_or (φ : t) : ⊥ ∨ φ ≈ φ.
+Theorem false_or (p : t) : ⊥ ∨ p ≈ p.
 Proof. now rewrite or_comm; apply or_false. Qed.
 
-Theorem or_idem (φ : t) : φ ∨ φ ≈ φ.
+Theorem or_idem (p : t) : p ∨ p ≈ p.
 Proof.
-  assert (H1 : forall φ, ¬ (¬ φ ∨ ¬ φ) ≈ φ).
-    intro p.
-    rewrite <- (huntington p p) at 3.
-    rewrite (or_comm (¬p) p).
+  assert (H1 : forall q, ¬ (¬ q ∨ ¬ q) ≈ q).
+    intro q.
+    rewrite <- (huntington q q) at 3.
+    rewrite (or_comm (¬q) q).
     rewrite false_def.
     now rewrite or_false.
-  specialize (H1 (¬φ)).
+  specialize (H1 (¬p)).
   rewrite not_not in H1.
   apply not_inj.
   exact H1.
 Qed.
 
-Theorem or_true (φ : t) : φ ∨ ⊤ ≈ ⊤.
+Theorem or_true (p : t) : p ∨ ⊤ ≈ ⊤.
 Proof.
-  rewrite <- (true_def φ) at 1.
+  rewrite <- (true_def p) at 1.
   rewrite <- or_assoc.
   rewrite or_idem.
   now apply true_def.
 Qed.
 
-Theorem true_or (φ : t) : ⊤ ∨ φ ≈ ⊤.
+Theorem true_or (p : t) : ⊤ ∨ p ≈ ⊤.
 Proof. now rewrite or_comm; apply or_true. Qed.
 
-Theorem not_not_or_true (φ : t) : ¬(¬φ ∨ ¬⊤) ≈ φ.
+Theorem not_not_or_true (p : t) : ¬(¬p ∨ ¬⊤) ≈ p.
 Proof.
   intros.
   rewrite not_true.
@@ -248,7 +248,7 @@ Proof.
   now apply not_not.
 Qed.
 
-Theorem contrapositive (φ ψ : t) : (φ ⟹ ψ) <-> (¬ψ ⟹ ¬φ).
+Theorem contrapositive (p q : t) : (p ⟹ q) <-> (¬q ⟹ ¬p).
 Proof.
   split; intro.
   - rewrite H.
@@ -257,7 +257,7 @@ Proof.
     now rewrite !not_not in H.
 Qed.
 
-Theorem impl_def : forall (φ ψ : t), (φ ⟹ ψ) <-> (⊤ ⟹ ¬ φ ∨ ψ).
+Theorem impl_def : forall (p q : t), (p ⟹ q) <-> (⊤ ⟹ ¬ p ∨ q).
 Proof.
   split; intros.
   - rewrite <- H.
@@ -274,40 +274,40 @@ Proof.
     reflexivity.
 Qed.
 
-Theorem or_inj (φ ψ : t) : φ ⟹ φ ∨ ψ.
+Theorem or_inj (p q : t) : p ⟹ p ∨ q.
 Proof.
   apply impl_def.
   rewrite <- or_assoc.
-  rewrite (or_comm _ φ).
+  rewrite (or_comm _ p).
   rewrite true_def.
   rewrite true_or.
   reflexivity.
 Qed.
 
-Theorem true_impl (φ : t) : (⊤ ⟹ φ) <-> φ ≈ ⊤.
+Theorem true_impl (p : t) : (⊤ ⟹ p) <-> p ≈ ⊤.
 Proof.
   split; intro.
   - split; auto.
-    rewrite <- (true_def φ).
+    rewrite <- (true_def p).
     now apply or_inj.
   - now rewrite H.
 Qed.
 
-Theorem excluded_middle (φ : t) : ⊤ ⟹ φ ∨ ¬φ.
+Theorem excluded_middle (p : t) : ⊤ ⟹ p ∨ ¬p.
 Proof.
   apply true_impl.
   now rewrite <- true_def.
 Qed.
 
-Theorem impl_true (φ : t) : φ ⟹ ⊤.
+Theorem impl_true (p : t) : p ⟹ ⊤.
 Proof.
-  rewrite <- (true_def φ).
+  rewrite <- (true_def p).
   now apply or_inj.
 Qed.
 
-Theorem false_impl (φ : t) : ⊥ ⟹ φ.
+Theorem false_impl (p : t) : ⊥ ⟹ p.
 Proof.
-  rewrite <- (false_def φ).
+  rewrite <- (false_def p).
   apply contrapositive.
   rewrite not_not.
   rewrite or_comm.
