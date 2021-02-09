@@ -10,7 +10,7 @@ Require Import
  * defined simply in terms of ∨, this allows for more optimal choices
  * if meant to be used computationally. *)
 
-Module Type BooleanLogic.
+Module Type BooleanLogic <: MinimalBooleanLogic.
 
 Include MinimalBooleanLogic.
 
@@ -20,12 +20,20 @@ Infix    "∧"       := and             (at level 80, right associativity) : boo
 Notation "p ≡ q"   := (p ⇒ q ∧ q ⇒ p) (at level 89, right associativity, only parsing) : boolean_scope.
 
 Declare Instance and_respects_impl : Proper (impl ==> impl ==> impl) and.
-Program Instance and_respects_eqv : Proper (eqv ==> eqv ==> eqv) and.
 
 (** "and" is not fundamental and can be defined using "or". To allow for
     efficient choices of "and", we simply require that its behavior be
     equivalent to the more basic definition. *)
 Axiom and_def : forall (p q : t), p ∧ q ≈ ¬(¬p ∨ ¬q).
+
+End BooleanLogic.
+
+Module BooleanLogicFacts (B : BooleanLogic).
+
+Import B.
+Module Import MBF := MinimalBooleanLogicFacts B.
+
+Program Instance and_respects_eqv : Proper (eqv ==> eqv ==> eqv) and.
 
 Theorem not_or (p q : t) : ¬(p ∨ q) ≈ ¬p ∧ ¬q.
 Proof.
@@ -407,4 +415,4 @@ Qed.
 Theorem impl_refl (p : t) : p ⇒ p ≈ ⊤.
 Proof. now boolean. Qed.
 
-End BooleanLogic.
+End BooleanLogicFacts.

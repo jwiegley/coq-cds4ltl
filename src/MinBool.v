@@ -34,15 +34,47 @@ Notation "p ≈ q"  := (eqv p q)  (at level 90, no associativity) : boolean_scop
 
 Declare Instance impl_reflexive : Reflexive impl.
 Declare Instance impl_transitive : Transitive impl.
+Declare Instance not_respects_impl : Proper (impl --> impl) not | 1.
+Declare Instance or_respects_impl : Proper (impl ==> impl ==> impl) or.
 
-Definition eqv_equivalence : Equivalence eqv.
-Proof.
-  split.
-  - intro x; now split.
-  - repeat intro; split; destruct H; now intuition.
-  - repeat intro; split; destruct H, H0; now transitivity y.
-Defined.
-Existing Instance eqv_equivalence.
+(** Implication must have the same meaning as in Coq's own logic. *)
+Axiom impl_denote : forall (p q : t), (p ⟹ q) <-> (p ≈ ⊤ -> q ≈ ⊤).
+
+Axiom true_def : forall (p : t), p ∨ ¬p ≈ ⊤.
+Axiom false_def : forall (p : t), ¬(p ∨ ¬p) ≈ ⊥.
+
+(** This is one set of fundamental axioms of boolean algebra.
+ *
+ * NOTE: It is possible to formulate the following using a single axiom:
+ *
+ *   forall (p q r s : t),
+ *     ¬(¬(¬(p ∨ q) ∨ r) ∨ ¬(p ∨ ¬(¬r ∨ ¬(r ∨ s)))) ≈ r
+ *
+ * However, the proofs of the three axioms below in terms of this single one
+ * are laborious and left as an exercise to the motivated reader. Further
+ * notes may be found in the paper "Short Single Axioms for Boolean Algebra"
+ * by McCune, et al.
+ *)
+Axiom or_comm : forall (p q : t), p ∨ q ≈ q ∨ p.
+Axiom or_assoc : forall (p q r : t), (p ∨ q) ∨ r ≈ p ∨ (q ∨ r).
+Axiom huntington : forall (p q : t), ¬(¬p ∨ ¬q) ∨ ¬(¬p ∨ q) ≈ p.
+
+End MinimalBooleanLogic.
+
+Module MinimalBooleanLogicFacts (B : MinimalBooleanLogic).
+
+Import B.
+
+Program Instance eqv_equivalence : Equivalence eqv.
+Next Obligation.
+  intro x; now split.
+Qed.
+Next Obligation.
+  repeat intro; split; destruct H; now intuition.
+Qed.
+Next Obligation.
+  repeat intro; split; destruct H, H0; now transitivity y.
+Qed.
 
 Program Instance impl_respects_impl : Proper (impl --> impl ==> Basics.impl) impl.
 Next Obligation.
@@ -50,7 +82,7 @@ Next Obligation.
   unfold Basics.flip in H.
   rewrite H.
   now rewrite <- H0.
-Defined.
+Qed.
 
 Program Instance impl_respects_eqv : Proper (eqv ==> eqv ==> Basics.impl) impl.
 Next Obligation.
@@ -58,7 +90,7 @@ Next Obligation.
   destruct H, H0.
   transitivity x; auto.
   transitivity x0; auto.
-Defined.
+Qed.
 
 Ltac one_arg :=
   repeat intro;
@@ -86,32 +118,8 @@ Ltac two_arg :=
 
 Obligation Tactic := solve [ one_arg | two_arg ].
 
-Declare Instance not_respects_impl : Proper (impl --> impl) not | 1.
 Program Instance not_respects_eqv : Proper (eqv ==> eqv) not.
-Declare Instance or_respects_impl : Proper (impl ==> impl ==> impl) or.
 Program Instance or_respects_eqv : Proper (eqv ==> eqv ==> eqv) or.
-
-(** Implication must have the same meaning as in Coq's own logic. *)
-Axiom impl_denote : forall (p q : t), (p ⟹ q) <-> (p ≈ ⊤ -> q ≈ ⊤).
-
-Axiom true_def : forall (p : t), p ∨ ¬p ≈ ⊤.
-Axiom false_def : forall (p : t), ¬(p ∨ ¬p) ≈ ⊥.
-
-(** This is one set of fundamental axioms of boolean algebra.
- *
- * NOTE: It is possible to formulate the following using a single axiom:
- *
- *   forall (p q r s : t),
- *     ¬(¬(¬(p ∨ q) ∨ r) ∨ ¬(p ∨ ¬(¬r ∨ ¬(r ∨ s)))) ≈ r
- *
- * However, the proofs of the three axioms below in terms of this single one
- * are laborious and left as an exercise to the motivated reader. Further
- * notes may be found in the paper "Short Single Axioms for Boolean Algebra"
- * by McCune, et al.
- *)
-Axiom or_comm : forall (p q : t), p ∨ q ≈ q ∨ p.
-Axiom or_assoc : forall (p q r : t), (p ∨ q) ∨ r ≈ p ∨ (q ∨ r).
-Axiom huntington : forall (p q : t), ¬(¬p ∨ ¬q) ∨ ¬(¬p ∨ q) ≈ p.
 
 (** Many of the following proofs are based on work from:
     "A Complete Proof of the Robbins Conjecture", by Allen L. Mann
@@ -314,4 +322,4 @@ Proof.
   now apply or_inj.
 Qed.
 
-End MinimalBooleanLogic.
+End MinimalBooleanLogicFacts.

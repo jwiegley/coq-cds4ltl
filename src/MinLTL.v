@@ -15,7 +15,7 @@ Require Import
  *
  * by Warford, Vega and Staley *)
 
-Module Type MinimalLinearTemporalLogic.
+Module Type MinimalLinearTemporalLogic <: BooleanLogic.
 
 Include BooleanLogic.
 
@@ -32,8 +32,35 @@ Notation "◯ p"     := (next p)    (at level 75, right associativity) : ltl_sco
 Notation "p 'U' q" := (until p q) (at level 79, right associativity) : ltl_scope.
 
 Declare Instance next_respects_impl : Proper (impl ==> impl) next.
-Program Instance next_respects_eqv : Proper (eqv ==> eqv) next.
 Declare Instance until_respects_impl : Proper (impl ==> impl ==> impl) until.
+
+Axiom (* 1 *) next_not : forall (p : t), ◯ ¬p ≈ ¬◯ p.
+Axiom (* 2 *) next_impl : forall (p q : t), ◯ (p ⇒ q) ≈ ◯ p ⇒ ◯ q.
+
+Axiom (* 9 *) next_until : forall (p q : t), ◯ (p U q) ≈ (◯ p) U (◯ q).
+Axiom (* 10 *) until_expansion : forall (p q : t), p U q ≈ q ∨ (p ∧ ◯ (p U q)).
+Axiom (* 11 *) until_right_bottom : forall (p : t), p U ⊥ ≈ ⊥.
+Axiom (* 12 *) until_left_or : forall (p q r : t), p U (q ∨ r) ≈ (p U q) ∨ (p U r).
+Axiom (* 13 *) until_right_or : forall (p q r : t), (p U r) ∨ (q U r) ⟹ (p ∨ q) U r.
+Axiom (* 14 *) until_left_and : forall (p q r : t), p U (q ∧ r) ⟹ (p U q) ∧ (p U r).
+Axiom (* 15 *) until_right_and : forall (p q r : t), (p ∧ q) U r ≈ (p U r) ∧ (q U r).
+Axiom (* 16 *) until_impl_order : forall (p q r : t), (p U q) ∧ (¬q U r) ⟹ p U r.
+Axiom (* 17 *) until_right_or_order : forall (p q r : t), p U (q U r) ⟹ (p ∨ q) U r.
+Axiom (* 18 *) until_right_and_order : forall (p q r : t), p U (q ∧ r) ⟹ (p U q) U r.
+
+(** jww (2021-02-08): This axiom is just an idea a work in progress *)
+Axiom (* NEW *) until_continue : forall (p q : t), q ∧ p U ◯ ¬q ⟹ p U (q ∧ ◯ ¬q).
+Axiom (* NEW *) not_until : forall (p q : t), ⊤ U ¬p ∧ ¬(p U q) ≈ ¬q U (¬p ∧ ¬q).
+
+End MinimalLinearTemporalLogic.
+
+Module MinimalLinearTemporalLogicFacts (L : MinimalLinearTemporalLogic).
+
+Import L.
+Module Import BF := BooleanLogicFacts L.
+Module Import MBF := BF.MBF.
+
+Program Instance next_respects_eqv : Proper (eqv ==> eqv) next.
 Program Instance until_respects_eqv : Proper (eqv ==> eqv ==> eqv) until.
 
 (*** 3.1 Next ◯ *)
@@ -48,9 +75,6 @@ Program Instance until_respects_eqv : Proper (eqv ==> eqv ==> eqv) until.
 (7) Truth of ◯ : ◯ true ≡ true
 (8) Falsehood of ◯ : ◯ false ≡ false
 *)
-
-Axiom (* 1 *) next_not : forall (p : t), ◯ ¬p ≈ ¬◯ p.
-Axiom (* 2 *) next_impl : forall (p q : t), ◯ (p ⇒ q) ≈ ◯ p ⇒ ◯ q.
 
 Theorem (* 3 *) next_linearity (p : t) : ◯ p ≈ ¬◯ ¬p.
 Proof.
@@ -133,17 +157,6 @@ Qed.
 (36) Left absorption of U : p U (p U q) ≡ p U q
 (37) Right absorption of U : (p U q) U q ≡ p U q
 *)
-
-Axiom (* 9 *) next_until : forall (p q : t), ◯ (p U q) ≈ (◯ p) U (◯ q).
-Axiom (* 10 *) until_expansion : forall (p q : t), p U q ≈ q ∨ (p ∧ ◯ (p U q)).
-Axiom (* 11 *) until_right_bottom : forall (p : t), p U ⊥ ≈ ⊥.
-Axiom (* 12 *) until_left_or : forall (p q r : t), p U (q ∨ r) ≈ (p U q) ∨ (p U r).
-Axiom (* 13 *) until_right_or : forall (p q r : t), (p U r) ∨ (q U r) ⟹ (p ∨ q) U r.
-Axiom (* 14 *) until_left_and : forall (p q r : t), p U (q ∧ r) ⟹ (p U q) ∧ (p U r).
-Axiom (* 15 *) until_right_and : forall (p q r : t), (p ∧ q) U r ≈ (p U r) ∧ (q U r).
-Axiom (* 16 *) until_impl_order : forall (p q r : t), (p U q) ∧ (¬q U r) ⟹ p U r.
-Axiom (* 17 *) until_right_or_order : forall (p q r : t), p U (q U r) ⟹ (p ∨ q) U r.
-Axiom (* 18 *) until_right_and_order : forall (p q r : t), p U (q ∧ r) ⟹ (p U q) U r.
 
 Theorem (* 19 *) until_right_impl (p q r : t) : (p ⇒ q) U r ⟹ (p U r) ⇒ (q U r).
 Proof.
@@ -304,6 +317,4 @@ Proof.
   reflexivity.
 Qed.
 
-Axiom (* NEW *) not_until : forall (p q : t), ⊤ U ¬p ∧ ¬(p U q) ≈ ¬q U (¬p ∧ ¬q).
-
-End MinimalLinearTemporalLogic.
+End MinimalLinearTemporalLogicFacts.

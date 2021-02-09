@@ -4,7 +4,7 @@ Require Import
   Coq.Classes.Morphisms
   MinLTL.
 
-Module Type LinearTemporalLogic.
+Module Type LinearTemporalLogic <: MinimalLinearTemporalLogic.
 
 Include MinimalLinearTemporalLogic.
 
@@ -21,14 +21,32 @@ Notation "p 'R' q" := (release p q)        (at level 79, right associativity) : 
 Notation "p 'M' q" := (strong_release p q) (at level 79, right associativity) : ltl_scope.
 
 Declare Instance eventually_respects_impl : Proper (impl ==> impl) eventually.
-Program Instance eventually_respects_eqv : Proper (eqv ==> eqv) eventually.
 Declare Instance always_respects_impl : Proper (impl ==> impl) always.
-Program Instance always_respects_eqv : Proper (eqv ==> eqv) always.
 Declare Instance wait_respects_impl : Proper (impl ==> impl ==> impl) wait.
-Program Instance wait_respects_eqv : Proper (eqv ==> eqv ==> eqv) wait.
 Declare Instance release_respects_impl : Proper (impl ==> impl ==> impl) release.
-Program Instance release_respects_eqv : Proper (eqv ==> eqv ==> eqv) release.
 Declare Instance strong_release_respects_impl : Proper (impl ==> impl ==> impl) strong_release.
+
+Axiom (* 38 *) evn_def : forall (p : t), ◇ p ≈ ⊤ U p.
+Axiom (* 54 *) always_def : forall (p : t), □ p ≈ ¬◇ ¬p.
+Axiom (* 55 *) always_until_and_ind : forall (p q r : t),
+  □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r.
+Axiom (* 169 *) wait_def : forall (p q : t), p W q ≈ □ p ∨ p U q.
+Axiom release_def : forall (p q : t), p R q ≈ ¬(¬p U ¬q).
+Axiom strong_release_def : forall (p q : t), p M q ≈ p U (q ∧ p).
+
+End LinearTemporalLogic.
+
+Module LinearTemporalLogicFacts (L : LinearTemporalLogic).
+
+Import L.
+Module Import MLTL := MinimalLinearTemporalLogicFacts L.
+Module Import BF := MLTL.BF.
+Module Import MBF := BF.MBF.
+
+Program Instance eventually_respects_eqv : Proper (eqv ==> eqv) eventually.
+Program Instance always_respects_eqv : Proper (eqv ==> eqv) always.
+Program Instance wait_respects_eqv : Proper (eqv ==> eqv ==> eqv) wait.
+Program Instance release_respects_eqv : Proper (eqv ==> eqv ==> eqv) release.
 Program Instance strong_release_respects_eqv : Proper (eqv ==> eqv ==> eqv) strong_release.
 
 (*** 3.3 Eventually ◇ *)
@@ -51,8 +69,6 @@ Program Instance strong_release_respects_eqv : Proper (eqv ==> eqv ==> eqv) stro
 (52) Distributivity of ◇ over ∨ : ◇ (p ∨ q) ≡ ◇ p ∨ ◇ q
 (53) Distributivity of ◇ over ∧ : ◇ (p ∧ q) ⇒ ◇ p ∧ ◇ q
 *)
-
-Axiom (* 38 *) evn_def : forall (p : t), ◇ p ≈ ⊤ U p.
 
 Theorem (* 39 *) law_39 (p q : t) : (p U q) ∧ ◇ q ≈ p U q.
 Proof.
@@ -195,16 +211,6 @@ Qed.
 (80) ◯ generalization: □ p ⇒ □ ◯ p
 (81) □ p ⇒ ¬(q U ¬p)
 *)
-
-Axiom until_continue : forall (p q : t), q ∧ p U ◯ ¬q ⟹ p U (q ∧ ◯ ¬q).
-
-Axiom (* 54 *) always_def : forall (p : t), □ p ≈ ¬◇ ¬p.
-
-(* Theorem (* 55 *) always_until_and_ind (p q r : t) : *)
-(*   □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r. *)
-
-Axiom (* 55 *) always_until_and_ind : forall (p q r : t),
-  □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r.
 
 Theorem (* 73 *) law_73 (p : t) : ◯ □ p ≈ □ ◯ p.
 Proof.
@@ -1637,8 +1643,6 @@ Qed.
 (254) Lemmon formula: □ (□ p ⇒ q) ∨ □ (□ q ⇒ p)
 *)
 
-Axiom (* 169 *) wait_def : forall (p q : t), p W q ≈ □ p ∨ p U q.
-
 Theorem (* 170 *) not_wait (p q : t) : ¬(p W q) ≈ ¬q U (¬p ∧ ¬q).
 Proof.
   rewrite wait_def.
@@ -2445,8 +2449,6 @@ Admitted.
 
 (*** Release R *)
 
-Axiom release_def : forall (p q : t), p R q ≈ ¬(¬p U ¬q).
-
 Theorem law_256 (p q : t) : p U q ≈ ¬(¬p R ¬q).
 Proof.
   (* FILL IN HERE *)
@@ -2499,8 +2501,6 @@ Admitted.
 
 (*** Strong Release M *)
 
-Axiom strong_release_def : forall (p q : t), p M q ≈ p U (q ∧ p).
-
 Theorem law_266 (p q : t) : p W q ≈ ¬(¬p M ¬q).
 Proof.
   (* FILL IN HERE *)
@@ -2547,4 +2547,4 @@ Admitted.
 
 (* Definition examine {a : Type} (P : a -> t) : t := fun s => P (head s) s. *)
 
-End LinearTemporalLogic.
+End LinearTemporalLogicFacts.
