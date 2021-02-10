@@ -83,30 +83,30 @@ Notation "p ≈ q"  := (eqv p q)  (at level 90, no associativity) : boolean_scop
 Infix    "∧"       := and             (at level 80, right associativity) : boolean_scope.
 Notation "p ≡ q"   := (p ⇒ q ∧ q ⇒ p) (at level 89, right associativity, only parsing) : boolean_scope.
 
-Theorem impl_denote (p q : t) : (p ⟹ q) <-> (p ≈ ⊤ -> q ≈ ⊤).
+Theorem or_inj (p q : t) : p ⟹ p ∨ q.
+Proof. repeat intro; now left. Qed.
+
+Theorem impl_denote (p q : t) : (p ⟹ q) <-> ((⊤ ⟹ p) -> (⊤ ⟹ q)).
 Proof.
   split; intros.
-  - destruct H0.
-    split; intros.
-    + constructor.
-    + unfold impl in H.
-      now transitivity p; auto.
+  - now rewrite <- H, <- H0.
   - unfold impl.
     repeat intro.
-    rewrite H.
-    + constructor.
-    + split.
-      * constructor.
-      * repeat intro.
-        (* We run afoul of a mismatch between existential witnesses *)
-Admitted.
+    apply H; [|constructor].
+    repeat intro.
+    (* We run afoul of a mismatch between existential witnesses *)
+Abort.
 
 Theorem true_def (p : t) : p ∨ ¬p ≈ ⊤.
 Proof.
   split; intros.
   - constructor.
-  - (* The goal is the axiom of the excluded middle. *)
-Admitted.
+  - repeat intro.
+    pose proof (classic (In _ p x)).
+    destruct H0.
+      now left.
+    now right.
+Qed.
 
 Theorem false_def (p : t) : ¬(p ∨ ¬p) ≈ ⊥.
 Proof.
@@ -132,14 +132,37 @@ Proof.
   now rewrite Union_associative.
 Qed.
 
+Theorem Intersection_Union {A : Type} p q :
+  Same_set A (Intersection A p q)
+             (Complement A (Union A (Complement A p) (Complement A q))).
+Proof.
+  split; repeat intro.
+  - inversion H; subst.
+    destruct H0.
+    + now apply H0.
+    + now apply H0.
+  - rewrite <- (Complement_Complement A (Intersection A p q)).
+    intro.
+    apply H.
+    unfold In, Complement, Logic.not in H0.
+    assert (In A p x /\ In A q x → False).
+      intros.
+      apply H0.
+      now constructor.
+    apply not_and_or in H1.
+    destruct H1.
+      now left.
+    now right.
+Qed.
+
 Theorem and_def (p q : t) : p ∧ q ≈ ¬(¬p ∨ ¬q).
 Proof.
-  unfold and, or, not.
   split; repeat intro.
   - destruct H, H0; contradiction.
-  - unfold Complement, In, Logic.not in *.
-    (* The goal should be a simple fact of logic. *)
-Admitted.
+  - unfold and.
+    rewrite Intersection_Union.
+    exact H.
+Qed.
 
 Theorem huntington (p q : t) : ¬(¬p ∨ ¬q) ∨ ¬(¬p ∨ q) ≈ p.
 Proof.

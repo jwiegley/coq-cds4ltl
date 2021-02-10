@@ -22,6 +22,8 @@ Parameter impl : t -> t -> Prop.
 Parameter true : t.
 Parameter false : t.
 
+Declare Instance impl_reflexive : Reflexive impl.
+Declare Instance impl_transitive : Transitive impl.
 Declare Instance not_respects_impl : Proper (impl --> impl) not | 1.
 Declare Instance or_respects_impl : Proper (impl ==> impl ==> impl) or.
 
@@ -41,7 +43,7 @@ Notation "p ⟹ q" := (impl p q) (at level 99, right associativity) : boolean_sc
 Notation "p ≈ q"  := (eqv p q)  (at level 90, no associativity) : boolean_scope.
 
 (** This axiom denotes implication into Coq's logic. *)
-Axiom impl_denote : forall (p q : t), (p ⟹ q) <-> (p ≈ ⊤ -> q ≈ ⊤).
+Axiom or_inj : forall (p q : t), p ⟹ p ∨ q.
 
 (** These two axioms establish the definition of the syntactic terms. *)
 Axiom true_def  : forall (p : t), p ∨ ¬p ≈ ⊤.
@@ -68,16 +70,6 @@ End MinimalBooleanLogic.
 Module MinimalBooleanLogicFacts (B : MinimalBooleanLogic).
 
 Import B.
-
-Program Instance impl_reflexive : Reflexive impl.
-Next Obligation. now apply impl_denote; auto. Qed.
-
-Program Instance impl_transitive : Transitive impl.
-Next Obligation.
-  apply impl_denote; intros.
-  apply impl_denote in H; auto.
-  apply impl_denote in H0; auto.
-Qed.
 
 Program Instance eqv_equivalence : Equivalence eqv.
 Next Obligation.
@@ -277,28 +269,21 @@ Proof.
     now rewrite !not_not in H.
 Qed.
 
-Theorem impl_def : forall (p q : t), (p ⟹ q) <-> (⊤ ⟹ ¬ p ∨ q).
+Theorem impl_def : forall (p q : t), (p ⟹ q) <-> (⊤ ⟹ p ⇒ q).
 Proof.
   split; intros.
   - rewrite <- H.
     rewrite or_comm.
     rewrite true_def.
     reflexivity.
-  - apply impl_denote in H; [|reflexivity].
-    apply impl_denote; intros.
-    rewrite H0 in H; clear H0.
-    rewrite not_true in H.
-    now rewrite false_or in H.
-Qed.
-
-Theorem or_inj (p q : t) : p ⟹ p ∨ q.
-Proof.
-  apply impl_def.
-  rewrite <- or_assoc.
-  rewrite (or_comm _ p).
-  rewrite true_def.
-  rewrite true_or.
-  reflexivity.
+  - rewrite <- (huntington p q).
+    rewrite <- H.
+    rewrite not_true.
+    rewrite or_false.
+    apply contrapositive.
+    rewrite not_not.
+    rewrite or_comm.
+    now apply or_inj.
 Qed.
 
 Theorem true_impl (p : t) : (⊤ ⟹ p) <-> p ≈ ⊤.

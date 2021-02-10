@@ -49,7 +49,7 @@ Axiom (* 17 *) until_right_or_order : forall (p q r : t), p U (q U r) ⟹ (p ∨
 Axiom (* 18 *) until_right_and_order : forall (p q r : t), p U (q ∧ r) ⟹ (p U q) U r.
 
 (** jww (2021-02-08): This axiom is just an idea a work in progress *)
-Axiom (* NEW *) until_continue : forall (p q : t), q ∧ p U ◯ ¬q ⟹ p U (q ∧ ◯ ¬q).
+(* Axiom (* NEW *) until_continue : forall (p q : t), q ∧ p U ◯ ¬q ⟹ p U (q ∧ ◯ ¬q). *)
 Axiom (* NEW *) not_until : forall (p q : t), ⊤ U ¬p ∧ ¬(p U q) ≈ ¬q U (¬p ∧ ¬q).
 
 End MinimalLinearTemporalLogic.
