@@ -34,7 +34,7 @@ Open Scope boolean_scope.
 
 Notation "¬ p"    := (not p)    (at level 75, right associativity) : boolean_scope.
 Infix    "∨"      := or         (at level 85, right associativity) : boolean_scope.
-Notation "p ⇒ q"  := (¬ p ∨ q)  (at level 86, right associativity, only parsing) : boolean_scope.
+Notation "p ⇒ q"  := (¬ p ∨ q)  (at level 86, right associativity) : boolean_scope.
 Notation "⊤"      := true       (at level 0, no associativity) : boolean_scope.
 Notation "⊥"      := false      (at level 0, no associativity) : boolean_scope.
 Notation "p ⟹ q" := (impl p q) (at level 99, right associativity) : boolean_scope.
