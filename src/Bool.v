@@ -421,13 +421,31 @@ Qed.
 Theorem impl_refl (p : t) : p ⇒ p ≈ ⊤.
 Proof. now boolean. Qed.
 
-Lemma or_respects  (p q r s : t) : (p ⇒ r) ∧ (q ⇒ s) ⟹ (p ∨ q ⇒ r ∨ s).
+Lemma not_respects (p q : t) : (p ⇒ q) ⟹ ¬ q ⇒ ¬ p.
+Proof.
+  rewrite (or_comm _ (¬p)).
+  now rewrite not_not.
+Qed.
+
+Lemma or_respects (p q r s : t) : (p ⇒ r) ∧ (q ⇒ s) ⟹ (p ∨ q ⇒ r ∨ s).
 Proof.
   rewrite or_impl.
   rewrite <- (or_inj r) at 1.
   rewrite (or_comm r s).
   rewrite <- (or_inj s).
   reflexivity.
+Qed.
+
+Lemma or_respects_l (p q r : t) : (p ⇒ r) ⟹ (p ∨ q ⇒ r ∨ q).
+Proof.
+  rewrite <- or_respects.
+  now boolean.
+Qed.
+
+Lemma or_respects_r (p q r : t) : (q ⇒ r) ⟹ (p ∨ q ⇒ p ∨ r).
+Proof.
+  rewrite <- or_respects.
+  now boolean.
 Qed.
 
 Lemma and_respects  (p q r s : t) : (p ⇒ r) ∧ (q ⇒ s) ⟹ (p ∧ q ⇒ r ∧ s).
@@ -440,6 +458,18 @@ Proof.
   apply or_respects_impl; [|reflexivity].
   rewrite <- and_or.
   now rewrite !and_proj.
+Qed.
+
+Lemma and_respects_l (p q r : t) : (p ⇒ r) ⟹ (p ∧ q ⇒ r ∧ q).
+Proof.
+  rewrite <- and_respects.
+  now boolean.
+Qed.
+
+Lemma and_respects_r (p q r : t) : (q ⇒ r) ⟹ (p ∧ q ⇒ p ∧ r).
+Proof.
+  rewrite <- and_respects.
+  now boolean.
 Qed.
 
 End BooleanLogicFacts.

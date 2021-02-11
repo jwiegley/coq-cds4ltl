@@ -228,14 +228,6 @@ Lemma until_respects (p q r s : t) : (p ⇒ r) ∧ (q ⇒ s) ⟹ (p U q ⇒ r U 
 Proof.
 Admitted.
 
-Lemma always_respects (p q r s : t) : (q ⇒ s) ⟹ (¬(⊤ U ¬q) ⇒ ¬(⊤ U ¬s)).
-Proof.
-Abort.
-
-Lemma eventually_respects (p q r s : t) : (q ⇒ s) ⟹ (⊤ U q ⇒ ⊤ U s).
-Proof.
-Abort.
-
 Theorem (* 55 *) always_until_and_ind : forall (p q r : t),
   □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r.
 Proof.
@@ -1103,15 +1095,22 @@ Qed.
 (139) Metatheorem □ : If P ⇒ Q is a theorem then □ P ⇒ □ Q is a theorem.
 *)
 
-Theorem (* 136 *) law_136 (p q : t) : (p ⟹ q) <-> (⊤ ⟹ □ (p ⇒ q)).
+Theorem (* 136 *) law_136 (p : t) : (⊤ ⟹ p) <-> (⊤ ⟹ □ p).
 Proof.
   split; intros.
   - rewrite H.
     boolean.
-    now rewrite law_64.
-  - apply impl_def.
-    rewrite H.
+    rewrite <- H at 2.
+    rewrite law_64.
+    now boolean.
+  - rewrite H.
     now apply law_76.
+Qed.
+
+Theorem until_metatheorem (p q r s : t) : (p ⟹ q) -> (r ⟹ s) -> (p U r ⟹ q U s).
+Proof.
+  intros.
+  now apply until_respects_impl.
 Qed.
 
 Theorem (* 137 *) next_metatheorem (p q : t) : (p ⟹ q) -> (◯ p ⟹ ◯ q).
