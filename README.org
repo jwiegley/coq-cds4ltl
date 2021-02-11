@@ -81,6 +81,12 @@ all my questions and offering their support and encouragement.
 :CREATED:  [2021-02-11 Thu 10:43]
 :END:
 
+** TODO Typeset new proof: of □ ¬p ∧ p U q ⇒ q
+:PROPERTIES:
+:ID:       FC4ECD01-B161-4081-9C63-4E127FAFBD4F
+:CREATED:  [2021-02-11 Thu 10:50]
+:END:
+
 ** TODO Produce a CDS4LTL proof of (55)
 :PROPERTIES:
 :ID:       6F57D36C-AE95-4AB6-8843-6A338055DBC3
@@ -139,7 +145,7 @@ This may be found in Model.v
 :CREATED:  [2021-02-11 Thu 08:58]
 :END:
 
-** TODO Prove monotonicity properties of the model operators
+** TODO Prove monotonicity properties of the modal operators
 :PROPERTIES:
 :ID:       6478060E-DEFE-4F03-BD26-2DA3CF3EEA4A
 :CREATED:  [2021-02-11 Thu 08:59]
