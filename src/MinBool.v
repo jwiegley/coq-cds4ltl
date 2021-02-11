@@ -42,8 +42,7 @@ Notation "⊥"      := false      (at level 0, no associativity) : boolean_scope
 Notation "p ⟹ q" := (impl p q) (at level 99, right associativity) : boolean_scope.
 Notation "p ≈ q"  := (eqv p q)  (at level 90, no associativity) : boolean_scope.
 
-(** This axiom denotes implication into Coq's logic. *)
-Axiom or_inj : forall (p q : t), p ⟹ p ∨ q.
+Axiom impl_denote : forall (p q : t), (p ⟹ q) <-> ((⊤ ⟹ p) -> (⊤ ⟹ q)).
 
 (** These two axioms establish the definition of the syntactic terms. *)
 Axiom true_def  : forall (p : t), p ∨ ¬p ≈ ⊤.
@@ -283,7 +282,19 @@ Proof.
     apply contrapositive.
     rewrite not_not.
     rewrite or_comm.
-    now apply or_inj.
+    apply impl_denote; intros.
+    rewrite <- H0.
+    now rewrite true_or.
+Qed.
+
+Theorem or_inj (p q : t) : p ⟹ p ∨ q.
+Proof.
+  apply impl_def.
+  rewrite <- or_assoc.
+  rewrite (or_comm _ p).
+  rewrite true_def.
+  rewrite true_or.
+  reflexivity.
 Qed.
 
 Theorem true_impl (p : t) : (⊤ ⟹ p) <-> p ≈ ⊤.

@@ -86,16 +86,40 @@ Notation "p ≡ q"   := (p ⇒ q ∧ q ⇒ p) (at level 89, right associativity,
 Theorem or_inj (p q : t) : p ⟹ p ∨ q.
 Proof. repeat intro; now left. Qed.
 
+Axiom truth_irrelevance : forall p, Inhabited (Stream a) p -> (⊤ ⟹ p).
+
+Lemma truth_is_truth : forall p, (⊤ ⟹ p) -> p ≈ ⊤.
+Proof.
+  intros.
+  split; [constructor|].
+  apply H.
+Qed.
+
+Theorem impl_denote (p q : t) : (p ⟹ q) <-> (⊤ ⟹ ¬ p ∨ q).
+Proof.
+  split; intros.
+  - rewrite <- H.
+    repeat intro.
+    pose proof (classic (In _ p x)).
+    destruct H1.
+    + now right.
+    + now left.
+  - repeat intro.
+    specialize (H x (Full_intro _ _)).
+    destruct H.
+    + contradiction.
+    + exact H.
+Qed.
+
 Theorem impl_denote (p q : t) : (p ⟹ q) <-> ((⊤ ⟹ p) -> (⊤ ⟹ q)).
 Proof.
   split; intros.
   - now rewrite <- H, <- H0.
-  - unfold impl.
-    repeat intro.
+  - repeat intro.
     apply H; [|constructor].
-    repeat intro.
-    (* We run afoul of a mismatch between existential witnesses *)
-Abort.
+    apply truth_irrelevance.
+    now exists x.
+Qed.
 
 Theorem true_def (p : t) : p ∨ ¬p ≈ ⊤.
 Proof.
@@ -263,18 +287,64 @@ Qed.
 
 Theorem (* 1 *) next_not (p : t) : ◯ ¬p ≈ ¬◯ p.
 Proof.
-Admitted.
+  unfold next, not.
+  split; repeat intro;
+  now apply H.
+Qed.
 
 Theorem (* 2 *) next_impl (p q : t) : ◯ (p ⇒ q) ≈ ◯ p ⇒ ◯ q.
 Proof.
-Admitted.
+  unfold next.
+  split; repeat intro.
+  - inversion H; subst.
+    + now left.
+    + now right.
+  - inversion H; subst.
+    + now left.
+    + now right.
+Qed.
 
 Theorem (* 9 *) next_until (p q : t) : ◯ (p U q) ≈ (◯ p) U (◯ q).
 Proof.
-Admitted.
+  unfold next, until.
+  split; repeat intro; unfold In in *;
+  now setoid_rewrite from_from.
+Qed.
 
 Theorem (* 10 *) until_expansion (p q : t) : p U q ≈ q ∨ (p ∧ ◯ (p U q)).
 Proof.
+  unfold next, until, or, and.
+  split; repeat intro; unfold In in *.
+  - destruct H, H.
+    generalize dependent p.
+    generalize dependent q.
+    generalize dependent x.
+    induction x0; intros.
+    + now left.
+    + right.
+      unfold In.
+      constructor.
+      apply (H0 0).
+      * now apply PeanoNat.Nat.lt_0_succ.
+      * unfold In.
+        exists x0.
+        split.
+        ** now rewrite from_S.
+        ** intros.
+           rewrite from_S.
+           apply H0.
+           now apply (proj1 (PeanoNat.Nat.succ_lt_mono _ _)).
+  - inversion H; subst.
+    + exists 0.
+      split; auto; intros.
+      apply PeanoNat.Nat.nlt_0_r in H1.
+      contradiction.
+    + destruct H0; unfold In in *.
+      destruct H1, H1.
+      exists (x0 + 1).
+      rewrite <- from_plus.
+      split; auto; intros.
+      setoid_rewrite from_from in H2.
 Admitted.
 
 Theorem (* 11 *) until_right_bottom (p : t) : p U ⊥ ≈ ⊥.
