@@ -78,3 +78,9 @@ This may be found in Model.v
 :ID:       DE89F702-84A9-407D-AA4F-FCABB7F2394A
 :CREATED:  [2021-02-11 Thu 09:39]
 :END:
+
+** TODO Build up theorems for Release (R) and Strong Release (M)
+:PROPERTIES:
+:ID:       6F7FF7D9-E21F-4982-B638-4A8A902D1BE6
+:CREATED:  [2021-02-11 Thu 09:46]
+:END:
