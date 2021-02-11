@@ -1,0 +1,80 @@
+* Work list
+
+** TODO Typeset the proof of (56) in LaTeX
+- Note taken on [2021-02-11 Thu 08:57] \\
+  Scott to provide a template LaTeX file for John to typeset his new (56)
+  Theorem proof.
+:PROPERTIES:
+:ID:       A3ABA0D7-A3A9-48F9-88E7-F03BC60D6E1B
+:CREATED:  [2021-02-11 Thu 08:57]
+:END:
+
+** TODO Produce a CDS4LTL proof of (55)
+:PROPERTIES:
+:ID:       6F57D36C-AE95-4AB6-8843-6A338055DBC3
+:CREATED:  [2021-02-11 Thu 08:52]
+:END:
+
+** TODO Is =Proper (impl ==> impl) eventually= a valid statement?
+:PROPERTIES:
+:ID:       A4DB0B7D-171D-4438-999A-0FF968C0F9E0
+:CREATED:  [2021-02-11 Thu 08:55]
+:END:
+
+** TODO Complete the stream semantic model of LinearTemporalLogic
+This may be found in Model.v
+:PROPERTIES:
+:ID:       20B4D94E-BA32-420E-9EAC-D75FF2E59938
+:CREATED:  [2021-02-11 Thu 08:55]
+:END:
+
+** TODO Find a more minimal set of until axioms
+:PROPERTIES:
+:ID:       E78658FF-D458-46FB-A0EA-6D826CF227CB
+:CREATED:  [2021-02-11 Thu 08:56]
+:END:
+
+** TODO Read the ACL2 paper that Scott provided
+- Note taken on [2021-02-11 Thu 08:57] \\
+  Scott to provide a copy of his ACL2 paper to show John a model for what he
+  might write up about coq the we could include in the book.
+:PROPERTIES:
+:ID:       28FC9F46-5D12-4844-997C-C426F7C7120F
+:CREATED:  [2021-02-11 Thu 08:57]
+:END:
+
+** TODO Look into SPOT as time permits
+:PROPERTIES:
+:ID:       DEAF41D2-E3DB-4460-9391-13BB62C9AA63
+:CREATED:  [2021-02-11 Thu 08:57]
+:END:
+
+** TODO Take a fresh-eyes look at the Dummett formula
+:PROPERTIES:
+:ID:       4E133597-5BC0-4873-9F85-A20137E80F7B
+:CREATED:  [2021-02-11 Thu 08:58]
+:END:
+
+** TODO Write a short paper on the Coq formulation of CDS4LTL
+:PROPERTIES:
+:ID:       40030D5B-9336-4005-BFD1-64F0C2106BE3
+:CREATED:  [2021-02-11 Thu 08:58]
+:END:
+
+** TODO Find a better axiomatic basis for proving (82)
+:PROPERTIES:
+:ID:       2540261A-82CE-4CD2-838C-32847BC3BD4B
+:CREATED:  [2021-02-11 Thu 08:58]
+:END:
+
+** TODO Prove monotonicity properties of the model operators
+:PROPERTIES:
+:ID:       6478060E-DEFE-4F03-BD26-2DA3CF3EEA4A
+:CREATED:  [2021-02-11 Thu 08:59]
+:END:
+
+** TODO Rebuild the syntactic, Mealy-machine based evaluation model
+:PROPERTIES:
+:ID:       DE89F702-84A9-407D-AA4F-FCABB7F2394A
+:CREATED:  [2021-02-11 Thu 09:39]
+:END:
