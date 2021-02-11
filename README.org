@@ -13,9 +13,72 @@ all my questions and offering their support and encouragement.
 - Note taken on [2021-02-11 Thu 08:57] \\
   Scott to provide a template LaTeX file for John to typeset his new (56)
   Theorem proof.
+
+#+begin_src text
+(56) □ (p ⇒ ◯ (p ∨ q)) ⇒ p ⇒ □ p ∨ p U q
+
+ Proof:
+
+     true
+   =   ⟨(55) Axiom, U Induction, with p := p, q := ◯ p, r := ◯ q⟩
+     □ (p ⇒ (◯ p ∧ ◯ p) ∨ ◯ q) ⇒ (p ⇒ □ ◯ p ∨ ◯ p U ◯ q)
+   =   ⟨idempotency of ∧⟩
+     □ (p ⇒ ◯ p ∨ ◯ q) ⇒ (p ⇒ □ ◯ p ∨ ◯ p U ◯ q)
+   =   ⟨(4) Distributivity of ◯ over ∨⟩
+     □ (p ⇒ ◯ (p ∨ q)) ⇒ (p ⇒ □ ◯ p ∨ ◯ p U ◯ q)
+   =   ⟨⊤ ∧ p ≡ p⟩
+     □ (p ⇒ ◯ (p ∨ q)) ⇒ ⊤ ∧ (p ⇒ □ ◯ p ∨ ◯ p U ◯ q)
+   =   ⟨p ⇒ p ≡ ⊤⟩
+     □ (p ⇒ ◯ (p ∨ q)) ⇒ (p ⇒ p) ∧ (p ⇒ □ ◯ p ∨ (◯ p U ◯ q))
+   =   ⟨p ⇒ q ≡ ¬p ∨ q, ∨ distributes over ∧⟩
+     □ (p ⇒ ◯ (p ∨ q)) ⇒ (p ⇒ p ∧ (□ ◯ p ∨ ◯ p U ◯ q))
+   =   ⟨∧ distributes over ∨⟩
+     □ (p ⇒ ◯ (p ∨ q)) ⇒ (p ⇒ (p ∧ □ ◯ p) ∨ (p ∧ ◯ p U ◯ q))
+   =>  ⟨p ⇒ p ∨ q, with p := p ∧ b, q := q⟩
+     □ (p ⇒ ◯ (p ∨ q)) ⇒ (p ⇒ ((p ∧ □ ◯ p) ∨ q) ∨ (p ∧ ◯ p U ◯ q))
+   =   ⟨commutativity of ∨⟩
+     □ (p ⇒ ◯ (p ∨ q)) ⇒ (p ⇒ (q ∨ (p ∧ □ ◯ p)) ∨ (p ∧ ◯ p U ◯ q))
+   =   ⟨(9) Axiom, Distributivity of ◯ over U⟩
+     □ (p ⇒ ◯ (p ∨ q)) ⇒ (p ⇒ (q ∨ (p ∧ □ ◯ p)) ∨ (p ∧ ◯ (p U q)))
+   =   ⟨(10) Axiom, Expansion of U⟩
+     □ (p ⇒ ◯ (p ∨ q)) ⇒ (p ⇒ (p ∧ □ ◯ p) ∨ (p U q))
+   =   ⟨(73) Exchange of ◯ and □⟩
+     □ (p ⇒ ◯ (p ∨ q)) ⇒ (p ⇒ (p ∧ ◯ □ p) ∨ (p U q))
+   =   ⟨(66) Expansion of □⟩
+     □ (p ⇒ ◯ (p ∨ q)) ⇒ (p ⇒ (□ p ∨ (p U q)))    ∎
+#+end_src
 :PROPERTIES:
 :ID:       A3ABA0D7-A3A9-48F9-88E7-F03BC60D6E1B
 :CREATED:  [2021-02-11 Thu 08:57]
+:END:
+
+** TODO Typeset the proof of (58) in LaTeX
+#+begin_src text
+(58) □ (◯ p ⇒ p) ⇒ (◇ p ⇒ p)
+
+ Proof:
+
+     true
+   =   ⟨(56) Axiom, U Induction, with p := ¬p, q := ⊥⟩
+     □ (¬p ⇒ ◯ (¬p ∨ ⊥)) ⇒ (¬p ⇒ □ ¬p ∨ (¬p U ⊥))
+   =   ⟨(11) Axiom, Right zero of U⟩
+     □ (¬p ⇒ ◯ (¬p ∨ ⊥)) ⇒ (¬p ⇒ □ ¬p ∨ ⊥)
+   =   ⟨p ∨ ⊥ ≡ p⟩
+     □ (¬p ⇒ ◯ ¬p) ⇒ (¬p ⇒ □ ¬p)
+   =   ⟨(3) Linearity⟩
+     □ (¬p ⇒ ¬(◯ ¬¬p)) ⇒ (¬p ⇒ □ ¬p)
+   =   ⟨¬¬p ≡ p, ¬p ⇒ q ≡ p ∨ q⟩
+     □ (p ∨ ¬ ◯ p) ⇒ p ∨ □ ¬p
+   =   ⟨commutativity of ∨, p ⇒ q ≡ ¬p ∨ q⟩
+     □ (◯ p ⇒ p) ⇒ □ ¬p ∨ p
+   =   ⟨(54) Definition of □⟩
+     □ (◯ p ⇒ p) ⇒ (¬◇ ¬¬p ∨ p)
+   =>  ⟨¬¬p ≡ p, p ⇒ q ≡ ¬p ∨ q⟩
+     □ (◯ p ⇒ p) ⇒ (◇ p ⇒ p)    ∎
+#+end_src
+:PROPERTIES:
+:ID:       51EF7EE2-09A1-41EC-92B6-DE8B12A7699D
+:CREATED:  [2021-02-11 Thu 10:43]
 :END:
 
 ** TODO Produce a CDS4LTL proof of (55)
