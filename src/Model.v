@@ -83,21 +83,8 @@ Notation "p ≈ q"  := (eqv p q)  (at level 90, no associativity) : boolean_scop
 Infix    "∧"       := and             (at level 80, right associativity) : boolean_scope.
 Notation "p ≡ q"   := (p ⇒ q ∧ q ⇒ p) (at level 89, right associativity, only parsing) : boolean_scope.
 
-Theorem impl_def (p q : t) : (p ⟹ q) <-> (⊤ ⟹ ¬ p ∨ q).
-Proof.
-  split; intros.
-  - rewrite <- H.
-    repeat intro.
-    pose proof (classic (In _ p x)).
-    destruct H1.
-    + now right.
-    + now left.
-  - repeat intro.
-    specialize (H x (Full_intro _ _)).
-    destruct H.
-    + contradiction.
-    + exact H.
-Qed.
+Theorem or_inj (p q : t) : p ⟹ p ∨ q.
+Proof. repeat intro; now left. Qed.
 
 Theorem true_def (p : t) : p ∨ ¬p ≈ ⊤.
 Proof.
