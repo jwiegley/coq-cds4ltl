@@ -1,3 +1,12 @@
+#+TITLE: Linear Temporal Logic in Coq
+
+This project is an implementation in Coq of an axiomatic system for linear
+temporal logic as described in: [[https://dl.acm.org/doi/10.1145/3387109][A Calculational Deductive System for Linear
+Temporal Logic]], ACM Computing Surveys, Vol. 53, No. 3, June 2020.
+
+With many thanks to Professor Stan Warford and Dr. Scott Staley for answering
+all my questions and offering their support and encouragement.
+
 * Work list
 
 ** TODO Typeset the proof of (56) in LaTeX
