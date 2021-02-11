@@ -227,6 +227,12 @@ Proof.
   now rewrite true_or.
 Qed.
 
+Theorem and_proj_r (p q : t) : q ∧ p ⟹ p.
+Proof.
+  rewrite and_comm.
+  now apply and_proj.
+Qed.
+
 Ltac boolean :=
   repeat match goal with
     | [ |- context G [¬ ⊤] ] => rewrite not_true
@@ -414,5 +420,26 @@ Qed.
 
 Theorem impl_refl (p : t) : p ⇒ p ≈ ⊤.
 Proof. now boolean. Qed.
+
+Lemma or_respects  (p q r s : t) : (p ⇒ r) ∧ (q ⇒ s) ⟹ (p ∨ q ⇒ r ∨ s).
+Proof.
+  rewrite or_impl.
+  rewrite <- (or_inj r) at 1.
+  rewrite (or_comm r s).
+  rewrite <- (or_inj s).
+  reflexivity.
+Qed.
+
+Lemma and_respects  (p q r s : t) : (p ⇒ r) ∧ (q ⇒ s) ⟹ (p ∧ q ⇒ r ∧ s).
+Proof.
+  rewrite or_and_or.
+  rewrite (and_def p q).
+  rewrite not_not.
+  rewrite <- !or_assoc.
+  rewrite (and_comm r s).
+  apply or_respects_impl; [|reflexivity].
+  rewrite <- and_or.
+  now rewrite !and_proj.
+Qed.
 
 End BooleanLogicFacts.

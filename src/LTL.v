@@ -50,21 +50,6 @@ Program Instance wait_respects_eqv : Proper (eqv ==> eqv ==> eqv) wait.
 Program Instance release_respects_eqv : Proper (eqv ==> eqv ==> eqv) release.
 Program Instance strong_release_respects_eqv : Proper (eqv ==> eqv ==> eqv) strong_release.
 
-Lemma (* 55 *) always_until_and_ind_2 : forall (p q r : t),
-  □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r.
-Proof.
-  intros.
-  rewrite !always_def.
-  apply contrapositive.
-  rewrite !not_or.
-  rewrite !not_not.
-  rewrite !evn_def.
-  rewrite not_and.
-  rewrite (and_comm p (and _ (¬r))).
-  rewrite and_assoc.
-  rewrite not_until.
-Abort.
-
 (*** 3.3 Eventually ◇ *)
 
 (**
@@ -227,6 +212,83 @@ Qed.
 (80) ◯ generalization: □ p ⇒ □ ◯ p
 (81) □ p ⇒ ¬(q U ¬p)
 *)
+
+Lemma until_impl : forall p q r : t, (p ⇒ r) ∧ (q ⇒ r) ⟹ (p U q ⇒ r).
+Proof.
+  intros.
+  rewrite or_respects.
+  rewrite until_28.
+  now rewrite or_idem.
+Qed.
+
+(** Metatheorem U : If P ⇒ R is a theorem and Q ⇒ S is a theorem then
+      P U Q ⇒ R U S
+    is a theorem. *)
+Lemma until_respects (p q r s : t) : (p ⇒ r) ∧ (q ⇒ s) ⟹ (p U q ⇒ r U s).
+Proof.
+Admitted.
+
+Lemma always_respects (p q r s : t) : (q ⇒ s) ⟹ (¬(⊤ U ¬q) ⇒ ¬(⊤ U ¬s)).
+Proof.
+Abort.
+
+Lemma eventually_respects (p q r s : t) : (q ⇒ s) ⟹ (⊤ U q ⇒ ⊤ U s).
+Proof.
+Abort.
+
+Theorem (* 55 *) always_until_and_ind : forall (p q r : t),
+  □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r.
+Proof.
+  intros.
+  rewrite !always_def.
+  apply contrapositive.
+  rewrite !not_or.
+  rewrite !not_not.
+  rewrite !evn_def.
+  rewrite not_until.
+  rewrite not_and.
+  rewrite (and_comm p (and _ (¬r))).
+  rewrite and_assoc.
+  rewrite and_or_r.
+  rewrite (* 12 *) until_left_or.
+  rewrite <- !and_assoc.
+  rewrite !(and_comm _ p).
+  rewrite or_comm.
+  rewrite <- or_inj.
+  apply impl_def; intros.
+  rewrite not_and.
+  rewrite and_def.
+  rewrite !not_not.
+  rewrite not_or.
+  rewrite (* AXIOM *) <- not_until.
+  rewrite or_assoc.
+  rewrite not_and.
+  rewrite not_not.
+  rewrite or_comm.
+  rewrite or_assoc.
+  rewrite (or_comm (not _)).
+  rewrite or_assoc.
+  rewrite <- (or_assoc _ _ (¬p)).
+  rewrite <- (until_respects ⊤ (¬q) ⊤ (p ∧ ¬ q ∧ ¬ r)).
+  boolean.
+  rewrite !or_assoc.
+  rewrite <- (or_assoc _ _ (¬p)).
+  rewrite or_and.
+  rewrite or_and.
+  boolean.
+  rewrite <- or_and.
+  rewrite or_assoc.
+  rewrite or_and_r.
+  boolean.
+  rewrite (or_comm _ (¬p)).
+  rewrite <- !or_assoc.
+  rewrite or_comm.
+  apply and_impl_iff.
+  boolean.
+  rewrite <- or_inj.
+  rewrite <- or_inj.
+  now apply (* 29 *) until_insertion.
+Qed.
 
 Theorem (* 73 *) law_73 (p : t) : ◯ □ p ≈ □ ◯ p.
 Proof.
@@ -2201,7 +2263,7 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* NEW *) always_not_until_left (p q : t) : □ ¬p ∧ p U q ⟹ q.
+Lemma (* NEW *) not_always_until (p q : t) : □ ¬p ∧ p U q ⟹ q.
 Proof.
   rewrite always_def.
   rewrite not_not.
@@ -2212,6 +2274,13 @@ Proof.
   rewrite until_28.
   rewrite <- until_30.
   now boolean.
+Qed.
+
+Lemma (* NEW *) always_until_left (p q : t) : □ p U q ⟹ p U q ∨ □ ¬q.
+Proof.
+  rewrite <- or_inj.
+  apply until_respects_impl; [|reflexivity].
+  now apply law_76.
 Qed.
 
 Theorem (* 236 *) law_236 (p q : t) : ¬□ p ∧ p W q ⟹ ◇ q.

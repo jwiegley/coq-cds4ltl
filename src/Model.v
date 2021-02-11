@@ -83,19 +83,7 @@ Notation "p ≈ q"  := (eqv p q)  (at level 90, no associativity) : boolean_scop
 Infix    "∧"       := and             (at level 80, right associativity) : boolean_scope.
 Notation "p ≡ q"   := (p ⇒ q ∧ q ⇒ p) (at level 89, right associativity, only parsing) : boolean_scope.
 
-Theorem or_inj (p q : t) : p ⟹ p ∨ q.
-Proof. repeat intro; now left. Qed.
-
-Axiom truth_irrelevance : forall p, Inhabited (Stream a) p -> (⊤ ⟹ p).
-
-Lemma truth_is_truth : forall p, (⊤ ⟹ p) -> p ≈ ⊤.
-Proof.
-  intros.
-  split; [constructor|].
-  apply H.
-Qed.
-
-Theorem impl_denote (p q : t) : (p ⟹ q) <-> (⊤ ⟹ ¬ p ∨ q).
+Theorem impl_def (p q : t) : (p ⟹ q) <-> (⊤ ⟹ ¬ p ∨ q).
 Proof.
   split; intros.
   - rewrite <- H.
@@ -109,16 +97,6 @@ Proof.
     destruct H.
     + contradiction.
     + exact H.
-Qed.
-
-Theorem impl_denote (p q : t) : (p ⟹ q) <-> ((⊤ ⟹ p) -> (⊤ ⟹ q)).
-Proof.
-  split; intros.
-  - now rewrite <- H, <- H0.
-  - repeat intro.
-    apply H; [|constructor].
-    apply truth_irrelevance.
-    now exists x.
 Qed.
 
 Theorem true_def (p : t) : p ∨ ¬p ≈ ⊤.
