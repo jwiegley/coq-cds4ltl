@@ -87,10 +87,22 @@ all my questions and offering their support and encouragement.
 :CREATED:  [2021-02-11 Thu 10:50]
 :END:
 
+** TODO Prove monotonicity properties of the modal operators
+:PROPERTIES:
+:ID:       6478060E-DEFE-4F03-BD26-2DA3CF3EEA4A
+:CREATED:  [2021-02-11 Thu 08:59]
+:END:
+
 ** TODO Produce a CDS4LTL proof of (55)
 :PROPERTIES:
 :ID:       6F57D36C-AE95-4AB6-8843-6A338055DBC3
 :CREATED:  [2021-02-11 Thu 08:52]
+:END:
+
+** TODO Find an appropriate statement of (82)
+:PROPERTIES:
+:ID:       5D6FD9DA-0C74-424A-B6A0-6F10CB85D13E
+:CREATED:  [2021-02-11 Thu 11:30]
 :END:
 
 ** TODO Is =Proper (impl ==> impl) eventually= a valid statement?
@@ -143,12 +155,6 @@ This may be found in Model.v
 :PROPERTIES:
 :ID:       2540261A-82CE-4CD2-838C-32847BC3BD4B
 :CREATED:  [2021-02-11 Thu 08:58]
-:END:
-
-** TODO Prove monotonicity properties of the modal operators
-:PROPERTIES:
-:ID:       6478060E-DEFE-4F03-BD26-2DA3CF3EEA4A
-:CREATED:  [2021-02-11 Thu 08:59]
 :END:
 
 ** TODO Rebuild the syntactic, Mealy-machine based evaluation model
