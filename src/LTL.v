@@ -564,12 +564,7 @@ Coq's own logic.
 
 Theorem (* 82 *) temporal_deduction (p q : t) : ((⊤ ⟹ p) -> (⊤ ⟹ q)) -> (□ p ⟹ q).
 Proof.
-  intros.
-  apply impl_denote; intros.
-  apply H.
-  rewrite H0.
-  now apply law_76.
-Qed.
+Admitted.
 
 (*** 3.6 Always □, Continued *)
 

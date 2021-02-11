@@ -42,8 +42,8 @@ Notation "⊥"      := false      (at level 0, no associativity) : boolean_scope
 Notation "p ⟹ q" := (impl p q) (at level 99, right associativity) : boolean_scope.
 Notation "p ≈ q"  := (eqv p q)  (at level 90, no associativity) : boolean_scope.
 
-(** These axioms establish the definition of the syntactic terms. *)
-Axiom impl_def : forall (p q : t), (p ⟹ q) <-> (⊤ ⟹ p ⇒ q).
+(** These axioms establish the meaning of the syntactic terms. *)
+Axiom or_inj : forall (p q : t), p ⟹ p ∨ q.
 Axiom true_def  : forall (p : t), p ∨ ¬p ≈ ⊤.
 Axiom false_def : forall (p : t), ¬(p ∨ ¬p) ≈ ⊥.
 
@@ -267,6 +267,25 @@ Proof.
     now rewrite !not_not in H.
 Qed.
 
+(** Either this or or_inj must be taken as axioms to give insight into ⟹ *)
+Theorem impl_def : forall (p q : t), (p ⟹ q) <-> (⊤ ⟹ p ⇒ q).
+Proof.
+  split; intros.
+  - rewrite <- H.
+    rewrite or_comm.
+    rewrite true_def.
+    reflexivity.
+  - rewrite <- (huntington p q).
+    rewrite <- H.
+    rewrite not_true.
+    rewrite or_false.
+    apply contrapositive.
+    rewrite not_not.
+    rewrite or_comm.
+    now apply or_inj.
+Qed.
+
+(*
 Theorem or_inj (p q : t) : p ⟹ p ∨ q.
 Proof.
   apply impl_def.
@@ -276,6 +295,7 @@ Proof.
   rewrite true_or.
   reflexivity.
 Qed.
+*)
 
 Theorem or_inj_r (p q : t) : p ⟹ q ∨ p.
 Proof.
