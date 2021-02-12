@@ -554,9 +554,21 @@ This follows from the axiom impl_denote, which denotes implication (⟹) in
 Coq's own logic.
  *)
 
-Theorem (* 82 *) temporal_deduction (p q : t) : ((⊤ ⟹ p) -> (⊤ ⟹ q)) -> (□ p ⟹ q).
+Theorem (* 82 *) temporal_deduction (p q : t) :
+  (exists x, (x ⟹ p) -> (x ⟹ q)) -> (□ p ⟹ q).
 Proof.
+  intros.
+  destruct H.
+  rewrite <- H.
 Admitted.
+(*   destruct H. *)
+(*   - rewrite <- H0. *)
+(*     + now apply impl_true. *)
+(*     + now rewrite H. *)
+(*   - rewrite H. *)
+(*     rewrite law_65. *)
+(*     now apply false_impl. *)
+(* Qed. *)
 
 (*** 3.6 Always □, Continued *)
 
@@ -1107,6 +1119,17 @@ Proof.
     now apply law_76.
 Qed.
 
+Corollary law_136b (p q : t) : (p ⟹ q) <-> (⊤ ⟹ □ (p ⇒ q)).
+Proof.
+  split; intros.
+  - apply (proj1 (law_136 _)).
+    apply and_impl_iff.
+    now boolean.
+  - apply law_136 in H.
+    apply and_impl_iff in H.
+    now rewrite true_and in H.
+Qed.
+
 Theorem until_metatheorem (p q r s : t) : (p ⟹ q) -> (r ⟹ s) -> (p U r ⟹ q U s).
 Proof.
   intros.
@@ -1504,7 +1527,7 @@ Proof.
     rewrite <- law_99.
     apply impl_def.
     rewrite <- law_120.
-    apply (proj1 (law_136 _ _)).
+    apply (proj1 (law_136b _ _)).
     apply and_impl_iff.
     rewrite not_and.
     rewrite !not_not.
@@ -1528,7 +1551,7 @@ Proof.
   assert (G : □ (□ p ∨ □ q) ⟹ □ r).
     apply impl_def.
     rewrite <- law_120.
-    apply (proj1 (law_136 _ _)).
+    apply (proj1 (law_136b _ _)).
     rewrite A.
     rewrite <- or_assoc.
     now rewrite <- (or_inj _ (p ∧ q)).

@@ -11,6 +11,8 @@ Module Type MinimalBooleanLogic.
 
 Parameter t : Type.             (* The type of boolean propositions *)
 
+Parameter truth : t -> Prop.
+
 (** The following three parameters are fundamental to this development. *)
 Parameter not : t -> t.
 Parameter or : t -> t -> t.
@@ -18,16 +20,10 @@ Parameter or : t -> t -> t.
 (** The next three parameters are syntactic terms whose defined may be
     expressed in terms of the fundamentals above. They are allowed here as
     parameters so module authors may chose more economical definitions. *)
-Parameter impl : t -> t -> Prop.
+Parameter impl : t -> t -> t.
+Parameter eqv : t -> t -> t.
 Parameter true : t.
 Parameter false : t.
-
-Declare Instance impl_reflexive : Reflexive impl.
-Declare Instance impl_transitive : Transitive impl.
-Declare Instance not_respects_impl : Proper (impl --> impl) not | 1.
-Declare Instance or_respects_impl : Proper (impl ==> impl ==> impl) or.
-
-Definition eqv  (x y : t) : Prop := impl x y /\ impl y x.
 
 Declare Scope boolean_scope.
 Bind Scope boolean_scope with t.
@@ -36,16 +32,36 @@ Open Scope boolean_scope.
 
 Notation "¬ p"    := (not p)    (at level 75, right associativity) : boolean_scope.
 Infix    "∨"      := or         (at level 85, right associativity) : boolean_scope.
-Notation "p ⇒ q"  := (¬ p ∨ q)  (at level 86, right associativity) : boolean_scope.
+Infix    "⇒"      := impl       (at level 86, right associativity) : boolean_scope.
+Infix    "≡"      := eqv        (at level 86, right associativity) : boolean_scope.
 Notation "⊤"      := true       (at level 0, no associativity) : boolean_scope.
 Notation "⊥"      := false      (at level 0, no associativity) : boolean_scope.
-Notation "p ⟹ q" := (impl p q) (at level 99, right associativity) : boolean_scope.
-Notation "p ≈ q"  := (eqv p q)  (at level 90, no associativity) : boolean_scope.
+
+Definition implies    (x y : t) : Prop := truth (impl x y).
+Definition equivalent (x y : t) : Prop := implies x y /\ implies y x.
+
+Declare Instance implies_reflexive : Reflexive implies.
+Declare Instance implies_transitive : Transitive implies.
+
+Declare Instance truth_respects_implies : Proper (implies ==> Basics.impl) truth.
+Declare Instance truth_respects_flip_implies : Proper (implies --> Basics.impl) truth.
+Declare Instance truth_respects_equivalent : Proper (equivalent ==> iff) truth.
+
+Declare Instance not_respects_implies : Proper (implies --> implies) not | 1.
+Declare Instance or_respects_implies : Proper (implies ==> implies ==> implies) or.
+
+Infix "⟹" := implies    (at level 99, right associativity) : boolean_scope.
+Infix "≈"  := equivalent (at level 90, no associativity) : boolean_scope.
 
 (** These axioms establish the meaning of the syntactic terms. *)
-Axiom or_inj : forall (p q : t), p ⟹ p ∨ q.
-Axiom true_def  : forall (p : t), p ∨ ¬p ≈ ⊤.
-Axiom false_def : forall (p : t), ¬(p ∨ ¬p) ≈ ⊥.
+Axiom impl_def  : forall (p q : t), p ⇒ q ≈ ¬p ∨ q.
+Axiom eqv_def   : forall (p q : t), p ≡ q ≈ ¬(¬(p ⇒ q) ∨ ¬(q ⇒ p)).
+Axiom true_def  : forall (p : t),   p ∨ ¬p ≈ ⊤.
+Axiom false_def : forall (p : t),   ¬(p ∨ ¬p) ≈ ⊥.
+
+(** Clasically [truth p <-> p ≈ ⊤], but constructively this is not the case! *)
+Axiom truth_true : truth ⊤.
+Axiom not_truth_false : truth ⊥.
 
 (** This is one set of fundamental axioms of boolean algebra.
  *
@@ -69,9 +85,9 @@ Module MinimalBooleanLogicFacts (B : MinimalBooleanLogic).
 
 Import B.
 
-Program Instance eqv_equivalence : Equivalence eqv.
+Program Instance eqv_equivalence : Equivalence equivalent.
 Next Obligation.
-  intro x; now split.
+  now intro x; split.
 Qed.
 Next Obligation.
   repeat intro; split; destruct H; now intuition.
@@ -80,18 +96,76 @@ Next Obligation.
   repeat intro; split; destruct H, H0; now transitivity y.
 Qed.
 
-Program Instance impl_respects_impl : Proper (impl --> impl ==> Basics.impl) impl.
+Program Instance implies_respects_implies :
+  Proper (implies --> implies ==> Basics.impl) implies.
 Next Obligation.
   repeat intro.
   unfold Basics.flip in H.
   now rewrite <- H0, <- H1.
 Qed.
 
-Program Instance impl_respects_eqv : Proper (eqv ==> eqv ==> Basics.impl) impl.
+Program Instance implies_respects_flip_implies :
+  Proper (implies ==> implies --> Basics.flip Basics.impl) implies.
+Next Obligation.
+  repeat intro.
+  unfold Basics.flip in H.
+  now rewrite H, H1.
+Qed.
+
+Program Instance implies_respects_equivalent :
+  Proper (equivalent ==> equivalent ==> Basics.impl) implies.
 Next Obligation.
   repeat intro.
   destruct H, H0.
   now rewrite <- H0, <- H1, <- H2.
+Qed.
+
+Program Instance not_respects_eqv : Proper (equivalent ==> equivalent) not.
+Next Obligation.
+  repeat intro.
+  destruct H.
+  split; intros.
+  - now rewrite H0.
+  - now rewrite H.
+Qed.
+
+Program Instance or_respects_eqv : Proper (equivalent ==> equivalent ==> equivalent) or.
+Next Obligation.
+  repeat intro.
+  destruct H, H0.
+  split.
+  - now rewrite H, H0.
+  - now rewrite H1, H2.
+Qed.
+
+Program Instance impl_respects_implies : Proper (implies ==> implies ==> implies) impl.
+Next Obligation.
+  repeat intro.
+  unfold implies.
+  rewrite !impl_def.
+  rewrite H, H0.
+  rewrite <- !impl_def.
+  reflexivity.
+Qed.
+
+Program Instance impl_respects_equivalent : Proper (equivalent ==> equivalent ==> equivalent) impl.
+Next Obligation.
+  repeat intro.
+  unfold implies.
+  rewrite !impl_def.
+  rewrite H, H0.
+  rewrite <- !impl_def.
+  reflexivity.
+Qed.
+
+Program Instance eqv_respects_equivalent : Proper (equivalent ==> equivalent ==> equivalent) eqv.
+Next Obligation.
+  repeat intro.
+  unfold implies.
+  rewrite !eqv_def.
+  rewrite H, H0.
+  rewrite <- !eqv_def.
+  reflexivity.
 Qed.
 
 Ltac one_arg :=
@@ -120,8 +194,8 @@ Ltac two_arg :=
 
 Obligation Tactic := solve [ one_arg | two_arg ].
 
-Program Instance not_respects_eqv : Proper (eqv ==> eqv) not.
-Program Instance or_respects_eqv : Proper (eqv ==> eqv ==> eqv) or.
+(* Program Instance not_respects_eqv : Proper (eqv ==> eqv) not. *)
+(* Program Instance or_respects_eqv : Proper (eqv ==> eqv ==> eqv) or. *)
 
 (** Many of the following proofs are based on work from:
     "A Complete Proof of the Robbins Conjecture", by Allen L. Mann
@@ -263,19 +337,32 @@ Proof.
   split; intro.
   - rewrite H.
     reflexivity.
-  - apply not_respects_impl in H.
+  - apply not_respects_implies in H.
     now rewrite !not_not in H.
 Qed.
 
+Theorem or_inj (p q : t) : p ⟹ p ∨ q.
+Proof.
+  unfold implies.
+  rewrite impl_def.
+  rewrite <- or_assoc.
+  rewrite (or_comm _ p).
+  rewrite true_def.
+  rewrite true_or.
+  exact truth_true.
+Qed.
+
 (** Either this or or_inj must be taken as axioms to give insight into ⟹ *)
-Theorem impl_def : forall (p q : t), (p ⟹ q) <-> (⊤ ⟹ p ⇒ q).
+Theorem impl_implies : forall (p q : t), (p ⟹ q) <-> (⊤ ⟹ p ⇒ q).
 Proof.
   split; intros.
   - rewrite <- H.
+    rewrite impl_def.
     rewrite or_comm.
     rewrite true_def.
     reflexivity.
   - rewrite <- (huntington p q).
+    rewrite impl_def in H.
     rewrite <- H.
     rewrite not_true.
     rewrite or_false.
@@ -284,18 +371,6 @@ Proof.
     rewrite or_comm.
     now apply or_inj.
 Qed.
-
-(*
-Theorem or_inj (p q : t) : p ⟹ p ∨ q.
-Proof.
-  apply impl_def.
-  rewrite <- or_assoc.
-  rewrite (or_comm _ p).
-  rewrite true_def.
-  rewrite true_or.
-  reflexivity.
-Qed.
-*)
 
 Theorem or_inj_r (p q : t) : p ⟹ q ∨ p.
 Proof.
@@ -312,12 +387,6 @@ Proof.
   - now rewrite H.
 Qed.
 
-Theorem excluded_middle (p : t) : ⊤ ⟹ p ∨ ¬p.
-Proof.
-  apply true_impl.
-  now rewrite <- true_def.
-Qed.
-
 Theorem impl_true (p : t) : p ⟹ ⊤.
 Proof.
   rewrite <- (true_def p).
@@ -332,5 +401,11 @@ Proof.
   rewrite or_comm.
   now apply or_inj.
 Qed.
+
+Theorem deduction (p q : t) : (truth p -> truth q) -> (p ⟹ q).
+Proof.
+  intros.
+  unfold implies.
+  rewrite impl_def.
 
 End MinimalBooleanLogicFacts.
