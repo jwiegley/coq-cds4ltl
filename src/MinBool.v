@@ -2,7 +2,7 @@ Set Warnings "-local-declaration".
 
 Require Import
   Coq.Classes.Morphisms
-  Coq.Setoids.Setoid.
+  Coq.Logic.Classical.
 
 (***********************************************************************
  * This is a minimal Boolean Logic comprised of ∨, ¬ and three axioms. *)
@@ -13,13 +13,13 @@ Parameter t : Type.             (* The type of boolean propositions *)
 
 Parameter truth : t -> Prop.
 
-(** The following three parameters are fundamental to this development. *)
+(** The following are fundamental to a classical definition of this logic. *)
 Parameter not : t -> t.
 Parameter or : t -> t -> t.
 
-(** The next three parameters are syntactic terms whose defined may be
-    expressed in terms of the fundamentals above. They are allowed here as
-    parameters so module authors may chose more economical definitions. *)
+(** The next four terms are purely syntactic and may be defined in terms of
+    the fundamentals above. They are given as parameters so that module
+    authors may chose economical definitions. *)
 Parameter impl : t -> t -> t.
 Parameter eqv : t -> t -> t.
 Parameter true : t.
@@ -30,15 +30,15 @@ Bind Scope boolean_scope with t.
 Delimit Scope boolean_scope with boolean.
 Open Scope boolean_scope.
 
-Notation "¬ p"    := (not p)    (at level 75, right associativity) : boolean_scope.
-Infix    "∨"      := or         (at level 85, right associativity) : boolean_scope.
-Infix    "⇒"      := impl       (at level 86, right associativity) : boolean_scope.
-Infix    "≡"      := eqv        (at level 86, right associativity) : boolean_scope.
-Notation "⊤"      := true       (at level 0, no associativity) : boolean_scope.
-Notation "⊥"      := false      (at level 0, no associativity) : boolean_scope.
+Notation "¬ p" := (not p) (at level 75, right associativity) : boolean_scope.
+Infix    "∨"   := or      (at level 85, right associativity) : boolean_scope.
+Infix    "⇒"   := impl    (at level 86, right associativity) : boolean_scope.
+Infix    "≡"   := eqv     (at level 86, right associativity) : boolean_scope.
+Notation "⊤"   := true    (at level 0, no associativity) : boolean_scope.
+Notation "⊥"   := false   (at level 0, no associativity) : boolean_scope.
 
-Definition implies    (x y : t) : Prop := truth (impl x y).
-Definition equivalent (x y : t) : Prop := implies x y /\ implies y x.
+Definition implies    x y := truth (impl x y).
+Definition equivalent x y := implies x y /\ implies y x.
 
 Declare Instance implies_reflexive : Reflexive implies.
 Declare Instance implies_transitive : Transitive implies.
@@ -53,31 +53,32 @@ Declare Instance or_respects_implies : Proper (implies ==> implies ==> implies) 
 Infix "⟹" := implies    (at level 99, right associativity) : boolean_scope.
 Infix "≈"  := equivalent (at level 90, no associativity) : boolean_scope.
 
-(** These axioms establish the meaning of the syntactic terms. *)
-Axiom impl_def  : forall (p q : t), p ⇒ q ≈ ¬p ∨ q.
-Axiom eqv_def   : forall (p q : t), p ≡ q ≈ ¬(¬(p ⇒ q) ∨ ¬(q ⇒ p)).
-Axiom true_def  : forall (p : t),   p ∨ ¬p ≈ ⊤.
-Axiom false_def : forall (p : t),   ¬(p ∨ ¬p) ≈ ⊥.
-
-(** Clasically [truth p <-> p ≈ ⊤], but constructively this is not the case! *)
-Axiom truth_true : truth ⊤.
-Axiom not_truth_false : truth ⊥.
-
 (** This is one set of fundamental axioms of boolean algebra.
  *
  * NOTE: It is possible to formulate the following using a single axiom:
  *
- *   forall (p q r s : t),
+ *   forall p q r s,
  *     ¬(¬(¬(p ∨ q) ∨ r) ∨ ¬(p ∨ ¬(¬r ∨ ¬(r ∨ s)))) ≈ r
  *
  * However, the proofs of the three axioms below in terms of this single one
  * are laborious and left as an exercise to the motivated reader. Further
  * notes may be found in the paper "Short Single Axioms for Boolean Algebra"
- * by McCune, et al.
- *)
-Axiom or_comm    : forall (p q : t),   p ∨ q ≈ q ∨ p.
-Axiom or_assoc   : forall (p q r : t), (p ∨ q) ∨ r ≈ p ∨ (q ∨ r).
-Axiom huntington : forall (p q : t),   ¬(¬p ∨ ¬q) ∨ ¬(¬p ∨ q) ≈ p.
+ * by McCune, et al. *)
+Axiom or_comm      : forall p q,   p ∨ q ≈ q ∨ p.
+Axiom or_assoc     : forall p q r, (p ∨ q) ∨ r ≈ p ∨ (q ∨ r).
+Axiom huntington   : forall p q,   ¬(¬p ∨ ¬q) ∨ ¬(¬p ∨ q) ≈ p.
+
+(** These axioms establish the meaning of the syntactic terms. *)
+Axiom impl_def     : forall p q,   p ⇒ q ≈ ¬p ∨ q.
+Axiom eqv_def      : forall p q,   p ≡ q ≈ ¬(¬(p ⇒ q) ∨ ¬(q ⇒ p)).
+Axiom true_def     : forall p,     p ∨ ¬p ≈ ⊤.
+Axiom false_def    : forall p,     ¬(p ∨ ¬p) ≈ ⊥.
+
+(** Denoting the basic terms into Coq's logic allows meta-theorems to be
+    proven. *)
+Axiom truth_denote :               truth ⊤.
+Axiom not_denote   : forall p,     truth (¬p) <-> ~ truth p.
+Axiom or_denote    : forall p q,   truth (p ∨ q) <-> truth p \/ truth q.
 
 End MinimalBooleanLogic.
 
@@ -86,15 +87,9 @@ Module MinimalBooleanLogicFacts (B : MinimalBooleanLogic).
 Import B.
 
 Program Instance eqv_equivalence : Equivalence equivalent.
-Next Obligation.
-  now intro x; split.
-Qed.
-Next Obligation.
-  repeat intro; split; destruct H; now intuition.
-Qed.
-Next Obligation.
-  repeat intro; split; destruct H, H0; now transitivity y.
-Qed.
+Next Obligation. now intro x; split. Qed.
+Next Obligation. repeat intro; split; destruct H; now intuition. Qed.
+Next Obligation. repeat intro; split; destruct H, H0; now transitivity y. Qed.
 
 Program Instance implies_respects_implies :
   Proper (implies --> implies ==> Basics.impl) implies.
@@ -129,7 +124,8 @@ Next Obligation.
   - now rewrite H.
 Qed.
 
-Program Instance or_respects_eqv : Proper (equivalent ==> equivalent ==> equivalent) or.
+Program Instance or_respects_eqv :
+  Proper (equivalent ==> equivalent ==> equivalent) or.
 Next Obligation.
   repeat intro.
   destruct H, H0.
@@ -138,7 +134,8 @@ Next Obligation.
   - now rewrite H1, H2.
 Qed.
 
-Program Instance impl_respects_implies : Proper (implies ==> implies ==> implies) impl.
+Program Instance impl_respects_implies :
+  Proper (implies ==> implies ==> implies) impl.
 Next Obligation.
   repeat intro.
   unfold implies.
@@ -148,7 +145,8 @@ Next Obligation.
   reflexivity.
 Qed.
 
-Program Instance impl_respects_equivalent : Proper (equivalent ==> equivalent ==> equivalent) impl.
+Program Instance impl_respects_equivalent :
+  Proper (equivalent ==> equivalent ==> equivalent) impl.
 Next Obligation.
   repeat intro.
   unfold implies.
@@ -158,7 +156,8 @@ Next Obligation.
   reflexivity.
 Qed.
 
-Program Instance eqv_respects_equivalent : Proper (equivalent ==> equivalent ==> equivalent) eqv.
+Program Instance eqv_respects_equivalent :
+  Proper (equivalent ==> equivalent ==> equivalent) eqv.
 Next Obligation.
   repeat intro.
   unfold implies.
@@ -194,13 +193,10 @@ Ltac two_arg :=
 
 Obligation Tactic := solve [ one_arg | two_arg ].
 
-(* Program Instance not_respects_eqv : Proper (eqv ==> eqv) not. *)
-(* Program Instance or_respects_eqv : Proper (eqv ==> eqv ==> eqv) or. *)
-
 (** Many of the following proofs are based on work from:
     "A Complete Proof of the Robbins Conjecture", by Allen L. Mann
     May 25, 2003 *)
-Theorem or_not (p : t) : p ∨ ¬p ≈ ¬p ∨ ¬¬p.
+Theorem or_not p : p ∨ ¬p ≈ ¬p ∨ ¬¬p.
 Proof.
   pose proof (huntington p (¬¬ p)) as H1.
   pose proof (huntington (¬ p) (¬¬ p)) as H2.
@@ -225,7 +221,7 @@ Proof.
   now rewrite or_comm.
 Qed.
 
-Theorem not_not (p : t) : ¬¬p ≈ p.
+Theorem not_not p : ¬¬p ≈ p.
 Proof.
   pose proof (huntington (¬¬ p) (¬ p)) as H1.
   pose proof (huntington p (¬¬ p)) as H2.
@@ -236,7 +232,7 @@ Proof.
   now apply huntington.
 Qed.
 
-Theorem not_swap (p q : t) : ¬p ≈ q <-> p ≈ ¬q.
+Theorem not_swap p q : ¬p ≈ q <-> p ≈ ¬q.
 Proof.
   split; intro.
   - rewrite <- not_not.
@@ -245,7 +241,7 @@ Proof.
     now apply not_not.
 Qed.
 
-Theorem not_inj (p q : t) : ¬p ≈ ¬q -> p ≈ q.
+Theorem not_inj p q : ¬p ≈ ¬q -> p ≈ q.
 Proof.
   intro.
   rewrite <- (not_not p).
@@ -262,7 +258,7 @@ Proof.
   now apply not_not.
 Qed.
 
-Theorem or_false (p : t) : p ∨ ⊥ ≈ p.
+Theorem or_false p : p ∨ ⊥ ≈ p.
 Proof.
   pose proof (huntington ⊥ ⊥) as H1.
   rewrite (or_comm _ ⊥) in H1.
@@ -296,10 +292,10 @@ Proof.
   now rewrite huntington.
 Qed.
 
-Theorem false_or (p : t) : ⊥ ∨ p ≈ p.
+Theorem false_or p : ⊥ ∨ p ≈ p.
 Proof. now rewrite or_comm; apply or_false. Qed.
 
-Theorem or_idem (p : t) : p ∨ p ≈ p.
+Theorem or_idem p : p ∨ p ≈ p.
 Proof.
   assert (H1 : forall q, ¬ (¬ q ∨ ¬ q) ≈ q).
     intro q.
@@ -313,7 +309,7 @@ Proof.
   exact H1.
 Qed.
 
-Theorem or_true (p : t) : p ∨ ⊤ ≈ ⊤.
+Theorem or_true p : p ∨ ⊤ ≈ ⊤.
 Proof.
   rewrite <- (true_def p) at 1.
   rewrite <- or_assoc.
@@ -321,10 +317,10 @@ Proof.
   now apply true_def.
 Qed.
 
-Theorem true_or (p : t) : ⊤ ∨ p ≈ ⊤.
+Theorem true_or p : ⊤ ∨ p ≈ ⊤.
 Proof. now rewrite or_comm; apply or_true. Qed.
 
-Theorem not_not_or_true (p : t) : ¬(¬p ∨ ¬⊤) ≈ p.
+Theorem not_not_or_true p : ¬(¬p ∨ ¬⊤) ≈ p.
 Proof.
   intros.
   rewrite not_true.
@@ -332,7 +328,7 @@ Proof.
   now apply not_not.
 Qed.
 
-Theorem contrapositive (p q : t) : (p ⟹ q) <-> (¬q ⟹ ¬p).
+Theorem contrapositive p q : (p ⟹ q) <-> (¬q ⟹ ¬p).
 Proof.
   split; intro.
   - rewrite H.
@@ -341,7 +337,7 @@ Proof.
     now rewrite !not_not in H.
 Qed.
 
-Theorem or_inj (p q : t) : p ⟹ p ∨ q.
+Theorem or_inj p q : p ⟹ p ∨ q.
 Proof.
   unfold implies.
   rewrite impl_def.
@@ -349,11 +345,11 @@ Proof.
   rewrite (or_comm _ p).
   rewrite true_def.
   rewrite true_or.
-  exact truth_true.
+  exact truth_denote.
 Qed.
 
 (** Either this or or_inj must be taken as axioms to give insight into ⟹ *)
-Theorem impl_implies : forall (p q : t), (p ⟹ q) <-> (⊤ ⟹ p ⇒ q).
+Theorem impl_implies : forall p q, (p ⟹ q) <-> (⊤ ⟹ p ⇒ q).
 Proof.
   split; intros.
   - rewrite <- H.
@@ -372,13 +368,13 @@ Proof.
     now apply or_inj.
 Qed.
 
-Theorem or_inj_r (p q : t) : p ⟹ q ∨ p.
+Theorem or_inj_r p q : p ⟹ q ∨ p.
 Proof.
   rewrite or_comm.
   now apply or_inj.
 Qed.
 
-Theorem true_impl (p : t) : (⊤ ⟹ p) <-> p ≈ ⊤.
+Theorem true_impl p : (⊤ ⟹ p) <-> p ≈ ⊤.
 Proof.
   split; intro.
   - split; auto.
@@ -387,13 +383,13 @@ Proof.
   - now rewrite H.
 Qed.
 
-Theorem impl_true (p : t) : p ⟹ ⊤.
+Theorem impl_true p : p ⟹ ⊤.
 Proof.
   rewrite <- (true_def p).
   now apply or_inj.
 Qed.
 
-Theorem false_impl (p : t) : ⊥ ⟹ p.
+Theorem false_impl p : ⊥ ⟹ p.
 Proof.
   rewrite <- (false_def p).
   apply contrapositive.
@@ -402,10 +398,18 @@ Proof.
   now apply or_inj.
 Qed.
 
-Theorem deduction (p q : t) : (truth p -> truth q) -> (p ⟹ q).
+(** This meta-theorem is only valid in classical logic. *)
+Theorem deduction p q : (truth p -> truth q) -> (p ⟹ q).
 Proof.
   intros.
   unfold implies.
   rewrite impl_def.
+  apply or_denote.
+  pose proof (classic (truth p)).
+  destruct H0.
+  - now intuition.
+  - left.
+    now apply not_denote.
+Qed.
 
 End MinimalBooleanLogicFacts.
