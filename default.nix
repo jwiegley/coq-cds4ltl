@@ -1,7 +1,7 @@
 args@{ packages ? "coqPackages_8_13"
 
-, rev      ? "693c7cd0f7e6ce6ff7c6210ac1857712dac4cad5"
-, sha256   ? "1b6mj8w36wbrzg62yabp14q1m70rp5af92f5fnq01xj0bfw5q5zi"
+, rev      ? "a58a0b5098f0c2a389ee70eb69422a052982d990"
+, sha256   ? "1dmnm6r67q75ql96hag851438ybqlx21vfn309ir3z6n08a2qsfs"
 
 , pkgs     ? import (builtins.fetchTarball {
     url = "https://github.com/NixOS/nixpkgs/archive/${rev}.tar.gz";

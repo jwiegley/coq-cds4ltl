@@ -16,10 +16,10 @@ Include MinimalBooleanLogic.
 
 Parameter and : t -> t -> t.
 
-Infix "∧" := and (at level 80, right associativity) : boolean_scope.
-
 Declare Instance and_respects_implies :
   Proper (implies ==> implies ==> implies) and.
+
+Infix "∧" := and (at level 80, right associativity) : boolean_scope.
 
 (** "and" is not fundamental and can be defined using "or". To allow for
     efficient choices of "and", we simply require that its behavior be
@@ -235,6 +235,7 @@ Ltac boolean :=
   repeat match goal with
     | [ |- context G [¬ ⊤] ] => rewrite not_true
     | [ |- context G [¬ ⊥] ] => rewrite not_false
+    | [ |- context G [?P ⇒ ?Q] ] => rewrite (impl_def P Q)
     | [ |- context G [¬¬ ?P] ] => rewrite (not_not P)
     | [ |- context G [?P ∧ ?P] ] => rewrite (and_idem P)
     | [ |- context G [?P ∨ ?P] ] => rewrite (or_idem P)
@@ -306,10 +307,12 @@ Proof.
   split; intro.
   - rewrite <- H; clear H.
     rewrite and_comm.
+    rewrite impl_def.
     rewrite or_and.
     now boolean.
   - rewrite H; clear H.
     rewrite and_comm.
+    rewrite impl_def.
     rewrite and_or.
     now boolean.
 Qed.
@@ -317,9 +320,10 @@ Qed.
 Theorem impl_trans p q r : (p ⇒ q) ∧ (q ⇒ r) ⟹ (p ⇒ r).
 Proof.
   apply and_impl_iff.
+  rewrite !impl_def.
   rewrite (or_comm _ (_ ∨ _)).
   rewrite or_assoc.
-  apply or_respects_impl; [reflexivity|].
+  apply or_respects_implies; [reflexivity|].
   rewrite or_comm.
   rewrite not_or.
   rewrite not_not.
@@ -334,7 +338,8 @@ Proof. now boolean. Qed.
 Theorem or_impl_iff p q r : (p ∨ q ⟹ r) <-> (p ⇒ r) ∧ (q ⇒ r) ≈ ⊤.
 Proof.
   split; intros.
-  - rewrite !(or_comm _ r).
+  - rewrite !impl_def.
+    rewrite !(or_comm _ r).
     rewrite <- or_and.
     rewrite and_def.
     rewrite !not_not.
@@ -342,13 +347,16 @@ Proof.
     + now apply impl_true.
     + rewrite <- H at 1.
       now rewrite true_def.
-  - rewrite !(or_comm _ r) in H.
+  - rewrite !impl_def in H.
+    rewrite !(or_comm _ r) in H.
     rewrite <- or_and in H.
     rewrite and_def in H.
     rewrite !not_not in H.
     rewrite or_comm in H.
-    apply impl_def.
-    now rewrite H.
+    destruct H.
+    apply impl_implies.
+    rewrite impl_def.
+    now rewrite H0.
 Qed.
 
 Theorem impl_iff p q : (p ⟹ q) <-> (p ⇒ q ≈ ⊤).
@@ -357,7 +365,7 @@ Proof.
   - apply true_impl.
     rewrite <- H.
     now boolean.
-  - apply impl_def.
+  - apply impl_implies.
     now rewrite <- H.
 Qed.
 
@@ -369,6 +377,7 @@ Qed.
 
 Theorem or_monotonicity p q r : (p ⇒ q) ⟹ (p ∨ r ⇒ q ∨ r).
 Proof.
+  rewrite !impl_def.
   rewrite not_or.
   rewrite <- or_assoc.
   rewrite !or_and_r.
@@ -385,11 +394,11 @@ Proof.
   rewrite and_or.
   rewrite !and_or_r.
   rewrite !or_assoc.
-  apply or_respects_eqv; [reflexivity|].
+  apply or_respects_equivalent; [reflexivity|].
   rewrite <- !or_assoc.
-  apply or_respects_eqv; [|now boolean].
+  apply or_respects_equivalent; [|now boolean].
   rewrite or_comm.
-  now apply or_respects_eqv; boolean.
+  now apply or_respects_equivalent; boolean.
 Qed.
 
 Theorem and_or_and p q r s :
@@ -398,11 +407,11 @@ Proof.
   rewrite or_and.
   rewrite !or_and_r.
   rewrite !and_assoc.
-  apply and_respects_eqv; [reflexivity|].
+  apply and_respects_equivalent; [reflexivity|].
   rewrite <- !and_assoc.
-  apply and_respects_eqv; [|now boolean].
+  apply and_respects_equivalent; [|now boolean].
   rewrite and_comm.
-  now apply and_respects_eqv; boolean.
+  now apply and_respects_equivalent; boolean.
 Qed.
 
 Theorem or_eqv_impl p q : (p ∨ q ≈ q) <-> (p ⟹ q).
@@ -432,6 +441,7 @@ Proof. now boolean. Qed.
 
 Lemma not_respects p q : (p ⇒ q) ⟹ ¬ q ⇒ ¬ p.
 Proof.
+  rewrite !impl_def.
   rewrite (or_comm _ (¬p)).
   now rewrite not_not.
 Qed.
@@ -459,12 +469,13 @@ Qed.
 
 Lemma and_respects  p q r s : (p ⇒ r) ∧ (q ⇒ s) ⟹ (p ∧ q ⇒ r ∧ s).
 Proof.
+  rewrite !impl_def.
   rewrite or_and_or.
   rewrite (and_def p q).
   rewrite not_not.
   rewrite <- !or_assoc.
   rewrite (and_comm r s).
-  apply or_respects_impl; [|reflexivity].
+  apply or_respects_implies; [|reflexivity].
   rewrite <- and_or.
   now rewrite !and_proj.
 Qed.
