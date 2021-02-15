@@ -19,10 +19,6 @@ Module Type MinimalLinearTemporalLogic <: BooleanLogic.
 
 Include BooleanLogic.
 
-Parameters s : Type.
-
-Parameter holds : s -> nat -> t -> Prop.
-
 Parameter next : t -> t.
 Parameter until : t -> t -> t.
 
@@ -32,27 +28,11 @@ Delimit Scope ltl_scope with ltl.
 Open Scope boolean_scope.
 Open Scope ltl_scope.
 
-Notation "[ σ , j ]  ⊨ p" := (holds σ j p) (at level 89, no associativity) : ltl_scope.
-Notation "◯ p"            := (next p)      (at level 75, right associativity) : ltl_scope.
-Notation "p 'U' q"        := (until p q)   (at level 79, right associativity) : ltl_scope.
-
-Definition t_implies    p q := forall σ j, holds σ j (impl p q).
-Definition t_equivalent p q := t_implies p q /\ t_implies q p.
-
-Declare Instance holds_respects_implies σ j :
-  Proper (implies ==> Basics.impl) (holds σ j).
-Declare Instance holds_respects_temporality σ j :
-  Proper ((fun p q => holds σ j (impl p q)) ==> Basics.impl) (holds σ j).
+Notation "◯ p"     := (next p)    (at level 75, right associativity) : ltl_scope.
+Notation "p 'U' q" := (until p q) (at level 79, right associativity) : ltl_scope.
 
 Declare Instance next_respects_implies : Proper (implies ==> implies) next.
 Declare Instance until_respects_implies : Proper (implies ==> implies ==> implies) until.
-
-Infix "⟹" := t_implies    (at level 99, right associativity) : ltl_scope.
-Infix "≈"  := t_equivalent (at level 90, no associativity) : ltl_scope.
-
-Axiom truth_holds : forall p, truth p <-> forall σ j, holds σ j p.
-
-Axiom next_semantics : forall σ j p, [σ, j] ⊨ ◯ p <-> [σ, j + 1] ⊨ p.
 
 Axiom (* 1 *)  next_not : forall p, ◯ ¬p ≈ ¬◯ p.
 Axiom (* 2 *)  next_impl : forall p q, ◯ (p ⇒ q) ≈ ◯ p ⇒ ◯ q.
@@ -70,7 +50,7 @@ Axiom (* 18 *) until_right_and_order : forall p q r, p U (q ∧ r) ⟹ (p U q) U
 
 (** jww (2021-02-08): This axiom is just an idea a work in progress *)
 (* Axiom (* NEW *) until_continue : forall p q, q ∧ p U ◯ ¬q ⟹ p U (q ∧ ◯ ¬q). *)
-Axiom (* NEW *) always_until : forall p q r, ¬(⊤ U ¬p) ∧ q U r ≈ (p ∧ q) U (p ∧ r).
+(* Axiom (* NEW *) always_until : forall p q r, ¬(⊤ U ¬p) ∧ q U r ≈ (p ∧ q) U (p ∧ r). *)
 Axiom (* NEW *) not_until    : forall p q, ⊤ U ¬p ∧ ¬(p U q) ≈ ¬q U (¬p ∧ ¬q).
 
 End MinimalLinearTemporalLogic.
@@ -81,274 +61,10 @@ Import L.
 Module Import BF := BooleanLogicFacts L.
 Module Import MBF := BF.MBF.
 
-Lemma t_impl p q : (p ⟹ q)%boolean <-> (p ⟹ q).
-Proof.
-  unfold t_implies.
-  split; intro H.
-  - apply truth_holds.
-    now apply H.
-  - apply truth_holds in H.
-    now apply H.
-Qed.
-
-Lemma t_eqv p q : (p ≈ q)%boolean <-> p ≈ q.
-Proof.
-  unfold t_equivalent.
-  split; intro H.
-  - destruct H.
-    split; now apply t_impl.
-  - destruct H.
-    split; now apply t_impl.
-Qed.
-
 Program Instance next_respects_equivalent :
   Proper (equivalent ==> equivalent) next.
 Program Instance until_respects_equivalent :
   Proper (equivalent ==> equivalent ==> equivalent) until.
-
-Local Obligation Tactic := program_simpl.
-
-Program Instance t_implies_reflexive : Reflexive t_implies.
-Next Obligation.
-  unfold t_implies; intros.
-  apply truth_holds.
-  reflexivity.
-Qed.
-
-Program Instance t_implies_transitive : Transitive t_implies.
-Next Obligation.
-  unfold t_implies in *; intros.
-  apply truth_holds in H.
-  apply truth_holds in H0.
-  apply truth_holds.
-  now transitivity y.
-Qed.
-
-Program Instance t_equivalent_Equivalence : Equivalence t_equivalent.
-Next Obligation. now intro x; split. Qed.
-Next Obligation. repeat intro; split; destruct H; now intuition. Qed.
-Next Obligation. repeat intro; split; destruct H, H0; now transitivity y. Qed.
-
-Arguments holds_respects_temporality {_ _ _ _} H.
-
-Program Instance holds_respects_t_implies σ j :
-  Proper (t_implies ==> Basics.impl) (holds σ j).
-Next Obligation.
-  repeat intro.
-  now apply (holds_respects_temporality (H σ j)).
-Qed.
-
-Program Instance holds_respects_equivalent σ j :
-  Proper (equivalent ==> iff) (holds σ j).
-Next Obligation.
-  repeat intro.
-  destruct H.
-  split; intro.
-  - unfold implies in H.
-    pose proof (proj1 (truth_holds _) H).
-    now apply (holds_respects_temporality (H2 σ j)).
-  - unfold implies in H0.
-    pose proof (proj1 (truth_holds _) H0).
-    now apply (holds_respects_temporality (H2 σ j)).
-Qed.
-
-Program Instance holds_respects_t_equivalent σ j :
-  Proper (t_equivalent ==> iff) (holds σ j).
-Next Obligation.
-  repeat intro.
-  destruct H.
-  split; intro.
-  - now rewrite <- H.
-  - now rewrite <- H0.
-Qed.
-
-Program Instance t_implies_respects_implies :
-  Proper (implies --> implies ==> Basics.impl) t_implies.
-Next Obligation.
-  repeat intro.
-  unfold Basics.flip in H.
-  apply truth_holds in H1.
-  revert j.
-  revert σ.
-  apply truth_holds.
-  now rewrite H, <- H0.
-Qed.
-
-Program Instance t_implies_respects_t_implies :
-  Proper (t_implies --> t_implies ==> Basics.impl) t_implies.
-Next Obligation.
-  repeat intro.
-  unfold Basics.flip in H.
-  apply truth_holds in H.
-  apply truth_holds in H0.
-  apply truth_holds in H1.
-  revert j.
-  revert σ.
-  apply truth_holds.
-  now rewrite H, <- H0.
-Qed.
-
-Program Instance t_implies_respects_equivalent :
-  Proper (equivalent ==> equivalent ==> iff) t_implies.
-Next Obligation.
-  repeat intro.
-  destruct H, H0.
-  split; intros.
-  - now rewrite H1, H3, H0.
-  - now rewrite <- H2, <- H3, <- H.
-Qed.
-
-Program Instance t_implies_respects_t_equivalent :
-  Proper (t_equivalent ==> t_equivalent ==> iff) t_implies.
-Next Obligation.
-  repeat intro.
-  destruct H, H0.
-  split; intros.
-  - now rewrite H1, H3, H0.
-  - now rewrite <- H2, <- H3, <- H.
-Qed.
-
-Program Instance t_equivalent_respects_equivalent :
-  Proper (equivalent ==> equivalent ==> iff) t_equivalent.
-Next Obligation.
-  repeat intro.
-  destruct H, H0.
-  split; intros.
-  - split; intros.
-    + destruct H3.
-      now rewrite H1, H3, H0.
-    + destruct H3.
-      now rewrite H2, H4, H.
-  - split; intros.
-    + destruct H3.
-      now rewrite H, H3, H2.
-    + destruct H3.
-      now rewrite H0, H4, H1.
-Qed.
-
-Program Instance t_equivalent_respects_t_equivalent :
-  Proper (t_equivalent ==> t_equivalent ==> iff) t_equivalent.
-Next Obligation.
-  repeat intro.
-  destruct H, H0.
-  split; intros.
-  - split; intros.
-    + destruct H3.
-      now rewrite H1, H3, H0.
-    + destruct H3.
-      now rewrite H2, H4, H.
-  - split; intros.
-    + destruct H3.
-      now rewrite H, H3, H2.
-    + destruct H3.
-      now rewrite H0, H4, H1.
-Qed.
-
-Program Instance impl_respects_t_implies :
-  Proper (t_implies --> t_implies ==> t_implies) impl.
-Next Obligation.
-  repeat intro.
-  apply truth_holds in H.
-  apply truth_holds in H0.
-  apply truth_holds.
-  rewrite <- H.
-  rewrite H0.
-  reflexivity.
-Qed.
-
-Program Instance impl_respects_t_equivalent :
-  Proper (t_equivalent ==> t_equivalent ==> t_equivalent) impl.
-Next Obligation.
-  repeat intro.
-  destruct H, H0.
-  split; intros.
-  + now rewrite <- H1, H0.
-  + now rewrite <- H, H2.
-Qed.
-
-Program Instance not_respects_t_implies : Proper (t_implies --> t_implies) not.
-Next Obligation.
-  repeat intro.
-  unfold flip in H.
-  apply truth_holds in H.
-  apply truth_holds.
-  now rewrite H.
-Qed.
-
-Program Instance not_respects_t_equivalent :
-  Proper (t_equivalent ==> t_equivalent) not.
-Next Obligation.
-  repeat intro.
-  destruct H.
-  split; intros.
-  - now rewrite H0.
-  - now rewrite H.
-Qed.
-
-Program Instance or_respects_t_implies :
-  Proper (t_implies ==> t_implies ==> t_implies) or.
-Next Obligation.
-  repeat intro.
-  apply truth_holds in H.
-  apply truth_holds in H0.
-  apply truth_holds.
-  now rewrite H, H0.
-Qed.
-
-Program Instance or_respects_t_equivalent :
-  Proper (t_equivalent ==> t_equivalent ==> t_equivalent) or.
-Next Obligation.
-  repeat intro.
-  destruct H, H0.
-  split; intros.
-  - now rewrite H, H0.
-  - now rewrite H1, H2.
-Qed.
-
-Program Instance and_respects_t_implies :
-  Proper (t_implies ==> t_implies ==> t_implies) and.
-Next Obligation.
-  repeat intro.
-  apply truth_holds in H.
-  apply truth_holds in H0.
-  apply truth_holds.
-  now rewrite H, H0.
-Qed.
-
-Program Instance and_respects_t_equivalent :
-  Proper (t_equivalent ==> t_equivalent ==> t_equivalent) and.
-Next Obligation.
-  repeat intro.
-  destruct H, H0.
-  split; intros.
-  - now rewrite H, H0.
-  - now rewrite H1, H2.
-Qed.
-
-Program Instance next_respects_t_implies :
-  Proper (t_implies ==> t_implies) next.
-Next Obligation.
-  repeat intro.
-  rewrite <- next_impl.
-  rewrite next_semantics.
-  now apply H.
-Qed.
-
-Program Instance next_respects_t_equivalent :
-  Proper (t_equivalent ==> t_equivalent) next.
-Next Obligation.
-  repeat intro.
-  destruct H.
-  split; intros.
-  - now rewrite <- H.
-  - now rewrite <- H0.
-Qed.
-
-Program Instance until_respects_t_implies :
-  Proper (t_implies ==> t_implies ==> t_implies) until.
-
-Program Instance until_respects_t_equivalent :
-  Proper (t_equivalent ==> t_equivalent ==> t_equivalent) until.
 
 (*** 3.1 Next ◯ *)
 
@@ -389,7 +105,8 @@ Proof.
   now rewrite <- !next_linearity.
 Qed.
 
-Notation "p ≡ q" := (¬(¬(p ⇒ q) ∨ ¬(p ⇒ q))) (at level 86, right associativity) : boolean_scope.
+Notation "p ≡ q" := (¬(¬(p ⇒ q) ∨ ¬(p ⇒ q)))
+  (at level 86, right associativity) : boolean_scope.
 
 Theorem (* 6 *) next_eqv p q : ◯ (p ≡ q) ≈ ◯ p ≡ ◯ q.
 Proof.
@@ -492,8 +209,10 @@ Qed.
 Theorem (* 24 *) until_24 p q r : (¬p U (q U r)) ∧ (p U r) ⟹ q U r.
 Proof.
   rewrite until_right_or_order.
+  rewrite <- impl_def.
   rewrite until_right_impl.
   rewrite and_comm.
+  rewrite impl_def.
   rewrite and_or.
   now boolean.
 Qed.
@@ -502,8 +221,10 @@ Theorem (* 25 *) until_25 p q r : (p U (¬q U r)) ∧ (q U r) ⟹ p U r.
 Proof.
   rewrite until_right_or_order.
   rewrite or_comm.
+  rewrite <- impl_def.
   rewrite until_right_impl.
   rewrite and_comm.
+  rewrite impl_def.
   rewrite and_or.
   now boolean.
 Qed.

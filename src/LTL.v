@@ -1,7 +1,9 @@
 Set Warnings "-local-declaration".
 
 Require Import
+  Coq.micromega.Lia
   Coq.Classes.Morphisms
+  Coq.Setoids.Setoid
   MinLTL.
 
 Module Type LinearTemporalLogic <: MinimalLinearTemporalLogic.
@@ -20,11 +22,16 @@ Notation "p 'W' q" := (wait p q)           (at level 79, right associativity) : 
 Notation "p 'R' q" := (release p q)        (at level 79, right associativity) : ltl_scope.
 Notation "p 'M' q" := (strong_release p q) (at level 79, right associativity) : ltl_scope.
 
-Declare Instance eventually_respects_impl : Proper (impl ==> impl) eventually.
-Declare Instance always_respects_impl : Proper (impl ==> impl) always.
-Declare Instance wait_respects_impl : Proper (impl ==> impl ==> impl) wait.
-Declare Instance release_respects_impl : Proper (impl ==> impl ==> impl) release.
-Declare Instance strong_release_respects_impl : Proper (impl ==> impl ==> impl) strong_release.
+Declare Instance eventually_respects_implies :
+  Proper (implies ==> implies) eventually.
+Declare Instance always_respects_implies :
+  Proper (implies ==> implies) always.
+Declare Instance wait_respects_implies :
+  Proper (implies ==> implies ==> implies) wait.
+Declare Instance release_respects_implies :
+  Proper (implies ==> implies ==> implies) release.
+Declare Instance strong_release_respects_implies :
+  Proper (implies ==> implies ==> implies) strong_release.
 
 Axiom (* 38 *) evn_def : forall (p : t), ◇ p ≈ ⊤ U p.
 Axiom (* 54 *) always_def : forall (p : t), □ p ≈ ¬◇ ¬p.
@@ -35,6 +42,21 @@ Axiom strong_release_def : forall (p q : t), p M q ≈ p U (q ∧ p).
 Axiom (* 55 *) always_until_and_ind : forall (p q r : t),
   □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r.
 
+Parameter holds : nat -> t -> Prop.
+
+Infix "⊨" := holds (at level 87, no associativity) : ltl_scope.
+
+Declare Instance holds_respects_implies :
+  Proper (eq ==> implies ==> Basics.impl) holds.
+
+(** In order prove meta-theorems concerning the facts of temporality, we
+    require a semantics to express how "the flow of time" relates to the
+    boolean and temporal operators. *)
+Axiom truth_holds  : forall p, truth p <-> forall j, j ⊨ p.
+
+Axiom impl_holds   : forall p q j, j ⊨ p ⇒ q <-> (j ⊨ p -> j ⊨ q).
+Axiom always_holds : forall p j, j ⊨ □ p <-> forall i, i >= j -> i ⊨ p.
+
 End LinearTemporalLogic.
 
 Module LinearTemporalLogicFacts (L : LinearTemporalLogic).
@@ -44,11 +66,16 @@ Module Import MLTL := MinimalLinearTemporalLogicFacts L.
 Module Import BF := MLTL.BF.
 Module Import MBF := BF.MBF.
 
-Program Instance eventually_respects_eqv : Proper (eqv ==> eqv) eventually.
-Program Instance always_respects_eqv : Proper (eqv ==> eqv) always.
-Program Instance wait_respects_eqv : Proper (eqv ==> eqv ==> eqv) wait.
-Program Instance release_respects_eqv : Proper (eqv ==> eqv ==> eqv) release.
-Program Instance strong_release_respects_eqv : Proper (eqv ==> eqv ==> eqv) strong_release.
+Program Instance eventually_respects_equivalent :
+  Proper (equivalent ==> equivalent) eventually.
+Program Instance always_respects_equivalent :
+  Proper (equivalent ==> equivalent) always.
+Program Instance wait_respects_equivalent :
+  Proper (equivalent ==> equivalent ==> equivalent) wait.
+Program Instance release_respects_equivalent :
+  Proper (equivalent ==> equivalent ==> equivalent) release.
+Program Instance strong_release_respects_equivalent :
+  Proper (equivalent ==> equivalent ==> equivalent) strong_release.
 
 (*** 3.3 Eventually ◇ *)
 
@@ -100,7 +127,7 @@ Qed.
 Theorem (* 42 *) law_42 (p q : t) : p U q ⟹ ◇ q.
 Proof.
   rewrite <- (until_absorb_evn p).
-  apply until_respects_impl; [reflexivity|].
+  apply until_respects_implies; [reflexivity|].
   rewrite evn_def.
   now rewrite <- until_insertion.
 Qed.
@@ -138,7 +165,7 @@ Proof.
   rewrite or_comm.
   rewrite <- or_inj.
   rewrite true_and.
-  apply next_respects_impl.
+  apply next_respects_implies.
   rewrite <- evn_def.
   apply evn_weaken.
 Qed.
@@ -228,12 +255,36 @@ Lemma until_respects (p q r s : t) : (p ⇒ r) ∧ (q ⇒ s) ⟹ (p U q ⇒ r U 
 Proof.
 Admitted.
 
-Theorem (* 55 *) always_until_and_ind : forall (p q r : t),
+Theorem (* 99 *) law_99 (p q : t) : □ (p ∧ q) ≈ □ p ∧ □ q.
+Proof.
+  rewrite !always_def.
+  rewrite not_and.
+  rewrite evn_or.
+  now rewrite not_or.
+Qed.
+
+Theorem (* 76 *) law_76 (p : t) : □ p ⟹ p.
+Proof.
+  rewrite always_def.
+  apply contrapositive.
+  rewrite not_not.
+  now apply evn_weaken.
+Qed.
+
+Corollary (* NEW *) always_apply (p q : t) : □ (p ⇒ q) ∧ p ⟹ q.
+Proof.
+  rewrite law_76.
+  rewrite and_comm.
+  rewrite and_apply.
+  now boolean.
+Qed.
+
+Theorem (* 55 *) always_until_and_ind (p q r : t) :
   □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r.
 Proof.
-  intros.
   rewrite !always_def.
   apply contrapositive.
+  rewrite !impl_def.
   rewrite !not_or.
   rewrite !not_not.
   rewrite !evn_def.
@@ -247,7 +298,8 @@ Proof.
   rewrite !(and_comm _ p).
   rewrite or_comm.
   rewrite <- or_inj.
-  apply impl_def; intros.
+  apply impl_implies; intros.
+  rewrite !impl_def.
   rewrite not_and.
   rewrite and_def.
   rewrite !not_not.
@@ -261,6 +313,15 @@ Proof.
   rewrite (or_comm (not _)).
   rewrite or_assoc.
   rewrite <- (or_assoc _ _ (¬p)).
+  rewrite <- !evn_def.
+  rewrite <- always_def.
+  rewrite <- !or_assoc.
+  rewrite (or_comm _ (□ q)).
+  rewrite <- wait_def.
+  rewrite (or_comm _ (¬ p)).
+  rewrite <- impl_def.
+  apply and_impl_iff.
+  boolean.
   rewrite <- (until_respects ⊤ (¬q) ⊤ (p ∧ ¬ q ∧ ¬ r)).
   boolean.
   rewrite !or_assoc.
@@ -275,6 +336,7 @@ Proof.
   rewrite (or_comm _ (¬p)).
   rewrite <- !or_assoc.
   rewrite or_comm.
+  rewrite <- impl_def.
   apply and_impl_iff.
   boolean.
   rewrite <- or_inj.
@@ -302,11 +364,11 @@ Qed.
 Theorem (* 56 *) always_until_or_ind (p q : t) :
   □ (p ⇒ ◯ (p ∨ q)) ⟹ p ⇒ □ p ∨ p U q.
 Proof.
-  apply impl_def.
+  apply impl_implies.
   set (consequent := □ (p ⇒ ◯ (p ∨ q)) ⇒ p ⇒ □ p ∨ p U q).
 
   pose proof (always_until_and_ind p (◯ p) (◯ q)) as law_55.
-  apply impl_def in law_55.
+  apply impl_implies in law_55.
   rewrite law_55.
 
   rewrite and_idem.
@@ -314,6 +376,7 @@ Proof.
 
   rewrite <- (true_and (p ⇒ _ ∨ _)).
   rewrite <- (impl_refl p).
+  rewrite !impl_def.
   rewrite <- or_and.
   rewrite and_or.
   rewrite (or_inj (p ∧ _ U _) q).
@@ -323,6 +386,7 @@ Proof.
   rewrite (* 10 *) <- (until_expansion p q).
   rewrite (* 73 *) <- law_73.
   rewrite (* 66 *) <- (law_66 p).
+  rewrite <- !impl_def.
   reflexivity.
 Qed.
 
@@ -337,20 +401,23 @@ Qed.
 
 Lemma (* 58 *) evn_induction (p : t) : □ (◯ p ⇒ p) ⟹ (◇ p ⇒ p).
 Proof.
-  apply impl_def.
+  apply impl_implies.
   set (consequent := □ (◯ p ⇒ p) ⇒ ◇ p ⇒ p).
 
   pose proof (always_until_or_ind (¬ p) ⊥) as law_56.
-  apply impl_def in law_56.
+  apply impl_implies in law_56.
   rewrite law_56.
 
   rewrite until_right_bottom.
   rewrite !or_false.
   rewrite next_linearity.
   rewrite !not_not.
+  rewrite !impl_def.
+  rewrite not_not.
   rewrite !(or_comm p).
   rewrite (always_def (¬p)).
   rewrite not_not.
+  rewrite <- !impl_def.
   reflexivity.
 Qed.
 
@@ -477,6 +544,7 @@ Proof.
   rewrite always_def.
   rewrite <- always_def.
   rewrite law_66 at 1.
+  rewrite !impl_def.
   rewrite or_and.
   rewrite or_comm at 1.
   rewrite true_def.
@@ -490,6 +558,7 @@ Proof.
   rewrite <- !always_def.
   rewrite next_not.
   rewrite !not_not.
+  rewrite <- !impl_def.
   now apply always_induction.
 Qed.
 
@@ -554,21 +623,20 @@ This follows from the axiom impl_denote, which denotes implication (⟹) in
 Coq's own logic.
  *)
 
-Theorem (* 82 *) temporal_deduction (p q : t) :
-  (exists x, (x ⟹ p) -> (x ⟹ q)) -> (□ p ⟹ q).
+Theorem (* 82 *) temporal_deduction (p q : t) j :
+  (forall i, i >= j -> i ⊨ (⊤ ⇒ p) -> i ⊨ q) -> j ⊨ (□ p ⇒ q).
 Proof.
   intros.
-  destruct H.
-  rewrite <- H.
-Admitted.
-(*   destruct H. *)
-(*   - rewrite <- H0. *)
-(*     + now apply impl_true. *)
-(*     + now rewrite H. *)
-(*   - rewrite H. *)
-(*     rewrite law_65. *)
-(*     now apply false_impl. *)
-(* Qed. *)
+  apply (proj2 (impl_holds (□ p) q j)).
+  intros.
+  apply H.
+    lia.
+  pose proof (proj1 (always_holds p j) H0).
+  apply impl_holds.
+  intros.
+  apply H1.
+  lia.
+Qed.
 
 (*** 3.6 Always □, Continued *)
 
@@ -631,6 +699,7 @@ Admitted.
 Theorem (* 83 *) law_83 (p q r : t) : □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r).
 Proof.
   apply and_impl_iff.
+  apply truth_holds; intros.
   apply temporal_deduction; intros.
   rewrite <- !H.
   now boolean.
@@ -665,14 +734,14 @@ Theorem (* 85 *) law_85 (p q r : t) : □ (p ⇒ q) ⟹ (r U p ⇒ r U q).
 Proof.
   apply and_impl_iff.
   rewrite law_83.
-  now apply until_respects_impl; boolean.
+  now apply until_respects_implies; boolean.
 Qed.
 
 Theorem (* 86 *) law_86 (p q r : t) : □ (p ⇒ q) ⟹ (p U r ⇒ q U r).
 Proof.
   apply and_impl_iff.
   rewrite law_83.
-  now apply until_respects_impl; boolean.
+  now apply until_respects_implies; boolean.
 Qed.
 
 Theorem (* 87 *) law_87 (p : t) : □ ¬p ⟹ ¬□ p.
@@ -688,7 +757,7 @@ Proof.
   rewrite !evn_def.
   rewrite law_83.
   boolean.
-  now apply until_respects_impl; boolean.
+  now apply until_respects_implies; boolean.
 Qed.
 
 Theorem (* 89 *) law_89 (p : t) : ◇ p ∨ □ ¬p ≈ ⊤.
@@ -1039,13 +1108,13 @@ Proof.
   apply (proj1 (and_impl_iff _ _ _)) in H.
   apply (proj2 (and_impl_iff _ _ _)).
   rewrite H; clear H.
-  apply or_respects_impl; [|reflexivity].
+  apply or_respects_implies; [|reflexivity].
   rewrite <- law_99.
   rewrite !(or_comm _ (◇ s)).
   rewrite <- or_and.
-  apply not_respects_impl; unfold Basics.flip.
-  apply always_respects_impl.
-  apply or_respects_impl; [reflexivity|].
+  apply not_respects_implies; unfold Basics.flip.
+  apply always_respects_implies.
+  apply or_respects_implies; [reflexivity|].
   rewrite and_def.
   now boolean.
 Qed.
@@ -1133,22 +1202,22 @@ Qed.
 Theorem until_metatheorem (p q r s : t) : (p ⟹ q) -> (r ⟹ s) -> (p U r ⟹ q U s).
 Proof.
   intros.
-  now apply until_respects_impl.
+  now apply until_respects_implies.
 Qed.
 
 Theorem (* 137 *) next_metatheorem (p q : t) : (p ⟹ q) -> (◯ p ⟹ ◯ q).
 Proof.
-  now apply next_respects_impl.
+  now apply next_respects_implies.
 Qed.
 
 Theorem (* 138 *) eventually_metatheorem (p q : t) : (p ⟹ q) -> (◇ p ⟹ ◇ q).
 Proof.
-  now apply eventually_respects_impl.
+  now apply eventually_respects_implies.
 Qed.
 
 Theorem (* 139 *) always_metatheorem (p q : t) : (p ⟹ q) -> (□ p ⟹ □ q).
 Proof.
-  now apply always_respects_impl.
+  now apply always_respects_implies.
 Qed.
 
 (*** 3.8 Always □, Continued *)
@@ -1191,7 +1260,7 @@ Proof.
     apply true_impl.
     rewrite <- (law_85 (□ q) q p).
     pose proof (law_76 q).
-    apply impl_def in H.
+    apply impl_implies in H.
     rewrite <- H.
     now rewrite !law_64.
   assert (B : □ (p U □ q ⇒ ◯ (p U □ q)) ≈ ⊤).
@@ -1213,7 +1282,7 @@ Proof.
     boolean.
     now rewrite law_64.
   pose proof (law_129 (p U □ q) (p U q)).
-  apply impl_def.
+  apply impl_implies.
   rewrite <- H.
   rewrite impl_and.
   rewrite law_99.
@@ -1233,7 +1302,7 @@ Qed.
 Theorem (* 142 *) law_142 (*Right ∧ U strengthening*) (p q r : t) : p U (q ∧ r) ⟹ p U (q U r).
 Proof.
   pose proof (law_85 (q ∧ r) (q U r) p).
-  apply impl_def.
+  apply impl_implies.
   rewrite <- H.
   rewrite <- until_30.
   boolean.
@@ -1243,7 +1312,7 @@ Qed.
 Theorem (* 143 *) law_143 (*Left ∧ U strengthening*) (p q r : t) : (p ∧ q) U r ⟹ (p U q) U r.
 Proof.
   pose proof (law_86 (p ∧ q) (p U q)).
-  apply impl_def.
+  apply impl_implies.
   rewrite <- H.
   rewrite <- until_30.
   boolean.
@@ -1252,9 +1321,9 @@ Qed.
 
 Theorem (* 144 *) law_144 (*Left ∧ U ordering*) (p q r : t) : (p ∧ q) U r ⟹ p U (q U r).
 Proof.
-  apply impl_def.
+  apply impl_implies.
   rewrite <- law_127.
-  rewrite <- (proj1 (impl_def _ _) (and_proj p q)).
+  rewrite <- (proj1 (impl_implies _ _) (and_proj p q)).
   rewrite <- until_insertion.
   boolean.
   now apply law_64.
@@ -1437,7 +1506,7 @@ Proof.
     rewrite <- law_104.
     rewrite <- (law_76 (◇ (◇ p ⇒ ◇ □ q))).
     rewrite <- law_152.
-    apply impl_def.
+    apply impl_implies.
     rewrite <- law_157.
     rewrite <- law_119.
     boolean.
@@ -1516,16 +1585,16 @@ Proof.
     reflexivity.
 
   assert (C : □ r ∧ ¬□ p ∧ ¬□ q ⟹ □ (□ r ∧ ¬□ p ∧ ¬□ q)).
-    apply impl_def in B.
-    apply always_respects_impl in B.
+    apply impl_implies in B.
+    apply always_respects_implies in B.
     rewrite always_induction in B.
     rewrite law_64 in B.
-    apply impl_def in B.
+    apply impl_implies in B.
     exact B.
 
   assert (D : □ (□ r ∧ ¬□ p ∧ ¬□ q) ⟹ □ p ∧ □ q).
     rewrite <- law_99.
-    apply impl_def.
+    apply impl_implies.
     rewrite <- law_120.
     apply (proj1 (law_136b _ _)).
     apply and_impl_iff.
@@ -1549,7 +1618,7 @@ Proof.
     now rewrite <- next_or.
 
   assert (G : □ (□ p ∨ □ q) ⟹ □ r).
-    apply impl_def.
+    apply impl_implies.
     rewrite <- law_120.
     apply (proj1 (law_136b _ _)).
     rewrite A.
@@ -1557,7 +1626,7 @@ Proof.
     now rewrite <- (or_inj _ (p ∧ q)).
 
   split.
-  - apply impl_def.
+  - apply impl_implies.
     apply contrapositive.
     rewrite not_true.
     rewrite !not_or.
@@ -1571,7 +1640,7 @@ Proof.
     now boolean.
 
   - rewrite <- G.
-    apply impl_def.
+    apply impl_implies.
     rewrite <- always_induction.
     rewrite <- F.
     boolean.
@@ -1764,7 +1833,7 @@ Proof.
   rewrite not_wait.
   rewrite wait_def.
   rewrite or_comm.
-  apply or_respects_eqv; [|reflexivity].
+  apply or_respects_equivalent; [|reflexivity].
   now apply law_61.
 Qed.
 
@@ -2296,7 +2365,7 @@ Qed.
 Lemma (* NEW *) always_until_left (p q : t) : □ p U q ⟹ p U q ∨ □ ¬q.
 Proof.
   rewrite <- or_inj.
-  apply until_respects_impl; [|reflexivity].
+  apply until_respects_implies; [|reflexivity].
   now apply law_76.
 Qed.
 
@@ -2397,7 +2466,7 @@ Qed.
 
 Theorem (* 246 *) law_246 (*Left U ∨ strengthening*) (p q r : t) : (p U q) U r ⟹ (p ∨ q) U r.
 Proof.
-  apply impl_def.
+  apply impl_implies.
   rewrite <- (law_86 (p U q) (p ∨ q)).
   rewrite until_28.
   boolean.
@@ -2406,7 +2475,7 @@ Qed.
 
 Theorem (* 247 *) law_247 (*Left W ∨ strengthening*) (p q r : t) : (p W q) W r ⟹ (p ∨ q) W r.
 Proof.
-  apply impl_def.
+  apply impl_implies.
   rewrite <- (law_238 (p W q) (p ∨ q)).
   rewrite law_206.
   boolean.
@@ -2415,7 +2484,7 @@ Qed.
 
 Theorem (* 248 *) law_248 (*Right W ∨ strengthening*) (p q r : t) : p W (q W r) ⟹ p W (q ∨ r).
 Proof.
-  apply impl_def.
+  apply impl_implies.
   rewrite <- (law_239 (q W r) (q ∨ r) p).
   rewrite law_206.
   boolean.
