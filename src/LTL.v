@@ -279,7 +279,66 @@ Proof.
   now boolean.
 Qed.
 
-Theorem (* 55 *) always_until_and_ind (p q r : t) :
+(* Theorem (* 84 *) law_84 (p q : t) : p ∧ ((¬p ∨ q) U (¬p ∨ r)) *)
+
+(* Theorem (* 84 *) helper (p q r : t) : (p ∨ q) U (p ∨ r) ⟹ q U (p ∨ r). *)
+
+Theorem (* 84 *) helper (p q : t) : p U q ⟹ ⊤ U q.
+Proof.
+  rewrite law_42.
+  now rewrite evn_def.
+Qed.
+
+Theorem (* 84 *) law_84 (p q : t) : □ p ∧ ◇ q ⟹ p U q.
+Admitted.
+
+Theorem (* 73 *) law_73 (p : t) : ◯ □ p ≈ □ ◯ p.
+Proof.
+  rewrite !always_def.
+  rewrite next_not.
+  rewrite law_51.
+  now rewrite <- next_not.
+Qed.
+
+Theorem (* 66 *) law_66 (p : t) : □ p ≈ p ∧ ◯ □ p.
+Proof.
+  rewrite always_def.
+  rewrite law_45 at 1.
+  rewrite not_or.
+  rewrite not_not.
+  now rewrite next_not.
+Qed.
+
+Theorem (* 67 *) law_67 (p : t) : □ p ≈ p ∧ ◯ p ∧ ◯ □ p.
+Proof.
+  split.
+  - rewrite <- next_and.
+    assert (□ p ⟹ p ∧ □ p).
+      rewrite law_66.
+      rewrite <- and_assoc.
+      now rewrite and_idem.
+    rewrite <- H.
+    now apply law_66.
+  - rewrite <- and_assoc.
+    rewrite (and_comm p).
+    rewrite and_assoc.
+    rewrite <- law_66.
+    rewrite and_comm.
+    now apply and_proj.
+Qed.
+
+Theorem (* 68 *) law_68 (p : t) : p ∧ □ p ≈ □ p.
+Proof.
+  split.
+  - rewrite always_def.
+    rewrite and_comm.
+    now apply and_proj.
+  - rewrite law_66.
+    rewrite <- and_assoc.
+    now rewrite and_idem.
+Qed.
+
+Theorem (* 55 *) always_until_and_ind_wide (p q r : t) :
   □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r.
 Proof.
   rewrite !always_def.
@@ -289,7 +348,97 @@ Proof.
   rewrite !not_not.
   rewrite !evn_def.
   rewrite not_until.
+  rewrite !not_and.
+  rewrite (and_proj_r _ (¬q)).
+  rewrite <- (or_inj _ (¬q)).
+  rewrite until_idem.
+  apply
+Qed.
+
+Theorem (* 55 *) always_until_and_ind_wide (p q r : t) :
+  □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r.
+Proof.
+  rewrite !always_def.
+  apply contrapositive.
+  rewrite !impl_def.
+  rewrite !not_or.
+  rewrite !not_not.
+  rewrite evn_def.
+  rewrite not_until.
+  rewrite !not_and.
+  rewrite (and_proj_r _ (¬q)).
+  rewrite <- (or_inj _ (¬q)).
+  rewrite until_idem.
+  apply evn_weaken.
+Qed.
+
+Theorem (* 55 *) always_until_and_ind_nar (p q r : t) :
+  □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r.
+Proof.
+  rewrite always_until_and_ind_wide.
+  rewrite <- (true_and r) at 2.
+  rewrite <- (true_def (◯ p)).
+  rewrite and_or_r.
+  rewrite !always_def.
+  apply contrapositive.
+  rewrite !impl_def.
+  rewrite !not_or.
+  rewrite !not_not.
+  rewrite evn_def.
+  rewrite !not_until.
+  rewrite !not_or.
+  rewrite (and_comm (¬q) (and _ _)).
+  rewrite (and_proj_r _ (¬q)).
+  rewrite until_idem.
+  rewrite <- (or_inj _ (¬q)).
+  rewrite not_or.
+  apply evn_weaken.
+Qed.
+
+(*   rewrite <- or_and. *)
+(*   rewrite (and_proj_r (¬r)). *)
+(*   rewrite helper. *)
+(*   rewrite <- evn_def. *)
+(*   rewrite or_comm. *)
+(*   rewrite or_comm. *)
+(*   rewrite and_or. *)
+(*   rewrite evn_def. *)
+(*   rewrite <- and_or. *)
+(*   rewrite (and_comm _ (¬r)). *)
+(*   rewrite (or_comm _ (¬r)). *)
+(*   rewrite <- until_left_or. *)
+(*   rewrite <- and_assoc. *)
+(*   rewrite and_or. *)
+(*   rewrite <- (or_inj_r _ (¬ ◯ p)). *)
+(* Abort. *)
+
+Theorem (* 55 *) always_until_and_ind (p q r : t) :
+  □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r.
+Proof.
+  rewrite always_until_and_ind_wide.
+  rewrite until_left_or.
+  apply impl_respects_implies; [reflexivity|].
+  apply or_respects_implies; [reflexivity|].
+  rewrite (and_proj_r r).
+  now rewrite (and_proj_r r).
+Qed.
+
+Theorem (* 55 *) always_until_and_ind (p q r : t) :
+  □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r.
+Proof.
+  rewrite !always_def.
+  apply contrapositive.
+  rewrite !impl_def.
+  rewrite !not_or.
+  rewrite !not_not.
   rewrite not_and.
+  rewrite and_or_r.
+  rewrite and_or.
+  rewrite <- law_84.
+  rewrite not_and.
+  rewrite not_until_2.
+  rewrite !evn_def.
+  rewrite not_until.
   rewrite (and_comm p (and _ (¬r))).
   rewrite and_assoc.
   rewrite and_or_r.
@@ -297,6 +446,8 @@ Proof.
   rewrite <- !and_assoc.
   rewrite !(and_comm _ p).
   rewrite or_comm.
+  rewrite (* AXIOM *) <- not_until.
+  rewrite <- !evn_def.
   rewrite <- or_inj.
   apply impl_implies; intros.
   rewrite !impl_def.
@@ -304,7 +455,6 @@ Proof.
   rewrite and_def.
   rewrite !not_not.
   rewrite not_or.
-  rewrite (* AXIOM *) <- not_until.
   rewrite or_assoc.
   rewrite not_and.
   rewrite not_not.
@@ -342,23 +492,6 @@ Proof.
   rewrite <- or_inj.
   rewrite <- or_inj.
   now apply (* 29 *) until_insertion.
-Qed.
-
-Theorem (* 73 *) law_73 (p : t) : ◯ □ p ≈ □ ◯ p.
-Proof.
-  rewrite !always_def.
-  rewrite next_not.
-  rewrite law_51.
-  now rewrite <- next_not.
-Qed.
-
-Theorem (* 66 *) law_66 (p : t) : □ p ≈ p ∧ ◯ □ p.
-Proof.
-  rewrite always_def.
-  rewrite law_45 at 1.
-  rewrite not_or.
-  rewrite not_not.
-  now rewrite next_not.
 Qed.
 
 Theorem (* 56 *) always_until_or_ind (p q : t) :
@@ -1097,7 +1230,7 @@ Qed.
 Theorem (* 130 *) law_130 (p q r : t) : □ (p ⇒ ¬q ∧ ◯ p) ⟹ (p ⇒ ¬(r U q)).
 Proof.
   rewrite law_129.
-  rewrite (law_81 (¬ q) r).
+  rewrite (law_81 (¬q) r).
   now rewrite not_not.
 Qed.
 
