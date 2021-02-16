@@ -16,29 +16,35 @@ Module StreamLTL <: LinearTemporalLogic.
 
 Variable a : Type.
 
+Hypothesis A_inhabited : inhabited a.
+
 Definition t := Ensemble (Stream a).
 
+Definition truth := Inhabited (Stream a).
 Definition not   := Complement (Stream a).
 Definition or    := Union (Stream a).
-Definition impl  := Included (Stream a).
+Definition impl  := fun p => Union (Stream a) (Complement _ p).
 Definition true  := Full_set (Stream a).
 Definition false := Empty_set (Stream a).
-Definition eqv   := Same_set (Stream a).
 Definition and   := Intersection (Stream a).
 
-Program Instance impl_reflexive : Reflexive impl.
+Definition implies    := Included (Stream a).
+Definition equivalent := Same_set (Stream a).
+
+Program Instance implies_reflexive : Reflexive implies.
 Next Obligation.
-  unfold impl.
-  now intro.
+  unfold implies.
+  now repeat intro.
 Qed.
 
-Program Instance impl_transitive : Transitive impl.
+Program Instance implies_transitive : Transitive implies.
 Next Obligation.
-  unfold impl, Included in *.
+  unfold implies in *.
   repeat intro.
   now intuition.
 Qed.
 
+(*
 Program Instance not_respects_impl : Proper (impl --> impl) not | 1.
 Next Obligation.
   unfold flip, impl.
@@ -67,21 +73,22 @@ Next Obligation.
   - now apply H.
   - now apply H0.
 Qed.
+*)
 
 Declare Scope boolean_scope.
 Bind Scope boolean_scope with t.
 Delimit Scope boolean_scope with boolean.
 Open Scope boolean_scope.
 
-Notation "¬ p"    := (not p)    (at level 75, right associativity) : boolean_scope.
-Infix    "∨"      := or         (at level 85, right associativity) : boolean_scope.
-Notation "p ⇒ q"  := (¬ p ∨ q)  (at level 86, right associativity) : boolean_scope.
-Notation "⊤"      := true       (at level 0, no associativity) : boolean_scope.
-Notation "⊥"      := false      (at level 0, no associativity) : boolean_scope.
-Notation "p ⟹ q" := (impl p q) (at level 99, right associativity) : boolean_scope.
-Notation "p ≈ q"  := (eqv p q)  (at level 90, no associativity) : boolean_scope.
-Infix    "∧"       := and             (at level 80, right associativity) : boolean_scope.
-Notation "p ≡ q"   := (p ⇒ q ∧ q ⇒ p) (at level 89, right associativity, only parsing) : boolean_scope.
+Notation "¬ p"    := (not p)         (at level 75, right associativity) : boolean_scope.
+Infix    "∨"      := or              (at level 85, right associativity) : boolean_scope.
+Notation "p ⇒ q"  := (¬ p ∨ q)       (at level 86, right associativity) : boolean_scope.
+Notation "⊤"      := true            (at level 0, no associativity) : boolean_scope.
+Notation "⊥"      := false           (at level 0, no associativity) : boolean_scope.
+Infix    "⟹"     := implies         (at level 99, right associativity) : boolean_scope.
+Infix    "≈"      := equivalent      (at level 90, no associativity) : boolean_scope.
+Infix    "∧"      := and             (at level 80, right associativity) : boolean_scope.
+Notation "p ≡ q"  := (p ⇒ q ∧ q ⇒ p) (at level 89, right associativity, only parsing) : boolean_scope.
 
 Theorem or_inj (p q : t) : p ⟹ p ∨ q.
 Proof. repeat intro; now left. Qed.
@@ -175,9 +182,8 @@ Qed.
 
 Definition next : t -> t := λ p s,（s, 1）⊨ p.
 
-Program Instance next_respects_impl : Proper (impl ==> impl) next.
+Program Instance next_respects_implies : Proper (implies ==> implies) next.
 Next Obligation.
-  unfold impl, next.
   repeat intro.
   apply H, H0.
 Qed.
@@ -185,9 +191,8 @@ Qed.
 Definition until : t -> t -> t :=
   λ p q s, ∃ k,（s, k）⊨ q /\ ∀ i, i < k ->（s, i）⊨ p.
 
-Program Instance until_respects_impl : Proper (impl ==> impl ==> impl) until.
+Program Instance until_respects_implies : Proper (implies ==> implies ==> implies) until.
 Next Obligation.
-  unfold impl, until.
   repeat intro.
   destruct H1.
   exists x2.
@@ -355,21 +360,21 @@ Admitted.
 
 Definition eventually : t -> t := any.
 Definition always : t -> t := every.
-Definition wait : t -> t -> t.
-Definition release : t -> t -> t.
-Definition strong_release : t -> t -> t.
+(* Definition wait : t -> t -> t. *)
+(* Definition release : t -> t -> t. *)
+(* Definition strong_release : t -> t -> t. *)
 
 Notation "◇ p"     := (eventually p)       (at level 75, right associativity) : ltl_scope.
 Notation "□ p"     := (always p)           (at level 75, right associativity) : ltl_scope.
-Notation "p 'W' q" := (wait p q)           (at level 79, right associativity) : ltl_scope.
-Notation "p 'R' q" := (release p q)        (at level 79, right associativity) : ltl_scope.
-Notation "p 'M' q" := (strong_release p q) (at level 79, right associativity) : ltl_scope.
+(* Notation "p 'W' q" := (wait p q)           (at level 79, right associativity) : ltl_scope. *)
+(* Notation "p 'R' q" := (release p q)        (at level 79, right associativity) : ltl_scope. *)
+(* Notation "p 'M' q" := (strong_release p q) (at level 79, right associativity) : ltl_scope. *)
 
-Program Instance eventually_respects_impl : Proper (impl ==> impl) eventually.
-Program Instance always_respects_impl : Proper (impl ==> impl) always.
-Program Instance wait_respects_impl : Proper (impl ==> impl ==> impl) wait.
-Program Instance release_respects_impl : Proper (impl ==> impl ==> impl) release.
-Program Instance strong_release_respects_impl : Proper (impl ==> impl ==> impl) strong_release.
+Program Instance eventually_respects_implies : Proper (implies ==> implies) eventually.
+Program Instance always_respects_implies : Proper (implies ==> implies) always.
+(* Program Instance wait_respects_impl : Proper (impl ==> impl ==> impl) wait. *)
+(* Program Instance release_respects_impl : Proper (impl ==> impl ==> impl) release. *)
+(* Program Instance strong_release_respects_impl : Proper (impl ==> impl ==> impl) strong_release. *)
 
 Theorem evn_def (p : t) : ◇ p ≈ ⊤ U p.
 Proof.
@@ -384,17 +389,17 @@ Theorem always_until_and_ind (p q r : t) :
 Proof.
 Admitted.
 
-Theorem wait_def (p q : t) : p W q ≈ □ p ∨ p U q.
-Proof.
-Admitted.
+(* Theorem wait_def (p q : t) : p W q ≈ □ p ∨ p U q. *)
+(* Proof. *)
+(* Admitted. *)
 
-Theorem release_def (p q : t) : p R q ≈ ¬(¬p U ¬q).
-Proof.
-Admitted.
+(* Theorem release_def (p q : t) : p R q ≈ ¬(¬p U ¬q). *)
+(* Proof. *)
+(* Admitted. *)
 
-Theorem strong_release_def (p q : t) : p M q ≈ p U (q ∧ p).
-Proof.
-Admitted.
+(* Theorem strong_release_def (p q : t) : p M q ≈ p U (q ∧ p). *)
+(* Proof. *)
+(* Admitted. *)
 
 Include LinearTemporalLogicFacts.
 

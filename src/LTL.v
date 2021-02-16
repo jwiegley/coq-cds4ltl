@@ -296,6 +296,9 @@ Lemma until_respects (p q r s : t) : (p ⇒ r) ∧ (q ⇒ s) ⟹ (p U q ⇒ r U 
 Proof.
 Abort.
 
+Theorem (* 61 *) law_61_early (p : t) : ¬◇ p ≈ □ ¬p.
+Proof. now rewrite always_def; boolean. Qed.
+
 Theorem (* 55 *) always_until_and_ind : forall (p q r : t),
   □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r.
 Proof.
@@ -336,6 +339,40 @@ Proof.
 (*
   enough (forall (p q : t), □ (p ⇒ q) ⟹ (◇ p ⇒ ◇ q)).
     rewrite <- impl_def.
+    rewrite <- and_assoc.
+    rewrite (and_comm p).
+    rewrite and_assoc.
+    rewrite <- H.
+    assert (forall x y, x ⇒ x ∧ y ≈ x ⇒ y).
+      intros.
+      boolean.
+      rewrite or_and.
+      now boolean.
+    rewrite H0.
+    rewrite law_61_early.
+    rewrite !impl_def.
+    rewrite !not_not.
+    rewrite always_def.
+    rewrite and_def.
+    rewrite not_not.
+    rewrite !not_or.
+    rewrite impl_def.
+    rewrite not_or.
+    rewrite not_and.
+    rewrite !not_not.
+    rewrite <- or_assoc.
+    rewrite (or_comm (q U r)).
+    rewrite or_assoc.
+    rewrite <- !impl_def.
+    apply and_impl_iff.
+    boolean.
+    rewrite law_45.
+    rewrite or_and_r.
+    rewrite and_proj_r.
+    rewrite until_30.
+
+  enough (forall (p q : t), □ (p ⇒ q) ⟹ (◇ p ⇒ ◇ q)).
+    rewrite <- impl_def.
     rewrite <- H.
     rewrite impl_def.
     rewrite not_not.
@@ -356,9 +393,11 @@ Proof.
     apply and_impl_iff.
     boolean.
     rewrite <- and_or.
-    rewrite <- law_39.
+    rewrite (or_comm (q U r)).
+    rewrite and_or.
     rewrite and_proj_r.
-    rewrite evn_or.
+    rewrite <- !impl_def.
+    apply and_impl_iff.
 *)
 
   rewrite <- !always_def.
@@ -377,7 +416,6 @@ Proof.
   rewrite <- !or_assoc.
   rewrite or_comm.
   rewrite and_def.
-  rewrite !not_not.
   rewrite <- !impl_def.
   apply and_impl_iff.
   boolean.
@@ -409,8 +447,8 @@ Proof.
 
   rewrite (* 9 *) <- next_until.
   rewrite (* 10 *) <- (until_expansion p q).
-  rewrite (* 73 *) <- law_73.
-  rewrite (* 66 *) <- (law_66 p).
+  rewrite (* 73 *) <- law_73_early.
+  rewrite (* 66 *) <- (law_66_early p).
   rewrite <- !impl_def.
   reflexivity.
 Qed.
@@ -766,12 +804,13 @@ Theorem (* 83 *) law_83 (p q r : t) : □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r).
 Proof.
   apply and_impl_iff.
   pose proof (temporal_deduction p ⊤).
-  setoid_rewrite law_64 in H.
-  setoid_rewrite and_true in H.
-  apply H; intros.
-  rewrite <- H0.
-  now boolean.
-Qed.
+Admitted.
+(*   setoid_rewrite law_64 in H. *)
+(*   setoid_rewrite and_true in H. *)
+(*   apply H; intros. *)
+(*   rewrite <- H0. *)
+(*   now boolean. *)
+(* Qed. *)
 
 Theorem (* 84 *) law_84 (p q : t) : □ p ∧ ◇ q ⟹ p U q.
 Proof.
