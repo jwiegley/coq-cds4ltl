@@ -270,13 +270,15 @@ Ltac boolean :=
     | [ |- ?P ∧ ?Q ⟹ ?Q ∧ ?P ] => rewrite (and_comm P Q)
   end.
 
-Theorem and_impl p q r : p ∧ q ⇒ r ≈ p ⇒ (q ⇒ r).
+Theorem and_impl p q r : p ∧ q ⇒ r ≈ (p ⇒ r) ∨ (q ⇒ r).
 Proof.
   rewrite and_def.
-  rewrite impl_def.
+  rewrite !impl_def.
   rewrite not_not.
+  rewrite !or_assoc.
+  rewrite (or_comm r).
   rewrite or_assoc.
-  now rewrite <- !impl_def.
+  now boolean.
 Qed.
 
 Theorem impl_and p q r : p ⇒ q ∧ r ≈ (p ⇒ q) ∧ (p ⇒ r).

@@ -105,7 +105,7 @@ Proof.
   now rewrite <- !next_linearity.
 Qed.
 
-Notation "p ≡ q" := (¬(¬(p ⇒ q) ∨ ¬(p ⇒ q)))
+Notation "p ≡ q" := ((p ⇒ q) ∧ (q ⇒ p))
   (at level 86, right associativity) : boolean_scope.
 
 Theorem (* 6 *) next_eqv p q : ◯ (p ≡ q) ≈ ◯ p ≡ ◯ q.
@@ -113,6 +113,7 @@ Proof.
   rewrite !impl_def.
   rewrite <- !next_not.
   rewrite <- !next_or.
+  rewrite !and_def.
   rewrite <- !next_not.
   rewrite <- !next_or.
   now rewrite <- !next_not.
