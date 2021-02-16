@@ -467,14 +467,16 @@ Proof.
   rewrite from_plus in H.
   exists (x1 + x0).
   split; auto; intros.
-  destruct (Compare_dec.le_lt_dec x0 0).
+  destruct (Compare_dec.le_lt_dec x0 i).
   - right; unfold In.
-    pose proof (Le.le_n_0_eq _ l); subst.
+    setoid_rewrite from_plus in H1.
+    specialize (H1 (i - x0)).
+    rewrite PeanoNat.Nat.sub_add in H1; auto.
     apply H1.
     lia.
   - left; unfold In.
-    apply H0.
-Admitted.
+    now apply H0.
+Qed.
 
 Theorem (* 18 *) until_right_and_order (p q r : t) : p U (q ∧ r) ⟹ (p U q) U r.
 Proof.
@@ -486,14 +488,33 @@ Proof.
   unfold In in *.
   exists x0.
   split; auto; intros.
-Admitted.
-
-Theorem (* NEW *) until_continue (p q : t) : q ∧ p U ◯ ¬q ⟹ p U (q ∧ ◯ ¬q).
-Proof.
-Admitted.
+  exists (x0 - i).
+  rewrite from_plus.
+  rewrite PeanoNat.Nat.sub_add.
+  - split; auto; intros.
+    rewrite from_plus.
+    apply H0.
+    lia.
+  - lia.
+Qed.
 
 Theorem (* NEW *) not_until (p q : t) : ⊤ U ¬p ∧ ¬(p U q) ≈ ¬q U (¬p ∧ ¬q).
 Proof.
+  split; repeat intro;
+  unfold until, In in *.
+  - inversion H; subst; clear H.
+    unfold In, not, Complement, Logic.not, In in *.
+    destruct H0.
+    destruct H.
+    exists x0.
+    split.
+    + split; unfold In in *.
+      * exact H.
+      * intro.
+        apply H1; clear H1.
+        exists x0.
+        split; auto.
+        intros.
 Admitted.
 
 Definition eventually : t -> t := any.

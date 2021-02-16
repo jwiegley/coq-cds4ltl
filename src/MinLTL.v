@@ -48,8 +48,6 @@ Axiom (* 16 *) until_impl_order : forall p q r, (p U q) ∧ (¬q U r) ⟹ p U r.
 Axiom (* 17 *) until_right_or_order : forall p q r, p U (q U r) ⟹ (p ∨ q) U r.
 Axiom (* 18 *) until_right_and_order : forall p q r, p U (q ∧ r) ⟹ (p U q) U r.
 
-(** jww (2021-02-08): This axiom is just an idea a work in progress *)
-(* Axiom (* NEW *) until_continue : forall p q, q ∧ p U ◯ ¬q ⟹ p U (q ∧ ◯ ¬q). *)
 (* Axiom (* NEW *) always_until : forall p q r, ¬(⊤ U ¬p) ∧ q U r ≈ (p ∧ q) U (p ∧ r). *)
 Axiom (* NEW *) not_until    : forall p q, ⊤ U ¬p ∧ ¬(p U q) ≈ ¬q U (¬p ∧ ¬q).
 
