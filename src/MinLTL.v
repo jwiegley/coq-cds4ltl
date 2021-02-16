@@ -88,7 +88,7 @@ Qed.
 Theorem (* 4 *) next_or p q : ◯ (p ∨ q) ≈ ◯ p ∨ ◯ q.
 Proof.
   pose proof (next_impl (¬p) q) as H.
-  rewrite !impl_def in H.
+  (* rewrite !impl_def in H. *)
   rewrite not_not in H.
   rewrite H.
   now rewrite <- next_linearity.
@@ -105,12 +105,9 @@ Proof.
   now rewrite <- !next_linearity.
 Qed.
 
-Notation "p ≡ q" := ((p ⇒ q) ∧ (q ⇒ p))
-  (at level 86, right associativity) : boolean_scope.
-
 Theorem (* 6 *) next_eqv p q : ◯ (p ≡ q) ≈ ◯ p ≡ ◯ q.
 Proof.
-  rewrite !impl_def.
+  (* rewrite !impl_def. *)
   rewrite <- !next_not.
   rewrite <- !next_or.
   rewrite !and_def.
@@ -210,10 +207,10 @@ Qed.
 Theorem (* 24 *) until_24 p q r : (¬p U (q U r)) ∧ (p U r) ⟹ q U r.
 Proof.
   rewrite until_right_or_order.
-  rewrite <- impl_def.
+  (* rewrite <- impl_def. *)
   rewrite until_right_impl.
   rewrite and_comm.
-  rewrite impl_def.
+  (* rewrite impl_def. *)
   rewrite and_or.
   now boolean.
 Qed.
@@ -222,10 +219,10 @@ Theorem (* 25 *) until_25 p q r : (p U (¬q U r)) ∧ (q U r) ⟹ p U r.
 Proof.
   rewrite until_right_or_order.
   rewrite or_comm.
-  rewrite <- impl_def.
+  (* rewrite <- impl_def. *)
   rewrite until_right_impl.
   rewrite and_comm.
-  rewrite impl_def.
+  (* rewrite impl_def. *)
   rewrite and_or.
   now boolean.
 Qed.

@@ -19,7 +19,8 @@ Parameter and : t -> t -> t.
 Declare Instance and_respects_implies :
   Proper (implies ==> implies ==> implies) and.
 
-Infix "∧" := and (at level 80, right associativity) : boolean_scope.
+Infix    "∧"     := and                 (at level 80, right associativity) : boolean_scope.
+Notation "p ≡ q" := ((p ⇒ q) ∧ (q ⇒ p)) (at level 86, right associativity) : boolean_scope.
 
 (** "and" is not fundamental and can be defined using "or". To allow for
     efficient choices of "and", we simply require that its behavior be
@@ -235,7 +236,7 @@ Ltac boolean :=
   repeat match goal with
     | [ |- context G [¬ ⊤] ] => rewrite not_true
     | [ |- context G [¬ ⊥] ] => rewrite not_false
-    | [ |- context G [?P ⇒ ?Q] ] => rewrite (impl_def P Q)
+    (* | [ |- context G [?P ⇒ ?Q] ] => rewrite (impl_def P Q) *)
     | [ |- context G [¬¬ ?P] ] => rewrite (not_not P)
     | [ |- context G [?P ∧ ?P] ] => rewrite (and_idem P)
     | [ |- context G [?P ∨ ?P] ] => rewrite (or_idem P)
@@ -273,7 +274,7 @@ Ltac boolean :=
 Theorem and_impl p q r : p ∧ q ⇒ r ≈ (p ⇒ r) ∨ (q ⇒ r).
 Proof.
   rewrite and_def.
-  rewrite !impl_def.
+  (* rewrite !impl_def. *)
   rewrite not_not.
   rewrite !or_assoc.
   rewrite (or_comm r).
@@ -283,15 +284,16 @@ Qed.
 
 Theorem impl_and p q r : p ⇒ q ∧ r ≈ (p ⇒ q) ∧ (p ⇒ r).
 Proof.
-  rewrite (impl_def p q).
-  rewrite (impl_def p r).
+  (* rewrite (impl_def p q). *)
+  (* rewrite (impl_def p r). *)
   rewrite <- or_and.
-  now rewrite <- impl_def.
+  (* rewrite <- impl_def. *)
+  reflexivity.
 Qed.
 
 Theorem or_impl p q r : p ∨ q ⇒ r ≈ (p ⇒ r) ∧ (q ⇒ r).
 Proof.
-  rewrite !(impl_def _ r).
+  (* rewrite !(impl_def _ r). *)
   rewrite !(or_comm _ r).
   rewrite <- or_and.
   rewrite and_def.
@@ -300,7 +302,7 @@ Qed.
 
 Theorem and_apply p q : p ∧ (p ⇒ q) ≈ p ∧ q.
 Proof.
-  rewrite impl_def.
+  (* rewrite impl_def. *)
   now rewrite and_or; boolean.
 Qed.
 
@@ -309,12 +311,12 @@ Proof.
   split; intro.
   - rewrite <- H; clear H.
     rewrite and_comm.
-    rewrite impl_def.
+    (* rewrite impl_def. *)
     rewrite or_and.
     now boolean.
   - rewrite H; clear H.
     rewrite and_comm.
-    rewrite impl_def.
+    (* rewrite impl_def. *)
     rewrite and_or.
     now boolean.
 Qed.
@@ -322,7 +324,7 @@ Qed.
 Theorem impl_trans p q r : (p ⇒ q) ∧ (q ⇒ r) ⟹ (p ⇒ r).
 Proof.
   apply and_impl_iff.
-  rewrite !impl_def.
+  (* rewrite !impl_def. *)
   rewrite (or_comm _ (_ ∨ _)).
   rewrite or_assoc.
   apply or_respects_implies; [reflexivity|].
@@ -340,7 +342,7 @@ Proof. now boolean. Qed.
 Theorem or_impl_iff p q r : (p ∨ q ⟹ r) <-> (p ⇒ r) ∧ (q ⇒ r) ≈ ⊤.
 Proof.
   split; intros.
-  - rewrite !impl_def.
+  - (* rewrite !impl_def. *)
     rewrite !(or_comm _ r).
     rewrite <- or_and.
     rewrite and_def.
@@ -349,7 +351,7 @@ Proof.
     + now apply impl_true.
     + rewrite <- H at 1.
       now rewrite true_def.
-  - rewrite !impl_def in H.
+  - (* rewrite !impl_def in H. *)
     rewrite !(or_comm _ r) in H.
     rewrite <- or_and in H.
     rewrite and_def in H.
@@ -357,7 +359,7 @@ Proof.
     rewrite or_comm in H.
     destruct H.
     apply impl_implies.
-    rewrite impl_def.
+    (* rewrite impl_def. *)
     now rewrite H0.
 Qed.
 
@@ -379,7 +381,7 @@ Qed.
 
 Theorem or_monotonicity p q r : (p ⇒ q) ⟹ (p ∨ r ⇒ q ∨ r).
 Proof.
-  rewrite !impl_def.
+  (* rewrite !impl_def. *)
   rewrite not_or.
   rewrite <- or_assoc.
   rewrite !or_and_r.
@@ -443,7 +445,7 @@ Proof. now boolean. Qed.
 
 Lemma not_respects p q : (p ⇒ q) ⟹ ¬ q ⇒ ¬ p.
 Proof.
-  rewrite !impl_def.
+  (* rewrite !impl_def. *)
   rewrite (or_comm _ (¬p)).
   now rewrite not_not.
 Qed.
@@ -471,7 +473,7 @@ Qed.
 
 Lemma and_respects  p q r s : (p ⇒ r) ∧ (q ⇒ s) ⟹ (p ∧ q ⇒ r ∧ s).
 Proof.
-  rewrite !impl_def.
+  (* rewrite !impl_def. *)
   rewrite or_and_or.
   rewrite (and_def p q).
   rewrite not_not.

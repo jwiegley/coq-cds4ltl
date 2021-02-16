@@ -23,13 +23,14 @@ Definition t := Ensemble (Stream a).
 Definition truth := Inhabited (Stream a).
 Definition not   := Complement (Stream a).
 Definition or    := Union (Stream a).
-Definition impl  := fun p => Union (Stream a) (Complement _ p).
 Definition true  := Full_set (Stream a).
 Definition false := Empty_set (Stream a).
 Definition and   := Intersection (Stream a).
 
 Definition implies    := Included (Stream a).
 Definition equivalent := Same_set (Stream a).
+
+Definition holds (j : nat) (p : t) : t := fun s => [s, j] ⊨ p.
 
 Program Instance implies_reflexive : Reflexive implies.
 Next Obligation.
@@ -44,18 +45,24 @@ Next Obligation.
   now intuition.
 Qed.
 
-(*
-Program Instance not_respects_impl : Proper (impl --> impl) not | 1.
+Program Instance holds_respects_implies : Proper (eq ==> implies ==> implies) holds.
 Next Obligation.
-  unfold flip, impl.
+  unfold holds, implies.
+  repeat intro; subst.
+  now apply H0.
+Qed.
+
+Program Instance not_respects_implies : Proper (implies --> implies) not | 1.
+Next Obligation.
+  unfold flip, implies.
   repeat intro.
   apply H0.
   now apply H.
 Qed.
 
-Program Instance or_respects_impl : Proper (impl ==> impl ==> impl) or.
+Program Instance or_respects_implies : Proper (implies ==> implies ==> implies) or.
 Next Obligation.
-  unfold impl, or.
+  unfold implies, or.
   repeat intro.
   destruct H1; unfold Included, In in *.
   - left.
@@ -64,16 +71,15 @@ Next Obligation.
     now apply H0.
 Qed.
 
-Program Instance and_respects_impl : Proper (impl ==> impl ==> impl) and.
+Program Instance and_respects_implies : Proper (implies ==> implies ==> implies) and.
 Next Obligation.
-  unfold impl, and.
+  unfold implies, and.
   repeat intro.
   destruct H1; unfold Included, In in *.
   constructor.
   - now apply H.
   - now apply H0.
 Qed.
-*)
 
 Declare Scope boolean_scope.
 Bind Scope boolean_scope with t.
@@ -180,7 +186,7 @@ Proof.
     now constructor.
 Qed.
 
-Definition next : t -> t := λ p s,（s, 1）⊨ p.
+Definition next : t -> t := λ p s, [s, 1] ⊨ p.
 
 Program Instance next_respects_implies : Proper (implies ==> implies) next.
 Next Obligation.
@@ -189,7 +195,7 @@ Next Obligation.
 Qed.
 
 Definition until : t -> t -> t :=
-  λ p q s, ∃ k,（s, k）⊨ q /\ ∀ i, i < k ->（s, i）⊨ p.
+  λ p q s, ∃ k, [s, k] ⊨ q /\ ∀ i, i < k -> [s, i] ⊨ p.
 
 Program Instance until_respects_implies : Proper (implies ==> implies ==> implies) until.
 Next Obligation.
@@ -213,7 +219,7 @@ Open Scope ltl_scope.
 Notation "◯ p"     := (next p)    (at level 75, right associativity) : ltl_scope.
 Notation "p 'U' q" := (until p q) (at level 79, right associativity) : ltl_scope.
 
-Theorem next_semantics : ∀ σ j p,（σ, j）⊨ (◯ p) <->（σ, j + 1）⊨ p.
+Theorem next_semantics : ∀ σ j p, [σ, j] ⊨ (◯ p) <-> [σ, j + 1] ⊨ p.
 Proof.
   unfold next.
   split; intros.
@@ -224,7 +230,7 @@ Proof.
 Qed.
 
 Theorem until_semantics : ∀ σ j p q,
- （σ, j）⊨ (p U q) <-> ∃ k, k ≥ j /\（σ, k）⊨ q /\ ∀ i, j ≤ i -> i < k ->（σ, i）⊨ p.
+  [σ, j] ⊨ (p U q) <-> ∃ k, k ≥ j /\ [σ, k] ⊨ q /\ ∀ i, j ≤ i -> i < k -> [σ, i] ⊨ p.
 Proof.
   unfold until.
   repeat setoid_rewrite from_plus.
@@ -360,28 +366,61 @@ Admitted.
 
 Definition eventually : t -> t := any.
 Definition always : t -> t := every.
-(* Definition wait : t -> t -> t. *)
+Definition wait : t -> t -> t := fun p q => always p ∨ p U q.
 (* Definition release : t -> t -> t. *)
 (* Definition strong_release : t -> t -> t. *)
 
 Notation "◇ p"     := (eventually p)       (at level 75, right associativity) : ltl_scope.
 Notation "□ p"     := (always p)           (at level 75, right associativity) : ltl_scope.
-(* Notation "p 'W' q" := (wait p q)           (at level 79, right associativity) : ltl_scope. *)
+Notation "p 'W' q" := (wait p q)           (at level 79, right associativity) : ltl_scope.
 (* Notation "p 'R' q" := (release p q)        (at level 79, right associativity) : ltl_scope. *)
 (* Notation "p 'M' q" := (strong_release p q) (at level 79, right associativity) : ltl_scope. *)
 
 Program Instance eventually_respects_implies : Proper (implies ==> implies) eventually.
+Next Obligation.
+Admitted.
+
 Program Instance always_respects_implies : Proper (implies ==> implies) always.
-(* Program Instance wait_respects_impl : Proper (impl ==> impl ==> impl) wait. *)
-(* Program Instance release_respects_impl : Proper (impl ==> impl ==> impl) release. *)
-(* Program Instance strong_release_respects_impl : Proper (impl ==> impl ==> impl) strong_release. *)
+Next Obligation.
+Admitted.
+
+Program Instance wait_respects_implies : Proper (implies ==> implies ==> implies) wait.
+Next Obligation.
+Admitted.
+
+(*
+Program Instance release_respects_impl : Proper (impl ==> impl ==> impl) release.
+Next Obligation.
+Admitted.
+*)
+
+(*
+Program Instance strong_release_respects_impl : Proper (impl ==> impl ==> impl) strong_release.
+Next Obligation.
+Admitted.
+*)
 
 Theorem evn_def (p : t) : ◇ p ≈ ⊤ U p.
 Proof.
-Admitted.
+  unfold eventually, until, any.
+  split; repeat intro; unfold In in *.
+  - destruct H.
+    exists x0.
+    split; auto; intros.
+    now split.
+  - destruct H.
+    exists x0.
+    now destruct H.
+Qed.
 
 Theorem always_def (p : t) : □ p ≈ ¬◇ ¬p.
 Proof.
+  unfold always, eventually, until, any, every.
+  split; repeat intro; unfold In in *.
+  - destruct H0.
+    apply H0.
+    now apply H.
+  - admit.
 Admitted.
 
 Theorem always_until_and_ind (p q r : t) :
@@ -389,9 +428,9 @@ Theorem always_until_and_ind (p q r : t) :
 Proof.
 Admitted.
 
-(* Theorem wait_def (p q : t) : p W q ≈ □ p ∨ p U q. *)
-(* Proof. *)
-(* Admitted. *)
+Theorem wait_def (p q : t) : p W q ≈ □ p ∨ p U q.
+Proof.
+Admitted.
 
 (* Theorem release_def (p q : t) : p R q ≈ ¬(¬p U ¬q). *)
 (* Proof. *)

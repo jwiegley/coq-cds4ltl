@@ -11,8 +11,6 @@ Module Type MinimalBooleanLogic.
 
 Parameter t : Type.             (* The type of boolean propositions *)
 
-Parameter truth : t -> Prop.
-
 (** The following are fundamental to a classical definition of this logic. *)
 Parameter not : t -> t.
 Parameter or : t -> t -> t.
@@ -20,7 +18,7 @@ Parameter or : t -> t -> t.
 (** The next four terms are purely syntactic and may be defined in terms of
     the fundamentals above. They are given as parameters so that module
     authors may chose economical definitions. *)
-Parameter impl : t -> t -> t.
+Parameter implies : t -> t -> Prop.
 Parameter true : t.
 Parameter false : t.
 
@@ -29,19 +27,16 @@ Bind Scope boolean_scope with t.
 Delimit Scope boolean_scope with boolean.
 Open Scope boolean_scope.
 
-Notation "¬ p" := (not p) (at level 75, right associativity) : boolean_scope.
-Infix    "∨"   := or      (at level 85, right associativity) : boolean_scope.
-Infix    "⇒"   := impl    (at level 86, right associativity) : boolean_scope.
-Notation "⊤"   := true    (at level 0, no associativity) : boolean_scope.
-Notation "⊥"   := false   (at level 0, no associativity) : boolean_scope.
+Notation "¬ p"   := (not p)   (at level 75, right associativity) : boolean_scope.
+Infix    "∨"     := or        (at level 85, right associativity) : boolean_scope.
+Notation "p ⇒ q" := (¬ p ∨ q) (at level 86, right associativity) : boolean_scope.
+Notation "⊤"     := true      (at level 0, no associativity) : boolean_scope.
+Notation "⊥"     := false     (at level 0, no associativity) : boolean_scope.
 
-Definition implies    p q := truth (impl p q).
 Definition equivalent p q := implies p q /\ implies q p.
 
 Declare Instance implies_reflexive : Reflexive implies.
 Declare Instance implies_transitive : Transitive implies.
-
-Declare Instance truth_respects_implies : Proper (implies ==> Basics.impl) truth.
 
 Declare Instance not_respects_implies : Proper (implies --> implies) not.
 Declare Instance or_respects_implies : Proper (implies ==> implies ==> implies) or.
@@ -65,29 +60,20 @@ Axiom or_assoc     : forall p q r, (p ∨ q) ∨ r ≈ p ∨ (q ∨ r).
 Axiom huntington   : forall p q,   ¬(¬p ∨ ¬q) ∨ ¬(¬p ∨ q) ≈ p.
 
 (** These axioms establish the meaning of the syntactic terms. *)
-Axiom impl_def     : forall p q,   p ⇒ q ≈ ¬p ∨ q.
+Axiom or_inj       : forall p q,   p ⟹ p ∨ q.
 Axiom true_def     : forall p,     p ∨ ¬p ≈ ⊤.
 Axiom false_def    : forall p,     ¬(p ∨ ¬p) ≈ ⊥.
 
 (** Denoting the basic terms into Coq's logic allows meta-theorems to be
     proven. *)
-Axiom truth_denote :               truth ⊤.
-Axiom or_denote    : forall p q,   truth (p ∨ q) <-> truth p \/ truth q.
+(* Axiom truth_denote :               truth ⊤. *)
+(* Axiom or_denote    : forall p q,   truth (p ∨ q) <-> truth p \/ truth q. *)
 
 End MinimalBooleanLogic.
 
 Module MinimalBooleanLogicFacts (B : MinimalBooleanLogic).
 
 Import B.
-
-Program Instance truth_respects_equivalent : Proper (equivalent ==> iff) truth.
-Next Obligation.
-  repeat intro.
-  destruct H.
-  split; intro.
-  - now rewrite <- H.
-  - now rewrite <- H0.
-Qed.
 
 Program Instance equivalent_Equivalence : Equivalence equivalent.
 Next Obligation. now intro x; split. Qed.
@@ -139,31 +125,6 @@ Next Obligation.
   split.
   - now rewrite H, H0.
   - now rewrite H1, H2.
-Qed.
-
-Program Instance impl_respects_implies :
-  Proper (implies --> implies ==> implies) impl.
-Next Obligation.
-  repeat intro.
-  unfold implies, Basics.flip in *.
-  rewrite !impl_def.
-  rewrite H.
-  rewrite <- H0.
-  rewrite or_comm.
-  rewrite true_def.
-  exact truth_denote.
-Qed.
-
-Program Instance impl_respects_equivalent :
-  Proper (equivalent ==> equivalent ==> equivalent) impl.
-Next Obligation.
-  repeat intro.
-  destruct H, H0.
-  split.
-  - rewrite <- H0.
-    now rewrite H1.
-  - rewrite <- H2.
-    now rewrite H.
 Qed.
 
 Ltac one_arg :=
@@ -336,28 +297,17 @@ Proof.
     now rewrite !not_not in H.
 Qed.
 
-Theorem or_inj p q : p ⟹ p ∨ q.
-Proof.
-  unfold implies.
-  rewrite impl_def.
-  rewrite <- or_assoc.
-  rewrite (or_comm _ p).
-  rewrite true_def.
-  rewrite true_or.
-  exact truth_denote.
-Qed.
-
 (** Either this or or_inj must be taken as axioms to give insight into ⟹ *)
 Theorem impl_implies : forall p q, (p ⟹ q) <-> (⊤ ⟹ p ⇒ q).
 Proof.
   split; intros.
   - rewrite <- H.
-    rewrite impl_def.
+    (* rewrite impl_def. *)
     rewrite or_comm.
     rewrite true_def.
     reflexivity.
   - rewrite <- (huntington p q).
-    rewrite impl_def in H.
+    (* rewrite impl_def in H. *)
     rewrite <- H.
     rewrite not_true.
     rewrite or_false.
@@ -395,27 +345,6 @@ Proof.
   rewrite not_not.
   rewrite or_comm.
   now apply or_inj.
-Qed.
-
-Theorem impl_denote p q : (truth p -> truth q) -> (p ⟹ q).
-Proof.
-  intros.
-  unfold implies.
-  rewrite impl_def.
-  apply or_denote.
-  pose proof truth_denote.
-  rewrite <- (true_def p) in H0.
-  apply or_denote in H0.
-  destruct H0; now intuition.
-Qed.
-
-Theorem not_denote p : ~ truth p -> truth (¬p).
-Proof.
-  intros.
-  pose proof truth_denote.
-  rewrite <- (true_def p) in H0.
-  apply or_denote in H0.
-  destruct H0; now intuition.
 Qed.
 
 End MinimalBooleanLogicFacts.
