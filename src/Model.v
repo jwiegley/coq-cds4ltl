@@ -30,7 +30,7 @@ Definition and   := Intersection (Stream a).
 Definition implies    := Included (Stream a).
 Definition equivalent := Same_set (Stream a).
 
-Definition holds (j : nat) (p : t) : t := fun s => [s, j] ⊨ p.
+Definition holds (j : nat) (p : t) : t := fun σ => [σ, j] ⊨ p.
 
 Program Instance implies_reflexive : Reflexive implies.
 Next Obligation.
@@ -186,7 +186,7 @@ Proof.
     now constructor.
 Qed.
 
-Definition next : t -> t := λ p s, [s, 1] ⊨ p.
+Definition next : t -> t := λ p σ, [σ, 1] ⊨ p.
 
 Program Instance next_respects_implies : Proper (implies ==> implies) next.
 Next Obligation.
@@ -195,7 +195,7 @@ Next Obligation.
 Qed.
 
 Definition until : t -> t -> t :=
-  λ p q s, ∃ k, [s, k] ⊨ q /\ ∀ i, i < k -> [s, i] ⊨ p.
+  λ p q σ, ∃ k, [σ, k] ⊨ q /\ ∀ i, i < k -> [σ, i] ⊨ p.
 
 Program Instance until_respects_implies : Proper (implies ==> implies ==> implies) until.
 Next Obligation.
@@ -310,38 +310,133 @@ Proof.
            rewrite from_S.
            apply H0.
            now apply (proj1 (PeanoNat.Nat.succ_lt_mono _ _)).
-  - inversion H; subst.
+  - inversion H; subst; clear H.
     + exists 0.
       split; auto; intros.
-      apply PeanoNat.Nat.nlt_0_r in H1.
+      apply PeanoNat.Nat.nlt_0_r in H.
       contradiction.
     + destruct H0; unfold In in *.
-      destruct H1, H1.
-      exists (x0 + 1).
-      rewrite <- from_plus.
+      destruct H0, H0.
+      rewrite from_S in H0.
+      rewrite from_O in H0.
+      setoid_rewrite from_S in H1.
+      rewrite from_O in H1.
+      exists (S x0).
       split; auto; intros.
-      setoid_rewrite from_from in H2.
-Admitted.
+      induction i; intros.
+      * exact H.
+      * apply H1.
+        lia.
+Qed.
 
 Theorem (* 11 *) until_right_bottom (p : t) : p U ⊥ ≈ ⊥.
 Proof.
-Admitted.
+  unfold next, until, or, and.
+  split; repeat intro; unfold In in *.
+  - destruct H, H.
+    contradiction.
+  - exists 0.
+    split; auto; intros.
+    lia.
+Qed.
 
 Theorem (* 12 *) until_left_or (p q r : t) : p U (q ∨ r) ≈ (p U q) ∨ (p U r).
 Proof.
-Admitted.
+  split; repeat intro; unfold In in *.
+  unfold until, or in *.
+  - destruct H.
+    destruct H.
+    inversion H; subst; clear H.
+    + left.
+      unfold In in *.
+      exists x0.
+      now split.
+    + right.
+      unfold In in *.
+      exists x0.
+      now split.
+  - destruct H.
+    destruct H.
+    destruct H.
+    + unfold until.
+      exists x0.
+      split.
+      * now left.
+      * intros.
+        now apply H0.
+    + destruct H.
+      destruct H.
+      unfold until.
+      exists x0.
+      split.
+      * now right.
+      * intros.
+        now apply H0.
+Qed.
 
 Theorem (* 13 *) until_right_or (p q r : t) : (p U r) ∨ (q U r) ⟹ (p ∨ q) U r.
 Proof.
-Admitted.
+  repeat intro; unfold In in *.
+  unfold until, or in *.
+  destruct H; unfold In in *.
+  - destruct H.
+    destruct H.
+    exists x0.
+    split; auto; intros.
+    left.
+    now intuition.
+  - destruct H.
+    destruct H.
+    exists x0.
+    split; auto; intros.
+    right.
+    now intuition.
+Qed.
 
 Theorem (* 14 *) until_left_and (p q r : t) : p U (q ∧ r) ⟹ (p U q) ∧ (p U r).
 Proof.
-Admitted.
+  repeat intro; unfold In in *.
+  unfold until, or in *.
+  destruct H.
+  destruct H.
+  inversion H; subst; clear H.
+  split; unfold In in *.
+  - exists x0.
+    now split.
+  - exists x0.
+    now split.
+Qed.
 
 Theorem (* 15 *) until_right_and (p q r : t) : (p ∧ q) U r ≈ (p U r) ∧ (q U r).
 Proof.
-Admitted.
+  split; repeat intro;
+  unfold until, In in *.
+  - destruct H.
+    destruct H.
+    split; unfold In in *.
+    + exists x0.
+      split; auto; intros.
+      specialize (H0 _ H1).
+      inversion H0; subst; clear H0.
+      exact H2.
+    + exists x0.
+      split; auto; intros.
+      specialize (H0 _ H1).
+      inversion H0; subst; clear H0.
+      exact H3.
+  - inversion H; subst; clear H.
+    unfold In in *.
+    destruct H0, H.
+    destruct H1, H1.
+    exists (min x0 x1).
+    split; auto; intros.
+    + now destruct (Min.min_dec x0 x1); rewrite e.
+    + split.
+      * apply H0.
+        lia.
+      * apply H2.
+        lia.
+Qed.
 
 Theorem (* 16 *) until_impl_order (p q r : t) : (p U q) ∧ (¬q U r) ⟹ p U r.
 Proof.

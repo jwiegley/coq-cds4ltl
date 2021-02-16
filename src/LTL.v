@@ -46,14 +46,14 @@ Parameter holds : nat -> t -> t.
 
 Infix "⊨" := holds (at level 87, no associativity) : ltl_scope.
 
-Declare Instance holds_respects_implies :
-  Proper (eq ==> implies ==> implies) holds.
+Declare Instance holds_respects_implies : Proper (eq ==> implies ==> implies) holds.
 
 (** In order prove meta-theorems concerning the facts of temporality, we
     require a semantics to express how "the flow of time" relates to the
     boolean and temporal operators. *)
-(* Axiom impl_holds   : forall p q j, j ⊨ p ⇒ q <-> (j ⊨ p -> j ⊨ q). *)
-(* Axiom always_holds : forall p j, j ⊨ □ p <-> forall i, i >= j -> i ⊨ p. *)
+(* Axiom truth_holds  : forall p, (forall j, (⊤ ⟹ j ⊨ p)) -> ⊤ ⟹ p. *)
+(* Axiom impl_holds   : forall p q j, ((⊤ ⟹ j ⊨ p) -> (⊤ ⟹ j ⊨ q)) -> ⊤ ⟹ j ⊨ p ⇒ q. *)
+(* Axiom always_holds : forall p j, (⊤ ⟹ j ⊨ □ p) <-> forall i, i >= j -> ⊤ ⟹ i ⊨ p. *)
 
 End LinearTemporalLogic.
 
@@ -681,17 +681,15 @@ Qed.
  *)
 
 (*
-Theorem (* 82 *) temporal_deduction (p q : t) j :
-  (forall i, i >= j -> i ⊨ (⊤ ⇒ p) -> i ⊨ q) -> j ⊨ (□ p ⇒ q).
+Theorem (* 82 *) temporal_deduction_holds (p q : t) j :
+  (forall i, i >= j -> (⊤ ⟹ i ⊨ p) -> (⊤ ⟹ i ⊨ q)) -> ⊤ ⟹ j ⊨ (□ p ⇒ q).
 Proof.
   intros.
-  apply (proj2 (impl_holds (□ p) q j)).
+  apply (impl_holds (□ p) q j).
   intros.
   apply H.
     lia.
   pose proof (proj1 (always_holds p j) H0).
-  apply impl_holds.
-  intros.
   apply H1.
   lia.
 Qed.
@@ -794,6 +792,16 @@ Qed.
 (133) Temporal particularization law : □ (p ⇒ ◇ q) ⇒ (◇ p ⇒ ◇ q)
 (134) □ (p ⇒ ◯ q) ⇒ (p ⇒ ◇ q)
 (135) □ (p ⇒ ◯ ¬p) ⇒ (p ⇒ ¬□ p)
+*)
+
+(*
+Theorem (* 83 *) law_83_holds (p q r : t) : □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r).
+Proof.
+  apply and_impl_iff.
+  apply impl_implies.
+  apply truth_holds; intros.
+  apply temporal_deduction; intros.
+Abort.
 *)
 
 Theorem (* 83 *) law_83 (p q r : t) : □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r).

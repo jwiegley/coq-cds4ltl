@@ -69,6 +69,9 @@ Qed.
 Lemma tail_from i s : tail (from i s) = from i (tail s).
 Proof. symmetry. now apply from_tail. Qed.
 
+Lemma from_O s : from O s = s.
+Proof. reflexivity. Qed.
+
 Lemma from_S i j s : from i (from (S j) s) = from (S i) (from j s).
 Proof. now rewrite <- !from_tail_S, !from_tail. Qed.
 
