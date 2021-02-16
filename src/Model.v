@@ -440,17 +440,54 @@ Qed.
 
 Theorem (* 16 *) until_impl_order (p q r : t) : (p U q) ∧ (¬q U r) ⟹ p U r.
 Proof.
-Admitted.
+  repeat intro;
+  unfold until, In in *.
+  inversion H; subst; clear H.
+  unfold In in *.
+  destruct H0, H.
+  destruct H1, H1.
+  unfold not, Complement, Logic.not, In in H2.
+  destruct (Compare_dec.le_lt_dec x1 x0).
+  - exists x1.
+    split; auto; intros.
+    apply H0.
+    lia.
+  - elimtype False.
+    now firstorder.
+Qed.
 
 Theorem (* 17 *) until_right_or_order (p q r : t) : p U (q U r) ⟹ (p ∨ q) U r.
 Proof.
+  repeat intro; unfold In in *.
+  unfold until, or in *.
+  destruct H; unfold In in *.
+  destruct H.
+  destruct H.
+  destruct H.
+  rewrite from_plus in H.
+  exists (x1 + x0).
+  split; auto; intros.
+  destruct (Compare_dec.le_lt_dec x0 0).
+  - right; unfold In.
+    pose proof (Le.le_n_0_eq _ l); subst.
+    apply H1.
+    lia.
+  - left; unfold In.
+    apply H0.
 Admitted.
 
 Theorem (* 18 *) until_right_and_order (p q r : t) : p U (q ∧ r) ⟹ (p U q) U r.
 Proof.
+  repeat intro; unfold In in *.
+  unfold until, or in *.
+  destruct H.
+  destruct H.
+  inversion H; subst; clear H.
+  unfold In in *.
+  exists x0.
+  split; auto; intros.
 Admitted.
 
-(** jww (2021-02-08): This axiom is just an idea a work in progress *)
 Theorem (* NEW *) until_continue (p q : t) : q ∧ p U ◯ ¬q ⟹ p U (q ∧ ◯ ¬q).
 Proof.
 Admitted.
@@ -473,15 +510,49 @@ Notation "p 'W' q" := (wait p q)           (at level 79, right associativity) : 
 
 Program Instance eventually_respects_implies : Proper (implies ==> implies) eventually.
 Next Obligation.
-Admitted.
+  unfold eventually, any.
+  repeat intro.
+  unfold In in *.
+  destruct H0.
+  exists x1.
+  apply H.
+  exact H0.
+Qed.
 
 Program Instance always_respects_implies : Proper (implies ==> implies) always.
 Next Obligation.
-Admitted.
+  unfold always, every.
+  repeat intro.
+  unfold In in *.
+  apply H.
+  now apply H0.
+Qed.
 
 Program Instance wait_respects_implies : Proper (implies ==> implies ==> implies) wait.
 Next Obligation.
-Admitted.
+  unfold wait, always, every, until.
+  repeat intro.
+  unfold In in *.
+  inversion H1; subst; clear H1.
+  - unfold In in *.
+    left.
+    unfold In in *.
+    intros.
+    apply H.
+    now apply H2.
+  - unfold In in *.
+    right.
+    unfold In in *.
+    destruct H2.
+    exists x2.
+    destruct H1.
+    split.
+    + apply H0.
+      exact H1.
+    + intros.
+      apply H.
+      now apply H2.
+Qed.
 
 (*
 Program Instance release_respects_impl : Proper (impl ==> impl ==> impl) release.
@@ -515,8 +586,13 @@ Proof.
   - destruct H0.
     apply H0.
     now apply H.
-  - admit.
-Admitted.
+  - unfold not, Complement, Logic.not, In in H.
+    apply NNPP.
+    unfold Logic.not.
+    intro.
+    apply H.
+    now exists i.
+Qed.
 
 Theorem always_until_and_ind (p q r : t) :
   □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r.
@@ -525,7 +601,33 @@ Admitted.
 
 Theorem wait_def (p q : t) : p W q ≈ □ p ∨ p U q.
 Proof.
-Admitted.
+  unfold wait, until, always, every.
+  split; repeat intro; unfold In in *.
+  - inversion H; subst; clear H.
+    + unfold In in *.
+      left.
+      unfold In in *.
+      exact H0.
+    + unfold In in *.
+      right.
+      unfold In in *.
+      destruct H0.
+      destruct H.
+      exists x0.
+      now split.
+  - inversion H; subst; clear H.
+    + unfold In in *.
+      left.
+      unfold In in *.
+      exact H0.
+    + unfold In in *.
+      right.
+      unfold In in *.
+      destruct H0.
+      destruct H.
+      exists x0.
+      now split.
+Qed.
 
 (* Theorem release_def (p q : t) : p R q ≈ ¬(¬p U ¬q). *)
 (* Proof. *)
