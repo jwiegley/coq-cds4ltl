@@ -1,6 +1,7 @@
 Set Warnings "-local-declaration".
 
 Require Import
+  Coq.Program.Program
   Coq.micromega.Lia
   Coq.Classes.Morphisms
   Coq.Setoids.Setoid
@@ -51,7 +52,7 @@ Declare Instance holds_respects_implies : Proper (eq ==> implies ==> implies) ho
 (** In order prove meta-theorems concerning the facts of temporality, we
     require a semantics to express how "the flow of time" relates to the
     boolean and temporal operators. *)
-(* Axiom truth_holds  : forall p, (forall j, (⊤ ⟹ j ⊨ p)) -> ⊤ ⟹ p. *)
+(* Axiom truth_holds  : forall p q, (forall j, (⊤ ⟹ j ⊨ p ⇒ q)) -> p ⟹ q. *)
 (* Axiom impl_holds   : forall p q j, ((⊤ ⟹ j ⊨ p) -> (⊤ ⟹ j ⊨ q)) -> ⊤ ⟹ j ⊨ p ⇒ q. *)
 (* Axiom always_holds : forall p j, (⊤ ⟹ j ⊨ □ p) <-> forall i, i >= j -> ⊤ ⟹ i ⊨ p. *)
 
@@ -74,6 +75,18 @@ Program Instance wait_respects_equivalent :
 (*   Proper (equivalent ==> equivalent ==> equivalent) release. *)
 (* Program Instance strong_release_respects_equivalent : *)
 (*   Proper (equivalent ==> equivalent ==> equivalent) strong_release. *)
+
+Local Obligation Tactic := program_simpl.
+
+Program Instance holds_respects_equivalent : Proper (eq ==> equivalent ==> equivalent) holds.
+Next Obligation.
+  repeat intro; subst.
+  split.
+  - destruct H0.
+    now rewrite H.
+  - destruct H0.
+    now rewrite H0.
+Qed.
 
 (*** 3.3 Eventually ◇ *)
 
@@ -682,7 +695,7 @@ Qed.
 
 (*
 Theorem (* 82 *) temporal_deduction_holds (p q : t) j :
-  (forall i, i >= j -> (⊤ ⟹ i ⊨ p) -> (⊤ ⟹ i ⊨ q)) -> ⊤ ⟹ j ⊨ (□ p ⇒ q).
+  (forall i, i >= j -> i ⊨ ⊤ ⇒ p ⟹ i ⊨ ⊤ ⇒ q) -> ⊤ ⟹ j ⊨ (□ p ⇒ q).
 Proof.
   intros.
   apply (impl_holds (□ p) q j).
@@ -798,9 +811,8 @@ Qed.
 Theorem (* 83 *) law_83_holds (p q r : t) : □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r).
 Proof.
   apply and_impl_iff.
-  apply impl_implies.
   apply truth_holds; intros.
-  apply temporal_deduction; intros.
+  apply temporal_deduction_holds; intros.
 Abort.
 *)
 
