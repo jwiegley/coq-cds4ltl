@@ -197,7 +197,8 @@ Qed.
 Definition until : t -> t -> t :=
   λ p q σ, ∃ k, [σ, k] ⊨ q /\ ∀ i, i < k -> [σ, i] ⊨ p.
 
-Program Instance until_respects_implies : Proper (implies ==> implies ==> implies) until.
+Program Instance until_respects_implies :
+  Proper (implies ==> implies ==> implies) until.
 Next Obligation.
   repeat intro.
   destruct H1.
@@ -230,7 +231,8 @@ Proof.
 Qed.
 
 Theorem until_semantics : ∀ σ j p q,
-  [σ, j] ⊨ (p U q) <-> ∃ k, k ≥ j /\ [σ, k] ⊨ q /\ ∀ i, j ≤ i -> i < k -> [σ, i] ⊨ p.
+  [σ, j] ⊨ (p U q) <->
+  ∃ k, k ≥ j /\ [σ, k] ⊨ q /\ ∀ i, j ≤ i -> i < k -> [σ, i] ⊨ p.
 Proof.
   unfold until.
   repeat setoid_rewrite from_plus.
@@ -504,23 +506,81 @@ Proof.
   unfold until, In in *.
   - inversion H; subst; clear H.
     unfold In, not, Complement, Logic.not, In in *.
-    destruct H0.
-    destruct H.
-    exists x0.
-    split.
-    + split; unfold In in *.
-      * exact H.
-      * intro.
-        apply H1; clear H1.
-        exists x0.
-        split; auto.
-        intros.
+
+    assert (forall A (P Q : A -> Prop),
+               (∃ x, P x ∧ Q x) <-> (∃ x, ¬(¬(P x) ∨ ¬(Q x))))%type. {
+      split; repeat intro.
+      - destruct H, H.
+        now eexists; intuition eauto.
+      - destruct H.
+        eexists.
+        apply not_or_and in H.
+        destruct H.
+        apply NNPP in H.
+        apply NNPP in H2.
+        now split; eauto.
+    }
+
+    destruct H0 as [x0 [H2 _]].
+
+    setoid_rewrite H in H1.
+    clear H.
+    apply not_ex_not_all with (n := x0) in H1.
+
+    destruct H1.
+    + eexists.
+      split; unfold In; intuition eauto; intros.
+      * now split; unfold In; intuition eauto; intros.
+      * admit.
+    + apply not_all_ex_not in H.
+      destruct H.
+      apply imply_to_and in H.
+      destruct H.
+      exists x0.
+      split.
+      * split; unfold In; intros.
+        ** contradiction.
+        ** admit.
+      * intros.
+        admit.
+(*
+    eexists.
+    split; intros.
+    + split; eauto.
+      unfold In in *.
+      intros.
+      apply H1; clear H1.
+      eexists.
+      split; eauto; intros.
+      admit.
+    + apply H1; clear H1.
+      eexists.
+      split; eauto; intros.
+      admit.
+*)
+  - destruct H.
+    inversion H; subst; clear H.
+    inversion H0; subst; clear H0.
+    unfold In, not, Complement, Logic.not, In in *.
+    split; unfold In.
+    + eexists.
+      split; eauto; intros.
+      now constructor.
+    + intro.
+      destruct H0, H0.
+      destruct (Compare_dec.le_lt_dec x1 x0).
+      * eapply H1; eauto.
+        destruct l.
+        ** contradiction.
+        ** lia.
+      * apply H.
+        now apply H3.
 Admitted.
 
 Definition eventually : t -> t := any.
-Definition always : t -> t := every.
-Definition wait : t -> t -> t := fun p q => always p ∨ p U q.
-(* Definition release : t -> t -> t. *)
+Definition always     : t -> t := every.
+Definition wait       : t -> t -> t := fun p q => always p ∨ p U q.
+(* Definition release        : t -> t -> t. *)
 (* Definition strong_release : t -> t -> t. *)
 
 Notation "◇ p"     := (eventually p)       (at level 75, right associativity) : ltl_scope.
@@ -618,37 +678,35 @@ Qed.
 Theorem always_until_and_ind (p q r : t) :
   □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r.
 Proof.
+  unfold until, next, always, every, or, and, not.
+  repeat intro.
+  pose proof (H 0) as H2.
+  inversion H2; subst; clear H2.
+  - now left.
+  - inversion H0; subst; clear H0.
+    + rewrite from_O in H1.
+      inversion H1; subst; clear H1.
+      right.
+      destruct (classic (eventually r x)).
+      * inversion H1; subst; clear H1.
+        right.
+        exists x0.
+        split; auto; intros.
+        admit.
+      * left.
+        intro.
+        unfold eventually, any in H1.
+        admit.
+        (* apply not_ex_all_not with (n := i) in H1. *)
+    + right.
+      right.
+      exists 0.
+      split; auto; intros.
+      lia.
 Admitted.
 
 Theorem wait_def (p q : t) : p W q ≈ □ p ∨ p U q.
-Proof.
-  unfold wait, until, always, every.
-  split; repeat intro; unfold In in *.
-  - inversion H; subst; clear H.
-    + unfold In in *.
-      left.
-      unfold In in *.
-      exact H0.
-    + unfold In in *.
-      right.
-      unfold In in *.
-      destruct H0.
-      destruct H.
-      exists x0.
-      now split.
-  - inversion H; subst; clear H.
-    + unfold In in *.
-      left.
-      unfold In in *.
-      exact H0.
-    + unfold In in *.
-      right.
-      unfold In in *.
-      destruct H0.
-      destruct H.
-      exists x0.
-      now split.
-Qed.
+Proof. reflexivity. Qed.
 
 (* Theorem release_def (p q : t) : p R q ≈ ¬(¬p U ¬q). *)
 (* Proof. *)
