@@ -513,7 +513,7 @@ Proof.
     contradiction.
 Qed.
 
-Theorem apply {p q x} : (Complement (Stream a) p ∪ q) x -> p x -> q x.
+Lemma apply_ {p q x} : (Complement (Stream a) p ∪ q) x -> p x -> q x.
 Proof.
   intros.
   now inv H.
@@ -745,12 +745,43 @@ Proof.
   induction i; intros.
   - now inv H; [contradiction|].
   - specialize (IHi (H0 i)).
-    pose proof (apply (H0 i) IHi).
+    pose proof (apply_ (H0 i) IHi).
     clear -H2.
     rewrite <- PeanoNat.Nat.add_1_r.
     rewrite <- from_plus.
     rewrite <- from_from.
     now apply H2.
+Qed.
+
+Lemma not_until_eventually_ p : ¬(¬p U p) ⟹ ¬◇ p.
+Proof.
+  repeat intro.
+  apply H; clear H.
+  inv H0.
+  generalize dependent x.
+  induction x0; intros.
+  - exists 0.
+    split; auto; intros.
+    lia.
+  - specialize (IHx0 (from 1 x)).
+    rewrite from_plus in IHx0.
+    rewrite PeanoNat.Nat.add_1_r in IHx0.
+    apply IHx0 in H; clear IHx0.
+    destruct (classic (p x)).
+    + exists 0.
+      split; auto; intros.
+      lia.
+    + inv H.
+      inv H1.
+      rewrite from_plus in H.
+      rewrite PeanoNat.Nat.add_1_r in H.
+      setoid_rewrite from_plus in H2.
+      setoid_rewrite PeanoNat.Nat.add_1_r in H2.
+      exists (S x1).
+      split; auto; intros.
+      destruct i; auto.
+      apply H2.
+      lia.
 Qed.
 
 Theorem always_until_and_ind (p q r : t) :
@@ -759,7 +790,65 @@ Proof.
   apply and_impl_iff_.
   intros x H.
   inv H.
-Admitted.
+  destruct (classic ((¬r U r) x)).
+  - inv H.
+    inv H2.
+    right.
+    exists x0.
+    split; auto; intros.
+    enough ([x, i] ⊨ q /\ [x, i] ⊨ p).
+      now inv H2.
+    pose proof (H0 i).
+    induction i; intros.
+    + pose proof (apply_ H4 H1).
+      split; auto; intros.
+      inv H4.
+      * contradiction.
+      * inv H6.
+        ** now inv H4.
+        ** specialize (H3 0).
+           now intuition.
+    + assert (i < x0) by lia.
+      destruct (IHi H5 (H0 i)).
+      pose proof (apply_ (H0 i) H7).
+      inv H8.
+      * inv H9.
+        unfold next, In in H8.
+        rewrite from_plus in H8.
+        pose proof (apply_ (H0 (S i)) H8).
+        split; auto.
+        inv H9.
+        ** now inv H11.
+        ** specialize (H3 _ H2).
+           contradiction.
+      * specialize (H3 _ H5).
+        contradiction.
+  - apply not_until_eventually_ in H.
+    left.
+    intro.
+    enough ([x, i] ⊨ q /\ [x, i] ⊨ p).
+      now inv H2.
+    pose proof (H0 i).
+    induction i; intros.
+    + inv H2; [contradiction|].
+      inv H3; [now inv H2|].
+      apply not_ex_all_not with (n:=0) in H.
+      contradiction.
+    + destruct (IHi (H0 i)).
+      pose proof (apply_ (H0 i) H4).
+      inv H5.
+      * inv H6.
+        unfold next, In in H5.
+        rewrite from_plus in H5.
+        pose proof (apply_ H2 H5).
+        split; auto.
+        inv H6.
+        ** now inv H8.
+        ** apply not_ex_all_not with (n:=S i) in H.
+           contradiction.
+      * apply not_ex_all_not with (n:=i) in H.
+        contradiction.
+Qed.
 
 Theorem law_83_ (p q r : t) : □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r).
 Proof.
