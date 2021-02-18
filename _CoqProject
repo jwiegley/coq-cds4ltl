@@ -3,6 +3,7 @@ src/MinBool.v
 src/Bool.v
 src/MinLTL.v
 src/LTL.v
-src/Model.v
 src/Same_set.v
 src/Stream.v
+src/Model.v
+src/Syntax.v

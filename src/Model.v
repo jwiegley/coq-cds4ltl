@@ -688,6 +688,20 @@ Next Obligation.
       now apply H2.
 Qed.
 
+Theorem eventually_semantics : ∀ σ j p, [σ, j] ⊨ ◇ p.
+Proof.
+Admitted.
+
+Theorem always_semantics : ∀ σ j p, [σ, j] ⊨ □ p.
+Proof.
+Admitted.
+
+Theorem wait_semantics : ∀ σ j p q,
+  [σ, j] ⊨ (p U q) <->
+  ∃ k, k ≥ j /\ [σ, k] ⊨ q /\ ∀ i, j ≤ i -> i < k -> [σ, i] ⊨ p.
+Proof.
+Admitted.
+
 Theorem evn_def (p : t) : ◇ p ≈ ⊤ U p.
 Proof.
   unfold eventually, until, any.
@@ -854,10 +868,6 @@ Qed.
 
 Theorem wait_def (p q : t) : p W q ≈ □ p ∨ p U q.
 Proof. reflexivity. Qed.
-
-Definition examine (P : a -> t) : t := fun s => P (head s) s.
-
-Notation "λ f , g" := (examine (λ f, g)) (at level 97, no associativity) : ltl_scope.
 
 End StreamLTLW.
 
