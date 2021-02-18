@@ -43,19 +43,6 @@ Axiom (* 169 *) wait_def : forall (p q : t), p W q ≈ □ p ∨ p U q.
 Axiom (* 55 *) always_until_and_ind : forall (p q r : t),
   □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r.
 
-Parameter holds : nat -> t -> t.
-
-Infix "⊨" := holds (at level 87, no associativity) : ltl_scope.
-
-Declare Instance holds_respects_implies : Proper (eq ==> implies ==> implies) holds.
-
-(** In order prove meta-theorems concerning the facts of temporality, we
-    require a semantics to express how "the flow of time" relates to the
-    boolean and temporal operators. *)
-(* Axiom truth_holds  : forall p q, (forall j, (⊤ ⟹ j ⊨ p ⇒ q)) -> p ⟹ q. *)
-(* Axiom impl_holds   : forall p q j, ((⊤ ⟹ j ⊨ p) -> (⊤ ⟹ j ⊨ q)) -> ⊤ ⟹ j ⊨ p ⇒ q. *)
-(* Axiom always_holds : forall p j, (⊤ ⟹ j ⊨ □ p) <-> forall i, i >= j -> ⊤ ⟹ i ⊨ p. *)
-
 End LinearTemporalLogic.
 
 Module LinearTemporalLogicFacts (L : LinearTemporalLogic).
@@ -75,18 +62,6 @@ Program Instance wait_respects_equivalent :
 (*   Proper (equivalent ==> equivalent ==> equivalent) release. *)
 (* Program Instance strong_release_respects_equivalent : *)
 (*   Proper (equivalent ==> equivalent ==> equivalent) strong_release. *)
-
-Local Obligation Tactic := program_simpl.
-
-Program Instance holds_respects_equivalent : Proper (eq ==> equivalent ==> equivalent) holds.
-Next Obligation.
-  repeat intro; subst.
-  split.
-  - destruct H0.
-    now rewrite H.
-  - destruct H0.
-    now rewrite H0.
-Qed.
 
 (*** 3.3 Eventually ◇ *)
 
@@ -300,140 +275,13 @@ Proof.
   now rewrite next_not.
 Qed.
 
-(** Metatheorem U : If P ⇒ R is a theorem and Q ⇒ S is a theorem then
-      P U Q ⇒ R U S
-    is a theorem. *)
-Lemma until_respects (p q r s : t) : (p ⇒ r) ∧ (q ⇒ s) ⟹ (p U q ⇒ r U s).
+Corollary (* NEW *) always_until_and_ind_alt (p q : t) :
+  □ (p ⇒ ◯ p ∧ q) ⟹ p ⇒ □ q.
 Proof.
-Abort.
-
-Theorem (* 61 *) law_61_early (p : t) : ¬◇ p ≈ □ ¬p.
-Proof. now rewrite always_def; boolean. Qed.
-
-Theorem (* 55 *) always_until_and_ind : forall (p q r : t),
-  □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r.
-Proof.
-  intros.
-  rewrite !always_def.
-  apply contrapositive.
-  (* rewrite !impl_def. *)
-  rewrite !not_or.
-  rewrite !not_and.
-  rewrite !not_not.
-  rewrite !evn_def.
-  rewrite not_until.
-  rewrite (and_comm p (and _ (¬r))).
-  rewrite and_assoc.
-  rewrite and_or_r.
-  rewrite (* 12 *) until_left_or.
-  rewrite <- !and_assoc.
-  rewrite !(and_comm _ p).
-  rewrite or_comm.
-  rewrite <- or_inj.
-  apply impl_implies; intros.
-  (* rewrite impl_def. *)
-  rewrite not_and.
-  rewrite and_def.
-  rewrite !not_not.
-  rewrite not_or.
-  rewrite (* AXIOM *) <- not_until.
-  rewrite or_assoc.
-  rewrite not_and.
-  rewrite not_not.
-  rewrite or_comm.
-  rewrite or_assoc.
-  rewrite (or_comm (not _)).
-  rewrite or_assoc.
-  rewrite <- (or_assoc _ _ (¬p)).
-  rewrite <- !evn_def.
-
-(*
-  enough (forall (p q : t), □ (p ⇒ q) ⟹ (◇ p ⇒ ◇ q)).
-    (* rewrite <- impl_def. *)
-    rewrite <- and_assoc.
-    rewrite (and_comm p).
-    rewrite and_assoc.
-    rewrite <- H.
-    assert (forall x y, x ⇒ x ∧ y ≈ x ⇒ y).
-      intros.
-      boolean.
-      rewrite or_and.
-      now boolean.
-    rewrite H0.
-    rewrite law_61_early.
-    (* rewrite !impl_def. *)
-    rewrite !not_not.
-    rewrite always_def.
-    rewrite and_def.
-    rewrite not_not.
-    rewrite !not_or.
-    (* rewrite impl_def. *)
-    rewrite not_or.
-    rewrite not_and.
-    rewrite !not_not.
-    rewrite <- or_assoc.
-    rewrite (or_comm (q U r)).
-    rewrite or_assoc.
-    (* rewrite <- !impl_def. *)
-    apply and_impl_iff.
-    boolean.
-    rewrite law_45.
-    rewrite or_and_r.
-    rewrite and_proj_r.
-    rewrite until_30.
-
-  enough (forall (p q : t), □ (p ⇒ q) ⟹ (◇ p ⇒ ◇ q)).
-    (* rewrite <- impl_def. *)
-    rewrite <- H.
-    (* rewrite impl_def. *)
-    rewrite not_not.
-    rewrite <- and_assoc.
-    rewrite (and_comm p).
-    rewrite and_assoc.
-    rewrite or_and.
-    boolean.
-    rewrite or_and.
-    rewrite always_def.
-    rewrite and_def.
-    rewrite not_not.
-    rewrite !not_or.
-    rewrite <- or_assoc.
-    rewrite (or_comm (q U r)).
-    rewrite or_assoc.
-    (* rewrite <- impl_def. *)
-    apply and_impl_iff.
-    boolean.
-    rewrite <- and_or.
-    rewrite (or_comm (q U r)).
-    rewrite and_or.
-    rewrite and_proj_r.
-    (* rewrite <- !impl_def. *)
-    apply and_impl_iff.
-*)
-
-  rewrite <- !always_def.
-  rewrite <- evn_weaken.
-  rewrite !or_assoc.
-  rewrite <- (or_assoc _ _ (¬p)).
-  rewrite or_and.
-  rewrite or_and.
-  boolean.
-  rewrite <- or_and.
-  rewrite <- or_and.
-  rewrite or_assoc.
-  rewrite or_and_r.
-  boolean.
-  rewrite (or_comm _ (¬p)).
-  rewrite <- !or_assoc.
-  rewrite or_comm.
-  rewrite and_def.
-  (* rewrite <- !impl_def. *)
-  apply and_impl_iff.
-  boolean.
-  rewrite <- (or_inj _ (¬p)).
-  rewrite (or_comm _ (□ q)).
-  rewrite <- (* 29 *) until_insertion.
-Abort.
+  pose proof (always_until_and_ind p q ⊥).
+  rewrite until_right_bottom in H.
+  now rewrite !or_false in H.
+Qed.
 
 Theorem (* 56 *) always_until_or_ind (p q : t) :
   □ (p ⇒ ◯ (p ∨ q)) ⟹ p ⇒ □ p ∨ p U q.
@@ -677,6 +525,17 @@ Proof.
   now apply law_79.
 Qed.
 
+Corollary (* NEW *) always_induction_alt (p : t) : □ (p ⇒ ◯ p) ∧ p ≈ □ p.
+Proof.
+  split; intros.
+  - apply and_impl_iff.
+    now apply always_induction.
+  - rewrite <- or_inj_r.
+    rewrite <- law_80.
+    rewrite and_comm.
+    now rewrite law_68.
+Qed.
+
 Theorem (* 81 *) law_81 (p q : t) : □ p ⟹ ¬(q U ¬p).
 Proof.
   rewrite always_def.
@@ -693,61 +552,10 @@ Qed.
      You cannot use textual substitution in P₁ or P₂.
  *)
 
-(*
-Theorem (* 82 *) temporal_deduction_holds (p q : t) j :
-  (forall i, i >= j -> i ⊨ ⊤ ⇒ p ⟹ i ⊨ ⊤ ⇒ q) -> ⊤ ⟹ j ⊨ (□ p ⇒ q).
-Proof.
-  intros.
-  apply (impl_holds (□ p) q j).
-  intros.
-  apply H.
-    lia.
-  pose proof (proj1 (always_holds p j) H0).
-  apply H1.
-  lia.
-Qed.
-*)
-
 Theorem (* 82 *) temporal_deduction (P₁ P₂ Q : t) :
   ((⊤ ⟹ P₁) -> (⊤ ⟹ P₂) -> (⊤ ⟹ Q)) -> (□ P₁ ∧ □ P₂ ⟹ Q).
 Proof.
-  intros.
-  rewrite <- true_and.
-  apply and_impl_iff.
-  enough (P₁ ∧ P₂ ⟹ Q).
-    apply impl_implies in H0.
-    rewrite <- (true_or (□ P₁ ∧ □ P₂ ⇒ Q)).
-    rewrite H0.
-    rewrite <- and_impl.
-    rewrite and_assoc.
-    rewrite <- (and_assoc P₂).
-    rewrite (and_comm P₂).
-    rewrite and_assoc.
-    rewrite law_68.
-    rewrite <- and_assoc.
-    rewrite law_68.
-    reflexivity.
-Admitted.
-
-Theorem (* 82 *) temporal_deduction_simple (P₁ P₂ Q : t) :
-  (P₁ ∧ P₂ ⟹ Q) -> (□ P₁ ∧ □ P₂ ⟹ Q).
-Proof.
-  intros.
-  rewrite <- true_and.
-  apply and_impl_iff.
-  apply impl_implies in H.
-  rewrite <- (true_or (□ P₁ ∧ □ P₂ ⇒ Q)).
-  rewrite H.
-  rewrite <- and_impl.
-  rewrite and_assoc.
-  rewrite <- (and_assoc P₂).
-  rewrite (and_comm P₂).
-  rewrite and_assoc.
-  rewrite law_68.
-  rewrite <- and_assoc.
-  rewrite law_68.
-  reflexivity.
-Qed.
+Abort.
 
 (*** 3.6 Always □, Continued *)
 
@@ -807,16 +615,8 @@ Qed.
 (135) □ (p ⇒ ◯ ¬p) ⇒ (p ⇒ ¬□ p)
 *)
 
+Axiom (* 83 *) law_83 : forall (p q r : t), □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r).
 (*
-Theorem (* 83 *) law_83_holds (p q r : t) : □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r).
-Proof.
-  apply and_impl_iff.
-  apply truth_holds; intros.
-  apply temporal_deduction_holds; intros.
-Abort.
-*)
-
-Theorem (* 83 *) law_83 (p q r : t) : □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r).
 Proof.
   apply and_impl_iff.
   pose proof (temporal_deduction p ⊤).
@@ -826,6 +626,7 @@ Proof.
   rewrite <- H0.
   now boolean.
 Qed.
+*)
 
 Theorem (* 84 *) law_84 (p q : t) : □ p ∧ ◇ q ⟹ p U q.
 Proof.
@@ -2744,6 +2545,28 @@ Definition F (p q : t) := □ (p ⇒ □ q).
 
 Theorem Dummett (p : t) : F (F p p) p ⟹ (◇ □ p ⇒ □ p).
 Proof.
+  unfold F.
+  rewrite law_62.
+  rewrite always_def at 1.
+  rewrite not_or.
+  rewrite not_not.
+  apply contrapositive.
+  rewrite not_or.
+  rewrite <- law_62.
+  rewrite !not_not.
+  rewrite !always_def.
+  rewrite !not_or.
+  rewrite !not_not.
+  rewrite (law_53 p (◇ ¬p)).
+  rewrite law_50.
+  rewrite !not_and.
+  rewrite evn_weaken.
+  apply eventually_respects_implies.
+  apply and_respects_implies; [|reflexivity].
+  apply contrapositive.
+  rewrite not_or.
+  rewrite !not_not.
+  rewrite <- always_def.
 Abort.
 
 (*** Release R *)
