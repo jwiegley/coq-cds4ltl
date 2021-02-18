@@ -34,6 +34,8 @@ Module BooleanLogicFacts (B : BooleanLogic).
 Import B.
 Module Import MBF := MinimalBooleanLogicFacts B.
 
+#[local] Obligation Tactic := solve [ one_arg | two_arg ].
+
 Program Instance and_respects_equivalent :
   Proper (equivalent ==> equivalent ==> equivalent) and.
 

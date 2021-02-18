@@ -59,6 +59,8 @@ Import L.
 Module Import BF := BooleanLogicFacts L.
 Module Import MBF := BF.MBF.
 
+#[local] Obligation Tactic := solve [ one_arg | two_arg ].
+
 Program Instance next_respects_equivalent :
   Proper (equivalent ==> equivalent) next.
 Program Instance until_respects_equivalent :

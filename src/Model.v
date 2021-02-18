@@ -13,7 +13,7 @@ Require Import
   Bool
   LTL.
 
-Module StreamLTL <: LinearTemporalLogic.
+Module StreamLTLW <: LinearTemporalLogicW.
 
 Variable a : Type.
 
@@ -637,14 +637,10 @@ Qed.
 Definition eventually : t -> t := any.
 Definition always     : t -> t := every.
 Definition wait       : t -> t -> t := fun p q => always p ∨ p U q.
-(* Definition release        : t -> t -> t. *)
-(* Definition strong_release : t -> t -> t. *)
 
 Notation "◇ p"     := (eventually p)       (at level 75, right associativity) : ltl_scope.
 Notation "□ p"     := (always p)           (at level 75, right associativity) : ltl_scope.
 Notation "p 'W' q" := (wait p q)           (at level 79, right associativity) : ltl_scope.
-(* Notation "p 'R' q" := (release p q)        (at level 79, right associativity) : ltl_scope. *)
-(* Notation "p 'M' q" := (strong_release p q) (at level 79, right associativity) : ltl_scope. *)
 
 Program Instance eventually_respects_implies : Proper (implies ==> implies) eventually.
 Next Obligation.
@@ -691,18 +687,6 @@ Next Obligation.
       apply H.
       now apply H2.
 Qed.
-
-(*
-Program Instance release_respects_impl : Proper (impl ==> impl ==> impl) release.
-Next Obligation.
-Admitted.
-*)
-
-(*
-Program Instance strong_release_respects_impl : Proper (impl ==> impl ==> impl) strong_release.
-Next Obligation.
-Admitted.
-*)
 
 Theorem evn_def (p : t) : ◇ p ≈ ⊤ U p.
 Proof.
@@ -850,7 +834,7 @@ Proof.
         contradiction.
 Qed.
 
-Theorem law_83_ (p q r : t) : □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r).
+Theorem always_and_until (p q r : t) : □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r).
 Proof.
   unfold until, next, always, every, or, and, not.
   repeat intro.
@@ -871,14 +855,38 @@ Qed.
 Theorem wait_def (p q : t) : p W q ≈ □ p ∨ p U q.
 Proof. reflexivity. Qed.
 
-(* Theorem release_def (p q : t) : p R q ≈ ¬(¬p U ¬q). *)
-(* Proof. *)
-(* Admitted. *)
+Definition examine (P : a -> t) : t := fun s => P (head s) s.
 
-(* Theorem strong_release_def (p q : t) : p M q ≈ p U (q ∧ p). *)
-(* Proof. *)
-(* Admitted. *)
+Notation "λ f , g" := (examine (λ f, g)) (at level 97, no associativity) : ltl_scope.
 
-Include LinearTemporalLogicFacts.
+End StreamLTLW.
+
+Module StreamLTL <: LinearTemporalLogic.
+
+Include StreamLTLW.
+
+Definition release        : t -> t -> t := fun x _ => x.
+Definition strong_release : t -> t -> t := fun x _ => x.
+
+Notation "p 'R' q" := (release p q)        (at level 79, right associativity) : ltl_scope.
+Notation "p 'M' q" := (strong_release p q) (at level 79, right associativity) : ltl_scope.
+
+Program Instance release_respects_implies :
+  Proper (implies ==> implies ==> implies) release.
+Next Obligation.
+Admitted.
+
+Program Instance strong_release_respects_implies :
+  Proper (implies ==> implies ==> implies) strong_release.
+Next Obligation.
+Admitted.
+
+Theorem release_def (p q : t) : p R q ≈ ¬(¬p U ¬q).
+Proof.
+Admitted.
+
+Theorem strong_release_def (p q : t) : p M q ≈ p U (q ∧ p).
+Proof.
+Admitted.
 
 End StreamLTL.

@@ -7,21 +7,17 @@ Require Import
   Coq.Setoids.Setoid
   MinLTL.
 
-Module Type LinearTemporalLogic <: MinimalLinearTemporalLogic.
+Module Type LinearTemporalLogicW <: MinimalLinearTemporalLogic.
 
 Include MinimalLinearTemporalLogic.
 
 Parameter eventually : t -> t.
 Parameter always : t -> t.
 Parameter wait : t -> t -> t.
-(* Parameter release : t -> t -> t. *)
-(* Parameter strong_release : t -> t -> t. *)
 
 Notation "◇ p"     := (eventually p)       (at level 75, right associativity) : ltl_scope.
 Notation "□ p"     := (always p)           (at level 75, right associativity) : ltl_scope.
 Notation "p 'W' q" := (wait p q)           (at level 79, right associativity) : ltl_scope.
-(* Notation "p 'R' q" := (release p q)        (at level 79, right associativity) : ltl_scope. *)
-(* Notation "p 'M' q" := (strong_release p q) (at level 79, right associativity) : ltl_scope. *)
 
 Declare Instance eventually_respects_implies :
   Proper (implies ==> implies) eventually.
@@ -29,28 +25,25 @@ Declare Instance always_respects_implies :
   Proper (implies ==> implies) always.
 Declare Instance wait_respects_implies :
   Proper (implies ==> implies ==> implies) wait.
-(* Declare Instance release_respects_implies : *)
-(*   Proper (implies ==> implies ==> implies) release. *)
-(* Declare Instance strong_release_respects_implies : *)
-(*   Proper (implies ==> implies ==> implies) strong_release. *)
 
 Axiom (* 38 *) evn_def : forall (p : t), ◇ p ≈ ⊤ U p.
 Axiom (* 54 *) always_def : forall (p : t), □ p ≈ ¬◇ ¬p.
 Axiom (* 169 *) wait_def : forall (p q : t), p W q ≈ □ p ∨ p U q.
-(* Axiom release_def : forall (p q : t), p R q ≈ ¬(¬p U ¬q). *)
-(* Axiom strong_release_def : forall (p q : t), p M q ≈ p U (q ∧ p). *)
 
 Axiom (* 55 *) always_until_and_ind : forall (p q r : t),
   □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r.
+Axiom (* 83 *) always_and_until : forall (p q r : t), □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r).
 
-End LinearTemporalLogic.
+End LinearTemporalLogicW.
 
-Module LinearTemporalLogicFacts (L : LinearTemporalLogic).
+Module LinearTemporalLogicWFacts (L : LinearTemporalLogicW).
 
 Import L.
-Module Import MLTL := MinimalLinearTemporalLogicFacts L.
-Module Import BF := MLTL.BF.
-Module Import MBF := BF.MBF.
+Module Import MLTLW := MinimalLinearTemporalLogicFacts L.
+Module Import BFW := MLTLW.BF.
+Module Import MBFW := BFW.MBF.
+
+#[local] Obligation Tactic := solve [ one_arg | two_arg ].
 
 Program Instance eventually_respects_equivalent :
   Proper (equivalent ==> equivalent) eventually.
@@ -58,10 +51,6 @@ Program Instance always_respects_equivalent :
   Proper (equivalent ==> equivalent) always.
 Program Instance wait_respects_equivalent :
   Proper (equivalent ==> equivalent ==> equivalent) wait.
-(* Program Instance release_respects_equivalent : *)
-(*   Proper (equivalent ==> equivalent ==> equivalent) release. *)
-(* Program Instance strong_release_respects_equivalent : *)
-(*   Proper (equivalent ==> equivalent ==> equivalent) strong_release. *)
 
 (*** 3.3 Eventually ◇ *)
 
@@ -226,20 +215,12 @@ Qed.
 (81) □ p ⇒ ¬(q U ¬p)
 *)
 
-Lemma until_impl : forall p q r : t, (p ⇒ r) ∧ (q ⇒ r) ⟹ (p U q ⇒ r).
+Theorem (* NEW *) until_impl : forall p q r : t, (p ⇒ r) ∧ (q ⇒ r) ⟹ (p U q ⇒ r).
 Proof.
   intros.
   rewrite or_respects.
   rewrite until_28.
   now rewrite or_idem.
-Qed.
-
-Theorem (* 99 *) law_99_early (p q : t) : □ (p ∧ q) ≈ □ p ∧ □ q.
-Proof.
-  rewrite !always_def.
-  rewrite not_and.
-  rewrite evn_or.
-  now rewrite not_or.
 Qed.
 
 Theorem (* 76 *) law_76_early (p : t) : □ p ⟹ p.
@@ -248,14 +229,6 @@ Proof.
   apply contrapositive.
   rewrite not_not.
   now apply evn_weaken.
-Qed.
-
-Corollary (* NEW *) always_apply_early (p q : t) : □ (p ⇒ q) ∧ p ⟹ q.
-Proof.
-  rewrite law_76_early.
-  rewrite and_comm.
-  rewrite and_apply.
-  now boolean.
 Qed.
 
 Theorem (* 73 *) law_73_early (p : t) : ◯ □ p ≈ □ ◯ p.
@@ -321,7 +294,7 @@ Proof.
   now rewrite or_false.
 Qed.
 
-Lemma (* 58 *) evn_induction (p : t) : □ (◯ p ⇒ p) ⟹ (◇ p ⇒ p).
+Theorem (* 58 *) evn_induction (p : t) : □ (◯ p ⇒ p) ⟹ (◇ p ⇒ p).
 Proof.
   apply impl_implies.
   set (consequent := □ (◯ p ⇒ p) ⇒ ◇ p ⇒ p).
@@ -552,11 +525,6 @@ Qed.
      You cannot use textual substitution in P₁ or P₂.
  *)
 
-Theorem (* 82 *) temporal_deduction (P₁ P₂ Q : t) :
-  ((⊤ ⟹ P₁) -> (⊤ ⟹ P₂) -> (⊤ ⟹ Q)) -> (□ P₁ ∧ □ P₂ ⟹ Q).
-Proof.
-Abort.
-
 (*** 3.6 Always □, Continued *)
 
 (**
@@ -615,23 +583,10 @@ Abort.
 (135) □ (p ⇒ ◯ ¬p) ⇒ (p ⇒ ¬□ p)
 *)
 
-Axiom (* 83 *) law_83 : forall (p q r : t), □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r).
-(*
-Proof.
-  apply and_impl_iff.
-  pose proof (temporal_deduction p ⊤).
-  setoid_rewrite law_64 in H.
-  setoid_rewrite and_true in H.
-  apply H; intros.
-  rewrite <- H0.
-  now boolean.
-Qed.
-*)
-
 Theorem (* 84 *) law_84 (p q : t) : □ p ∧ ◇ q ⟹ p U q.
 Proof.
   rewrite evn_def.
-  rewrite law_83.
+  rewrite always_and_until.
   rewrite and_true.
   rewrite until_left_and.
   now boolean.
@@ -657,14 +612,14 @@ Qed.
 Theorem (* 85 *) law_85 (p q r : t) : □ (p ⇒ q) ⟹ (r U p ⇒ r U q).
 Proof.
   apply and_impl_iff.
-  rewrite law_83.
+  rewrite always_and_until.
   now apply until_respects_implies; boolean.
 Qed.
 
 Theorem (* 86 *) law_86 (p q r : t) : □ (p ⇒ q) ⟹ (p U r ⇒ q U r).
 Proof.
   apply and_impl_iff.
-  rewrite law_83.
+  rewrite always_and_until.
   now apply until_respects_implies; boolean.
 Qed.
 
@@ -679,7 +634,7 @@ Qed.
 Theorem (* 88 *) law_88 (p q : t) : □ p ∧ ◇ q ⟹ ◇ (p ∧ q).
 Proof.
   rewrite !evn_def.
-  rewrite law_83.
+  rewrite always_and_until.
   boolean.
   now apply until_respects_implies; boolean.
 Qed.
@@ -1803,7 +1758,7 @@ Theorem (* 175 *) law_175 (*Distributivity of ∧ over W *) (p q r : t) : □ p 
 Proof.
   rewrite wait_def.
   rewrite and_or.
-  rewrite law_83.
+  rewrite always_and_until.
   rewrite <- law_99.
   now rewrite <- wait_def.
 Qed.
@@ -2309,7 +2264,7 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* NEW *) not_always_until (p q : t) : □ ¬p ∧ p U q ⟹ q.
+Theorem (* NEW *) not_always_until (p q : t) : □ ¬p ∧ p U q ⟹ q.
 Proof.
   rewrite always_def.
   rewrite not_not.
@@ -2323,7 +2278,7 @@ Proof.
   now boolean.
 Qed.
 
-Lemma (* NEW *) always_until_left (p q : t) : □ p U q ⟹ p U q ∨ □ ¬q.
+Theorem (* NEW *) always_until_left (p q : t) : □ p U q ⟹ p U q ∨ □ ¬q.
 Proof.
   rewrite <- or_inj.
   apply until_respects_implies; [|reflexivity].
@@ -2569,9 +2524,45 @@ Proof.
   rewrite <- always_def.
 Abort.
 
+End LinearTemporalLogicWFacts.
+
+Module Type LinearTemporalLogic <: LinearTemporalLogicW.
+
+Include LinearTemporalLogicW.
+
+Parameter release : t -> t -> t.
+Parameter strong_release : t -> t -> t.
+
+Notation "p 'R' q" := (release p q)        (at level 79, right associativity) : ltl_scope.
+Notation "p 'M' q" := (strong_release p q) (at level 79, right associativity) : ltl_scope.
+
+Declare Instance release_respects_implies :
+  Proper (implies ==> implies ==> implies) release.
+Declare Instance strong_release_respects_implies :
+  Proper (implies ==> implies ==> implies) strong_release.
+
+Axiom release_def : forall p q, p R q ≈ ¬(¬p U ¬q).
+Axiom strong_release_def : forall p q, p M q ≈ p U (q ∧ p).
+
+End LinearTemporalLogic.
+
+Module LinearTemporalLogicFacts (L : LinearTemporalLogic).
+
+Import L.
+Module Import LTLW := LinearTemporalLogicWFacts L.
+Module Import MLTL := MinimalLinearTemporalLogicFacts L.
+Module Import BF := MLTL.BF.
+Module Import MBF := BF.MBF.
+
+#[local] Obligation Tactic := solve [ one_arg | two_arg ].
+
+Program Instance release_respects_equivalent :
+  Proper (equivalent ==> equivalent ==> equivalent) release.
+Program Instance strong_release_respects_equivalent :
+  Proper (equivalent ==> equivalent ==> equivalent) strong_release.
+
 (*** Release R *)
 
-(*
 Theorem law_256 (p q : t) : p U q ≈ ¬(¬p R ¬q).
 Proof.
   (* FILL IN HERE *)
@@ -2646,8 +2637,6 @@ Admitted.
 
 (*** OLD *)
 
-Notation "p ≉ q" := (~ (p ≈ q)) (at level 90, no associativity).
-
 Theorem law_270 (p q r : t) : □ (p ⇒ ¬q ∧ ◯ r) ⟹ p ⇒ ¬(q U r).
 Proof.
   (* FILL IN HERE *)
@@ -2658,17 +2647,16 @@ Proof.
   (* FILL IN HERE *)
 Admitted.
 
-Theorem law_272 (p q : t) : ◇ (p U q) ≉ ◇ p U ◇ q.
-Proof.
-  (* FILL IN HERE *)
-Admitted.
-
 Theorem law_273 (p q : t) : ¬◇ (¬p ∧ q) ≈ □ (p ∨ ¬q).
 Proof.
   (* FILL IN HERE *)
 Admitted.
 
-(* Definition examine {a : Type} (P : a -> t) : t := fun s => P (head s) s. *)
-*)
+Notation "p ≉ q" := (~ (p ≈ q)) (at level 90, no associativity).
+
+Theorem law_272 (p q : t) : ◇ (p U q) ≉ ◇ p U ◇ q.
+Proof.
+  (* FILL IN HERE *)
+Admitted.
 
 End LinearTemporalLogicFacts.

@@ -64,11 +64,6 @@ Axiom or_inj       : forall p q,   p ⟹ p ∨ q.
 Axiom true_def     : forall p,     p ∨ ¬p ≈ ⊤.
 Axiom false_def    : forall p,     ¬(p ∨ ¬p) ≈ ⊥.
 
-(** Denoting the basic terms into Coq's logic allows meta-theorems to be
-    proven. *)
-(* Axiom truth_denote :               truth ⊤. *)
-(* Axiom or_denote    : forall p q,   truth (p ∨ q) <-> truth p \/ truth q. *)
-
 End MinimalBooleanLogic.
 
 Module MinimalBooleanLogicFacts (B : MinimalBooleanLogic).
@@ -151,7 +146,28 @@ Ltac two_arg :=
           | now rewrite H2, H4 ]
   end.
 
-Obligation Tactic := solve [ one_arg | two_arg ].
+#[local] Obligation Tactic := solve [ one_arg | two_arg ].
+
+Theorem or_inj_r p q : p ⟹ q ∨ p.
+Proof.
+  rewrite or_comm.
+  now apply or_inj.
+Qed.
+
+Theorem true_impl p : (⊤ ⟹ p) <-> p ≈ ⊤.
+Proof.
+  split; intro.
+  - split; auto.
+    rewrite <- (true_def p).
+    now apply or_inj.
+  - now rewrite H.
+Qed.
+
+Theorem impl_true p : p ⟹ ⊤.
+Proof.
+  rewrite <- (true_def p).
+  now apply or_inj.
+Qed.
 
 (** Many of the following proofs are based on work from:
     "A Complete Proof of the Robbins Conjecture", by Allen L. Mann
@@ -190,6 +206,15 @@ Proof.
   rewrite or_comm.
   rewrite (or_comm _ (¬p)).
   now apply huntington.
+Qed.
+
+Theorem contrapositive p q : (p ⟹ q) <-> (¬q ⟹ ¬p).
+Proof.
+  split; intro.
+  - rewrite H.
+    reflexivity.
+  - apply not_respects_implies in H.
+    now rewrite !not_not in H.
 Qed.
 
 Theorem not_swap p q : ¬p ≈ q <-> p ≈ ¬q.
@@ -280,24 +305,7 @@ Qed.
 Theorem true_or p : ⊤ ∨ p ≈ ⊤.
 Proof. now rewrite or_comm; apply or_true. Qed.
 
-Theorem not_not_or_true p : ¬(¬p ∨ ¬⊤) ≈ p.
-Proof.
-  intros.
-  rewrite not_true.
-  rewrite or_false.
-  now apply not_not.
-Qed.
-
-Theorem contrapositive p q : (p ⟹ q) <-> (¬q ⟹ ¬p).
-Proof.
-  split; intro.
-  - rewrite H.
-    reflexivity.
-  - apply not_respects_implies in H.
-    now rewrite !not_not in H.
-Qed.
-
-(** Either this or or_inj must be taken as axioms to give insight into ⟹ *)
+(** Either this or or_inj must be taken as an axiom *)
 Theorem impl_implies : forall p q, (p ⟹ q) <-> (⊤ ⟹ p ⇒ q).
 Proof.
   split; intros.
@@ -315,27 +323,6 @@ Proof.
     rewrite not_not.
     rewrite or_comm.
     now apply or_inj.
-Qed.
-
-Theorem or_inj_r p q : p ⟹ q ∨ p.
-Proof.
-  rewrite or_comm.
-  now apply or_inj.
-Qed.
-
-Theorem true_impl p : (⊤ ⟹ p) <-> p ≈ ⊤.
-Proof.
-  split; intro.
-  - split; auto.
-    rewrite <- (true_def p).
-    now apply or_inj.
-  - now rewrite H.
-Qed.
-
-Theorem impl_true p : p ⟹ ⊤.
-Proof.
-  rewrite <- (true_def p).
-  now apply or_inj.
 Qed.
 
 Theorem false_impl p : ⊥ ⟹ p.
