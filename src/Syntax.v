@@ -101,8 +101,8 @@ Fixpoint expand (l : t) : t :=
   | Always p          => And (expand p) (Next (Always p))
   | Eventually p      => Or (expand p) (Next (Eventually p))
 
-  | Wait p q          => Or (expand q) (And (expand p) (Next (Until p q)))
-  | StrongRelease p q => And (expand q) (Or (expand p) (Next (Release p q)))
+  | Wait p q          => Or (expand q) (And (expand p) (Next (Wait p q)))
+  | StrongRelease p q => And (expand q) (Or (expand p) (Next (StrongRelease p q)))
   end.
 
 Definition basic (l : t) : Prop :=
@@ -174,66 +174,66 @@ Function prune (l : t) : t :=
   | StrongRelease p q => StrongRelease (prune p) (prune q)
   end.
 
-Fixpoint matches (n : Prop) (l : t) (s : list S.a) {struct l} : Prop :=
+Fixpoint matches (b : bool) (l : t) (s : list S.a) {struct l} : Prop :=
   match l with
   | Top    => True
   | Bottom => False
 
   | Examine v =>
     match s with
-    | []     => n
-    | x :: _ => matches n (v x) s
+    | []     => if b then True else False
+    | x :: _ => matches b (v x) s
     end
 
-  | And p q => matches n p s /\ matches n q s
-  | Or p q  => matches n p s \/ matches n q s
+  | And p q => matches b p s /\ matches b q s
+  | Or p q  => matches b p s \/ matches b q s
 
   | Next p =>
     match s with
-    | []      => matches n p []
-    | x :: xs => matches n p xs
+    | []      => matches b p []
+    | x :: xs => matches b p xs
     end
 
   | Until p q =>
     let fix go s :=
         match s with
-        | [] => matches n q s
-        | _ :: xs => matches n q s \/ (matches n p s /\ go xs)
+        | [] => matches b q s
+        | _ :: xs => matches b q s \/ (matches b p s /\ go xs)
         end in go s
 
   | Release p q =>
     let fix go s :=
         match s with
-        | [] => matches n q s
-        | _ :: xs => matches n q s /\ (matches n p s \/ go xs)
+        | [] => matches b q s
+        | _ :: xs => matches b q s /\ (matches b p s \/ go xs)
         end in go s
 
   | Always p =>
     let fix go s :=
         match s with
         | [] => True
-        | _ :: xs => matches n p s /\ go xs
+        | _ :: xs => matches b p s /\ go xs
         end in go s
 
   | Eventually p =>
     let fix go s :=
         match s with
         | [] => False
-        | _ :: xs => matches n p s \/ go xs
+        | _ :: xs => matches b p s \/ go xs
         end in go s
 
   | Wait p q =>
     let fix go s :=
         match s with
         | [] => True
-        | _ :: xs => matches n q s \/ (matches n p s /\ go xs)
+        | _ :: xs => matches b q s \/ (matches b p s /\ go xs)
         end in go s
 
   | StrongRelease p q =>
     let fix go s :=
         match s with
         | [] => False
-        | _ :: xs => matches n q s /\ (matches n p s \/ go xs)
+        | _ :: xs => matches b q s /\ (matches b p s \/ go xs)
         end in go s
   end.
 
@@ -242,7 +242,7 @@ Definition false          := Bottom.
 Definition and            := And.
 Definition or             := Or.
 Definition not            := negate.
-Definition implies        := fun p q => forall n s, matches n p s -> matches n q s.
+Definition implies        := fun p q => forall b s, matches b p s -> matches b q s.
 Definition equivalent     := fun p q => implies p q /\ implies q p.
 Definition next           := Next.
 Definition until          := Until.
@@ -322,16 +322,16 @@ Next Obligation.
     now apply (H a a (reflexivity _)).
 Qed.
 
-Program Instance matches_respects_implies (n : Prop) :
-  Proper (implies ==> eq ==> Basics.impl) (matches n).
+Program Instance matches_respects_implies :
+  Proper (eq ==> implies ==> eq ==> Basics.impl) matches.
 Next Obligation.
   repeat intro.
   subst.
-  now apply H.
+  now apply H0.
 Qed.
 
-Program Instance matches_respects_equivalent (n : Prop) :
-  Proper (equivalent ==> eq ==> iff) (matches n).
+Program Instance matches_respects_equivalent (b : bool) :
+  Proper (equivalent ==> eq ==> iff) (matches b).
 Next Obligation.
   split; repeat intro.
   - subst.
@@ -441,10 +441,50 @@ Admitted.
 
 Lemma expand_until (φ ψ : Formula) : φ U ψ ≈ ψ ∨ (φ ∧ ◯ (φ U ψ)).
 Proof.
-Admitted.
+  split; simpl; intros n s H;
+  simpl in H;
+  destruct s; simpl;
+  now intuition.
+Qed.
 
 Lemma expand_release (φ ψ : Formula) : φ R ψ ≈ ψ ∧ (φ ∨ ◯ (φ R ψ)).
 Proof.
+  split; simpl; intros n s H;
+  simpl in H;
+  destruct s; simpl;
+  now intuition.
+Qed.
+
+Lemma expand_always (φ : Formula) : □ φ ≈ φ ∧ ◯ □ φ.
+Proof.
+  split; simpl; intros n s H;
+  simpl in H;
+  destruct s; simpl;
+  intuition.
+Admitted.
+
+Lemma expand_eventually (φ : Formula) : ◇ φ ≈ φ ∨ ◯ ◇ φ.
+Proof.
+  split; simpl; intros n s H;
+  simpl in H;
+  destruct s; simpl;
+  intuition.
+Admitted.
+
+Lemma expand_wait (φ ψ : Formula) : φ W ψ ≈ ψ ∨ (φ ∧ ◯ (φ W ψ)).
+Proof.
+  split; simpl; intros n s H;
+  simpl in H;
+  destruct s; simpl;
+  intuition.
+Admitted.
+
+Lemma expand_strong_release (φ ψ : Formula) : φ M ψ ≈ ψ ∧ (φ ∨ ◯ (φ M ψ)).
+Proof.
+  split; simpl; intros n s H;
+  simpl in H;
+  destruct s; simpl;
+  intuition.
 Admitted.
 
 Lemma expand_correct l : expand l ≈ l.
@@ -457,34 +497,70 @@ Proof.
     now rewrite H.
   - now rewrite <- expand_until.
   - now rewrite <- expand_release.
-  - admit.
-  - admit.
-  - admit.
-  - admit.
-Admitted.
+  - now rewrite <- expand_always.
+  - now rewrite <- expand_eventually.
+  - now rewrite <- expand_wait.
+  - now rewrite <- expand_strong_release.
+Qed.
 
 Lemma prune_correct l : prune l ≈ l.
 Proof.
-  apply prune_ind; simpl; intros; subst; intuition;
-  try rewrite e0 in H;
-  try rewrite e1 in H0.
-Admitted.
+  apply prune_ind; simpl; intros; subst; intuition.
+  - split; repeat intro; simpl; intuition.
+    + rewrite <- H.
+      now rewrite e0.
+    + now rewrite <- H0.
+    + simpl in H1.
+      now rewrite H0.
+  - split; repeat intro; simpl; intuition.
+    + now rewrite <- H.
+    + rewrite <- H0.
+      now rewrite e1.
+    + simpl in H2.
+      now rewrite H1.
+  - now rewrite H1, H2.
+  - split; repeat intro; simpl; intuition.
+    + right.
+      now rewrite <- H0.
+    + simpl in H1.
+      destruct H1.
+      * rewrite <- H, e0 in H1.
+        contradiction.
+      * now rewrite H0.
+  - split; repeat intro; simpl; intuition.
+    + left.
+      now rewrite <- H1.
+    + simpl in H2.
+      destruct H2.
+      * now rewrite H1.
+      * rewrite <- H0, e1 in H2.
+        contradiction.
+  - now rewrite H1, H2.
+  - now rewrite H.
+  - now rewrite H, H0.
+  - now rewrite H, H0.
+  - now rewrite H.
+  - now rewrite H.
+  - now rewrite H, H0.
+  - now rewrite H, H0.
+Qed.
 
-Lemma matches_negate n x s : matches n (negate x) s <-> ~ matches (~ n) x s.
+Lemma matches_negate b x s : matches b (negate x) s <-> ~ matches (negb b) x s.
 Proof.
   split; intro.
   - intro.
     generalize dependent s.
     induction x; intros;
     induction s; simpl in *;
-    now firstorder eauto.
+    firstorder eauto.
+    now destruct b; simpl in *.
   - generalize dependent s.
     induction x; intros;
     try (solve [simpl in *; intuition eauto]).
     + simpl negate.
       induction s.
         simpl in *; firstorder.
-        now apply NNPP.
+        now destruct b; simpl in *.
       simpl matches in H0.
       now simpl in *; firstorder.
     + simpl in *.
@@ -538,6 +614,32 @@ Proof.
       now simpl in *; intuition.
 Qed.
 
+Lemma negate_negate p : negate (negate p) ≈ p.
+Proof.
+  split; repeat intro;
+  rewrite !matches_negate in *.
+  - apply NNPP; intro.
+    apply H; clear H; intro.
+    apply H0; clear H0.
+    generalize dependent s.
+    induction p; simpl in *; intros;
+    induction s; intuition auto.
+    now destruct b; simpl in *.
+  - intro.
+    apply H0; clear H0.
+    generalize dependent s;
+    induction p; simpl in *; intros;
+    now destruct b; simpl in *.
+Qed.
+
+Lemma matches_not_false b p s : matches b p s -> matches (negb b) (¬ p) s -> False.
+Proof.
+  intros.
+  rewrite matches_negate in H0.
+  rewrite Bool.negb_involutive in H0.
+  contradiction.
+Qed.
+
 Program Instance negate_respects_implies : Proper (implies --> implies) negate | 1.
 Next Obligation.
   repeat intro.
@@ -556,155 +658,237 @@ Next Obligation.
   now rewrite <- H.
 Qed.
 
-(** These instances allow us to rewrite without unfolding. *)
 Instance and_respects_implies :
   Proper (implies ==> implies ==> implies) and := And_respects_implies.
-Instance and_respects_equivalent :
-  Proper (equivalent ==> equivalent ==> equivalent) and := And_respects_equivalent.
 Instance or_respects_implies :
   Proper (implies ==> implies ==> implies) or := Or_respects_implies.
-Instance or_respects_equivalent :
-  Proper (equivalent ==> equivalent ==> equivalent) or := Or_respects_equivalent.
 Instance next_respects_implies :
   Proper (implies ==> implies) next := Next_respects_implies.
-Instance next_respects_equivalent :
-  Proper (equivalent ==> equivalent) next := Next_respects_equivalent.
 Instance until_respects_implies :
   Proper (implies ==> implies ==> implies) until := Until_respects_implies.
-Instance until_respects_equivalent :
-  Proper (equivalent ==> equivalent ==> equivalent) until := Until_respects_equivalent.
 Instance eventually_respects_implies :
   Proper (implies ==> implies) eventually := Eventually_respects_implies.
-Instance eventually_respects_equivalent :
-  Proper (equivalent ==> equivalent) eventually := Eventually_respects_equivalent.
 Instance always_respects_implies :
   Proper (implies ==> implies) always := Always_respects_implies.
-Instance always_respects_equivalent :
-  Proper (equivalent ==> equivalent) always := Always_respects_equivalent.
 Instance wait_respects_implies :
   Proper (implies ==> implies ==> implies) wait := Wait_respects_implies.
-Instance wait_respects_equivalent :
-  Proper (equivalent ==> equivalent ==> equivalent) wait := Wait_respects_equivalent.
 Instance release_respects_implies :
   Proper (implies ==> implies ==> implies) release := Release_respects_implies.
-Instance release_respects_equivalent :
-  Proper (equivalent ==> equivalent ==> equivalent) release := Release_respects_equivalent.
 Instance strong_release_respects_implies :
   Proper (implies ==> implies ==> implies) strong_release := StrongRelease_respects_implies.
-Instance strong_release_respects_equivalent :
-  Proper (equivalent ==> equivalent ==> equivalent) strong_release := StrongRelease_respects_equivalent.
 
 Theorem or_inj (p q : t) : p ⟹ p ∨ q.
 Proof.
-Admitted.
+  repeat intro.
+  simpl; intuition.
+Qed.
 
 Theorem true_def (p : t) : p ∨ ¬p ≈ ⊤.
 Proof.
+  split; repeat intro;
+  simpl; intuition.
+  clear H.
+  rewrite matches_negate.
 Admitted.
 
 Theorem false_def (p : t) : ¬(p ∨ ¬p) ≈ ⊥.
 Proof.
-Admitted.
+  split; repeat intro;
+  simpl; intuition.
+  rewrite matches_negate in H.
+  apply H.
+  rewrite true_def.
+  constructor.
+Qed.
 
 Theorem or_comm (p q : t) : p ∨ q ≈ q ∨ p.
 Proof.
-Admitted.
+  split; repeat intro;
+  simpl in *; intuition.
+Qed.
 
 Theorem or_assoc (p q r : t) : (p ∨ q) ∨ r ≈ p ∨ (q ∨ r).
 Proof.
-Admitted.
+  split; repeat intro;
+  simpl in *; intuition.
+Qed.
 
 Theorem and_def (p q : t) : p ∧ q ≈ ¬(¬p ∨ ¬q).
 Proof.
-Admitted.
+  unfold and, or, not.
+  simpl.
+  now rewrite !negate_negate.
+Qed.
 
 Theorem huntington (p q : t) : ¬(¬p ∨ ¬q) ∨ ¬(¬p ∨ q) ≈ p.
 Proof.
-Admitted.
+  unfold or, not; simpl.
+  rewrite !negate_negate.
+  split; repeat intro; simpl in *; intuition.
+  pose proof (true_def q).
+  destruct H0.
+  clear H0.
+  specialize (H1 b s I).
+  simpl in H1.
+  intuition.
+Qed.
 
 Theorem next_not (p : t) : ◯ ¬p ≈ ¬◯ p.
-Proof.
-Admitted.
+Proof. now auto. Qed.
 
 Theorem next_impl (p q : t) : ◯ (p ⇒ q) ≈ ◯ p ⇒ ◯ q.
 Proof.
-Admitted.
+  unfold next, not, or.
+  split; repeat intro; simpl in *;
+  induction s; simpl in *; intuition.
+Qed.
 
 Theorem next_until (p q : t) : ◯ (p U q) ≈ (◯ p) U (◯ q).
 Proof.
+  unfold next, until.
+  split; repeat intro;
+  induction s; intuition.
+  - admit.
+  - admit.
 Admitted.
 
 Theorem until_expansion (p q : t) : p U q ≈ q ∨ (p ∧ ◯ (p U q)).
 Proof.
-Admitted.
+  unfold until, or.
+  split; repeat intro; simpl in *;
+  now induction s; intuition.
+Qed.
 
 Theorem until_right_bottom (p : t) : p U ⊥ ≈ ⊥.
 Proof.
-Admitted.
+  unfold until, false.
+  split; repeat intro; simpl in *;
+  now induction s; intuition.
+Qed.
 
 Theorem until_left_or (p q r : t) : p U (q ∨ r) ≈ (p U q) ∨ (p U r).
 Proof.
-Admitted.
+  unfold until, or.
+  split; repeat intro; simpl in *;
+  now induction s; intuition.
+Qed.
 
 Theorem until_right_or (p q r : t) : (p U r) ∨ (q U r) ⟹ (p ∨ q) U r.
 Proof.
-Admitted.
+  unfold until, or.
+  repeat intro; simpl in *;
+  now induction s; intuition.
+Qed.
 
 Theorem until_left_and (p q r : t) : p U (q ∧ r) ⟹ (p U q) ∧ (p U r).
 Proof.
-Admitted.
+  unfold until, or.
+  repeat intro; simpl in *;
+  now induction s; intuition.
+Qed.
 
 Theorem until_right_and (p q r : t) : (p ∧ q) U r ≈ (p U r) ∧ (q U r).
 Proof.
-Admitted.
+  unfold until, or.
+  split; repeat intro; simpl in *;
+  now induction s; intuition.
+Qed.
 
 Theorem until_impl_order (p q r : t) : (p U q) ∧ (¬q U r) ⟹ p U r.
 Proof.
+  unfold until, and, not.
+  repeat intro; simpl in *;
+  induction s; intuition.
 Admitted.
 
 Theorem until_right_or_order (p q r : t) : p U (q U r) ⟹ (p ∨ q) U r.
 Proof.
-Admitted.
+  unfold until, and, not.
+  repeat intro; simpl in *;
+  induction s; intuition.
+  right.
+  split; auto.
+  apply IHs.
+  now destruct s; simpl; intuition.
+Qed.
 
 Theorem until_right_and_order (p q r : t) : p U (q ∧ r) ⟹ (p U q) U r.
 Proof.
+  unfold until, and, not.
+  repeat intro; simpl in *;
+  induction s; intuition.
 Admitted.
 
 Theorem not_until (p q : t) : ⊤ U ¬p ∧ ¬(p U q) ≈ ¬q U (¬p ∧ ¬q).
 Proof.
-Admitted.
+  unfold until, or.
+  split; repeat intro; simpl in *;
+  now induction s; intuition.
+Qed.
 
 Theorem evn_def (p : t) : ◇ p ≈ ⊤ U p.
 Proof.
+  unfold eventually, until.
+  split; repeat intro; simpl in *;
+  induction s; intuition.
+  induction p; simpl in H; intuition.
+  (* jww (2021-02-18): impossible *)
 Admitted.
 
 Theorem always_def (p : t) : □ p ≈ ¬◇ ¬p.
 Proof.
-Admitted.
+  unfold eventually, until.
+  split; repeat intro; simpl in *;
+  induction s; intuition.
+  - now rewrite negate_negate.
+  - now rewrite negate_negate in H0.
+Qed.
 
 Theorem always_induction_ (p : t) : □ (p ⇒ ◯ p) ⟹ p ⇒ □ p.
 Proof.
+  unfold eventually, until.
+  repeat intro; simpl in *;
+  induction s; firstorder.
+  - admit.
+  - admit.
 Admitted.
 
 Theorem always_until_and_ind (p q r : t) :
   □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r.
 Proof.
+  unfold eventually, until.
+  repeat intro; simpl in *;
+  induction s; intuition.
 Admitted.
 
 Theorem always_and_until (p q r : t) : □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r).
 Proof.
+  unfold eventually, until.
+  repeat intro; simpl in *;
+  induction s; intuition.
+  (* jww (2021-02-18): impossible *)
 Admitted.
 
 Theorem wait_def (p q : t) : p W q ≈ □ p ∨ p U q.
 Proof.
-Admitted.
+  unfold wait, until.
+  split; repeat intro; simpl in *;
+  induction s; intuition.
+Qed.
 
 Theorem release_def (p q : t) : p R q ≈ ¬(¬p U ¬q).
 Proof.
-Admitted.
+  unfold release, until.
+  split; repeat intro; simpl in *;
+  induction s; intuition;
+  rewrite ?negate_negate in *; intuition.
+Qed.
 
 Theorem strong_release_def (p q : t) : p M q ≈ p U (q ∧ p).
 Proof.
+  unfold strong_release, until, and.
+  split; repeat intro; simpl in *;
+  induction s; intuition.
 Admitted.
 
 End LTL.
@@ -743,19 +927,20 @@ Include L.
 Definition num (n : nat) := Examine (λ x, if x =? n then ⊤ else ⊥).
 
 Example ex_match_query  :
-  matches (num 1 ∧ (◯ (num 2))) [1; 2].
+  matches Datatypes.true (num 1 ∧ (◯ (num 2))) [1; 2].
 Proof. simpl; auto. Qed.
 
 Example ex_match_series :
-  matches (series [num 1; num 2]) [1; 2].
+  matches Datatypes.true (series [num 1; num 2]) [1; 2].
 Proof. simpl; auto. Qed.
 
 Example ex_match_sample1 :
-  matches (◇ (num 3 ⇒ ◇ (num 8))) [1; 2; 3; 4; 5; 6; 7; 8; 9].
+  matches Datatypes.true (◇ (num 3 ⇒ ◇ (num 8))) [1; 2; 3; 4; 5; 6; 7; 8; 9].
 Proof. simpl; intuition auto. Qed.
 
 Example ex_match_sample2 :
-  matches (◇ (if_then (fun n => n =? 3) (fun n => ◇ (num (n + 5)))))
+  matches Datatypes.true
+          (◇ (if_then (fun n => n =? 3) (fun n => ◇ (num (n + 5)))))
           [1; 2; 3; 4; 5; 6; 7; 8; 9].
 Proof. simpl; intuition auto. Qed.
 
