@@ -742,13 +742,13 @@ Instance release_respects_implies :
 Instance strong_release_respects_implies :
   Proper (implies ==> implies ==> implies) strong_release := StrongRelease_respects_implies.
 
-Theorem or_inj (p q : t) : p ⟹ p ∨ q.
+Theorem or_inj p q : p ⟹ p ∨ q.
 Proof.
   repeat intro.
   simpl; intuition.
 Qed.
 
-Theorem true_def (p : t) : p ∨ ¬p ≈ ⊤.
+Theorem true_def p : p ∨ ¬p ≈ ⊤.
 Proof.
   split; repeat intro;
   simpl; intuition.
@@ -757,7 +757,7 @@ Proof.
   exact (classic (matches p s)).
 Qed.
 
-Theorem false_def (p : t) : ¬(p ∨ ¬p) ≈ ⊥.
+Theorem false_def p : ¬(p ∨ ¬p) ≈ ⊥.
 Proof.
   split; repeat intro;
   simpl; intuition.
@@ -767,26 +767,26 @@ Proof.
   constructor.
 Qed.
 
-Theorem or_comm (p q : t) : p ∨ q ≈ q ∨ p.
+Theorem or_comm p q : p ∨ q ≈ q ∨ p.
 Proof.
   split; repeat intro;
   simpl in *; intuition.
 Qed.
 
-Theorem or_assoc (p q r : t) : (p ∨ q) ∨ r ≈ p ∨ (q ∨ r).
+Theorem or_assoc p q r : (p ∨ q) ∨ r ≈ p ∨ (q ∨ r).
 Proof.
   split; repeat intro;
   simpl in *; intuition.
 Qed.
 
-Theorem and_def (p q : t) : p ∧ q ≈ ¬(¬p ∨ ¬q).
+Theorem and_def p q : p ∧ q ≈ ¬(¬p ∨ ¬q).
 Proof.
   unfold and, or, not.
   simpl.
   now rewrite !negate_negate.
 Qed.
 
-Theorem huntington (p q : t) : ¬(¬p ∨ ¬q) ∨ ¬(¬p ∨ q) ≈ p.
+Theorem huntington p q : ¬(¬p ∨ ¬q) ∨ ¬(¬p ∨ q) ≈ p.
 Proof.
   unfold or, not; simpl.
   rewrite !negate_negate.
@@ -799,24 +799,24 @@ Proof.
   intuition.
 Qed.
 
-Theorem next_not (p : t) : ◯ ¬p ≈ ¬◯ p.
+Theorem next_not p : ◯ ¬p ≈ ¬◯ p.
 Proof. now auto. Qed.
 
-Theorem next_impl (p q : t) : ◯ (p ⇒ q) ≈ ◯ p ⇒ ◯ q.
+Theorem next_impl p q : ◯ (p ⇒ q) ≈ ◯ p ⇒ ◯ q.
 Proof.
   unfold next, not, or.
   split; repeat intro; simpl in *;
   induction s; simpl in *; intuition.
 Qed.
 
-Theorem until_expansion (p q : t) : p U q ≈ q ∨ (p ∧ ◯ (p U q)).
+Theorem until_expansion p q : p U q ≈ q ∨ (p ∧ ◯ (p U q)).
 Proof.
   unfold until, or.
   split; repeat intro; simpl in *;
   now induction s; intuition.
 Qed.
 
-Theorem next_until (p q : t) : ◯ (p U q) ≈ (◯ p) U (◯ q).
+Theorem next_until p q : ◯ (p U q) ≈ (◯ p) U (◯ q).
 Proof.
   unfold next, until.
   split; repeat intro;
@@ -826,42 +826,42 @@ Proof.
   now intuition.
 Qed.
 
-Theorem until_right_bottom (p : t) : p U ⊥ ≈ ⊥.
+Theorem until_right_bottom p : p U ⊥ ≈ ⊥.
 Proof.
   unfold until, false.
   split; repeat intro; simpl in *;
   now induction s; intuition.
 Qed.
 
-Theorem until_left_or (p q r : t) : p U (q ∨ r) ≈ (p U q) ∨ (p U r).
+Theorem until_left_or p q r : p U (q ∨ r) ≈ (p U q) ∨ (p U r).
 Proof.
   unfold until, or.
   split; repeat intro; simpl in *;
   now induction s; intuition.
 Qed.
 
-Theorem until_right_or (p q r : t) : (p U r) ∨ (q U r) ⟹ (p ∨ q) U r.
+Theorem until_right_or p q r : (p U r) ∨ (q U r) ⟹ (p ∨ q) U r.
 Proof.
   unfold until, or.
   repeat intro; simpl in *;
   now induction s; intuition.
 Qed.
 
-Theorem until_left_and (p q r : t) : p U (q ∧ r) ⟹ (p U q) ∧ (p U r).
+Theorem until_left_and p q r : p U (q ∧ r) ⟹ (p U q) ∧ (p U r).
 Proof.
   unfold until, or.
   repeat intro; simpl in *;
   now induction s; intuition.
 Qed.
 
-Theorem until_right_and (p q r : t) : (p ∧ q) U r ≈ (p U r) ∧ (q U r).
+Theorem until_right_and p q r : (p ∧ q) U r ≈ (p U r) ∧ (q U r).
 Proof.
   unfold until, or.
   split; repeat intro; simpl in *;
   now induction s; intuition.
 Qed.
 
-Theorem until_impl_order (p q r : t) : (p U q) ∧ (¬q U r) ⟹ p U r.
+Theorem until_impl_order p q r : (p U q) ∧ (¬q U r) ⟹ p U r.
 Proof.
   unfold until, and, not.
   repeat intro; simpl in *;
@@ -869,7 +869,7 @@ Proof.
   contradiction (matches_not_false H H1).
 Qed.
 
-Theorem until_right_or_order (p q r : t) : p U (q U r) ⟹ (p ∨ q) U r.
+Theorem until_right_or_order p q r : p U (q U r) ⟹ (p ∨ q) U r.
 Proof.
   unfold until, and, not.
   repeat intro; simpl in *;
@@ -931,7 +931,7 @@ Lemma matches_strongrelease s p q : matches (StrongRelease p q) s <-> True.
 Proof.
 Abort.
 
-Theorem until_right_and_order (p q r : t) : p U (q ∧ r) ⟹ (p U q) U r.
+Theorem until_right_and_order p q r : p U (q ∧ r) ⟹ (p U q) U r.
 Proof.
   unfold until, and.
   repeat intro;
@@ -952,21 +952,21 @@ Proof.
     now induction s; simpl in *; intuition.
 Qed.
 
-Theorem not_until (p q : t) : ⊤ U ¬p ∧ ¬(p U q) ≈ ¬q U (¬p ∧ ¬q).
+Theorem not_until p q : ⊤ U ¬p ∧ ¬(p U q) ≈ ¬q U (¬p ∧ ¬q).
 Proof.
   unfold until, or.
   split; repeat intro; simpl in *;
   now induction s; intuition.
 Qed.
 
-Theorem evn_def (p : t) : ◇ p ≈ ⊤ U p.
+Theorem evn_def p : ◇ p ≈ ⊤ U p.
 Proof.
   unfold eventually, until.
   split; repeat intro; simpl in *;
   now induction s; intuition.
 Qed.
 
-Theorem always_def (p : t) : □ p ≈ ¬◇ ¬p.
+Theorem always_def p : □ p ≈ ¬◇ ¬p.
 Proof.
   unfold eventually, until.
   split; repeat intro; simpl in *;
@@ -977,7 +977,7 @@ Proof.
   - now rewrite negate_negate in H0.
 Qed.
 
-Theorem always_induction_ (p : t) : □ (p ⇒ ◯ p) ⟹ p ⇒ □ p.
+Theorem always_induction_ p : □ (p ⇒ ◯ p) ⟹ p ⇒ □ p.
 Proof.
   unfold eventually, until.
   repeat intro; simpl in *;
@@ -989,7 +989,11 @@ Proof.
     now firstorder.
 Qed.
 
-Theorem always_until_and_ind (p q r : t) :
+Theorem until_race p q r s : p U q ∧ r U s ⟹ p U (q ∧ r) ∧ r U (p ∧ s).
+Proof.
+Admitted.
+
+Theorem always_until_and_ind_ p q r :
   □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r.
 Proof.
   unfold eventually, until.
@@ -998,21 +1002,21 @@ Proof.
   contradiction (matches_not_false H H3).
 Qed.
 
-Theorem always_and_until (p q r : t) : □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r).
+Theorem always_and_until p q r : □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r).
 Proof.
   unfold always, until, and.
   repeat intro; simpl in *;
   now induction s; intuition.
 Qed.
 
-Theorem wait_def (p q : t) : p W q ≈ □ p ∨ p U q.
+Theorem wait_def p q : p W q ≈ □ p ∨ p U q.
 Proof.
   unfold wait, until.
   split; repeat intro; simpl in *;
   now induction s; intuition.
 Qed.
 
-Theorem release_def (p q : t) : p R q ≈ ¬(¬p U ¬q).
+Theorem release_def p q : p R q ≈ ¬(¬p U ¬q).
 Proof.
   unfold release, until.
   split; repeat intro; simpl in *;
@@ -1020,7 +1024,7 @@ Proof.
   rewrite ?negate_negate in *; intuition.
 Qed.
 
-Theorem strong_release_def (p q : t) : p M q ≈ q U (p ∧ q).
+Theorem strong_release_def p q : p M q ≈ q U (p ∧ q).
 Proof.
   unfold strong_release, until, and.
   split; repeat intro; simpl in *;

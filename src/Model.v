@@ -17,8 +17,6 @@ Module StreamLTLW <: LinearTemporalLogicW.
 
 Variable a : Type.
 
-Hypothesis A_inhabited : inhabited a.
-
 Infix    "∪"     := (Union _)        (at level 85, right associativity).
 Notation "∅"     := (Empty_set _)    (at level 0, no associativity).
 Infix    "∩"     := (Intersection _) (at level 80, right associativity).
@@ -27,7 +25,6 @@ Notation "p ⊆ q" := (Included _ q p) (at level 89, no associativity).
 
 Definition t := Ensemble (Stream a).
 
-Definition truth      := Inhabited (Stream a).
 Definition not        := Complement (Stream a).
 Definition or         := Union (Stream a).
 Definition true       := Full_set (Stream a).
@@ -93,10 +90,10 @@ Infix    "≈"      := equivalent      (at level 90, no associativity) : boolean
 Infix    "∧"      := and             (at level 80, right associativity) : boolean_scope.
 Notation "p ≡ q"  := (p ⇒ q ∧ q ⇒ p) (at level 89, right associativity, only parsing) : boolean_scope.
 
-Theorem or_inj (p q : t) : p ⟹ p ∨ q.
+Theorem or_inj p q : p ⟹ p ∨ q.
 Proof. repeat intro; now left. Qed.
 
-Theorem true_def (p : t) : p ∨ ¬p ≈ ⊤.
+Theorem true_def p : p ∨ ¬p ≈ ⊤.
 Proof.
   split; intros.
   - constructor.
@@ -107,7 +104,7 @@ Proof.
     now right.
 Qed.
 
-Theorem false_def (p : t) : ¬(p ∨ ¬p) ≈ ⊥.
+Theorem false_def p : ¬(p ∨ ¬p) ≈ ⊥.
 Proof.
   split; intros.
   - rewrite true_def.
@@ -119,13 +116,13 @@ Proof.
     contradiction.
 Qed.
 
-Theorem or_comm (p q : t) : p ∨ q ≈ q ∨ p.
+Theorem or_comm p q : p ∨ q ≈ q ∨ p.
 Proof.
   unfold or.
   now rewrite Union_commutative.
 Qed.
 
-Theorem or_assoc (p q r : t) : (p ∨ q) ∨ r ≈ p ∨ (q ∨ r).
+Theorem or_assoc p q r : (p ∨ q) ∨ r ≈ p ∨ (q ∨ r).
 Proof.
   unfold or.
   now rewrite Union_associative.
@@ -156,7 +153,7 @@ Proof.
     now right.
 Qed.
 
-Theorem and_def (p q : t) : p ∧ q ≈ ¬(¬p ∨ ¬q).
+Theorem and_def p q : p ∧ q ≈ ¬(¬p ∨ ¬q).
 Proof.
   split; repeat intro.
   - destruct H, H0; contradiction.
@@ -165,7 +162,7 @@ Proof.
     exact H.
 Qed.
 
-Theorem huntington (p q : t) : ¬(¬p ∨ ¬q) ∨ ¬(¬p ∨ q) ≈ p.
+Theorem huntington p q : ¬(¬p ∨ ¬q) ∨ ¬(¬p ∨ q) ≈ p.
 Proof.
   split; intros.
   - rewrite <- (Complement_Complement _ q) at 2.
@@ -262,14 +259,14 @@ Proof.
     lia.
 Qed.
 
-Theorem (* 1 *) next_not (p : t) : ◯ ¬p ≈ ¬◯ p.
+Theorem (* 1 *) next_not p : ◯ ¬p ≈ ¬◯ p.
 Proof.
   unfold next, not.
   split; repeat intro;
   now apply H.
 Qed.
 
-Theorem (* 2 *) next_impl (p q : t) : ◯ (p ⇒ q) ≈ ◯ p ⇒ ◯ q.
+Theorem (* 2 *) next_impl p q : ◯ (p ⇒ q) ≈ ◯ p ⇒ ◯ q.
 Proof.
   unfold next.
   split; repeat intro.
@@ -281,14 +278,14 @@ Proof.
     + now right.
 Qed.
 
-Theorem (* 9 *) next_until (p q : t) : ◯ (p U q) ≈ (◯ p) U (◯ q).
+Theorem (* 9 *) next_until p q : ◯ (p U q) ≈ (◯ p) U (◯ q).
 Proof.
   unfold next, until.
   split; repeat intro; unfold In in *;
   now setoid_rewrite from_from.
 Qed.
 
-Theorem (* 10 *) until_expansion (p q : t) : p U q ≈ q ∨ (p ∧ ◯ (p U q)).
+Theorem (* 10 *) until_expansion p q : p U q ≈ q ∨ (p ∧ ◯ (p U q)).
 Proof.
   unfold next, until, or, and.
   split; repeat intro; unfold In in *.
@@ -330,7 +327,7 @@ Proof.
         lia.
 Qed.
 
-Theorem (* 11 *) until_right_bottom (p : t) : p U ⊥ ≈ ⊥.
+Theorem (* 11 *) until_right_bottom p : p U ⊥ ≈ ⊥.
 Proof.
   unfold next, until, or, and.
   split; repeat intro; unfold In in *.
@@ -341,7 +338,7 @@ Proof.
     lia.
 Qed.
 
-Theorem (* 12 *) until_left_or (p q r : t) : p U (q ∨ r) ≈ (p U q) ∨ (p U r).
+Theorem (* 12 *) until_left_or p q r : p U (q ∨ r) ≈ (p U q) ∨ (p U r).
 Proof.
   split; repeat intro; unfold In in *.
   unfold until, or in *.
@@ -375,7 +372,7 @@ Proof.
         now apply H0.
 Qed.
 
-Theorem (* 13 *) until_right_or (p q r : t) : (p U r) ∨ (q U r) ⟹ (p ∨ q) U r.
+Theorem (* 13 *) until_right_or p q r : (p U r) ∨ (q U r) ⟹ (p ∨ q) U r.
 Proof.
   repeat intro; unfold In in *.
   unfold until, or in *.
@@ -394,7 +391,7 @@ Proof.
     now intuition.
 Qed.
 
-Theorem (* 14 *) until_left_and (p q r : t) : p U (q ∧ r) ⟹ (p U q) ∧ (p U r).
+Theorem (* 14 *) until_left_and p q r : p U (q ∧ r) ⟹ (p U q) ∧ (p U r).
 Proof.
   repeat intro; unfold In in *.
   unfold until, or in *.
@@ -408,7 +405,7 @@ Proof.
     now split.
 Qed.
 
-Theorem (* 15 *) until_right_and (p q r : t) : (p ∧ q) U r ≈ (p U r) ∧ (q U r).
+Theorem (* 15 *) until_right_and p q r : (p ∧ q) U r ≈ (p U r) ∧ (q U r).
 Proof.
   split; repeat intro;
   unfold until, In in *.
@@ -439,7 +436,7 @@ Proof.
         lia.
 Qed.
 
-Theorem (* 16 *) until_impl_order (p q r : t) : (p U q) ∧ (¬q U r) ⟹ p U r.
+Theorem (* 16 *) until_impl_order p q r : (p U q) ∧ (¬q U r) ⟹ p U r.
 Proof.
   repeat intro;
   unfold until, In in *.
@@ -457,7 +454,7 @@ Proof.
     now firstorder.
 Qed.
 
-Theorem (* 17 *) until_right_or_order (p q r : t) : p U (q U r) ⟹ (p ∨ q) U r.
+Theorem (* 17 *) until_right_or_order p q r : p U (q U r) ⟹ (p ∨ q) U r.
 Proof.
   repeat intro; unfold In in *.
   unfold until, or in *.
@@ -479,7 +476,7 @@ Proof.
     now apply H0.
 Qed.
 
-Theorem (* 18 *) until_right_and_order (p q r : t) : p U (q ∧ r) ⟹ (p U q) U r.
+Theorem (* 18 *) until_right_and_order p q r : p U (q ∧ r) ⟹ (p U q) U r.
 Proof.
   repeat intro; unfold In in *.
   unfold until, or in *.
@@ -519,7 +516,7 @@ Proof.
   now inv H.
 Qed.
 
-Theorem (* NEW *) not_until (p q : t) : ⊤ U ¬p ∧ ¬(p U q) ≈ ¬q U (¬p ∧ ¬q).
+Theorem (* NEW *) not_until p q : ⊤ U ¬p ∧ ¬(p U q) ≈ ¬q U (¬p ∧ ¬q).
 Proof.
   split.
   - apply and_impl_iff_.
@@ -702,7 +699,7 @@ Theorem wait_semantics : ∀ σ j p q,
 Proof.
 Admitted.
 
-Theorem evn_def (p : t) : ◇ p ≈ ⊤ U p.
+Theorem evn_def p : ◇ p ≈ ⊤ U p.
 Proof.
   unfold eventually, until, any.
   split; repeat intro; unfold In in *.
@@ -715,7 +712,7 @@ Proof.
     now destruct H.
 Qed.
 
-Theorem always_def (p : t) : □ p ≈ ¬◇ ¬p.
+Theorem always_def p : □ p ≈ ¬◇ ¬p.
 Proof.
   unfold always, eventually, until, any, every.
   split; repeat intro; unfold In in *.
@@ -732,7 +729,7 @@ Qed.
 
 (* This is provided by [LinearTemporalLogicFacts] below, I only proved it as a
    guide here to doing similar semantic proofs involving always. *)
-Theorem always_induction_ (p : t) : □ (p ⇒ ◯ p) ⟹ p ⇒ □ p.
+Theorem always_induction_ p : □ (p ⇒ ◯ p) ⟹ p ⇒ □ p.
 Proof.
   apply and_impl_iff_.
   unfold next, always, every.
@@ -782,7 +779,11 @@ Proof.
       lia.
 Qed.
 
-Theorem always_until_and_ind (p q r : t) :
+Theorem until_race p q r s : p U q ∧ r U s ⟹ p U (q ∧ r) ∧ r U (p ∧ s).
+Proof.
+Admitted.
+
+Theorem always_until_and_ind_ p q r :
   □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r.
 Proof.
   apply and_impl_iff_.
@@ -848,7 +849,7 @@ Proof.
         contradiction.
 Qed.
 
-Theorem always_and_until (p q r : t) : □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r).
+Theorem always_and_until p q r : □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r).
 Proof.
   unfold until, next, always, every, or, and, not.
   repeat intro.
@@ -866,7 +867,7 @@ Proof.
     + now apply H1.
 Qed.
 
-Theorem wait_def (p q : t) : p W q ≈ □ p ∨ p U q.
+Theorem wait_def p q : p W q ≈ □ p ∨ p U q.
 Proof. reflexivity. Qed.
 
 End StreamLTLW.
@@ -891,11 +892,11 @@ Program Instance strong_release_respects_implies :
 Next Obligation.
 Admitted.
 
-Theorem release_def (p q : t) : p R q ≈ ¬(¬p U ¬q).
+Theorem release_def p q : p R q ≈ ¬(¬p U ¬q).
 Proof.
 Admitted.
 
-Theorem strong_release_def (p q : t) : p M q ≈ q U (p ∧ q).
+Theorem strong_release_def p q : p M q ≈ q U (p ∧ q).
 Proof.
 Admitted.
 

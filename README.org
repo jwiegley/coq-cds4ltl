@@ -9,7 +9,7 @@ all my questions and offering their support and encouragement.
 
 * Work list
 
-** TODO Typeset the proof of (56) in LaTeX
+** DONE Typeset the proof of (56) in LaTeX
 - Note taken on [2021-02-11 Thu 08:57] \\
   Scott to provide a template LaTeX file for John to typeset his new (56)
   Theorem proof.
@@ -81,7 +81,7 @@ all my questions and offering their support and encouragement.
 :CREATED:  [2021-02-11 Thu 10:43]
 :END:
 
-** TODO Typeset new proof: of □ ¬p ∧ p U q ⇒ q
+** TODO Typeset new proof (57): □ ¬p ∧ p U q ⇒ q
 :PROPERTIES:
 :ID:       FC4ECD01-B161-4081-9C63-4E127FAFBD4F
 :CREATED:  [2021-02-11 Thu 10:50]
@@ -99,7 +99,7 @@ all my questions and offering their support and encouragement.
 :CREATED:  [2021-02-11 Thu 08:52]
 :END:
 
-** TODO Find an appropriate statement of (82)
+** DONE Find an appropriate statement of (82)
 :PROPERTIES:
 :ID:       5D6FD9DA-0C74-424A-B6A0-6F10CB85D13E
 :CREATED:  [2021-02-11 Thu 11:30]
@@ -151,13 +151,13 @@ This may be found in Model.v
 :CREATED:  [2021-02-11 Thu 08:58]
 :END:
 
-** TODO Find a better axiomatic basis for proving (82)
+** DONE Find a better axiomatic basis for proving (82)
 :PROPERTIES:
 :ID:       2540261A-82CE-4CD2-838C-32847BC3BD4B
 :CREATED:  [2021-02-11 Thu 08:58]
 :END:
 
-** TODO Rebuild the syntactic, Mealy-machine based evaluation model
+** DONE Rebuild the syntactic, Mealy-machine based evaluation model
 :PROPERTIES:
 :ID:       DE89F702-84A9-407D-AA4F-FCABB7F2394A
 :CREATED:  [2021-02-11 Thu 09:39]
@@ -167,4 +167,16 @@ This may be found in Model.v
 :PROPERTIES:
 :ID:       6F7FF7D9-E21F-4982-B638-4A8A902D1BE6
 :CREATED:  [2021-02-11 Thu 09:46]
+:END:
+** TODO Write a program to produce an ideal ordering of the LTL theorems
+This would first build a dependency graph, and then for items at the same
+level, order them based on term complexity.
+:PROPERTIES:
+:ID:       70E545FF-5640-4E48-AE24-F818F53A9E52
+:CREATED:  [2021-02-19 Fri 10:43]
+:END:
+** DONE Typeset new proof (238)
+:PROPERTIES:
+:ID:       6848091F-39F6-4D56-AD71-540C507BBF95
+:CREATED:  [2021-02-19 Fri 10:56]
 :END:
