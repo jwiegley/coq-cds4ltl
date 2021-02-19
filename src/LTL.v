@@ -2542,7 +2542,7 @@ Declare Instance strong_release_respects_implies :
   Proper (implies ==> implies ==> implies) strong_release.
 
 Axiom release_def : forall p q, p R q ≈ ¬(¬p U ¬q).
-Axiom strong_release_def : forall p q, p M q ≈ p U (q ∧ p).
+Axiom strong_release_def : forall p q, p M q ≈ q U (p ∧ q).
 
 End LinearTemporalLogic.
 

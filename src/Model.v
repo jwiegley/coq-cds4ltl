@@ -895,7 +895,7 @@ Theorem release_def (p q : t) : p R q ≈ ¬(¬p U ¬q).
 Proof.
 Admitted.
 
-Theorem strong_release_def (p q : t) : p M q ≈ p U (q ∧ p).
+Theorem strong_release_def (p q : t) : p M q ≈ q U (p ∧ q).
 Proof.
 Admitted.
 
