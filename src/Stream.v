@@ -94,7 +94,12 @@ Proof.
   now rewrite from_S.
 Qed.
 
-Notation "[ s , n ]  ⊨ P" := (P (from n s)) (at level 85).
+Declare Scope stream_scope.
+Bind Scope stream_scope with Stream.
+Delimit Scope stream_scope with stream.
+Open Scope stream_scope.
+
+Notation "[ s , n ]  ⊨ P" := (P (from n s)) (at level 85) : stream_scope.
 
 Definition every (P : Stream -> Prop) (s : Stream) := forall i, [s, i] ⊨ P.
 Definition any   (P : Stream -> Prop) (s : Stream) := exists i, [s, i] ⊨ P.
@@ -283,7 +288,12 @@ Arguments tail {a} s.
 Arguments every {a} P s.
 Arguments any {a} P s.
 
-Notation "[ s , n ]  ⊨ P" := (P (from n s)) (at level 75).
+Declare Scope stream_scope.
+Bind Scope stream_scope with Stream.
+Delimit Scope stream_scope with stream.
+Open Scope stream_scope.
+
+Notation "[ s , n ]  ⊨ P" := (P (from n s)) (at level 75) : stream_scope.
 
 CoFixpoint constant {a : Type} (x : a) : Stream a := Cons x (constant x).
 

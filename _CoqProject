@@ -7,3 +7,5 @@ src/Same_set.v
 src/Stream.v
 src/Model.v
 src/Syntax.v
+src/Step.v
+src/Machine.v
