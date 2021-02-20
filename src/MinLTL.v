@@ -38,7 +38,7 @@ Axiom (* 1 *)  next_not : forall p, ◯ ¬p ≈ ¬◯ p.
 Axiom (* 2 *)  next_impl : forall p q, ◯ (p ⇒ q) ≈ ◯ p ⇒ ◯ q.
 
 Axiom (* 9 *)  next_until : forall p q, ◯ (p U q) ≈ (◯ p) U (◯ q).
-Axiom (* 10 *) until_expansion : forall p q, p U q ≈ q ∨ (p ∧ ◯ (p U q)).
+Axiom (* 10 *) until_expand : forall p q, p U q ≈ q ∨ (p ∧ ◯ (p U q)).
 Axiom (* 11 *) until_right_bottom : forall p, p U ⊥ ≈ ⊥.
 Axiom (* 12 *) until_left_or : forall p q r, p U (q ∨ r) ≈ (p U q) ∨ (p U r).
 Axiom (* 13 *) until_right_or : forall p q r, (p U r) ∨ (q U r) ⟹ (p ∨ q) U r.
@@ -49,7 +49,11 @@ Axiom (* 17 *) until_right_or_order : forall p q r, p U (q U r) ⟹ (p ∨ q) U 
 Axiom (* 18 *) until_right_and_order : forall p q r, p U (q ∧ r) ⟹ (p U q) U r.
 Axiom (* 170 *) not_until : forall p q, ⊤ U ¬p ∧ ¬(p U q) ≈ ¬q U (¬p ∧ ¬q).
 
-Axiom (* NEW *) until_race : forall p q r s, p U q ∧ r U s ⟹ p U (q ∧ r) ∧ r U (p ∧ s).
+Axiom (* NEW *) until_race : forall p q r s,
+  p U q ∧ r U s ⟹ (p ∧ r) U ((q ∧ r) ∨  (* first wins  *)
+                              (p ∧ s) ∨  (* second wins *)
+                              (q ∧ s)    (* it's a tie  *)
+                             ).
 
 End MinimalLinearTemporalLogic.
 
@@ -133,11 +137,18 @@ Proof.
   now rewrite false_def.
 Qed.
 
+Corollary (* NEW *) until_expand_ext p q : p U q ≈ q ∨ (¬ q ∧ p ∧ ◯ (p U q)).
+Proof.
+  rewrite or_and.
+  boolean.
+  now apply until_expand.
+Qed.
+
 (*** 3.2 Until U *)
 
 (**
 (9) Axiom, Distributivity of ◯ over U : ◯ (p U q) ≡ p U ◯ q
-(10) Axiom, Expansion of U : p U q ≡ q ∨ (p ∧ ◯ (p U q))
+(10) Axiom, Expand of U : p U q ≡ q ∨ (p ∧ ◯ (p U q))
 (11) Axiom, Right zero of U : p U false ≡ false
 (12) Axiom, Left distributivity of U over ∨ : p U (q ∨ r) ≡ p U q ∨ p U r
 (13) Axiom, Right distributivity of U over ∨ : p U r ∨ q U r ⇒ (p ∨ q) U r
@@ -180,20 +191,20 @@ Qed.
 
 Theorem (* 20 *) until_true p : p U ⊤ ≈ ⊤.
 Proof.
-  rewrite until_expansion.
+  rewrite until_expand.
   now rewrite true_or.
 Qed.
 
 Theorem (* 21 *) false_until p : ⊥ U p ≈ p.
 Proof.
-  rewrite until_expansion.
+  rewrite until_expand.
   rewrite false_and.
   now rewrite or_false.
 Qed.
 
 Theorem (* 22 *) until_idem p : p U p ≈ p.
 Proof.
-  rewrite until_expansion.
+  rewrite until_expand.
   now rewrite or_absorb.
 Qed.
 
@@ -235,7 +246,7 @@ Qed.
 
 Theorem (* 27 *) until_27 p q : p ∧ (¬p U q) ⟹ q.
 Proof.
-  rewrite until_expansion.
+  rewrite until_expand.
   rewrite and_or.
   rewrite <- and_assoc.
   now boolean.
@@ -243,7 +254,7 @@ Qed.
 
 Theorem (* 28 *) until_28 p q : p U q ⟹ p ∨ q.
 Proof.
-  rewrite until_expansion.
+  rewrite until_expand.
   rewrite or_and.
   rewrite and_proj.
   now rewrite or_comm.
@@ -251,13 +262,13 @@ Qed.
 
 Theorem (* 29 *) until_insertion p q : q ⟹ p U q.
 Proof.
-  rewrite until_expansion.
+  rewrite until_expand.
   now apply or_inj.
 Qed.
 
 Theorem (* 30 *) until_30 p q : p ∧ q ⟹ p U q.
 Proof.
-  rewrite until_expansion.
+  rewrite until_expand.
   rewrite <- or_inj.
   rewrite and_comm.
   now apply and_proj.
@@ -274,7 +285,7 @@ Qed.
 
 Theorem (* 32 *) until_absorb_u_or p q : (p U q) ∨ q ≈ p U q.
 Proof.
-  rewrite until_expansion.
+  rewrite until_expand.
   rewrite or_comm at 1.
   rewrite <- or_assoc.
   now rewrite or_idem.

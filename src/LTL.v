@@ -58,7 +58,7 @@ Program Instance wait_respects_equivalent :
 (42) Eventuality: p U q ⇒ ◇ q
 (43) Truth of ◇ : ◇ true ≡ true
 (44) Falsehood of ◇ : ◇ false ≡ false
-(45) Expansion of ◇ : ◇ p ≡ p ∨ ◯ ◇ p
+(45) Expand of ◇ : ◇ p ≡ p ∨ ◯ ◇ p
 (46) Weakening of ◇ : p ⇒ ◇ p
 (47) Weakening of ◇ : ◯ p ⇒ ◇ p
 (48) Absorption of ∨ into ◇ : p ∨ ◇ p ≡ ◇ p
@@ -115,12 +115,21 @@ Proof.
   now apply until_right_bottom.
 Qed.
 
-Theorem (* 45 *) law_45 p : ◇ p ≈ p ∨ ◯ ◇ p.
+Theorem (* 45 *) evn_expand p : ◇ p ≈ p ∨ ◯ ◇ p.
 Proof.
   rewrite evn_def at 1.
-  rewrite until_expansion at 1.
+  rewrite until_expand at 1.
   rewrite <- evn_def at 1.
   now rewrite true_and.
+Qed.
+
+Corollary (* 45b *) evn_expand_ext p : ◇ p ≈ p ∨ (¬p ∧ ◯ ◇ p).
+Proof.
+  rewrite evn_def at 1.
+  rewrite until_expand at 1.
+  rewrite <- evn_def at 1.
+  rewrite !or_and.
+  now boolean.
 Qed.
 
 Theorem (* 46 *) evn_weaken p : p ⟹ ◇ p.
@@ -132,7 +141,7 @@ Qed.
 Theorem (* 47 *) law_47 p : ◯ p ⟹ ◇ p.
 Proof.
   rewrite evn_def.
-  rewrite until_expansion.
+  rewrite until_expand.
   rewrite or_comm.
   rewrite <- or_inj.
   rewrite true_and.
@@ -193,8 +202,8 @@ Qed.
 (63) Dual of □ ◇ : ¬□ ◇ p ≡ ◇ □ ¬p
 (64) Truth of □ : □ true ≡ true
 (65) Falsehood of □ : □ false ≡ false
-(66) Expansion of □ : □ p ≡ p ∧ ◯ □ p
-(67) Expansion of □ : □ p ≡ p ∧ ◯ p ∧ ◯ □ p
+(66) Expand of □ : □ p ≡ p ∧ ◯ □ p
+(67) Expand of □ : □ p ≡ p ∧ ◯ p ∧ ◯ □ p
 (68) Absorption of ∧ into □ : p ∧ □ p ≡ □ p
 (69) Absorption of □ into ∨ : □ p ∨ p ≡ p
 (70) Absorption of ◇ into □ : ◇ p ∧ □ p ≡ □ p
@@ -238,7 +247,7 @@ Qed.
 Theorem (* 66 *) law_66_early p : □ p ≈ p ∧ ◯ □ p.
 Proof.
   rewrite always_def.
-  rewrite law_45 at 1.
+  rewrite evn_expand at 1.
   rewrite not_or.
   rewrite not_not.
   now rewrite next_not.
@@ -250,53 +259,70 @@ Proof.
   now boolean.
 Qed.
 
-Corollary (* NEW *) until_race_compact p q r s :
-  p U q ∧ r U s ⟹ (p ∧ r) U ((q ∧ r) ∨ (p ∧ s)).
+Axiom (* NEW *) until_race_ : forall p q r s,
+  p U q ∧ r U s ⟹ (p ∧ r) U ((q ∧ r) ∨ (p ∧ s) ∨ (q ∧ s)).
+
+Theorem (* NEW *) law_88_strong p q : □ p ∧ ◇ q ⟹ p U (p ∧ q).
 Proof.
-  intros.
-  rewrite until_right_and.
-  rewrite <- or_inj at 1.
-  rewrite <- or_inj_r.
-  now apply until_race.
+  rewrite !always_def.
+  rewrite !evn_def.
+  rewrite (and_comm p q).
+  rewrite <- (not_not p) at 2.
+  rewrite <- (not_not p) at 3.
+  rewrite <- (not_not q) at 2.
+  rewrite <- not_until.
+  rewrite not_not.
+  rewrite and_comm.
+  apply and_respects_implies; [reflexivity|].
+  apply (proj1 (contrapositive _ _)).
+  rewrite <- evn_def.
+  now apply law_42.
 Qed.
 
 Lemma (* 75 *) law_75_strong p : p ∧ ◇ ¬p ≈ p U (p ∧ ¬◯ p).
 Proof.
   split; intros.
-  - pose proof (until_race p p ⊤ (¬p)).
-    revert H.
+  - rewrite !evn_def.
+    (* p ∧ ⊤ U ¬ p ⟹ p U (p ∧ ¬ ◯ p) *)
+    rewrite <- (and_idem (⊤ U ¬ p)).
+    rewrite (and_comm p (¬◯ p)).
+    rewrite <- (not_not p) at 4.
+    rewrite <- (not_not p) at 6.
+    rewrite <- not_until.
+    rewrite until_expand at 1.
+    rewrite <- and_assoc.
+    rewrite and_apply.
+    rewrite next_until.
+    rewrite true_and.
+    rewrite next_true.
+    rewrite next_not.
+    rewrite and_comm.
+    rewrite <- and_assoc.
+    rewrite and_comm.
+    apply and_respects_implies; [reflexivity|].
+    apply contrapositive.
+    rewrite not_and.
+    rewrite !not_not.
+    rewrite or_comm.
+    rewrite or_comm.
+    apply and_impl_iff.
+    rewrite until_race.
     boolean.
-    intros.
-    rewrite until_right_bottom in H.
-    rewrite until_idem in H.
-    rewrite <- evn_def in H.
-    rewrite and_false in H.
-    rewrite H.
-    now apply false_impl.
+    rewrite and_proj.
+    rewrite or_comm.
+    rewrite or_assoc.
+    boolean.
+    rewrite until_left_or.
+    admit.
   - rewrite until_left_and.
     rewrite until_idem.
     apply and_respects_implies; [reflexivity|].
-    rewrite law_45.
+    rewrite evn_expand.
     rewrite law_42.
     rewrite <- or_inj_r.
     rewrite law_51.
     now rewrite next_not.
-Qed.
-
-Theorem (* 83 *) always_and_until p q r : □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r).
-Proof.
-  pose proof (until_race_compact p (p ∧ r) q r).
-  rewrite (and_proj (p ∧ r) q) in H.
-  rewrite or_idem in H.
-  rewrite <- H; clear H.
-  rewrite <- (and_idem (q U r)) at 1.
-  rewrite <- and_assoc.
-  apply and_respects_implies; [|reflexivity].
-  rewrite law_42 at 1.
-  rewrite evn_def.
-  rewrite always_and_until.
-  now rewrite and_true.
-Qed.
+Admitted.
 
 Theorem (* 55 *) always_until_and_ind p q r :
   □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r.
@@ -312,18 +338,26 @@ Proof.
   rewrite <- (law_90_early p) at 1.
   rewrite !and_or_r.
   rewrite !(and_comm _ p).
-  rewrite law_75_strong.
   rewrite (and_proj_r (□ p)).
   rewrite <- (or_idem (◇ (_ ∧ (_ ∨ _)))).
   apply or_respects_implies.
   - rewrite <- or_inj_r.
-    rewrite always_and_until.
+    rewrite law_42.
+    rewrite law_88_strong.
     now rewrite law_42.
   - rewrite (and_comm (¬q)).
     rewrite and_or.
-    rewrite until_race_compact.
+    rewrite law_75_strong.
+    rewrite until_race.
     rewrite law_42.
     rewrite and_assoc.
+    apply eventually_respects_implies.
+    rewrite <- !and_or.
+    rewrite <- !and_or_r.
+    rewrite <- !and_assoc.
+    boolean.
+    rewrite !and_assoc.
+    rewrite <- !and_or.
     reflexivity.
 Qed.
 
@@ -357,7 +391,7 @@ Proof.
   rewrite (or_comm (p ∧ _ U _) q).
 
   rewrite (* 9 *) <- next_until.
-  rewrite (* 10 *) <- (until_expansion p q).
+  rewrite (* 10 *) <- (until_expand p q).
   rewrite (* 73 *) <- law_73_early.
   rewrite (* 66 *) <- (law_66_early p).
   (* rewrite <- !impl_def. *)
@@ -428,7 +462,7 @@ Qed.
 Theorem (* 66 *) law_66 p : □ p ≈ p ∧ ◯ □ p.
 Proof.
   rewrite always_def.
-  rewrite law_45 at 1.
+  rewrite evn_expand at 1.
   rewrite not_or.
   rewrite not_not.
   now rewrite next_not.
@@ -661,6 +695,22 @@ Qed.
 (134) □ (p ⇒ ◯ q) ⇒ (p ⇒ ◇ q)
 (135) □ (p ⇒ ◯ ¬p) ⇒ (p ⇒ ¬□ p)
 *)
+
+Theorem (* 83 *) always_and_until p q r : □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r).
+Proof.
+  pose proof (until_race p (p ∧ r) q r).
+  revert H.
+  boolean.
+  intro.
+  rewrite (and_proj (p ∧ r) q) in H.
+  rewrite or_idem in H.
+  rewrite <- H; clear H.
+  rewrite <- (and_idem (q U r)) at 1.
+  rewrite <- and_assoc.
+  apply and_respects_implies; [|reflexivity].
+  rewrite law_42 at 1.
+  now apply law_88_strong.
+Qed.
 
 Theorem (* 84 *) law_84 p q : □ p ∧ ◇ q ⟹ p U q.
 Proof.
@@ -1126,7 +1176,7 @@ Proof.
   boolean.
   rewrite law_53.
   rewrite and_comm, and_proj.
-  rewrite (law_45 q).
+  rewrite (evn_expand q).
   rewrite or_comm, <- or_inj.
   now rewrite law_51.
 Qed.
@@ -1258,7 +1308,7 @@ Proof.
     rewrite <- H0.
     rewrite and_comm.
     rewrite <- or_and.
-    rewrite <- until_expansion.
+    rewrite <- until_expand.
     boolean.
     now rewrite law_64.
   pose proof (law_129 (p U □ q) (p U q)).
@@ -1695,7 +1745,7 @@ Qed.
 (178) Absorption of W into □ : p W □ p ≡ □ p
 (179) Perpetuity: □ p ⇒ p W q
 (180) Distributivity of ◯ over W : ◯ (p W q) ≡ ◯ p W ◯ q
-(181) Expansion of W : p W q ≡ q ∨ (p ∧ ◯ (p W q))
+(181) Expand of W : p W q ≡ q ∨ (p ∧ ◯ (p W q))
 (182) W excluded middle: p W q ∨ p W ¬q
 (183) Left zero of W : true W q ≡ true
 (184) Left distributivity of W over ∨ : p W (q ∨ r) ≡ p W q ∨ p W r
@@ -1888,7 +1938,7 @@ Proof.
   rewrite <- or_assoc.
   rewrite (or_comm q).
   rewrite or_assoc.
-  rewrite <- until_expansion.
+  rewrite <- until_expand.
   now rewrite <- wait_def.
 Qed.
 

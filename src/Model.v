@@ -153,6 +153,17 @@ Proof.
     now right.
 Qed.
 
+Theorem Union_Complement {A : Type} p q :
+  Same_set A (Complement A (Union A p q))
+             (Intersection A (Complement A p) (Complement A q)).
+Proof.
+  split; repeat intro.
+  - rewrite Intersection_Union.
+    now rewrite !Complement_Complement.
+  - rewrite Intersection_Union in H.
+    now rewrite !Complement_Complement in H.
+Qed.
+
 Theorem and_def p q : p ∧ q ≈ ¬(¬p ∨ ¬q).
 Proof.
   split; repeat intro.
@@ -285,7 +296,7 @@ Proof.
   now setoid_rewrite from_from.
 Qed.
 
-Theorem (* 10 *) until_expansion p q : p U q ≈ q ∨ (p ∧ ◯ (p U q)).
+Theorem (* 10 *) until_expand p q : p U q ≈ q ∨ (p ∧ ◯ (p U q)).
 Proof.
   unfold next, until, or, and.
   split; repeat intro; unfold In in *.
@@ -788,39 +799,79 @@ Qed.
    p p p p p p p q  p U q ∧ r U s
    r r r r r r r s
  *)
-Theorem until_race p q r s : p U q ∧ r U s ⟹ p U (q ∧ r) ∨ r U (p ∧ s).
+Theorem until_race p q r s :
+  p U q ∧ r U s ⟹ (p ∧ r) U ((q ∧ r) ∨ (p ∧ s) ∨ (q ∧ s)).
 Proof.
   repeat intro.
   inv H.
   inv H0; inv H1.
   inv H; inv H0.
   destruct (classic (x0 < x1)).
-  - left.
-    + exists x0.
-      split.
-      * split; auto.
-        apply H3.
-        lia.
+  - exists x0.
+    + split.
+      * left.
+        split; auto.
+        apply H3; lia.
       * intros.
-        apply H2.
-        lia.
+        split.
+        ** apply H2; lia.
+        ** apply H3; lia.
   - destruct (classic (x0 = x1)).
-    subst.
-    lia.
-    right.
+    + subst.
+      exists x1.
+      split.
+      * right; right.
+        now split.
+      * intros.
+        split.
+        ** apply H2; lia.
+        ** apply H3; lia.
     + exists x1.
       split.
-      * split; auto.
-        apply H2.
-        lia.
+      * right; left.
+        split; auto.
+        apply H2; lia.
       * intros.
-        apply H2.
+        split.
+        ** apply H2; lia.
+        ** apply H3; lia.
+Qed.
+
+Lemma (* 75 *) law_75_strong p : p ∧ ◇ ¬p ≈ p U (p ∧ ¬◯ p).
+Proof.
+  split; repeat intro.
+  - inv H.
+    inv H1.
+    unfold not, Complement, Logic.not, In in H.
+    exists (Nat.pred x0).
+    split.
+    + split.
+      * admit.
+      * unfold next, not, Complement, Logic.not, In.
+        rewrite from_plus.
+        rewrite PeanoNat.Nat.add_1_l.
+        destruct (PeanoNat.Nat.eq_dec x0 0); subst; auto.
+        rewrite <- Lt.S_pred with (m:=0); eauto.
         lia.
-    + exists x
-      split.
-      * split; auto.
-        apply H2.
-        lia.
+    + intros.
+      admit.
+  - inv H.
+    inv H0.
+    inv H.
+    split.
+    + unfold In.
+      specialize (H1 0).
+      destruct (PeanoNat.Nat.eq_dec x0 0); subst; auto.
+      apply H1.
+      lia.
+    + exists (x0 + 1).
+      intro.
+      unfold next in H2.
+      unfold In in *.
+      unfold not, Complement, Logic.not, In in H2.
+      rewrite from_plus in H2.
+      rewrite PeanoNat.Nat.add_comm in H2.
+      contradiction.
 Admitted.
 
 Theorem always_until_and_ind_ p q r :
@@ -914,7 +965,36 @@ Definition F p q := □ (p ⇒ □ q).
 
 Theorem Dummett p : F (F p p) p ⟹ (◇ □ p ⇒ □ p).
 Proof.
-Admitted.
+  apply and_impl_iff_.
+  unfold F.
+  unfold always, eventually, every, any, or, not, Complement, Logic.not.
+  repeat intro.
+  inv H.
+  unfold In in *.
+  setoid_rewrite from_plus in H1.
+  destruct H1.
+  destruct (Compare_dec.lt_dec i x0).
+  - specialize (H0 0).
+    inv H0; unfold In in *.
+    + apply not_all_ex_not in H1.
+      destruct H1.
+      apply Union_Complement in H0.
+      inv H0.
+      unfold not, Complement, Logic.not, In in *.
+      rewrite from_O in *.
+      apply not_all_ex_not in H2.
+      destruct H2.
+      unfold Logic.not in *.
+      rewrite from_plus in H0.
+      apply NNPP in H1.
+      admit.
+    + setoid_rewrite from_plus in H1.
+      setoid_rewrite PeanoNat.Nat.add_0_r in H1.
+      now apply H1.
+  - specialize (H (i - x0)).
+    rewrite PeanoNat.Nat.sub_add in H; auto.
+    lia.
+Abort.
 
 End StreamLTLW.
 
