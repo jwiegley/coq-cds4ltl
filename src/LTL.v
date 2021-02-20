@@ -28,7 +28,6 @@ Declare Instance wait_respects_implies :
 
 Axiom (* 38 *) evn_def : forall p, ◇ p ≈ ⊤ U p.
 Axiom (* 54 *) always_def : forall p, □ p ≈ ¬◇ ¬p.
-Axiom (* 83 *) always_and_until : forall p q r, □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r).
 Axiom (* 169 *) wait_def : forall p q, p W q ≈ □ p ∨ p U q.
 
 End LinearTemporalLogicW.
@@ -212,7 +211,7 @@ Qed.
 (81) □ p ⇒ ¬(q U ¬p)
 *)
 
-Theorem (* NEW *) until_impl : forall p q r : t, (p ⇒ r) ∧ (q ⇒ r) ⟹ (p U q ⇒ r).
+Corollary (* NEW *) until_impl p q r : (p ⇒ r) ∧ (q ⇒ r) ⟹ (p U q ⇒ r).
 Proof.
   intros.
   rewrite or_respects.
@@ -251,7 +250,7 @@ Proof.
   now boolean.
 Qed.
 
-Corollary until_race_compact p q r s :
+Corollary (* NEW *) until_race_compact p q r s :
   p U q ∧ r U s ⟹ (p ∧ r) U ((q ∧ r) ∨ (p ∧ s)).
 Proof.
   intros.
@@ -282,6 +281,21 @@ Proof.
     rewrite <- or_inj_r.
     rewrite law_51.
     now rewrite next_not.
+Qed.
+
+Theorem (* 83 *) always_and_until p q r : □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r).
+Proof.
+  pose proof (until_race_compact p (p ∧ r) q r).
+  rewrite (and_proj (p ∧ r) q) in H.
+  rewrite or_idem in H.
+  rewrite <- H; clear H.
+  rewrite <- (and_idem (q U r)) at 1.
+  rewrite <- and_assoc.
+  apply and_respects_implies; [|reflexivity].
+  rewrite law_42 at 1.
+  rewrite evn_def.
+  rewrite always_and_until.
+  now rewrite and_true.
 Qed.
 
 Theorem (* 55 *) always_until_and_ind p q r :
@@ -563,7 +577,7 @@ Proof.
   now apply law_79.
 Qed.
 
-Corollary (* NEW *) always_induction_alt p : □ (p ⇒ ◯ p) ∧ p ≈ □ p.
+Theorem (* NEW *) always_induction_alt p : □ (p ⇒ ◯ p) ∧ p ≈ □ p.
 Proof.
   split; intros.
   - apply and_impl_iff.
@@ -647,10 +661,6 @@ Qed.
 (134) □ (p ⇒ ◯ q) ⇒ (p ⇒ ◇ q)
 (135) □ (p ⇒ ◯ ¬p) ⇒ (p ⇒ ¬□ p)
 *)
-
-Theorem (* 83 *) always_and_until_ p q r : □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r).
-Proof.
-Abort.
 
 Theorem (* 84 *) law_84 p q : □ p ∧ ◇ q ⟹ p U q.
 Proof.
@@ -1158,7 +1168,7 @@ Proof.
     now apply law_76.
 Qed.
 
-Corollary law_136b p q : (p ⟹ q) <-> (⊤ ⟹ □ (p ⇒ q)).
+Corollary (* NEW *) law_136b p q : (p ⟹ q) <-> (⊤ ⟹ □ (p ⇒ q)).
 Proof.
   split; intros.
   - apply (proj1 (law_136 _)).
@@ -1169,7 +1179,7 @@ Proof.
     now rewrite true_and in H.
 Qed.
 
-Theorem until_metatheorem p q r s : (p ⟹ q) -> (r ⟹ s) -> (p U r ⟹ q U s).
+Theorem (* NEW *) until_metatheorem p q r s : (p ⟹ q) -> (r ⟹ s) -> (p U r ⟹ q U s).
 Proof.
   intros.
   now apply until_respects_implies.
@@ -2347,7 +2357,7 @@ Proof.
   now boolean.
 Qed.
 
-Theorem (* NEW *) always_until_left p q : □ p U q ⟹ p U q ∨ □ ¬q.
+Corollary (* NEW *) always_until_left p q : □ p U q ⟹ p U q ∨ □ ¬q.
 Proof.
   rewrite <- or_inj.
   apply until_respects_implies; [|reflexivity].
@@ -2370,7 +2380,7 @@ Proof.
   now rewrite law_84.
 Qed.
 
-Theorem (* NEW *) law_237b p q : ◇ q ⟹ □ p ⇒ p U q.
+Corollary (* NEW *) law_237b p q : ◇ q ⟹ □ p ⇒ p U q.
 Proof.
   apply and_impl_iff.
   rewrite and_comm.

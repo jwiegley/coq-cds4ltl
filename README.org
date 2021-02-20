@@ -180,3 +180,29 @@ level, order them based on term complexity.
 :ID:       6848091F-39F6-4D56-AD71-540C507BBF95
 :CREATED:  [2021-02-19 Fri 10:56]
 :END:
+** TODO Starting a new working document
+... to cover new work on CDS4LTL/Coq proof discovery; new, reduced axiomatic
+foundations for CDS4LTL; and new interesting proofs in LTL. Prof. Warford has
+agreed to set up a document template and host it on his GitHub site.
+:PROPERTIES:
+:ID:       FDB1BB38-9B47-457C-8D10-5A2FF69193CF
+:CREATED:  [2021-02-19 Fri 16:20]
+:END:
+** TODO “Freeze" the current Vega-paper
+... and Staley “additional theorems” paper as is; And begin putting all new
+work and results into the above new working document.
+:PROPERTIES:
+:ID:       82551211-7D17-435B-8E34-88BBA0676F8B
+:CREATED:  [2021-02-19 Fri 16:20]
+:END:
+** TODO Build a list of publications and venues our work could be sent to
+:PROPERTIES:
+:ID:       02A58C25-9C76-44C9-9097-22DAE7A09B73
+:CREATED:  [2021-02-19 Fri 16:21]
+:END:
+** TODO Review the Mathematical Philosophy courses at Pepperdine
+:PROPERTIES:
+:ID:       7AB85D85-7988-4E25-9A36-2AD3491CA1B2
+:CREATED:  [2021-02-19 Fri 16:21]
+:URL:      https://github.com/ashumeow/introduction-to-mathematical-philosophy
+:END:

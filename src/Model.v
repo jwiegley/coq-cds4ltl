@@ -779,8 +779,48 @@ Proof.
       lia.
 Qed.
 
-Theorem until_race p q r s : p U q ∧ r U s ⟹ p U (q ∧ r) ∧ r U (p ∧ s).
+(* p p p p p p p q  p U q ∧ r U s ∧ r U (p ∧ s)
+   r r r r r s s s
+
+   p p p p p q q q  p U q ∧ r U s ∧ p U (q ∧ r)
+   r r r r r r r s
+
+   p p p p p p p q  p U q ∧ r U s
+   r r r r r r r s
+ *)
+Theorem until_race p q r s : p U q ∧ r U s ⟹ p U (q ∧ r) ∨ r U (p ∧ s).
 Proof.
+  repeat intro.
+  inv H.
+  inv H0; inv H1.
+  inv H; inv H0.
+  destruct (classic (x0 < x1)).
+  - left.
+    + exists x0.
+      split.
+      * split; auto.
+        apply H3.
+        lia.
+      * intros.
+        apply H2.
+        lia.
+  - destruct (classic (x0 = x1)).
+    subst.
+    lia.
+    right.
+    + exists x1.
+      split.
+      * split; auto.
+        apply H2.
+        lia.
+      * intros.
+        apply H2.
+        lia.
+    + exists x
+      split.
+      * split; auto.
+        apply H2.
+        lia.
 Admitted.
 
 Theorem always_until_and_ind_ p q r :
@@ -849,7 +889,7 @@ Proof.
         contradiction.
 Qed.
 
-Theorem always_and_until p q r : □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r).
+Theorem always_and_until_ p q r : □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r).
 Proof.
   unfold until, next, always, every, or, and, not.
   repeat intro.
@@ -869,6 +909,12 @@ Qed.
 
 Theorem wait_def p q : p W q ≈ □ p ∨ p U q.
 Proof. reflexivity. Qed.
+
+Definition F p q := □ (p ⇒ □ q).
+
+Theorem Dummett p : F (F p p) p ⟹ (◇ □ p ⇒ □ p).
+Proof.
+Admitted.
 
 End StreamLTLW.
 
