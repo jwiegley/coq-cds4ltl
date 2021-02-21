@@ -837,6 +837,26 @@ Proof.
         ** apply H3; lia.
 Qed.
 
+Lemma (* 75 *) law_75_b p q : p ∧ q U ¬p ⟹ (p ∧ q) U (p ∧ q ∧ ¬◯ p).
+Proof.
+  repeat intro.
+  inv H.
+  inv H1.
+  unfold not, Complement, Logic.not, In in H.
+  exists (Nat.pred x0).
+  split.
+  + split.
+    * admit.
+    * unfold next, not, Complement, Logic.not, In.
+      rewrite from_plus.
+      rewrite PeanoNat.Nat.add_1_l.
+      destruct (PeanoNat.Nat.eq_dec x0 0); subst; auto.
+      rewrite <- Lt.S_pred with (m:=0); eauto.
+      lia.
+  + intros.
+    admit.
+Admitted.
+
 Lemma (* 75 *) law_75_strong p : p ∧ ◇ ¬p ≈ p U (p ∧ ¬◯ p).
 Proof.
   split; repeat intro.
