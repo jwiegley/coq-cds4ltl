@@ -1,0 +1,35 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+my %theorems;
+my $current = 0;
+
+print "digraph CDS4LTL {\n";
+
+while (<ARGV>) {
+    if (/^(Theorem|Axiom|Corollary) \(\* ([0-9]+) \*\) ([0-9a-z_]+)/) {
+        $theorems{$3} = $2;
+        $current = $2;
+        if ($1 eq "Axiom") {
+            print "  $2 [shape=box,fillcolor=red];\n";
+        }
+    }
+    elsif (/^Qed/) {
+        $current = 0;
+    }
+    elsif ($current && /(?:rewrite|apply) (?:<- )?[!?]??([0-9a-z_]+)/) {
+        if (exists $theorems{$1}) {
+            if ($current ne $theorems{$1}) {
+                print "  $current -> $theorems{$1};\n";
+                # print "line    = $_";
+                # print "current = $current\n";
+                # print "cpature = $1\n";
+                # print "refers  = $theorems{$1}\n";
+            }
+        }
+    }
+}
+
+print "}\n";

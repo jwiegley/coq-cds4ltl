@@ -1843,7 +1843,7 @@ Qed.
 (254) Lemmon formula: □ (□ p ⇒ q) ∨ □ (□ q ⇒ p)
 *)
 
-Theorem (* 170 *) not_wait p q : ¬(p W q) ≈ ¬q U (¬p ∧ ¬q).
+Corollary not_wait p q : ¬(p W q) ≈ ¬q U (¬p ∧ ¬q).
 Proof.
   rewrite wait_def.
   rewrite <- not_until.
