@@ -164,6 +164,17 @@ Proof.
     now rewrite !Complement_Complement in H.
 Qed.
 
+Theorem Intersection_Complement {A : Type} p q :
+  Same_set A (Complement A (Intersection A p q))
+             (Union A (Complement A p) (Complement A q)).
+Proof.
+  split; repeat intro.
+  - rewrite Intersection_Union in H.
+    now rewrite !Complement_Complement in H.
+  - destruct H0.
+    destruct H; now apply H.
+Qed.
+
 Theorem and_def p q : p ∧ q ≈ ¬(¬p ∨ ¬q).
 Proof.
   split; repeat intro.
@@ -759,11 +770,10 @@ Proof.
     now apply H2.
 Qed.
 
-Lemma not_until_eventually_ p : ¬(¬p U p) ⟹ ¬◇ p.
+Lemma eventually_until_ p : ◇ p ⟹ ¬p U p.
 Proof.
   repeat intro.
-  apply H; clear H.
-  inv H0.
+  inv H.
   generalize dependent x.
   induction x0; intros.
   - exists 0.
@@ -772,15 +782,15 @@ Proof.
   - specialize (IHx0 (from 1 x)).
     rewrite from_plus in IHx0.
     rewrite PeanoNat.Nat.add_1_r in IHx0.
-    apply IHx0 in H; clear IHx0.
+    apply IHx0 in H0; clear IHx0.
     destruct (classic (p x)).
     + exists 0.
       split; auto; intros.
       lia.
-    + inv H.
+    + inv H0.
       inv H1.
-      rewrite from_plus in H.
-      rewrite PeanoNat.Nat.add_1_r in H.
+      rewrite from_plus in H0.
+      rewrite PeanoNat.Nat.add_1_r in H0.
       setoid_rewrite from_plus in H2.
       setoid_rewrite PeanoNat.Nat.add_1_r in H2.
       exists (S x1).
@@ -788,6 +798,13 @@ Proof.
       destruct i; auto.
       apply H2.
       lia.
+Qed.
+
+Corollary not_until_eventually_ p : ¬(¬p U p) ⟹ ¬◇ p.
+Proof.
+  repeat intro.
+  apply H; clear H.
+  now apply eventually_until_.
 Qed.
 
 (* p p p p p p p q  p U q ∧ r U s ∧ r U (p ∧ s)
@@ -837,62 +854,36 @@ Proof.
         ** apply H3; lia.
 Qed.
 
-Lemma (* 75 *) law_75_b p q : p ∧ q U ¬p ⟹ (p ∧ q) U (p ∧ q ∧ ¬◯ p).
+Lemma and_until p q : p ∧ q U ¬p ⟹ (q ∧ p) U (q ∧ p ∧ ¬◯ p).
 Proof.
   repeat intro.
   inv H.
   inv H1.
-  unfold not, Complement, Logic.not, In in H.
-  exists (Nat.pred x0).
-  split.
-  + split.
-    * admit.
-    * unfold next, not, Complement, Logic.not, In.
-      rewrite from_plus.
-      rewrite PeanoNat.Nat.add_1_l.
-      destruct (PeanoNat.Nat.eq_dec x0 0); subst; auto.
-      rewrite <- Lt.S_pred with (m:=0); eauto.
-      lia.
-  + intros.
-    admit.
-Admitted.
-
-Lemma (* 75 *) law_75_strong p : p ∧ ◇ ¬p ≈ p U (p ∧ ¬◯ p).
-Proof.
-  split; repeat intro.
-  - inv H.
-    inv H1.
-    unfold not, Complement, Logic.not, In in H.
+  inv H.
+  destruct (Compare_dec.le_dec x0 0).
+  - apply Le.le_n_0_eq in l.
+    subst.
+    contradiction.
+  - assert (0 < x0) by lia.
+    clear n.
     exists (Nat.pred x0).
     split.
     + split.
-      * admit.
-      * unfold next, not, Complement, Logic.not, In.
-        rewrite from_plus.
-        rewrite PeanoNat.Nat.add_1_l.
-        destruct (PeanoNat.Nat.eq_dec x0 0); subst; auto.
-        rewrite <- Lt.S_pred with (m:=0); eauto.
-        lia.
+      * apply H2; lia.
+      * split.
+        ** admit.
+        ** unfold next.
+           intro.
+           unfold In in H3.
+           rewrite from_plus in H3.
+           simpl plus in H3.
+           rewrite PeanoNat.Nat.succ_pred in H3; [|lia].
+           now apply H1.
     + intros.
-      admit.
-  - inv H.
-    inv H0.
-    inv H.
-    split.
-    + unfold In.
-      specialize (H1 0).
-      destruct (PeanoNat.Nat.eq_dec x0 0); subst; auto.
-      apply H1.
-      lia.
-    + exists (x0 + 1).
-      intro.
-      unfold next in H2.
-      unfold In in *.
-      unfold not, Complement, Logic.not, In in H2.
-      rewrite from_plus in H2.
-      rewrite PeanoNat.Nat.add_comm in H2.
-      contradiction.
-Admitted.
+      split.
+      * apply H2; lia.
+      * admit.
+Abort.
 
 Theorem always_until_and_ind_ p q r :
   □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r.

@@ -292,23 +292,47 @@ Proof.
   now apply law_88_strong.
 Qed.
 
-Lemma (* 75 *) law_75_b p q : p ∧ q U ¬p ⟹ (q ∧ p) U (q ∧ p ∧ ¬◯ p).
+Axiom eventually_until : forall p, ◇ p ⟹ ¬p U p.
+
+Lemma not_until_always p : ¬(p U ¬p) ⟹ □ p.
 Proof.
-  rewrite until_expand.
-  rewrite and_or.
+  apply contrapositive.
+  rewrite always_def.
+  rewrite eventually_until.
+  now rewrite !not_not.
+Qed.
+
+Axiom (* 75 *) and_until : forall p q, p ∧ q U ¬p ⟹ (q ∧ p) U (q ∧ p ∧ ¬◯ p).
+
+Lemma looped p : (p ⇒ ◯ p) U ¬p ⟹ ¬p.
+Proof.
+  rewrite <- (or_false (¬p)) at 3.
+  apply and_impl_iff.
+  rewrite and_comm.
+  rewrite and_until.
   boolean.
   rewrite <- and_assoc.
-  rewrite (until_30 p q) at 1.
-  rewrite next_until.
-  rewrite next_not.
-Admitted.
+  rewrite (and_comm _ p).
+  rewrite and_apply.
+  rewrite and_assoc.
+  boolean.
+  now apply until_right_bottom.
+Qed.
 
 Lemma (* 75 *) law_75_strong p : p ∧ ◇ ¬p ≈ p U (p ∧ ¬◯ p).
 Proof.
   split; intros.
-  - rewrite !evn_def.
-    rewrite law_75_b.
-    now boolean.
+  - apply and_impl_iff.
+    apply contrapositive.
+    rewrite not_or.
+    rewrite not_not.
+    rewrite evn_def.
+    rewrite not_until.
+    rewrite !not_and.
+    rewrite !not_not.
+    rewrite and_or.
+    boolean.
+    now apply looped.
   - rewrite until_left_and.
     rewrite until_idem.
     apply and_respects_implies; [reflexivity|].
@@ -322,7 +346,7 @@ Qed.
 Theorem (* 55 *) always_until_and_ind p q r :
   □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r.
 Proof.
-  assert (A : forall p q r, p ∧ q U (q ∧ r) ⟹ (p ∧ q) U (p ∧ q ∧ (¬◯ p ∨ r))). {
+  assert (A : forall p q r, p ∧ q U (q ∧ r) ⟹ ⊤ U (p ∧ q ∧ (¬◯ p ∨ r))). {
     clear.
     intros.
     rewrite <- (true_and p) at 1.
@@ -330,17 +354,21 @@ Proof.
     rewrite !and_or_r.
     rewrite !(and_comm _ p).
     rewrite (and_proj_r (□ p)).
-    rewrite <- (or_idem ((_ ∧ _) U (_ ∧ _))).
+    rewrite <- (or_idem (⊤ U (_ ∧ _))).
     apply or_respects_implies.
     - rewrite <- or_inj_r.
-      now apply law_83_early.
+      rewrite law_83_early.
+      rewrite law_42.
+      now rewrite evn_def.
     - rewrite law_75_strong.
       rewrite until_race.
       rewrite !and_or.
       rewrite (and_proj p (¬◯ p)) at 2.
       rewrite or_idem.
       rewrite and_assoc.
-      now rewrite (and_comm (¬◯ p) q).
+      rewrite (and_comm (¬◯ p) q).
+      rewrite law_42.
+      now rewrite evn_def.
   }
   rewrite !always_def.
   apply contrapositive.
@@ -350,9 +378,9 @@ Proof.
   rewrite evn_def.
   rewrite not_until.
   rewrite (and_comm (¬q)).
-  rewrite A.
-  rewrite (and_comm (¬r)).
-  now rewrite law_42.
+  rewrite (and_comm _ (¬r)).
+  rewrite evn_def.
+  now apply A.
 Qed.
 
 Corollary (* NEW *) always_until_and_ind_alt p q :
