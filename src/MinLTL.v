@@ -1,6 +1,7 @@
 Set Warnings "-local-declaration".
 
 Require Import
+  Coq.Unicode.Utf8
   Coq.Program.Program
   Coq.Classes.Morphisms
   Coq.Setoids.Setoid
@@ -19,7 +20,7 @@ Module Type MinimalLinearTemporalLogic <: BooleanLogic.
 
 Include BooleanLogic.
 
-Parameter next : t -> t.
+Parameter next  : t -> t.
 Parameter until : t -> t -> t.
 
 Declare Scope ltl_scope.
@@ -34,26 +35,26 @@ Notation "p 'U' q" := (until p q) (at level 79, right associativity) : ltl_scope
 Declare Instance next_respects_implies : Proper (implies ==> implies) next.
 Declare Instance until_respects_implies : Proper (implies ==> implies ==> implies) until.
 
-Axiom (* 1 *)  next_not : forall p, ◯ ¬p ≈ ¬◯ p.
-Axiom (* 2 *)  next_impl : forall p q, ◯ (p ⇒ q) ≈ ◯ p ⇒ ◯ q.
+Axiom (* 1 *)   next_not              : ∀ p,     ◯ ¬p ≈ ¬◯ p.
+Axiom (* 2 *)   next_impl             : ∀ p q,   ◯ (p ⇒ q) ≈ ◯ p ⇒ ◯ q.
 
-Axiom (* 9 *)  next_until : forall p q, ◯ (p U q) ≈ (◯ p) U (◯ q).
-Axiom (* 10 *) until_expand : forall p q, p U q ≈ q ∨ (p ∧ ◯ (p U q)).
-Axiom (* 11 *) until_right_bottom : forall p, p U ⊥ ≈ ⊥.
-Axiom (* 12 *) until_left_or : forall p q r, p U (q ∨ r) ≈ (p U q) ∨ (p U r).
-Axiom (* 13 *) until_right_or : forall p q r, (p U r) ∨ (q U r) ⟹ (p ∨ q) U r.
-Axiom (* 14 *) until_left_and : forall p q r, p U (q ∧ r) ⟹ (p U q) ∧ (p U r).
-Axiom (* 15 *) until_right_and : forall p q r, (p ∧ q) U r ≈ (p U r) ∧ (q U r).
-Axiom (* 16 *) until_impl_order : forall p q r, (p U q) ∧ (¬q U r) ⟹ p U r.
-Axiom (* 17 *) until_right_or_order : forall p q r, p U (q U r) ⟹ (p ∨ q) U r.
-Axiom (* 18 *) until_right_and_order : forall p q r, p U (q ∧ r) ⟹ (p U q) U r.
-Axiom (* 170 *) not_until : forall p q, ⊤ U ¬p ∧ ¬(p U q) ≈ ¬q U (¬p ∧ ¬q).
+Axiom (* 9 *)   next_until            : ∀ p q,   ◯ (p U q) ≈ (◯ p) U (◯ q).
+Axiom (* 10 *)  until_expand          : ∀ p q,   p U q ≈ q ∨ (p ∧ ◯ (p U q)).
+Axiom (* 11 *)  until_right_bottom    : ∀ p,     p U ⊥ ≈ ⊥.
+Axiom (* 12 *)  until_left_or         : ∀ p q r, p U (q ∨ r) ≈ (p U q) ∨ (p U r).
+Axiom (* 13 *)  until_right_or        : ∀ p q r, (p U r) ∨ (q U r) ⟹ (p ∨ q) U r.
+Axiom (* 14 *)  until_left_and        : ∀ p q r, p U (q ∧ r) ⟹ (p U q) ∧ (p U r).
+Axiom (* 17 *)  until_right_or_order  : ∀ p q r, p U (q U r) ⟹ (p ∨ q) U r.
+Axiom (* 18 *)  until_right_and_order : ∀ p q r, p U (q ∧ r) ⟹ (p U q) U r.
+Axiom (* 170 *) not_until             : ∀ p q,   ⊤ U ¬p ∧ ¬(p U q) ≈ ¬q U (¬p ∧ ¬q).
 
-Axiom (* NEW *) until_race : forall p q r s,
-  p U q ∧ r U s ⟹ (p ∧ r) U ((q ∧ r) ∨  (* first wins  *)
-                              (p ∧ s) ∨  (* second wins *)
-                              (q ∧ s)    (* it's a tie  *)
-                             ).
+Axiom (* NEW *) and_until             : ∀ p q,   p U q ∧ ¬q ⟹ (p ∧ ¬q) U (p ∧ ¬q ∧ ◯ q).
+
+Axiom (* NEW *) until_race            : ∀ p q r s,
+  (p U q) ∧ (r U s) ⟹ (p ∧ r) U ((q ∧ r) ∨  (* first wins  *)
+                                  (p ∧ s) ∨  (* second wins *)
+                                  (q ∧ s)    (* it's a tie  *)
+                                 ).
 
 End MinimalLinearTemporalLogic.
 
@@ -177,6 +178,31 @@ Qed.
 (36) Left absorption of U : p U (p U q) ≡ p U q
 (37) Right absorption of U : (p U q) U q ≡ p U q
 *)
+
+Theorem (* 15 *) until_right_and p q r : (p ∧ q) U r ≈ (p U r) ∧ (q U r).
+Proof.
+  split; intros.
+  - rewrite <- (and_idem r) at 1.
+    rewrite until_left_and.
+    rewrite (and_proj p) at 1.
+    now rewrite (and_proj_r q).
+  - rewrite until_race.
+    boolean.
+    rewrite (and_proj r).
+    rewrite (and_proj_r r).
+    now boolean.
+Qed.
+
+Theorem (* 16 *) until_impl_order p q r : (p U q) ∧ (¬q U r) ⟹ p U r.
+Proof.
+  intros.
+  rewrite until_race.
+  boolean.
+  rewrite <- and_or_r.
+  rewrite until_left_and.
+  rewrite and_proj_r.
+  now rewrite and_proj.
+Qed.
 
 Theorem (* 19 *) until_right_impl p q r : (p ⇒ q) U r ⟹ (p U r) ⇒ (q U r).
 Proof.

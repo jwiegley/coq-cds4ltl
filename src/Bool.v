@@ -1,6 +1,7 @@
 Set Warnings "-local-declaration".
 
 Require Import
+  Coq.Unicode.Utf8
   Coq.Classes.Morphisms
   Coq.Setoids.Setoid
   MinBool.
@@ -25,7 +26,7 @@ Notation "p ≡ q" := ((p ⇒ q) ∧ (q ⇒ p)) (at level 86, right associativit
 (** "and" is not fundamental and can be defined using "or". To allow for
     efficient choices of "and", we simply require that its behavior be
     equivalent to the more basic definition. *)
-Axiom and_def : forall p q, p ∧ q ≈ ¬(¬p ∨ ¬q).
+Axiom and_def : ∀ p q, p ∧ q ≈ ¬(¬p ∨ ¬q).
 
 End BooleanLogic.
 

@@ -808,9 +808,9 @@ Proof.
 Qed.
 
 (* p p p p p p p q  p U q ∧ r U s ∧ r U (p ∧ s)
-   r r r r r s s s
+   r r r r r s
 
-   p p p p p q q q  p U q ∧ r U s ∧ p U (q ∧ r)
+   p p p p p q      p U q ∧ r U s ∧ p U (q ∧ r)
    r r r r r r r s
 
    p p p p p p p q  p U q ∧ r U s
@@ -854,35 +854,8 @@ Proof.
         ** apply H3; lia.
 Qed.
 
-Theorem and_until p q : p ∧ q U ¬p ⟹ (q ∧ p) U (q ∧ p ∧ ¬◯ p).
+Theorem and_until p q : p U q ∧ ¬q ⟹ (p ∧ ¬q) U (p ∧ ¬q ∧ ◯ q).
 Proof.
-  repeat intro.
-  inv H.
-  inv H1.
-  inv H.
-  destruct (Compare_dec.le_dec x0 0).
-  - apply Le.le_n_0_eq in l.
-    subst.
-    contradiction.
-  - assert (0 < x0) by lia.
-    clear n.
-    exists (Nat.pred x0).
-    split.
-    + split.
-      * apply H2; lia.
-      * split.
-        ** admit.
-        ** unfold next.
-           intro.
-           unfold In in H3.
-           rewrite from_plus in H3.
-           simpl plus in H3.
-           rewrite PeanoNat.Nat.succ_pred in H3; [|lia].
-           now apply H1.
-    + intros.
-      split.
-      * apply H2; lia.
-      * admit.
 Admitted.
 
 Theorem always_until_and_ind_ p q r :

@@ -992,11 +992,23 @@ Qed.
 Theorem until_race p q r s :
   p U q ∧ r U s ⟹ (p ∧ r) U ((q ∧ r) ∨ (p ∧ s) ∨ (q ∧ s)).
 Proof.
-Admitted.
+  unfold until.
+  repeat intro;
+  induction s0; firstorder.
+Qed.
 
-Theorem and_until p q : p ∧ q U ¬p ⟹ (q ∧ p) U (q ∧ p ∧ ¬◯ p).
+Theorem and_until p q : p U q ∧ ¬q ⟹ (p ∧ ¬q) U (p ∧ ¬q ∧ ◯ q).
 Proof.
-Admitted.
+  unfold until.
+  repeat intro; simpl in *.
+  induction s; intuition.
+  - contradiction (matches_not_false H0 H1).
+  - contradiction (matches_not_false H H1).
+  - destruct (classic (matches q s)).
+    + now firstorder.
+    + apply matches_negate in H.
+      now firstorder.
+Qed.
 
 Theorem always_until_and_ind_ p q r :
   □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r.

@@ -1,6 +1,7 @@
 Set Warnings "-local-declaration".
 
 Require Import
+  Coq.Unicode.Utf8
   Coq.Classes.Morphisms
   Coq.Setoids.Setoid.
 
@@ -13,14 +14,14 @@ Parameter t : Type.             (* The type of boolean propositions *)
 
 (** The following are fundamental to a classical definition of this logic. *)
 Parameter not : t -> t.
-Parameter or : t -> t -> t.
+Parameter or  : t -> t -> t.
 
 (** The next four terms are purely syntactic and may be defined in terms of
     the fundamentals above. They are given as parameters so that module
     authors may chose economical definitions. *)
 Parameter implies : t -> t -> Prop.
-Parameter true : t.
-Parameter false : t.
+Parameter true    : t.
+Parameter false   : t.
 
 Declare Scope boolean_scope.
 Bind Scope boolean_scope with t.
@@ -48,21 +49,21 @@ Infix "≈"  := equivalent (at level 90, no associativity) : boolean_scope.
  *
  * NOTE: It is possible to formulate the following using a single axiom:
  *
- *   forall p q r s,
+ *   ∀ p q r s,
  *     ¬(¬(¬(p ∨ q) ∨ r) ∨ ¬(p ∨ ¬(¬r ∨ ¬(r ∨ s)))) ≈ r
  *
  * However, the proofs of the three axioms below in terms of this single one
  * are laborious and left as an exercise to the motivated reader. Further
  * notes may be found in the paper "Short Single Axioms for Boolean Algebra"
  * by McCune, et al. *)
-Axiom or_comm      : forall p q,   p ∨ q ≈ q ∨ p.
-Axiom or_assoc     : forall p q r, (p ∨ q) ∨ r ≈ p ∨ (q ∨ r).
-Axiom huntington   : forall p q,   ¬(¬p ∨ ¬q) ∨ ¬(¬p ∨ q) ≈ p.
+Axiom or_comm      : ∀ p q,   p ∨ q ≈ q ∨ p.
+Axiom or_assoc     : ∀ p q r, (p ∨ q) ∨ r ≈ p ∨ (q ∨ r).
+Axiom huntington   : ∀ p q,   ¬(¬p ∨ ¬q) ∨ ¬(¬p ∨ q) ≈ p.
 
 (** These axioms establish the meaning of the syntactic terms. *)
-Axiom or_inj       : forall p q,   p ⟹ p ∨ q.
-Axiom true_def     : forall p,     p ∨ ¬p ≈ ⊤.
-Axiom false_def    : forall p,     ¬(p ∨ ¬p) ≈ ⊥.
+Axiom or_inj       : ∀ p q,   p ⟹ p ∨ q.
+Axiom true_def     : ∀ p,     p ∨ ¬p ≈ ⊤.
+Axiom false_def    : ∀ p,     ¬(p ∨ ¬p) ≈ ⊥.
 
 End MinimalBooleanLogic.
 
@@ -282,7 +283,7 @@ Proof. now rewrite or_comm; apply or_false. Qed.
 
 Theorem or_idem p : p ∨ p ≈ p.
 Proof.
-  assert (H1 : forall q, ¬ (¬ q ∨ ¬ q) ≈ q).
+  assert (H1 : ∀ q, ¬ (¬ q ∨ ¬ q) ≈ q).
     intro q.
     rewrite <- (huntington q q) at 3.
     rewrite (or_comm (¬q) q).
@@ -306,7 +307,7 @@ Theorem true_or p : ⊤ ∨ p ≈ ⊤.
 Proof. now rewrite or_comm; apply or_true. Qed.
 
 (** Either this or or_inj must be taken as an axiom *)
-Theorem impl_implies : forall p q, (p ⟹ q) <-> (⊤ ⟹ p ⇒ q).
+Theorem impl_implies : ∀ p q, (p ⟹ q) <-> (⊤ ⟹ p ⇒ q).
 Proof.
   split; intros.
   - rewrite <- H.

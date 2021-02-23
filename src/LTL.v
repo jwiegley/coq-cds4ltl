@@ -1,6 +1,7 @@
 Set Warnings "-local-declaration".
 
 Require Import
+  Coq.Unicode.Utf8
   Coq.Program.Program
   Coq.micromega.Lia
   Coq.Classes.Morphisms
@@ -12,8 +13,8 @@ Module Type LinearTemporalLogicW <: MinimalLinearTemporalLogic.
 Include MinimalLinearTemporalLogic.
 
 Parameter eventually : t -> t.
-Parameter always : t -> t.
-Parameter wait : t -> t -> t.
+Parameter always     : t -> t.
+Parameter wait       : t -> t -> t.
 
 Notation "◇ p"     := (eventually p)       (at level 75, right associativity) : ltl_scope.
 Notation "□ p"     := (always p)           (at level 75, right associativity) : ltl_scope.
@@ -26,9 +27,9 @@ Declare Instance always_respects_implies :
 Declare Instance wait_respects_implies :
   Proper (implies ==> implies ==> implies) wait.
 
-Axiom (* 38 *) evn_def : forall p, ◇ p ≈ ⊤ U p.
-Axiom (* 54 *) always_def : forall p, □ p ≈ ¬◇ ¬p.
-Axiom (* 169 *) wait_def : forall p q, p W q ≈ □ p ∨ p U q.
+Axiom (* 38 *)  evn_def    : ∀ p,   ◇ p ≈ ⊤ U p.
+Axiom (* 54 *)  always_def : ∀ p,   □ p ≈ ¬◇ ¬p.
+Axiom (* 169 *) wait_def   : ∀ p q, p W q ≈ □ p ∨ p U q.
 
 End LinearTemporalLogicW.
 
@@ -292,14 +293,14 @@ Proof.
   now apply law_88_strong.
 Qed.
 
-Axiom (* NEW *) and_until : forall p q, p ∧ q U ¬p ⟹ (q ∧ p) U (q ∧ p ∧ ¬◯ p).
-
 Theorem (* NEW *) looped p : (p ⇒ ◯ p) U ¬p ⟹ ¬p.
 Proof.
   rewrite <- (or_false (¬p)) at 3.
   apply and_impl_iff.
-  rewrite and_comm.
+  rewrite <- (not_not p) at 4.
   rewrite and_until.
+  rewrite not_not.
+  rewrite next_not.
   rewrite and_or_r.
   rewrite <- and_assoc.
   rewrite (and_comm (p ⇒ ◯ p) p).
@@ -336,7 +337,7 @@ Qed.
 Theorem (* 55 *) always_until_and_ind p q r :
   □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r.
 Proof.
-  assert (A : forall p q r, p ∧ q U (q ∧ r) ⟹ ⊤ U (p ∧ q ∧ (¬◯ p ∨ r))). {
+  assert (A : ∀ p q r, p ∧ q U (q ∧ r) ⟹ ⊤ U (p ∧ q ∧ (¬◯ p ∨ r))). {
     clear.
     intros.
     rewrite <- (true_and p) at 1.
@@ -2643,7 +2644,7 @@ Module Type LinearTemporalLogic <: LinearTemporalLogicW.
 
 Include LinearTemporalLogicW.
 
-Parameter release : t -> t -> t.
+Parameter release        : t -> t -> t.
 Parameter strong_release : t -> t -> t.
 
 Notation "p 'R' q" := (release p q)        (at level 79, right associativity) : ltl_scope.
@@ -2654,8 +2655,8 @@ Declare Instance release_respects_implies :
 Declare Instance strong_release_respects_implies :
   Proper (implies ==> implies ==> implies) strong_release.
 
-Axiom release_def : forall p q, p R q ≈ ¬(¬p U ¬q).
-Axiom strong_release_def : forall p q, p M q ≈ q U (p ∧ q).
+Axiom release_def        : ∀ p q, p R q ≈ ¬(¬p U ¬q).
+Axiom strong_release_def : ∀ p q, p M q ≈ q U (p ∧ q).
 
 End LinearTemporalLogic.
 
