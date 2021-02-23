@@ -292,27 +292,17 @@ Proof.
   now apply law_88_strong.
 Qed.
 
-Axiom eventually_until : forall p, ◇ p ⟹ ¬p U p.
+Axiom (* NEW *) and_until : forall p q, p ∧ q U ¬p ⟹ (q ∧ p) U (q ∧ p ∧ ¬◯ p).
 
-Lemma not_until_always p : ¬(p U ¬p) ⟹ □ p.
-Proof.
-  apply contrapositive.
-  rewrite always_def.
-  rewrite eventually_until.
-  now rewrite !not_not.
-Qed.
-
-Axiom (* 75 *) and_until : forall p q, p ∧ q U ¬p ⟹ (q ∧ p) U (q ∧ p ∧ ¬◯ p).
-
-Lemma looped p : (p ⇒ ◯ p) U ¬p ⟹ ¬p.
+Theorem (* NEW *) looped p : (p ⇒ ◯ p) U ¬p ⟹ ¬p.
 Proof.
   rewrite <- (or_false (¬p)) at 3.
   apply and_impl_iff.
   rewrite and_comm.
   rewrite and_until.
-  boolean.
+  rewrite and_or_r.
   rewrite <- and_assoc.
-  rewrite (and_comm _ p).
+  rewrite (and_comm (p ⇒ ◯ p) p).
   rewrite and_apply.
   rewrite and_assoc.
   boolean.
@@ -2646,34 +2636,6 @@ Proof.
   rewrite <- !law_177.
   now rewrite law_252.
 Qed.
-
-Definition F p q := □ (p ⇒ □ q).
-
-Theorem Dummett p : F (F p p) p ⟹ (◇ □ p ⇒ □ p).
-Proof.
-  unfold F.
-  rewrite law_62.
-  rewrite always_def at 1.
-  rewrite not_or.
-  rewrite not_not.
-  apply contrapositive.
-  rewrite not_or.
-  rewrite <- law_62.
-  rewrite !not_not.
-  rewrite !always_def.
-  rewrite !not_or.
-  rewrite !not_not.
-  rewrite (law_53 p (◇ ¬p)).
-  rewrite law_50.
-  rewrite !not_and.
-  rewrite evn_weaken.
-  apply eventually_respects_implies.
-  apply and_respects_implies; [|reflexivity].
-  apply contrapositive.
-  rewrite not_or.
-  rewrite !not_not.
-  rewrite <- always_def.
-Abort.
 
 End LinearTemporalLogicWFacts.
 

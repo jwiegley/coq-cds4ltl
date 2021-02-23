@@ -206,3 +206,26 @@ work and results into the above new working document.
 :CREATED:  [2021-02-19 Fri 16:21]
 :URL:      https://github.com/ashumeow/introduction-to-mathematical-philosophy
 :END:
+** TODO Explore bi-directional temporal flows
+Our semantic model currently is based on infinite streams, with a
+satisfiability proposition with j being of type nat:
+
+  (σ, j) ⊨ p
+
+If we use a pair or tuple of infinite streams, where one represents time
+looking back, and the other represents time looking forward, then we could use
+the same satisfiability condition but with j being of type integer, such that:
+
+  type BiStream = (Stream, Stream)
+
+  ((σ₁, σ₂), n) ⊨ p  <->  if n < 0 then (σ₁, -n) ⊨ p else (σ₂, n) ⊨ p
+:PROPERTIES:
+:ID:       732E06FD-6EE3-4091-8B9B-7EF4F473DC97
+:CREATED:  [2021-02-22 Mon 14:34]
+:END:
+** TODO Prove the new axiom relating individual terms to until
+p ∧ q U ¬p ⇒ (q ∧ p) U (q ∧ p ∧ ¬◯ p)
+:PROPERTIES:
+:ID:       DB0F1502-BE6B-4F48-B524-25CD4A0D8A4C
+:CREATED:  [2021-02-22 Mon 14:35]
+:END:

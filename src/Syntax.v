@@ -809,7 +809,7 @@ Proof.
   induction s; simpl in *; intuition.
 Qed.
 
-Theorem until_expansion p q : p U q ≈ q ∨ (p ∧ ◯ (p U q)).
+Theorem until_expand p q : p U q ≈ q ∨ (p ∧ ◯ (p U q)).
 Proof.
   unfold until, or.
   split; repeat intro; simpl in *;
@@ -821,8 +821,8 @@ Proof.
   unfold next, until.
   split; repeat intro;
   induction s; intuition;
-  rewrite until_expansion; simpl;
-  rewrite until_expansion in H; simpl in H;
+  rewrite until_expand; simpl;
+  rewrite until_expand in H; simpl in H;
   now intuition.
 Qed.
 
@@ -989,7 +989,12 @@ Proof.
     now firstorder.
 Qed.
 
-Theorem until_race p q r s : p U q ∧ r U s ⟹ p U (q ∧ r) ∧ r U (p ∧ s).
+Theorem until_race p q r s :
+  p U q ∧ r U s ⟹ (p ∧ r) U ((q ∧ r) ∨ (p ∧ s) ∨ (q ∧ s)).
+Proof.
+Admitted.
+
+Theorem and_until p q : p ∧ q U ¬p ⟹ (q ∧ p) U (q ∧ p ∧ ¬◯ p).
 Proof.
 Admitted.
 
@@ -1002,7 +1007,7 @@ Proof.
   contradiction (matches_not_false H H3).
 Qed.
 
-Theorem always_and_until p q r : □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r).
+Theorem always_and_until_ p q r : □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r).
 Proof.
   unfold always, until, and.
   repeat intro; simpl in *;

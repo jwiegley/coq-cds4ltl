@@ -854,7 +854,7 @@ Proof.
         ** apply H3; lia.
 Qed.
 
-Lemma and_until p q : p ∧ q U ¬p ⟹ (q ∧ p) U (q ∧ p ∧ ¬◯ p).
+Theorem and_until p q : p ∧ q U ¬p ⟹ (q ∧ p) U (q ∧ p ∧ ¬◯ p).
 Proof.
   repeat intro.
   inv H.
@@ -883,7 +883,7 @@ Proof.
       split.
       * apply H2; lia.
       * admit.
-Abort.
+Admitted.
 
 Theorem always_until_and_ind_ p q r :
   □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r.
