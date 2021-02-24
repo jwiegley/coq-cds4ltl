@@ -349,7 +349,7 @@ Proof.
         lia.
 Qed.
 
-Theorem (* 11 *) until_right_bottom p : p U ⊥ ≈ ⊥.
+Theorem (* 11 *) until_false p : p U ⊥ ≈ ⊥.
 Proof.
   unfold next, until, or, and.
   split; repeat intro; unfold In in *.
@@ -476,7 +476,7 @@ Proof.
     now firstorder.
 Qed.
 
-Theorem (* 17 *) until_right_or_order p q r : p U (q U r) ⟹ (p ∨ q) U r.
+Theorem (* 17 *) until_left_or_order p q r : p U (q U r) ⟹ (p ∨ q) U r.
 Proof.
   repeat intro; unfold In in *.
   unfold until, or in *.
@@ -538,7 +538,7 @@ Proof.
   now inv H.
 Qed.
 
-Theorem (* NEW *) not_until p q : ⊤ U ¬p ∧ ¬(p U q) ≈ ¬q U (¬p ∧ ¬q).
+Theorem not_until p q : ⊤ U ¬p ∧ ¬(p U q) ≈ ¬q U (¬p ∧ ¬q).
 Proof.
   split.
   - apply and_impl_iff_.
@@ -657,9 +657,9 @@ Definition eventually : t -> t := any.
 Definition always     : t -> t := every.
 Definition wait       : t -> t -> t := fun p q => always p ∨ p U q.
 
-Notation "◇ p"     := (eventually p)       (at level 75, right associativity) : ltl_scope.
-Notation "□ p"     := (always p)           (at level 75, right associativity) : ltl_scope.
-Notation "p 'W' q" := (wait p q)           (at level 79, right associativity) : ltl_scope.
+Notation "◇ p"     := (eventually p) (at level 75, right associativity) : ltl_scope.
+Notation "□ p"     := (always p)     (at level 75, right associativity) : ltl_scope.
+Notation "p 'W' q" := (wait p q)     (at level 79, right associativity) : ltl_scope.
 
 Program Instance eventually_respects_implies : Proper (implies ==> implies) eventually.
 Next Obligation.
@@ -816,7 +816,7 @@ Qed.
    p p p p p p p q  p U q ∧ r U s
    r r r r r r r s
  *)
-Theorem until_race p q r s :
+Theorem until_and_until p q r s :
   p U q ∧ r U s ⟹ (p ∧ r) U ((q ∧ r) ∨ (p ∧ s) ∨ (q ∧ s)).
 Proof.
   repeat intro.
@@ -854,7 +854,25 @@ Proof.
         ** apply H3; lia.
 Qed.
 
-Theorem and_until p q : p U q ∧ ¬q ⟹ (p ∧ ¬q) U (p ∧ ¬q ∧ ◯ q).
+Theorem until_or_until p q r s : (p ∧ r) U (q ∨ s) ⟹ (p U q) ∨ (r U s).
+Proof.
+  repeat intro.
+  inv H.
+  inv H0.
+  inv H.
+  - left.
+    exists x0.
+    split; auto; intros.
+    specialize (H1 _ H).
+    now inv H1.
+  - right.
+    exists x0.
+    split; auto; intros.
+    specialize (H1 _ H).
+    now inv H1.
+Qed.
+
+Theorem until_and_not p q : p U q ∧ ¬q ⟹ (p ∧ ¬q) U (p ∧ ¬q ∧ ◯ q).
 Proof.
 Admitted.
 

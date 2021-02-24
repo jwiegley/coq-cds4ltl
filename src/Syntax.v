@@ -826,7 +826,7 @@ Proof.
   now intuition.
 Qed.
 
-Theorem until_right_bottom p : p U ⊥ ≈ ⊥.
+Theorem until_false p : p U ⊥ ≈ ⊥.
 Proof.
   unfold until, false.
   split; repeat intro; simpl in *;
@@ -869,7 +869,7 @@ Proof.
   contradiction (matches_not_false H H1).
 Qed.
 
-Theorem until_right_or_order p q r : p U (q U r) ⟹ (p ∨ q) U r.
+Theorem until_left_or_order p q r : p U (q U r) ⟹ (p ∨ q) U r.
 Proof.
   unfold until, and, not.
   repeat intro; simpl in *;
@@ -989,15 +989,22 @@ Proof.
     now firstorder.
 Qed.
 
-Theorem until_race p q r s :
-  p U q ∧ r U s ⟹ (p ∧ r) U ((q ∧ r) ∨ (p ∧ s) ∨ (q ∧ s)).
+Theorem until_and_until p q r s :
+  (p U q) ∧ (r U s) ⟹ (p ∧ r) U ((q ∧ r) ∨ (p ∧ s) ∨ (q ∧ s)).
 Proof.
   unfold until.
   repeat intro;
   induction s0; firstorder.
 Qed.
 
-Theorem and_until p q : p U q ∧ ¬q ⟹ (p ∧ ¬q) U (p ∧ ¬q ∧ ◯ q).
+Theorem until_or_until p q r s : (p ∧ r) U (q ∨ s) ⟹ (p U q) ∨ (r U s).
+Proof.
+  unfold until.
+  repeat intro.
+  induction s0; firstorder.
+Qed.
+
+Theorem until_and_not p q : p U q ∧ ¬q ⟹ (p ∧ ¬q) U (p ∧ ¬q ∧ ◯ q).
 Proof.
   unfold until.
   repeat intro; simpl in *.

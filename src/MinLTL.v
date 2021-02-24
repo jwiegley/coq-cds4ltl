@@ -35,26 +35,25 @@ Notation "p 'U' q" := (until p q) (at level 79, right associativity) : ltl_scope
 Declare Instance next_respects_implies : Proper (implies ==> implies) next.
 Declare Instance until_respects_implies : Proper (implies ==> implies ==> implies) until.
 
-Axiom (* 1 *)   next_not              : ∀ p,     ◯ ¬p ≈ ¬◯ p.
-Axiom (* 2 *)   next_impl             : ∀ p q,   ◯ (p ⇒ q) ≈ ◯ p ⇒ ◯ q.
+Axiom (* 1 *)   next_not   : ∀ p,   ◯ ¬p ≈ ¬◯ p.
+Axiom (* 2 *)   next_impl  : ∀ p q, ◯ (p ⇒ q) ≈ ◯ p ⇒ ◯ q.
+Axiom (* 9 *)   next_until : ∀ p q, ◯ (p U q) ≈ (◯ p) U (◯ q).
 
-Axiom (* 9 *)   next_until            : ∀ p q,   ◯ (p U q) ≈ (◯ p) U (◯ q).
-Axiom (* 10 *)  until_expand          : ∀ p q,   p U q ≈ q ∨ (p ∧ ◯ (p U q)).
-Axiom (* 11 *)  until_right_bottom    : ∀ p,     p U ⊥ ≈ ⊥.
-Axiom (* 12 *)  until_left_or         : ∀ p q r, p U (q ∨ r) ≈ (p U q) ∨ (p U r).
-Axiom (* 13 *)  until_right_or        : ∀ p q r, (p U r) ∨ (q U r) ⟹ (p ∨ q) U r.
-Axiom (* 14 *)  until_left_and        : ∀ p q r, p U (q ∧ r) ⟹ (p U q) ∧ (p U r).
-Axiom (* 17 *)  until_right_or_order  : ∀ p q r, p U (q U r) ⟹ (p ∨ q) U r.
+Axiom (* 10 *)  until_expand  : ∀ p q, p U q ≈ q ∨ (p ∧ ◯ (p U q)).
+Axiom (* 11 *)  until_false   : ∀ p,   p U ⊥ ≈ ⊥.
+Axiom (* NEW *) until_and_not : ∀ p q, p U q ∧ ¬q ⟹ (p ∧ ¬q) U (p ∧ ¬q ∧ ◯ q).
+
+Axiom (* 13 *)  until_right_or : ∀ p q r, (p U r) ∨ (q U r) ⟹ (p ∨ q) U r.
+Axiom (* 14 *)  until_left_and : ∀ p q r, p U (q ∧ r) ⟹ (p U q) ∧ (p U r).
+
+Axiom (* NEW *) until_or_until  : ∀ p q r s, (p ∧ r) U (q ∨ s) ⟹ (p U q) ∨ (r U s).
+Axiom (* NEW *) until_and_until : ∀ p q r s,
+  (p U q) ∧ (r U s) ⟹ (p ∧ r) U ((q ∧ r) ∨ (p ∧ s) ∨ (q ∧ s)).
+
+Axiom (* 17 *)  until_left_or_order   : ∀ p q r, p U (q U r) ⟹ (p ∨ q) U r.
 Axiom (* 18 *)  until_right_and_order : ∀ p q r, p U (q ∧ r) ⟹ (p U q) U r.
-Axiom (* 170 *) not_until             : ∀ p q,   ⊤ U ¬p ∧ ¬(p U q) ≈ ¬q U (¬p ∧ ¬q).
 
-Axiom (* NEW *) and_until             : ∀ p q,   p U q ∧ ¬q ⟹ (p ∧ ¬q) U (p ∧ ¬q ∧ ◯ q).
-
-Axiom (* NEW *) until_race            : ∀ p q r s,
-  (p U q) ∧ (r U s) ⟹ (p ∧ r) U ((q ∧ r) ∨  (* first wins  *)
-                                  (p ∧ s) ∨  (* second wins *)
-                                  (q ∧ s)    (* it's a tie  *)
-                                 ).
+Axiom (* 170 *) not_until : ∀ p q, ⊤ U ¬p ∧ ¬(p U q) ≈ ¬q U (¬p ∧ ¬q).
 
 End MinimalLinearTemporalLogic.
 
@@ -179,6 +178,49 @@ Qed.
 (37) Right absorption of U : (p U q) U q ≡ p U q
 *)
 
+Theorem (* NEW *) until_or_until_ext p q r s :
+  (p ∧ r) U ((q ∨ r) ∧ (p ∨ s) ∧ (q ∨ s)) ⟹ (p U q) ∨ (r U s).
+Proof.
+  intros.
+  rewrite <- until_or_until.
+  rewrite (and_proj_r (q ∨ s)).
+  now rewrite (and_proj_r (q ∨ s)).
+Qed.
+
+Theorem (* NEW *) until_and_until_ext p q r s : (p U q) ∧ (r U s) ⟹ (p ∧ r) U (q ∨ s).
+Proof.
+  intros.
+  rewrite until_and_until.
+  rewrite (and_proj q).
+  rewrite (and_proj_r s).
+  rewrite (and_proj_r s).
+  now rewrite or_idem.
+Qed.
+
+Theorem (* 12 *)  until_left_or p q r : p U (q ∨ r) ≈ (p U q) ∨ (p U r).
+Proof.
+  split.
+  - rewrite <- until_or_until.
+    now rewrite and_idem.
+  - rewrite <- (or_idem p) at 3.
+    rewrite <- until_right_or.
+    rewrite <- (or_inj q) at 1.
+    now rewrite <- (or_inj_r r) at 1.
+Qed.
+
+Theorem (* NEW *)  until_left_and_r p q r : (p U q) ∧ (p U r) ⟹ p U (q ∨ r).
+Proof.
+  rewrite until_and_until.
+  boolean.
+  rewrite and_proj.
+  rewrite and_proj_r.
+  rewrite and_proj.
+  apply until_respects_implies; [reflexivity|].
+  rewrite or_comm.
+  rewrite or_assoc.
+  now boolean.
+Qed.
+
 Theorem (* 15 *) until_right_and p q r : (p ∧ q) U r ≈ (p U r) ∧ (q U r).
 Proof.
   split; intros.
@@ -186,17 +228,28 @@ Proof.
     rewrite until_left_and.
     rewrite (and_proj p) at 1.
     now rewrite (and_proj_r q).
-  - rewrite until_race.
+  - rewrite until_and_until.
     boolean.
     rewrite (and_proj r).
     rewrite (and_proj_r r).
     now boolean.
 Qed.
 
+Theorem (* NEW *)  until_right_or_r p q r : (p ∧ q) U r ⟹ (p U r) ∨ (q U r).
+Proof.
+  rewrite <- until_or_until_ext.
+  boolean.
+  rewrite (and_comm _ r).
+  rewrite (or_comm _ r).
+  rewrite and_absorb.
+  rewrite (and_comm _ r).
+  now rewrite and_absorb.
+Qed.
+
 Theorem (* 16 *) until_impl_order p q r : (p U q) ∧ (¬q U r) ⟹ p U r.
 Proof.
   intros.
-  rewrite until_race.
+  rewrite until_and_until.
   boolean.
   rewrite <- and_or_r.
   rewrite until_left_and.
@@ -243,7 +296,7 @@ Qed.
 
 Theorem (* 24 *) until_24 p q r : (¬p U (q U r)) ∧ (p U r) ⟹ q U r.
 Proof.
-  rewrite until_right_or_order.
+  rewrite until_left_or_order.
   (* rewrite <- impl_def. *)
   rewrite until_right_impl.
   rewrite and_comm.
@@ -254,7 +307,7 @@ Qed.
 
 Theorem (* 25 *) until_25 p q r : (p U (¬q U r)) ∧ (q U r) ⟹ p U r.
 Proof.
-  rewrite until_right_or_order.
+  rewrite until_left_or_order.
   rewrite or_comm.
   (* rewrite <- impl_def. *)
   rewrite until_right_impl.
@@ -345,7 +398,7 @@ Qed.
 Theorem (* 36 *) until_left_absorb p q : p U (p U q) ≈ p U q.
 Proof.
   split.
-  - rewrite until_right_or_order.
+  - rewrite until_left_or_order.
     now rewrite or_idem.
   - now apply until_insertion.
 Qed.
@@ -357,14 +410,6 @@ Proof.
     now apply until_absorb_u_or.
   - rewrite <- until_right_and_order.
     now rewrite and_idem.
-Qed.
-
-Theorem (* NEW *) until_left_and_impl p q r : p U q ∧ p U r ⟹ p U (q ∨ r).
-Proof.
-  rewrite until_left_or.
-  rewrite and_proj.
-  rewrite <- or_inj.
-  reflexivity.
 Qed.
 
 End MinimalLinearTemporalLogicFacts.

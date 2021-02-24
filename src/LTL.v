@@ -91,7 +91,7 @@ Theorem (* 41 *) until_absorb_evn p q : p U ◇ q ≈ ◇ q.
 Proof.
   rewrite evn_def.
   split.
-  - rewrite until_right_or_order.
+  - rewrite until_left_or_order.
     now rewrite or_true.
   - now apply until_insertion.
 Qed.
@@ -113,7 +113,7 @@ Qed.
 Theorem (* 44 *) law_44 : ◇ ⊥ ≈ ⊥.
 Proof.
   rewrite evn_def.
-  now apply until_right_bottom.
+  now apply until_false.
 Qed.
 
 Theorem (* 45 *) evn_expand p : ◇ p ≈ p ∨ ◯ ◇ p.
@@ -279,7 +279,7 @@ Qed.
 
 Theorem (* 83 *) law_83_early p q r : □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r).
 Proof.
-  pose proof (until_race p (p ∧ r) q r).
+  pose proof (until_and_until p (p ∧ r) q r).
   revert H.
   boolean.
   intro.
@@ -298,7 +298,7 @@ Proof.
   rewrite <- (or_false (¬p)) at 3.
   apply and_impl_iff.
   rewrite <- (not_not p) at 4.
-  rewrite and_until.
+  rewrite until_and_not.
   rewrite not_not.
   rewrite next_not.
   rewrite and_or_r.
@@ -307,7 +307,7 @@ Proof.
   rewrite and_apply.
   rewrite and_assoc.
   boolean.
-  now apply until_right_bottom.
+  now apply until_false.
 Qed.
 
 Lemma (* 75 *) law_75_strong p : p ∧ ◇ ¬p ≈ p U (p ∧ ¬◯ p).
@@ -352,7 +352,7 @@ Proof.
       rewrite law_42.
       now rewrite evn_def.
     - rewrite law_75_strong.
-      rewrite until_race.
+      rewrite until_and_until.
       rewrite !and_or.
       rewrite (and_proj p (¬◯ p)) at 2.
       rewrite or_idem.
@@ -378,7 +378,7 @@ Corollary (* NEW *) always_until_and_ind_alt p q :
   □ (p ⇒ ◯ p ∧ q) ⟹ p ⇒ □ q.
 Proof.
   pose proof (always_until_and_ind p q ⊥).
-  rewrite until_right_bottom in H.
+  rewrite until_false in H.
   now rewrite !or_false in H.
 Qed.
 
@@ -416,7 +416,7 @@ Proof.
   pose proof (always_until_or_ind p ⊥).
   rewrite or_false in H.
   rewrite H.
-  rewrite until_right_bottom.
+  rewrite until_false.
   now rewrite or_false.
 Qed.
 
@@ -429,7 +429,7 @@ Proof.
   apply impl_implies in law_56.
   rewrite law_56.
 
-  rewrite until_right_bottom.
+  rewrite until_false.
   rewrite !or_false.
   rewrite next_linearity.
   (* rewrite !impl_def. *)
@@ -711,7 +711,7 @@ Qed.
 
 Theorem (* 83 *) always_and_until p q r : □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r).
 Proof.
-  pose proof (until_race p (p ∧ r) q r).
+  pose proof (until_and_until p (p ∧ r) q r).
   revert H.
   boolean.
   intro.
@@ -1130,7 +1130,7 @@ Qed.
 Theorem (* 129 *) law_129 p q : □ (p ⇒ q ∧ ◯ p) ⟹ (p ⇒ □ q).
 Proof.
   pose proof (always_until_and_ind p q ⊥).
-  rewrite until_right_bottom in H.
+  rewrite until_false in H.
   rewrite !or_false in H.
   now rewrite and_comm.
 Qed.
@@ -2318,7 +2318,7 @@ Qed.
 Theorem (* 224 *) law_224 p : □ p ≈ p W ⊥.
 Proof.
   rewrite wait_def.
-  rewrite until_right_bottom.
+  rewrite until_false.
   now boolean.
 Qed.
 
@@ -2556,7 +2556,7 @@ Proof.
   rewrite 2 wait_def.
   rewrite until_left_or.
   rewrite law_140.
-  rewrite until_right_or_order.
+  rewrite until_left_or_order.
   rewrite <- or_assoc.
   rewrite law_100.
   rewrite until_absorb_or_u.
