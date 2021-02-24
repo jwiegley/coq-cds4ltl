@@ -874,6 +874,41 @@ Qed.
 
 Theorem until_and_not p q : p U q ∧ ¬q ⟹ (p ∧ ¬q) U (p ∧ ¬q ∧ ◯ q).
 Proof.
+  repeat intro.
+  inv H.
+  inv H0.
+  inv H.
+  exists (Nat.pred x0).
+  split.
+  - destruct (Compare_dec.lt_dec 0 x0).
+    + split.
+      * unfold In.
+        apply H2; lia.
+      * split.
+        ** intro.
+           unfold In in H.
+           clear H2.
+           generalize dependent x.
+           induction x0; intros.
+           *** contradiction.
+           *** admit.
+        ** unfold In, next.
+           rewrite from_plus.
+           simpl plus.
+           now rewrite <- Lt.S_pred_pos.
+    + assert (0 = x0) by lia.
+      subst.
+      contradiction.
+  - intros.
+    destruct (Compare_dec.lt_dec 0 x0).
+    + split.
+      * apply H2; lia.
+      * intro.
+        unfold In in H3.
+        admit.
+    + assert (0 = x0) by lia.
+      subst.
+      contradiction.
 Admitted.
 
 Theorem always_until_and_ind_ p q r :
