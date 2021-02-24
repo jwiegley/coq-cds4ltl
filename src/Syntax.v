@@ -923,13 +923,15 @@ Lemma matches_eventually x xs p :
   matches p (x :: xs) \/ matches (Eventually p) xs.
 Proof. reflexivity. Qed.
 
-Lemma matches_wait s p q : matches (Wait p q) s <-> True.
-Proof.
-Abort.
+Lemma matches_wait x xs p q :
+  matches (Wait p q) (x :: xs) <->
+  matches q (x :: xs) \/ (matches p (x :: xs) /\ matches (Wait p q) xs).
+Proof. reflexivity. Qed.
 
-Lemma matches_strongrelease s p q : matches (StrongRelease p q) s <-> True.
-Proof.
-Abort.
+Lemma matches_strongrelease x xs p q :
+  matches (StrongRelease p q) (x :: xs) <->
+  matches q (x :: xs) /\ (matches p (x :: xs) \/ matches (StrongRelease p q) xs).
+Proof. reflexivity. Qed.
 
 Theorem until_right_and_order p q r : p U (q ∧ r) ⟹ (p U q) U r.
 Proof.
