@@ -12,7 +12,8 @@ CoInductive Machine (a b : Type) :=
 
 Arguments Step {a b} _.
 
-CoFixpoint map {a b c : Type} (f : b -> c) (p : Machine a b) : Machine a c :=
+CoFixpoint map {a b c : Type} (f : b -> c)
+           (p : Machine a b) : Machine a c :=
   match p with
   | Step k => Step (λ x, match k x with
                          | inl m => inl (map f m)
