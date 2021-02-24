@@ -22,16 +22,16 @@ This may be found in Model.v
 :CREATED:  [2021-02-11 Thu 08:55]
 :END:
 
-** TODO Write a short paper on the Coq formulation of CDS4LTL
-:PROPERTIES:
-:ID:       40030D5B-9336-4005-BFD1-64F0C2106BE3
-:CREATED:  [2021-02-11 Thu 08:58]
-:END:
-
 ** TODO Typeset new proof (57): □ ¬p ∧ p U q ⇒ q
 :PROPERTIES:
 :ID:       FC4ECD01-B161-4081-9C63-4E127FAFBD4F
 :CREATED:  [2021-02-11 Thu 10:50]
+:END:
+
+** TODO Write a short paper on the Coq formulation of CDS4LTL
+:PROPERTIES:
+:ID:       40030D5B-9336-4005-BFD1-64F0C2106BE3
+:CREATED:  [2021-02-11 Thu 08:58]
 :END:
 
 ** TODO Read the ACL2 paper that Scott provided
@@ -43,24 +43,6 @@ This may be found in Model.v
 :CREATED:  [2021-02-11 Thu 08:57]
 :END:
 
-** TODO Look into SPOT as time permits
-:PROPERTIES:
-:ID:       DEAF41D2-E3DB-4460-9391-13BB62C9AA63
-:CREATED:  [2021-02-11 Thu 08:57]
-:END:
-
-** TODO Build up theorems for Release (R) and Strong Release (M)
-:PROPERTIES:
-:ID:       6F7FF7D9-E21F-4982-B638-4A8A902D1BE6
-:CREATED:  [2021-02-11 Thu 09:46]
-:END:
-** DONE Write a program to produce an ideal ordering of the LTL theorems
-This would first build a dependency graph, and then for items at the same
-level, order them based on term complexity.
-:PROPERTIES:
-:ID:       70E545FF-5640-4E48-AE24-F818F53A9E52
-:CREATED:  [2021-02-19 Fri 10:43]
-:END:
 ** TODO Starting a new working document
 ... to cover new work on CDS4LTL/Coq proof discovery; new, reduced axiomatic
 foundations for CDS4LTL; and new interesting proofs in LTL. Prof. Warford has
@@ -81,11 +63,16 @@ work and results into the above new working document.
 :ID:       02A58C25-9C76-44C9-9097-22DAE7A09B73
 :CREATED:  [2021-02-19 Fri 16:21]
 :END:
-** TODO Review the Mathematical Philosophy courses at Pepperdine
+** TODO Look into SPOT as time permits
 :PROPERTIES:
-:ID:       7AB85D85-7988-4E25-9A36-2AD3491CA1B2
-:CREATED:  [2021-02-19 Fri 16:21]
-:URL:      https://github.com/ashumeow/introduction-to-mathematical-philosophy
+:ID:       DEAF41D2-E3DB-4460-9391-13BB62C9AA63
+:CREATED:  [2021-02-11 Thu 08:57]
+:END:
+
+** TODO Build up theorems for Release (R) and Strong Release (M)
+:PROPERTIES:
+:ID:       6F7FF7D9-E21F-4982-B638-4A8A902D1BE6
+:CREATED:  [2021-02-11 Thu 09:46]
 :END:
 ** TODO Explore bi-directional temporal flows
 Our semantic model currently is based on infinite streams, with a
@@ -103,6 +90,19 @@ the same satisfiability condition but with j being of type integer, such that:
 :PROPERTIES:
 :ID:       732E06FD-6EE3-4091-8B9B-7EF4F473DC97
 :CREATED:  [2021-02-22 Mon 14:34]
+:END:
+** TODO Review the Mathematical Philosophy courses at Pepperdine
+:PROPERTIES:
+:ID:       7AB85D85-7988-4E25-9A36-2AD3491CA1B2
+:CREATED:  [2021-02-19 Fri 16:21]
+:URL:      https://github.com/ashumeow/introduction-to-mathematical-philosophy
+:END:
+** DONE Write a program to produce an ideal ordering of the LTL theorems
+This would first build a dependency graph, and then for items at the same
+level, order them based on term complexity.
+:PROPERTIES:
+:ID:       70E545FF-5640-4E48-AE24-F818F53A9E52
+:CREATED:  [2021-02-19 Fri 10:43]
 :END:
 ** DONE Prove the new axiom relating individual terms to until
 p ∧ q U ¬p ⇒ (q ∧ p) U (q ∧ p ∧ ¬◯ p)

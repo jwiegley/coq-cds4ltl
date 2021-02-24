@@ -221,7 +221,7 @@ Qed.
 (81) □ p ⇒ ¬(q U ¬p)
 *)
 
-Lemma (* 75 *) law_75_strong p : p ∧ ◇ ¬p ≈ p U (p ∧ ¬◯ p).
+Theorem (* 75 *) law_75_strong p : p ∧ ◇ ¬p ≈ p U (p ∧ ¬◯ p).
 Proof.
   split; intros.
   - apply and_impl_iff.
@@ -1781,7 +1781,7 @@ Qed.
 (254) Lemmon formula: □ (□ p ⇒ q) ∨ □ (□ q ⇒ p)
 *)
 
-Corollary not_wait p q : ¬(p W q) ≈ ¬q U (¬p ∧ ¬q).
+Corollary (* NEW *) not_wait p q : ¬(p W q) ≈ ¬q U (¬p ∧ ¬q).
 Proof.
   rewrite wait_def.
   rewrite <- not_until.
