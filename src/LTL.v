@@ -221,12 +221,28 @@ Qed.
 (81) □ p ⇒ ¬(q U ¬p)
 *)
 
-Corollary (* NEW *) until_impl p q r : (p ⇒ r) ∧ (q ⇒ r) ⟹ (p U q ⇒ r).
+Lemma (* 75 *) law_75_strong p : p ∧ ◇ ¬p ≈ p U (p ∧ ¬◯ p).
 Proof.
-  intros.
-  rewrite or_respects.
-  rewrite until_28.
-  now rewrite or_idem.
+  split; intros.
+  - apply and_impl_iff.
+    apply contrapositive.
+    rewrite not_or.
+    rewrite not_not.
+    rewrite evn_def.
+    rewrite not_until.
+    rewrite !not_and.
+    rewrite !not_not.
+    rewrite and_or.
+    boolean.
+    now apply looped.
+  - rewrite until_left_and.
+    rewrite until_idem.
+    apply and_respects_implies; [reflexivity|].
+    rewrite evn_expand.
+    rewrite law_42.
+    rewrite <- or_inj_r.
+    rewrite law_51.
+    now rewrite next_not.
 Qed.
 
 Theorem (* 76 *) law_76_early p : □ p ⟹ p.
@@ -237,30 +253,7 @@ Proof.
   now apply evn_weaken.
 Qed.
 
-Theorem (* 73 *) law_73_early p : ◯ □ p ≈ □ ◯ p.
-Proof.
-  rewrite !always_def.
-  rewrite next_not.
-  rewrite law_51.
-  now rewrite <- next_not.
-Qed.
-
-Theorem (* 66 *) law_66_early p : □ p ≈ p ∧ ◯ □ p.
-Proof.
-  rewrite always_def.
-  rewrite evn_expand at 1.
-  rewrite not_or.
-  rewrite not_not.
-  now rewrite next_not.
-Qed.
-
-Theorem (* 90 *) law_90_early p : □ p ∨ ◇ ¬p ≈ ⊤.
-Proof.
-  rewrite always_def.
-  now boolean.
-Qed.
-
-Theorem (* NEW *) law_88_strong p q : □ p ∧ ◇ q ⟹ p U (p ∧ q).
+Theorem (* 88 *) law_88_strong p q : □ p ∧ ◇ q ⟹ p U (p ∧ q).
 Proof.
   rewrite !always_def.
   rewrite !evn_def.
@@ -293,45 +286,10 @@ Proof.
   now apply law_88_strong.
 Qed.
 
-Theorem (* NEW *) looped p : (p ⇒ ◯ p) U ¬p ⟹ ¬p.
+Theorem (* 90 *) law_90_early p : □ p ∨ ◇ ¬p ≈ ⊤.
 Proof.
-  rewrite <- (or_false (¬p)) at 3.
-  apply and_impl_iff.
-  rewrite <- (not_not p) at 4.
-  rewrite until_and_not.
-  rewrite not_not.
-  rewrite next_not.
-  rewrite and_or_r.
-  rewrite <- and_assoc.
-  rewrite (and_comm (p ⇒ ◯ p) p).
-  rewrite and_apply.
-  rewrite and_assoc.
-  boolean.
-  now apply until_false.
-Qed.
-
-Lemma (* 75 *) law_75_strong p : p ∧ ◇ ¬p ≈ p U (p ∧ ¬◯ p).
-Proof.
-  split; intros.
-  - apply and_impl_iff.
-    apply contrapositive.
-    rewrite not_or.
-    rewrite not_not.
-    rewrite evn_def.
-    rewrite not_until.
-    rewrite !not_and.
-    rewrite !not_not.
-    rewrite and_or.
-    boolean.
-    now apply looped.
-  - rewrite until_left_and.
-    rewrite until_idem.
-    apply and_respects_implies; [reflexivity|].
-    rewrite evn_expand.
-    rewrite law_42.
-    rewrite <- or_inj_r.
-    rewrite law_51.
-    now rewrite next_not.
+  rewrite always_def.
+  now boolean.
 Qed.
 
 Theorem (* 55 *) always_until_and_ind p q r :
@@ -380,6 +338,23 @@ Proof.
   pose proof (always_until_and_ind p q ⊥).
   rewrite until_false in H.
   now rewrite !or_false in H.
+Qed.
+
+Theorem (* 66 *) law_66_early p : □ p ≈ p ∧ ◯ □ p.
+Proof.
+  rewrite always_def.
+  rewrite evn_expand at 1.
+  rewrite not_or.
+  rewrite not_not.
+  now rewrite next_not.
+Qed.
+
+Theorem (* 73 *) law_73_early p : ◯ □ p ≈ □ ◯ p.
+Proof.
+  rewrite !always_def.
+  rewrite next_not.
+  rewrite law_51.
+  now rewrite <- next_not.
 Qed.
 
 Theorem (* 56 *) always_until_or_ind p q :

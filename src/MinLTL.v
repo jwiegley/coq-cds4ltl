@@ -412,4 +412,29 @@ Proof.
     now rewrite and_idem.
 Qed.
 
+Corollary (* NEW *) until_impl p q r : (p ⇒ r) ∧ (q ⇒ r) ⟹ (p U q ⇒ r).
+Proof.
+  intros.
+  rewrite or_respects.
+  rewrite until_28.
+  now rewrite or_idem.
+Qed.
+
+Theorem (* NEW *) looped p : (p ⇒ ◯ p) U ¬p ⟹ ¬p.
+Proof.
+  rewrite <- (or_false (¬p)) at 3.
+  apply and_impl_iff.
+  rewrite <- (not_not p) at 4.
+  rewrite until_and_not.
+  rewrite not_not.
+  rewrite next_not.
+  rewrite and_or_r.
+  rewrite <- and_assoc.
+  rewrite (and_comm (p ⇒ ◯ p) p).
+  rewrite and_apply.
+  rewrite and_assoc.
+  boolean.
+  now apply until_false.
+Qed.
+
 End MinimalLinearTemporalLogicFacts.
