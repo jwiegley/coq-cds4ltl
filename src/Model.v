@@ -360,39 +360,44 @@ Proof.
     lia.
 Qed.
 
-Theorem (* 12 *) until_left_or p q r : p U (q ∨ r) ≈ (p U q) ∨ (p U r).
+Theorem (* NEW *) until_and_not p q : p U q ∧ ¬q ⟹ (p ∧ ¬q) U (p ∧ ¬q ∧ ◯ q).
 Proof.
-  split; repeat intro; unfold In in *.
-  unfold until, or in *.
-  - destruct H.
-    destruct H.
-    inv H.
-    + left.
-      unfold In in *.
-      exists x0.
-      now split.
-    + right.
-      unfold In in *.
-      exists x0.
-      now split.
-  - destruct H.
-    destruct H.
-    destruct H.
-    + unfold until.
-      exists x0.
-      split.
-      * now left.
-      * intros.
-        now apply H0.
-    + destruct H.
-      destruct H.
-      unfold until.
-      exists x0.
-      split.
-      * now right.
-      * intros.
-        now apply H0.
-Qed.
+  repeat intro.
+  inv H.
+  inv H0.
+  inv H.
+  exists (Nat.pred x0).
+  split.
+  - destruct (Compare_dec.lt_dec 0 x0).
+    + split.
+      * unfold In.
+        apply H2; lia.
+      * split.
+        ** intro.
+           unfold In in H.
+           clear H2.
+           generalize dependent x.
+           induction x0; intros.
+           *** contradiction.
+           *** admit.
+        ** unfold In, next.
+           rewrite from_plus.
+           simpl plus.
+           now rewrite <- Lt.S_pred_pos.
+    + assert (0 = x0) by lia.
+      subst.
+      contradiction.
+  - intros.
+    destruct (Compare_dec.lt_dec 0 x0).
+    + split.
+      * apply H2; lia.
+      * intro.
+        unfold In in H3.
+        admit.
+    + assert (0 = x0) by lia.
+      subst.
+      contradiction.
+Admitted.
 
 Theorem (* 13 *) until_right_or p q r : (p U r) ∨ (q U r) ⟹ (p ∨ q) U r.
 Proof.
@@ -427,53 +432,60 @@ Proof.
     now split.
 Qed.
 
-Theorem (* 15 *) until_right_and p q r : (p ∧ q) U r ≈ (p U r) ∧ (q U r).
+Theorem (* NEW *) until_or_until p q r s : (p ∧ r) U (q ∨ s) ⟹ (p U q) ∨ (r U s).
 Proof.
-  split; repeat intro;
-  unfold until, In in *.
-  - destruct H.
-    destruct H.
-    split; unfold In in *.
-    + exists x0.
-      split; auto; intros.
-      specialize (H0 _ H1).
-      inv H0.
-      exact H2.
-    + exists x0.
-      split; auto; intros.
-      specialize (H0 _ H1).
-      inv H0.
-      exact H3.
-  - inv H.
-    unfold In in *.
-    destruct H0, H.
-    destruct H1, H1.
-    exists (min x0 x1).
+  repeat intro.
+  inv H.
+  inv H0.
+  inv H.
+  - left.
+    exists x0.
     split; auto; intros.
-    + now destruct (Min.min_dec x0 x1); rewrite e.
-    + split.
-      * apply H0.
-        lia.
-      * apply H2.
-        lia.
+    specialize (H1 _ H).
+    now inv H1.
+  - right.
+    exists x0.
+    split; auto; intros.
+    specialize (H1 _ H).
+    now inv H1.
 Qed.
 
-Theorem (* 16 *) until_impl_order p q r : (p U q) ∧ (¬q U r) ⟹ p U r.
+Theorem (* NEW *) until_and_until p q r s :
+  p U q ∧ r U s ⟹ (p ∧ r) U ((q ∧ r) ∨ (p ∧ s) ∨ (q ∧ s)).
 Proof.
-  repeat intro;
-  unfold until, In in *.
+  repeat intro.
   inv H.
-  unfold In in *.
-  destruct H0, H.
-  destruct H1, H1.
-  unfold not, Complement, Logic.not, In in H2.
-  destruct (Compare_dec.le_lt_dec x1 x0).
-  - exists x1.
-    split; auto; intros.
-    apply H0.
-    lia.
-  - elimtype False.
-    now firstorder.
+  inv H0; inv H1.
+  inv H; inv H0.
+  destruct (classic (x0 < x1)).
+  - exists x0.
+    + split.
+      * left.
+        split; auto.
+        apply H3; lia.
+      * intros.
+        split.
+        ** apply H2; lia.
+        ** apply H3; lia.
+  - destruct (classic (x0 = x1)).
+    + subst.
+      exists x1.
+      split.
+      * right; right.
+        now split.
+      * intros.
+        split.
+        ** apply H2; lia.
+        ** apply H3; lia.
+    + exists x1.
+      split.
+      * right; left.
+        split; auto.
+        apply H2; lia.
+      * intros.
+        split.
+        ** apply H2; lia.
+        ** apply H3; lia.
 Qed.
 
 Theorem (* 17 *) until_left_or_order p q r : p U (q U r) ⟹ (p ∨ q) U r.
@@ -532,13 +544,7 @@ Proof.
     contradiction.
 Qed.
 
-Lemma apply_ {p q x} : (Complement (Stream a) p ∪ q) x -> p x -> q x.
-Proof.
-  intros.
-  now inv H.
-Qed.
-
-Theorem not_until p q : ⊤ U ¬p ∧ ¬(p U q) ≈ ¬q U (¬p ∧ ¬q).
+Theorem (* 170 *) not_until p q : ⊤ U ¬p ∧ ¬(p U q) ≈ ¬q U (¬p ∧ ¬q).
 Proof.
   split.
   - apply and_impl_iff_.
@@ -721,7 +727,7 @@ Theorem wait_semantics : ∀ σ j p q,
 Proof.
 Admitted.
 
-Theorem evn_def p : ◇ p ≈ ⊤ U p.
+Theorem (* 38 *) evn_def p : ◇ p ≈ ⊤ U p.
 Proof.
   unfold eventually, until, any.
   split; repeat intro; unfold In in *.
@@ -734,7 +740,7 @@ Proof.
     now destruct H.
 Qed.
 
-Theorem always_def p : □ p ≈ ¬◇ ¬p.
+Theorem (* 54 *) always_def p : □ p ≈ ¬◇ ¬p.
 Proof.
   unfold always, eventually, until, any, every.
   split; repeat intro; unfold In in *.
@@ -749,289 +755,8 @@ Proof.
     now exists i.
 Qed.
 
-(* This is provided by [LinearTemporalLogicFacts] below, I only proved it as a
-   guide here to doing similar semantic proofs involving always. *)
-Theorem always_induction_ p : □ (p ⇒ ◯ p) ⟹ p ⇒ □ p.
-Proof.
-  apply and_impl_iff_.
-  unfold next, always, every.
-  repeat intro.
-  unfold In in *.
-  inv H.
-  pose proof (H0 i).
-  induction i; intros.
-  - now inv H; [contradiction|].
-  - specialize (IHi (H0 i)).
-    pose proof (apply_ (H0 i) IHi).
-    clear -H2.
-    rewrite <- PeanoNat.Nat.add_1_r.
-    rewrite <- from_plus.
-    rewrite <- from_from.
-    now apply H2.
-Qed.
-
-Lemma eventually_until_ p : ◇ p ⟹ ¬p U p.
-Proof.
-  repeat intro.
-  inv H.
-  generalize dependent x.
-  induction x0; intros.
-  - exists 0.
-    split; auto; intros.
-    lia.
-  - specialize (IHx0 (from 1 x)).
-    rewrite from_plus in IHx0.
-    rewrite PeanoNat.Nat.add_1_r in IHx0.
-    apply IHx0 in H0; clear IHx0.
-    destruct (classic (p x)).
-    + exists 0.
-      split; auto; intros.
-      lia.
-    + inv H0.
-      inv H1.
-      rewrite from_plus in H0.
-      rewrite PeanoNat.Nat.add_1_r in H0.
-      setoid_rewrite from_plus in H2.
-      setoid_rewrite PeanoNat.Nat.add_1_r in H2.
-      exists (S x1).
-      split; auto; intros.
-      destruct i; auto.
-      apply H2.
-      lia.
-Qed.
-
-Corollary not_until_eventually_ p : ¬(¬p U p) ⟹ ¬◇ p.
-Proof.
-  repeat intro.
-  apply H; clear H.
-  now apply eventually_until_.
-Qed.
-
-(* p p p p p p p q  p U q ∧ r U s ∧ r U (p ∧ s)
-   r r r r r s
-
-   p p p p p q      p U q ∧ r U s ∧ p U (q ∧ r)
-   r r r r r r r s
-
-   p p p p p p p q  p U q ∧ r U s
-   r r r r r r r s
- *)
-Theorem until_and_until p q r s :
-  p U q ∧ r U s ⟹ (p ∧ r) U ((q ∧ r) ∨ (p ∧ s) ∨ (q ∧ s)).
-Proof.
-  repeat intro.
-  inv H.
-  inv H0; inv H1.
-  inv H; inv H0.
-  destruct (classic (x0 < x1)).
-  - exists x0.
-    + split.
-      * left.
-        split; auto.
-        apply H3; lia.
-      * intros.
-        split.
-        ** apply H2; lia.
-        ** apply H3; lia.
-  - destruct (classic (x0 = x1)).
-    + subst.
-      exists x1.
-      split.
-      * right; right.
-        now split.
-      * intros.
-        split.
-        ** apply H2; lia.
-        ** apply H3; lia.
-    + exists x1.
-      split.
-      * right; left.
-        split; auto.
-        apply H2; lia.
-      * intros.
-        split.
-        ** apply H2; lia.
-        ** apply H3; lia.
-Qed.
-
-Theorem until_or_until p q r s : (p ∧ r) U (q ∨ s) ⟹ (p U q) ∨ (r U s).
-Proof.
-  repeat intro.
-  inv H.
-  inv H0.
-  inv H.
-  - left.
-    exists x0.
-    split; auto; intros.
-    specialize (H1 _ H).
-    now inv H1.
-  - right.
-    exists x0.
-    split; auto; intros.
-    specialize (H1 _ H).
-    now inv H1.
-Qed.
-
-Theorem until_and_not p q : p U q ∧ ¬q ⟹ (p ∧ ¬q) U (p ∧ ¬q ∧ ◯ q).
-Proof.
-  repeat intro.
-  inv H.
-  inv H0.
-  inv H.
-  exists (Nat.pred x0).
-  split.
-  - destruct (Compare_dec.lt_dec 0 x0).
-    + split.
-      * unfold In.
-        apply H2; lia.
-      * split.
-        ** intro.
-           unfold In in H.
-           clear H2.
-           generalize dependent x.
-           induction x0; intros.
-           *** contradiction.
-           *** admit.
-        ** unfold In, next.
-           rewrite from_plus.
-           simpl plus.
-           now rewrite <- Lt.S_pred_pos.
-    + assert (0 = x0) by lia.
-      subst.
-      contradiction.
-  - intros.
-    destruct (Compare_dec.lt_dec 0 x0).
-    + split.
-      * apply H2; lia.
-      * intro.
-        unfold In in H3.
-        admit.
-    + assert (0 = x0) by lia.
-      subst.
-      contradiction.
-Admitted.
-
-Theorem always_until_and_ind_ p q r :
-  □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r.
-Proof.
-  apply and_impl_iff_.
-  intros x H.
-  inv H.
-  destruct (classic ((¬r U r) x)).
-  - inv H.
-    inv H2.
-    right.
-    exists x0.
-    split; auto; intros.
-    enough ([x, i] ⊨ q /\ [x, i] ⊨ p).
-      now inv H2.
-    pose proof (H0 i).
-    induction i; intros.
-    + pose proof (apply_ H4 H1).
-      split; auto; intros.
-      inv H4.
-      * contradiction.
-      * inv H6.
-        ** now inv H4.
-        ** specialize (H3 0).
-           now intuition.
-    + assert (i < x0) by lia.
-      destruct (IHi H5 (H0 i)).
-      pose proof (apply_ (H0 i) H7).
-      inv H8.
-      * inv H9.
-        unfold next, In in H8.
-        rewrite from_plus in H8.
-        pose proof (apply_ (H0 (S i)) H8).
-        split; auto.
-        inv H9.
-        ** now inv H11.
-        ** specialize (H3 _ H2).
-           contradiction.
-      * specialize (H3 _ H5).
-        contradiction.
-  - apply not_until_eventually_ in H.
-    left.
-    intro.
-    enough ([x, i] ⊨ q /\ [x, i] ⊨ p).
-      now inv H2.
-    pose proof (H0 i).
-    induction i; intros.
-    + inv H2; [contradiction|].
-      inv H3; [now inv H2|].
-      apply not_ex_all_not with (n:=0) in H.
-      contradiction.
-    + destruct (IHi (H0 i)).
-      pose proof (apply_ (H0 i) H4).
-      inv H5.
-      * inv H6.
-        unfold next, In in H5.
-        rewrite from_plus in H5.
-        pose proof (apply_ H2 H5).
-        split; auto.
-        inv H6.
-        ** now inv H8.
-        ** apply not_ex_all_not with (n:=S i) in H.
-           contradiction.
-      * apply not_ex_all_not with (n:=i) in H.
-        contradiction.
-Qed.
-
-Theorem always_and_until_ p q r : □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r).
-Proof.
-  unfold until, next, always, every, or, and, not.
-  repeat intro.
-  inv H.
-  unfold In in *.
-  destruct H1.
-  exists x0.
-  destruct H.
-  split.
-  - split.
-    + now apply H0.
-    + now apply H.
-  - split; intros.
-    + now apply H0.
-    + now apply H1.
-Qed.
-
-Theorem wait_def p q : p W q ≈ □ p ∨ p U q.
+Theorem (* 169 *) wait_def p q : p W q ≈ □ p ∨ p U q.
 Proof. reflexivity. Qed.
-
-Definition F p q := □ (p ⇒ □ q).
-
-Theorem Dummett p : F (F p p) p ⟹ (◇ □ p ⇒ □ p).
-Proof.
-  apply and_impl_iff_.
-  unfold F.
-  unfold always, eventually, every, any, or, not, Complement, Logic.not.
-  repeat intro.
-  inv H.
-  unfold In in *.
-  setoid_rewrite from_plus in H1.
-  destruct H1.
-  destruct (Compare_dec.lt_dec i x0).
-  - specialize (H0 0).
-    inv H0; unfold In in *.
-    + apply not_all_ex_not in H1.
-      destruct H1.
-      apply Union_Complement in H0.
-      inv H0.
-      unfold not, Complement, Logic.not, In in *.
-      rewrite from_O in *.
-      apply not_all_ex_not in H2.
-      destruct H2.
-      unfold Logic.not in *.
-      rewrite from_plus in H0.
-      apply NNPP in H1.
-      admit.
-    + setoid_rewrite from_plus in H1.
-      setoid_rewrite PeanoNat.Nat.add_0_r in H1.
-      now apply H1.
-  - specialize (H (i - x0)).
-    rewrite PeanoNat.Nat.sub_add in H; auto.
-    lia.
-Abort.
 
 End StreamLTLW.
 

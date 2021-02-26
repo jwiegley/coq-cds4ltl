@@ -343,215 +343,107 @@ Qed.
 
 Ltac inv H := inversion H; subst; clear H.
 
+Ltac induct :=
+  try split; repeat intro; simpl in *;
+  match goal with
+    [ S : list S.a |- _ ] => induction S
+  end; firstorder.
+
+#[local] Obligation Tactic := induct.
+
 Program Instance Examine_respects_implies :
   Proper ((eq ==> implies) ==> implies) Examine.
-Next Obligation.
-  repeat intro; simpl in *.
-  destruct s; intuition;
-  now apply (H _ _ (reflexivity _)).
-  (* inv H0. *)
-  (* constructor. *)
-  (* specialize (H a a (reflexivity _)). *)
-  (* now apply H. *)
-Qed.
 
 Program Instance Examine_respects_equivalent :
   Proper ((eq ==> equivalent) ==> equivalent) Examine.
-Next Obligation.
-  split; repeat intro.
-  - destruct s; intuition;
-    now apply (H _ _ (reflexivity _)).
-  - destruct s; intuition;
-    now apply (H _ _ (reflexivity _)).
-Qed.
 
 Program Instance matches_respects_implies :
   Proper (implies ==> eq ==> Basics.impl) matches.
 Next Obligation.
-  repeat intro.
-  subst.
-  now apply H.
+  - subst; now apply H.
+  - subst; now apply H.
 Qed.
 
 Program Instance matches_respects_equivalent :
   Proper (equivalent ==> eq ==> iff) (matches).
 Next Obligation.
-  split; repeat intro.
-  - subst.
-    now apply H.
-  - subst.
-    now apply H.
+  - subst; now apply H.
+  - subst; now apply H.
+  - subst; now apply H2.
+  - subst; now apply H2.
 Qed.
 
-Program Instance And_respects_implies : Proper (implies ==> implies ==> implies) And.
-Next Obligation.
-  repeat intro.
-  simpl.
-  now rewrite <- H, <- H0.
-Qed.
+Program Instance And_respects_implies :
+  Proper (implies ==> implies ==> implies) And.
 
-Program Instance And_respects_equivalent : Proper (equivalent ==> equivalent ==> equivalent) And.
-Next Obligation.
-  split; repeat intro.
-  - destruct H, H0.
-    now rewrite <- H, <- H0.
-  - destruct H, H0.
-    now rewrite <- H2, <- H3.
-Qed.
+Program Instance And_respects_equivalent :
+  Proper (equivalent ==> equivalent ==> equivalent) And.
 
-Program Instance Or_respects_implies : Proper (implies ==> implies ==> implies) Or.
-Next Obligation.
-  repeat intro.
-  simpl.
-  now rewrite <- H, <- H0.
-Qed.
+Program Instance Or_respects_implies :
+  Proper (implies ==> implies ==> implies) Or.
 
-Program Instance Or_respects_equivalent : Proper (equivalent ==> equivalent ==> equivalent) Or.
-Next Obligation.
-  split; repeat intro.
-  - destruct H, H0.
-    now rewrite <- H, <- H0.
-  - destruct H, H0.
-    now rewrite <- H2, <- H3.
-Qed.
+Program Instance Or_respects_equivalent :
+  Proper (equivalent ==> equivalent ==> equivalent) Or.
 
-Program Instance Next_respects_implies : Proper (implies ==> implies) Next.
-Next Obligation.
-  repeat intro.
-  simpl in *;
-  destruct s; now auto.
-Qed.
+Program Instance Next_respects_implies :
+  Proper (implies ==> implies) Next.
 
-Program Instance Next_respects_equivalent : Proper (equivalent ==> equivalent) Next.
-Next Obligation.
-  split; repeat intro.
-  - simpl in *;
-    destruct s; auto;
-    now rewrite <- H.
-  - simpl in *;
-    destruct s; auto;
-    now rewrite H.
-Qed.
+Program Instance Next_respects_equivalent :
+  Proper (equivalent ==> equivalent) Next.
 
-Program Instance Until_respects_implies : Proper (implies ==> implies ==> implies) Until.
-Next Obligation.
-  repeat intro.
-  now induction s; simpl in *; intuition.
-Qed.
+Program Instance Until_respects_implies :
+  Proper (implies ==> implies ==> implies) Until.
 
-Program Instance Until_respects_equivalent : Proper (equivalent ==> equivalent ==> equivalent) Until.
-Next Obligation.
-  split; destruct H, H0;
-  now apply Until_respects_implies.
-Qed.
+Program Instance Until_respects_equivalent :
+  Proper (equivalent ==> equivalent ==> equivalent) Until.
 
-Program Instance Release_respects_implies : Proper (implies ==> implies ==> implies) Release.
-Next Obligation.
-  repeat intro.
-  now induction s; simpl in *; intuition.
-Qed.
+Program Instance Release_respects_implies :
+  Proper (implies ==> implies ==> implies) Release.
 
-Program Instance Release_respects_equivalent : Proper (equivalent ==> equivalent ==> equivalent) Release.
-Next Obligation.
-  split; destruct H, H0;
-  now apply Release_respects_implies.
-Qed.
+Program Instance Release_respects_equivalent :
+  Proper (equivalent ==> equivalent ==> equivalent) Release.
 
-Program Instance Always_respects_implies : Proper (implies ==> implies) Always.
-Next Obligation.
-  repeat intro.
-  now induction s; simpl in *; intuition.
-Qed.
+Program Instance Always_respects_implies :
+  Proper (implies ==> implies) Always.
 
-Program Instance Always_respects_equivalent : Proper (equivalent ==> equivalent) Always.
-Next Obligation.
-  split; destruct H;
-  now apply Always_respects_implies.
-Qed.
+Program Instance Always_respects_equivalent :
+  Proper (equivalent ==> equivalent) Always.
 
-Program Instance Eventually_respects_implies : Proper (implies ==> implies) Eventually.
-Next Obligation.
-  repeat intro.
-  now induction s; simpl in *; intuition.
-Qed.
+Program Instance Eventually_respects_implies :
+  Proper (implies ==> implies) Eventually.
 
-Program Instance Eventually_respects_equivalent : Proper (equivalent ==> equivalent) Eventually.
-Next Obligation.
-  split; destruct H;
-  now apply Eventually_respects_implies.
-Qed.
+Program Instance Eventually_respects_equivalent :
+  Proper (equivalent ==> equivalent) Eventually.
 
-Program Instance Wait_respects_implies : Proper (implies ==> implies ==> implies) Wait.
-Next Obligation.
-  repeat intro.
-  now induction s; simpl in *; intuition.
-Qed.
+Program Instance Wait_respects_implies :
+  Proper (implies ==> implies ==> implies) Wait.
 
-Program Instance Wait_respects_equivalent : Proper (equivalent ==> equivalent ==> equivalent) Wait.
-Next Obligation.
-  split; destruct H, H0;
-  now apply Wait_respects_implies.
-Qed.
+Program Instance Wait_respects_equivalent :
+  Proper (equivalent ==> equivalent ==> equivalent) Wait.
 
-Program Instance StrongRelease_respects_implies : Proper (implies ==> implies ==> implies) StrongRelease.
-Next Obligation.
-  repeat intro.
-  now induction s; simpl in *; intuition.
-Qed.
+Program Instance StrongRelease_respects_implies :
+  Proper (implies ==> implies ==> implies) StrongRelease.
 
-Program Instance StrongRelease_respects_equivalent : Proper (equivalent ==> equivalent ==> equivalent) StrongRelease.
-Next Obligation.
-  split; destruct H, H0;
-  now apply StrongRelease_respects_implies.
-Qed.
+Program Instance StrongRelease_respects_equivalent :
+  Proper (equivalent ==> equivalent ==> equivalent) StrongRelease.
 
 Lemma expand_until (φ ψ : Formula) : φ U ψ ≈ ψ ∨ (φ ∧ ◯ (φ U ψ)).
-Proof.
-  split; simpl; intros s H;
-  simpl in H;
-  destruct s; simpl;
-  now intuition.
-Qed.
+Proof. now induct. Qed.
 
 Lemma expand_release (φ ψ : Formula) : φ R ψ ≈ ψ ∧ (φ ∨ ◯ (φ R ψ)).
-Proof.
-  split; simpl; intros s H;
-  simpl in H;
-  destruct s; simpl;
-  now intuition.
-Qed.
+Proof. now induct. Qed.
 
 Lemma expand_always (φ : Formula) : □ φ ≈ φ ∧ ◯ □ φ.
-Proof.
-  split; simpl; intros s H;
-  simpl in H;
-  destruct s; simpl;
-  now intuition.
-Qed.
+Proof. now induct. Qed.
 
 Lemma expand_eventually (φ : Formula) : ◇ φ ≈ φ ∨ ◯ ◇ φ.
-Proof.
-  split; simpl; intros s H;
-  simpl in H;
-  destruct s; simpl;
-  now intuition.
-Qed.
+Proof. now induct. Qed.
 
 Lemma expand_wait (φ ψ : Formula) : φ W ψ ≈ ψ ∨ (φ ∧ ◯ (φ W ψ)).
-Proof.
-  split; simpl; intros s H;
-  simpl in H;
-  destruct s; simpl;
-  now intuition.
-Qed.
+Proof. now induct. Qed.
 
 Lemma expand_strong_release (φ ψ : Formula) : φ M ψ ≈ ψ ∧ (φ ∨ ◯ (φ M ψ)).
-Proof.
-  split; simpl; intros s H;
-  simpl in H;
-  destruct s; simpl;
-  now intuition.
-Qed.
+Proof. now induct. Qed.
 
 Lemma expand_correct l : expand l ≈ l.
 Proof.
@@ -707,20 +599,24 @@ Qed.
 
 Program Instance negate_respects_implies : Proper (implies --> implies) negate | 1.
 Next Obligation.
-  repeat intro.
-  unfold flip in H.
-  apply matches_negate.
-  apply matches_negate in H0.
-  intro.
-  apply H in H1.
-  contradiction.
+  - apply matches_negate.
+    apply matches_negate in H0.
+    now firstorder.
+  - apply matches_negate.
+    apply matches_negate in H0.
+    now firstorder.
 Qed.
 
 Program Instance not_respects_implies : Proper (implies --> implies) not | 1.
 Next Obligation.
-  unfold not.
-  repeat intro.
-  now rewrite <- H.
+  - unfold not in *.
+    apply matches_negate.
+    apply matches_negate in H0.
+    now firstorder.
+  - unfold not in *.
+    apply matches_negate.
+    apply matches_negate in H0.
+    now firstorder.
 Qed.
 
 Instance and_respects_implies :
@@ -740,13 +636,11 @@ Instance wait_respects_implies :
 Instance release_respects_implies :
   Proper (implies ==> implies ==> implies) release := Release_respects_implies.
 Instance strong_release_respects_implies :
-  Proper (implies ==> implies ==> implies) strong_release := StrongRelease_respects_implies.
+  Proper (implies ==> implies ==> implies) strong_release :=
+  StrongRelease_respects_implies.
 
 Theorem or_inj p q : p ⟹ p ∨ q.
-Proof.
-  repeat intro.
-  simpl; intuition.
-Qed.
+Proof. now induct. Qed.
 
 Theorem true_def p : p ∨ ¬p ≈ ⊤.
 Proof.
@@ -768,16 +662,10 @@ Proof.
 Qed.
 
 Theorem or_comm p q : p ∨ q ≈ q ∨ p.
-Proof.
-  split; repeat intro;
-  simpl in *; intuition.
-Qed.
+Proof. now induct. Qed.
 
 Theorem or_assoc p q r : (p ∨ q) ∨ r ≈ p ∨ (q ∨ r).
-Proof.
-  split; repeat intro;
-  simpl in *; intuition.
-Qed.
+Proof. now induct. Qed.
 
 Theorem and_def p q : p ∧ q ≈ ¬(¬p ∨ ¬q).
 Proof.
@@ -799,24 +687,16 @@ Proof.
   intuition.
 Qed.
 
-Theorem next_not p : ◯ ¬p ≈ ¬◯ p.
+Theorem (* 1 *) next_not p : ◯ ¬p ≈ ¬◯ p.
 Proof. now auto. Qed.
 
-Theorem next_impl p q : ◯ (p ⇒ q) ≈ ◯ p ⇒ ◯ q.
-Proof.
-  unfold next, not, or.
-  split; repeat intro; simpl in *;
-  induction s; simpl in *; intuition.
-Qed.
+Theorem (* 2 *) next_impl p q : ◯ (p ⇒ q) ≈ ◯ p ⇒ ◯ q.
+Proof. now induct. Qed.
 
-Theorem until_expand p q : p U q ≈ q ∨ (p ∧ ◯ (p U q)).
-Proof.
-  unfold until, or.
-  split; repeat intro; simpl in *;
-  now induction s; intuition.
-Qed.
+Theorem (* 10 *) until_expand p q : p U q ≈ q ∨ (p ∧ ◯ (p U q)).
+Proof. now induct. Qed.
 
-Theorem next_until p q : ◯ (p U q) ≈ (◯ p) U (◯ q).
+Theorem (* 9 *) next_until p q : ◯ (p U q) ≈ (◯ p) U (◯ q).
 Proof.
   unfold next, until.
   split; repeat intro;
@@ -826,58 +706,40 @@ Proof.
   now intuition.
 Qed.
 
-Theorem until_false p : p U ⊥ ≈ ⊥.
-Proof.
-  unfold until, false.
-  split; repeat intro; simpl in *;
-  now induction s; intuition.
-Qed.
+Theorem (* 11 *) until_false p : p U ⊥ ≈ ⊥.
+Proof. now induct. Qed.
 
-Theorem until_left_or p q r : p U (q ∨ r) ≈ (p U q) ∨ (p U r).
+Theorem (* NEW *) until_and_not p q : p U q ∧ ¬q ⟹ (p ∧ ¬q) U (p ∧ ¬q ∧ ◯ q).
 Proof.
-  unfold until, or.
-  split; repeat intro; simpl in *;
-  now induction s; intuition.
-Qed.
-
-Theorem until_right_or p q r : (p U r) ∨ (q U r) ⟹ (p ∨ q) U r.
-Proof.
-  unfold until, or.
-  repeat intro; simpl in *;
-  now induction s; intuition.
-Qed.
-
-Theorem until_left_and p q r : p U (q ∧ r) ⟹ (p U q) ∧ (p U r).
-Proof.
-  unfold until, or.
-  repeat intro; simpl in *;
-  now induction s; intuition.
-Qed.
-
-Theorem until_right_and p q r : (p ∧ q) U r ≈ (p U r) ∧ (q U r).
-Proof.
-  unfold until, or.
-  split; repeat intro; simpl in *;
-  now induction s; intuition.
-Qed.
-
-Theorem until_impl_order p q r : (p U q) ∧ (¬q U r) ⟹ p U r.
-Proof.
-  unfold until, and, not.
-  repeat intro; simpl in *;
+  unfold until.
+  repeat intro; simpl in *.
   induction s; intuition.
-  contradiction (matches_not_false H H1).
+  - contradiction (matches_not_false H0 H1).
+  - contradiction (matches_not_false H H1).
+  - destruct (classic (matches q s)).
+    + now firstorder.
+    + apply matches_negate in H.
+      now firstorder.
 Qed.
 
-Theorem until_left_or_order p q r : p U (q U r) ⟹ (p ∨ q) U r.
+Theorem (* 13 *) until_right_or p q r : (p U r) ∨ (q U r) ⟹ (p ∨ q) U r.
+Proof. now induct. Qed.
+
+Theorem (* 14 *) until_left_and p q r : p U (q ∧ r) ⟹ (p U q) ∧ (p U r).
+Proof. now induct. Qed.
+
+Theorem (* NEW *) until_or_until p q r s : (p ∧ r) U (q ∨ s) ⟹ (p U q) ∨ (r U s).
+Proof. now induct. Qed.
+
+Theorem (* NEW *) until_and_until p q r s :
+  (p U q) ∧ (r U s) ⟹ (p ∧ r) U ((q ∧ r) ∨ (p ∧ s) ∨ (q ∧ s)).
+Proof. now induct. Qed.
+
+Theorem (* 17 *) until_left_or_order p q r : p U (q U r) ⟹ (p ∨ q) U r.
 Proof.
-  unfold until, and, not.
-  repeat intro; simpl in *;
-  induction s; intuition.
+  induct.
   right.
-  split; auto.
-  apply IHs.
-  now destruct s; simpl; intuition.
+  now induct.
 Qed.
 
 Lemma matches_top s : matches Top s <-> True.
@@ -933,17 +795,14 @@ Lemma matches_strongrelease x xs p q :
   matches q (x :: xs) /\ (matches p (x :: xs) \/ matches (StrongRelease p q) xs).
 Proof. reflexivity. Qed.
 
-Theorem until_right_and_order p q r : p U (q ∧ r) ⟹ (p U q) U r.
+Theorem (* 18 *) until_right_and_order p q r : p U (q ∧ r) ⟹ (p U q) U r.
 Proof.
   unfold until, and.
   repeat intro;
   induction s; intuition.
   - now simpl in *; intuition.
   - rewrite matches_until, matches_and in *.
-    destruct H.
-      now intuition.
-    destruct H.
-    specialize (IHs H0).
+    firstorder.
     destruct (classic (matches r (a :: s))); auto.
     right; split; auto.
     destruct (classic (matches q (a :: s))); auto.
@@ -951,111 +810,26 @@ Proof.
     rewrite matches_until in *.
     right; split; auto.
     clear -H0.
-    now induction s; simpl in *; intuition.
+    now induct.
 Qed.
 
-Theorem not_until p q : ⊤ U ¬p ∧ ¬(p U q) ≈ ¬q U (¬p ∧ ¬q).
-Proof.
-  unfold until, or.
-  split; repeat intro; simpl in *;
-  now induction s; intuition.
-Qed.
+Theorem (* 170 *) not_until p q : ⊤ U ¬p ∧ ¬(p U q) ≈ ¬q U (¬p ∧ ¬q).
+Proof. now induct. Qed.
 
-Theorem evn_def p : ◇ p ≈ ⊤ U p.
-Proof.
-  unfold eventually, until.
-  split; repeat intro; simpl in *;
-  now induction s; intuition.
-Qed.
+Theorem (* 38 *) evn_def p : ◇ p ≈ ⊤ U p.
+Proof. now induct. Qed.
 
-Theorem always_def p : □ p ≈ ¬◇ ¬p.
-Proof.
-  unfold eventually, until.
-  split; repeat intro; simpl in *;
-  induction s; intuition.
-  - now rewrite negate_negate.
-  - now rewrite negate_negate.
-  - now rewrite negate_negate in H.
-  - now rewrite negate_negate in H0.
-Qed.
+Theorem (* 54 *) always_def p : □ p ≈ ¬◇ ¬p.
+Proof. induct; rewrite ?negate_negate in *; intuition. Qed.
 
-Theorem always_induction_ p : □ (p ⇒ ◯ p) ⟹ p ⇒ □ p.
-Proof.
-  unfold eventually, until.
-  repeat intro; simpl in *;
-  induction s; firstorder.
-  - contradiction (matches_not_false H H1).
-  - destruct (true_def p).
-    specialize (H2 (a :: s)).
-    specialize (H3 (a :: s)).
-    now firstorder.
-Qed.
-
-Theorem until_and_until p q r s :
-  (p U q) ∧ (r U s) ⟹ (p ∧ r) U ((q ∧ r) ∨ (p ∧ s) ∨ (q ∧ s)).
-Proof.
-  unfold until.
-  repeat intro;
-  induction s0; firstorder.
-Qed.
-
-Theorem until_or_until p q r s : (p ∧ r) U (q ∨ s) ⟹ (p U q) ∨ (r U s).
-Proof.
-  unfold until.
-  repeat intro.
-  induction s0; firstorder.
-Qed.
-
-Theorem until_and_not p q : p U q ∧ ¬q ⟹ (p ∧ ¬q) U (p ∧ ¬q ∧ ◯ q).
-Proof.
-  unfold until.
-  repeat intro; simpl in *.
-  induction s; intuition.
-  - contradiction (matches_not_false H0 H1).
-  - contradiction (matches_not_false H H1).
-  - destruct (classic (matches q s)).
-    + now firstorder.
-    + apply matches_negate in H.
-      now firstorder.
-Qed.
-
-Theorem always_until_and_ind_ p q r :
-  □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r.
-Proof.
-  unfold eventually, until.
-  repeat intro; simpl in *;
-  induction s; intuition.
-  contradiction (matches_not_false H H3).
-Qed.
-
-Theorem always_and_until_ p q r : □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r).
-Proof.
-  unfold always, until, and.
-  repeat intro; simpl in *;
-  now induction s; intuition.
-Qed.
-
-Theorem wait_def p q : p W q ≈ □ p ∨ p U q.
-Proof.
-  unfold wait, until.
-  split; repeat intro; simpl in *;
-  now induction s; intuition.
-Qed.
+Theorem (* 169 *) wait_def p q : p W q ≈ □ p ∨ p U q.
+Proof. now induct. Qed.
 
 Theorem release_def p q : p R q ≈ ¬(¬p U ¬q).
-Proof.
-  unfold release, until.
-  split; repeat intro; simpl in *;
-  induction s; intuition;
-  rewrite ?negate_negate in *; intuition.
-Qed.
+Proof. induct; rewrite ?negate_negate in *; intuition. Qed.
 
 Theorem strong_release_def p q : p M q ≈ q U (p ∧ q).
-Proof.
-  unfold strong_release, until, and.
-  split; repeat intro; simpl in *;
-  now induction s; intuition.
-Qed.
+Proof. now induct. Qed.
 
 End LTL.
 

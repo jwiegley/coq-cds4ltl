@@ -90,14 +90,12 @@ Delimit Scope ltl_scope with ltl.
 Open Scope boolean_scope.
 Open Scope ltl_scope.
 
-Notation "[ j ]  ⊨ P" := (P j) (at level 75) : ltl_scope.
-
-Definition next : t -> t := λ p j, [j + 1] ⊨ p.
+Definition next : t -> t := λ p j, p (S j).
 
 Program Instance next_respects_implies : Proper (implies ==> implies) next.
 
 Definition until : t -> t -> t :=
-  λ p q j, ∃ k, k ≥ j /\ [k] ⊨ q /\ ∀ i, j ≤ i -> i < k -> [i] ⊨ p.
+  λ p q j, ∃ k, k ≥ j /\ q k /\ ∀ i, j ≤ i -> i < k -> p i.
 
 Program Instance until_respects_implies :
   Proper (implies ==> implies ==> implies) until.
@@ -112,16 +110,44 @@ Theorem (* 2 *) next_impl p q : ◯ (p ⇒ q) ≈ ◯ p ⇒ ◯ q.
 Proof. now firstorder. Qed.
 
 Theorem (* 9 *) next_until p q : ◯ (p U q) ≈ (◯ p) U (◯ q).
-Admitted.
+Proof.
+  split; repeat intro; firstorder.
+  - exists (Nat.pred x).
+    firstorder.
+    + lia.
+    + unfold next.
+      rewrite <- Lt.S_pred_pos; auto.
+      lia.
+    + apply H1; lia.
+  - exists (S x).
+    firstorder.
+    + lia.
+    + specialize (H1 (Nat.pred i)).
+      unfold next in H1.
+      rewrite <- Lt.S_pred_pos in H1; firstorder.
+      * apply H1; lia.
+      * lia.
+Qed.
 
 Theorem (* 10 *) until_expand p q : p U q ≈ q ∨ (p ∧ ◯ (p U q)).
+Proof.
+  split; repeat intro; firstorder.
+  - generalize dependent j.
+    induction x; intros.
+    + assert (j = 0) by lia.
+      subst.
+      now left.
+    + admit.
+  - exists j; firstorder; lia.
 Admitted.
 
 Theorem (* 11 *) until_false p : p U ⊥ ≈ ⊥.
 Proof. now firstorder. Qed.
 
-Theorem (* 12 *) until_left_or p q r : p U (q ∨ r) ≈ (p U q) ∨ (p U r).
-Proof. now firstorder. Qed.
+Theorem (* NEW *) until_and_not p q : p U q ∧ ¬q ⟹ (p ∧ ¬q) U (p ∧ ¬q ∧ ◯ q).
+Proof.
+  repeat intro; firstorder.
+Admitted.
 
 Theorem (* 13 *) until_right_or p q r : (p U r) ∨ (q U r) ⟹ (p ∨ q) U r.
 Proof. now firstorder. Qed.
@@ -129,19 +155,28 @@ Proof. now firstorder. Qed.
 Theorem (* 14 *) until_left_and p q r : p U (q ∧ r) ⟹ (p U q) ∧ (p U r).
 Proof. now firstorder. Qed.
 
-Theorem (* 15 *) until_right_and p q r : (p ∧ q) U r ≈ (p U r) ∧ (q U r).
-Admitted.
+Theorem (* NEW *) until_or_until p q r s : (p ∧ r) U (q ∨ s) ⟹ (p U q) ∨ (r U s).
+Proof. now firstorder. Qed.
 
-Theorem (* 16 *) until_impl_order p q r : (p U q) ∧ (¬q U r) ⟹ p U r.
+Theorem (* NEW *) until_and_until p q r s :
+  p U q ∧ r U s ⟹ (p ∧ r) U ((q ∧ r) ∨ (p ∧ s) ∨ (q ∧ s)).
+Proof.
+  repeat intro; firstorder.
 Admitted.
 
 Theorem (* 17 *) until_left_or_order p q r : p U (q U r) ⟹ (p ∨ q) U r.
+Proof.
+  repeat intro; firstorder.
 Admitted.
 
 Theorem (* 18 *) until_right_and_order p q r : p U (q ∧ r) ⟹ (p U q) U r.
+Proof.
+  repeat intro; firstorder.
 Admitted.
 
-Theorem not_until p q : ⊤ U ¬p ∧ ¬(p U q) ≈ ¬q U (¬p ∧ ¬q).
+Theorem (* 170 *) not_until p q : ⊤ U ¬p ∧ ¬(p U q) ≈ ¬q U (¬p ∧ ¬q).
+Proof.
+  split; repeat intro; firstorder.
 Admitted.
 
 Definition eventually : t -> t := fun p j => ∃ k, k ≥ j /\ p j.
@@ -156,23 +191,17 @@ Program Instance eventually_respects_implies : Proper (implies ==> implies) even
 Program Instance always_respects_implies : Proper (implies ==> implies) always.
 Program Instance wait_respects_implies : Proper (implies ==> implies ==> implies) wait.
 
-Theorem evn_def p : ◇ p ≈ ⊤ U p.
+Theorem (* 38 *) evn_def p : ◇ p ≈ ⊤ U p.
+Proof.
+  split; repeat intro; firstorder.
 Admitted.
 
-Theorem always_def p : □ p ≈ ¬◇ ¬p.
+Theorem (* 54 *) always_def p : □ p ≈ ¬◇ ¬p.
+Proof.
+  split; repeat intro; firstorder.
 Admitted.
 
-Theorem until_and_until p q r s :
-  p U q ∧ r U s ⟹ (p ∧ r) U ((q ∧ r) ∨ (p ∧ s) ∨ (q ∧ s)).
-Admitted.
-
-Theorem until_or_until p q r s : (p ∧ r) U (q ∨ s) ⟹ (p U q) ∨ (r U s).
-Proof. now firstorder. Qed.
-
-Theorem until_and_not p q : p U q ∧ ¬q ⟹ (p ∧ ¬q) U (p ∧ ¬q ∧ ◯ q).
-Admitted.
-
-Theorem wait_def p q : p W q ≈ □ p ∨ p U q.
+Theorem (* 169 *) wait_def p q : p W q ≈ □ p ∨ p U q.
 Proof. now firstorder. Qed.
 
 Definition F p q := □ (p ⇒ □ q).
