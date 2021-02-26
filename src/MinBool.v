@@ -16,9 +16,10 @@ Parameter t : Type.             (* The type of boolean propositions *)
 Parameter not : t -> t.
 Parameter or  : t -> t -> t.
 
-(** The next four terms are purely syntactic and may be defined in terms of
-    the fundamentals above. They are given as parameters so that module
-    authors may chose economical definitions. *)
+(** The next three terms are syntactic and can be defined in terms of the
+    fundamentals above. They are given as parameters so that module authors
+    may chose economical definitions; we also provides implies as a relation
+    in Prop to facilitate use of Coq's rewriting system. *)
 Parameter implies : t -> t -> Prop.
 Parameter true    : t.
 Parameter false   : t.

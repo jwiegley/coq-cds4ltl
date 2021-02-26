@@ -499,4 +499,14 @@ Proof.
   now boolean.
 Qed.
 
+Theorem mccune p q r s : ¬(¬(¬(p ∨ q) ∨ r) ∨ ¬(p ∨ ¬(¬r ∨ ¬(r ∨ s)))) ≈ r.
+Proof.
+  pose proof (huntington (¬r) (¬(p ∨ q) ∨ (¬r ∧ ¬s))).
+  apply not_swap in H.
+  revert H.
+  rewrite !not_or.
+  rewrite !not_and.
+  rewrite !not_not.
+Abort.
+
 End BooleanLogicFacts.

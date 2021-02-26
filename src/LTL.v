@@ -255,35 +255,29 @@ Qed.
 
 Theorem (* 88 *) law_88_strong p q : □ p ∧ ◇ q ⟹ p U (p ∧ q).
 Proof.
-  rewrite !always_def.
-  rewrite !evn_def.
-  rewrite (and_comm p q).
-  rewrite <- (not_not p) at 2.
-  rewrite <- (not_not p) at 3.
-  rewrite <- (not_not q) at 2.
-  rewrite <- not_until.
-  rewrite not_not.
+  rewrite always_def.
+  rewrite <- (law_42 (¬q)).
+  rewrite evn_def.
   rewrite and_comm.
-  apply and_respects_implies; [reflexivity|].
-  apply (proj1 (contrapositive _ _)).
-  rewrite <- evn_def.
-  now apply law_42.
+  rewrite <- (not_not q) at 1.
+  rewrite not_until.
+  rewrite !not_not.
+  now rewrite and_comm.
 Qed.
 
 Theorem (* 83 *) law_83_early p q r : □ p ∧ q U r ⟹ (p ∧ q) U (p ∧ r).
 Proof.
-  pose proof (until_and_until p (p ∧ r) q r).
-  revert H.
-  boolean.
-  intro.
-  rewrite (and_proj (p ∧ r) q) in H.
-  rewrite or_idem in H.
-  rewrite <- H; clear H.
-  rewrite <- (and_idem (q U r)) at 1.
-  rewrite <- and_assoc.
-  apply and_respects_implies; [|reflexivity].
-  rewrite law_42 at 1.
-  now apply law_88_strong.
+  assert (A : p U (p ∧ r) ∧ q U r ⟹ (p ∧ q) U (p ∧ r)).
+    rewrite until_and_until.
+    rewrite (and_proj (p ∧ r) q).
+    rewrite (and_proj (p ∧ r) r).
+    now rewrite !or_idem.
+
+  rewrite <- A.
+  rewrite <- law_88_strong.
+  rewrite <- (law_42 q).
+  rewrite and_assoc.
+  now rewrite and_idem.
 Qed.
 
 Theorem (* 90 *) law_90_early p : □ p ∨ ◇ ¬p ≈ ⊤.
