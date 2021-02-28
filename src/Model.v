@@ -8,14 +8,30 @@ Require Import
   Coq.Sets.Classical_sets
   Coq.Sets.Ensembles
   Coq.Classes.Morphisms
+  Meta
   Same_set
   Stream
   Bool
   LTL.
 
-Module StreamLTLW <: LinearTemporalLogicW.
+Module Type ElementType.
 
-Variable a : Type.
+Parameter a : Type.
+
+End ElementType.
+
+Module Stream (E : ElementType) <: StreamType.
+
+Definition t := Stream E.a.
+
+End Stream.
+
+Module StreamLTLW (E : ElementType) <: LinearTemporalLogicW.
+
+Module S := Stream E.
+Module L := Meta.StreamLTLW S.
+
+Definition t := Ensemble (Stream E.a).
 
 Infix    "∪"     := (Union _)        (at level 85, right associativity).
 Notation "∅"     := (Empty_set _)    (at level 0, no associativity).
@@ -23,15 +39,13 @@ Infix    "∩"     := (Intersection _) (at level 80, right associativity).
 Infix    "∈"     := (In _)           (at level 88, no associativity).
 Notation "p ⊆ q" := (Included _ q p) (at level 89, no associativity).
 
-Definition t := Ensemble (Stream a).
-
-Definition not        := Complement (Stream a).
-Definition or         := Union (Stream a).
-Definition true       := Full_set (Stream a).
-Definition false      := Empty_set (Stream a).
-Definition and        := Intersection (Stream a).
-Definition implies    := Included (Stream a).
-Definition equivalent := Same_set (Stream a).
+Definition not        := Complement (Stream E.a).
+Definition or         := Union (Stream E.a).
+Definition true       := Full_set (Stream E.a).
+Definition false      := Empty_set (Stream E.a).
+Definition and        := Intersection (Stream E.a).
+Definition implies    := Included (Stream E.a).
+Definition equivalent := Same_set (Stream E.a).
 
 Program Instance implies_reflexive : Reflexive implies.
 Next Obligation.
@@ -362,42 +376,47 @@ Qed.
 
 Theorem (* NEW *) until_and_not p q : p U q ∧ ¬q ⟹ (p ∧ ¬q) U (p ∧ ¬q ∧ ◯ q).
 Proof.
+  pose proof L.until_and_not.
+  unfold L.until, L.and, L.not, L.equivalent, L.implies, L.t, S.t, L.next, Logic.not in H.
+  unfold until, and, not, Complement, Logic.not, In.
+  specialize (H (λ σ j, [σ, j] ⊨ p) (λ σ j, [σ, j] ⊨ q)).
   repeat intro.
-  inv H.
-  inv H0.
-  inv H.
-  exists (Nat.pred x0).
+  specialize (H x 0).
+  unfold In in *.
+  assert ((∃ k : nat, (k ≥ 0 ∧ [x, k] ⊨ q ∧ (∀ i : nat, 0 ≤ i → i < k → [x, i] ⊨ p))%type)
+            ∧ ([x, 0] ⊨ q → False)). {
+    clear -H0.
+    destruct H0, H, H.
+    unfold In in *.
+    split.
+    - exists x0.
+      split.
+      + exact (PeanoNat.Nat.le_0_l x0).
+      + split.
+        * exact H.
+        * intros.
+          now apply H1.
+    - exact H0.
+  }
+  specialize (H H1); clear H1 H0.
+  destruct H, H, H0, H0, H2.
+  exists x0.
   split.
-  - destruct (Compare_dec.lt_dec 0 x0).
+  - split.
+    + exact H0.
     + split.
       * unfold In.
-        apply H2; lia.
-      * split.
-        ** intro.
-           unfold In in H.
-           clear H2.
-           generalize dependent x.
-           induction x0; intros.
-           *** contradiction.
-           *** admit.
-        ** unfold In, next.
-           rewrite from_plus.
-           simpl plus.
-           now rewrite <- Lt.S_pred_pos.
-    + assert (0 = x0) by lia.
-      subst.
-      contradiction.
+        exact H2.
+      * unfold next, In.
+        rewrite from_plus.
+        exact H3.
   - intros.
-    destruct (Compare_dec.lt_dec 0 x0).
-    + split.
-      * apply H2; lia.
-      * intro.
-        unfold In in H3.
-        admit.
-    + assert (0 = x0) by lia.
-      subst.
-      contradiction.
-Admitted.
+    destruct (H1 i (PeanoNat.Nat.le_0_l i) H4).
+    split.
+    + exact H5.
+    + unfold In.
+      exact H6.
+Qed.
 
 Theorem (* 13 *) until_right_or p q r : (p U r) ∨ (q U r) ⟹ (p ∨ q) U r.
 Proof.
@@ -757,6 +776,65 @@ Qed.
 
 Theorem (* 169 *) wait_def p q : p W q ≈ □ p ∨ p U q.
 Proof. reflexivity. Qed.
+
+Definition F p q := □ (p ⇒ □ q).
+
+Theorem Dummett p : F (F p p) p ⟹ (◇ □ p ⇒ □ p).
+Proof.
+  pose proof L.Dummett.
+  unfold L.F, L.or, L.always, L.eventually, L.until, L.and, L.not, L.equivalent, L.implies, L.t, S.t, L.next, Logic.not in H.
+  unfold F, always, every, eventually, any, until, and, not, Complement, Logic.not, In.
+  repeat intro.
+  unfold In in *.
+  specialize (H (λ σ j, [σ, j] ⊨ p) x).
+  assert
+    (∀ k : nat,
+         k ≥ 0
+         ∧ (((∀ k0 : nat,
+                k0 ≥ 0
+                ∧ (((λ (σ : Stream E.a) (j : nat), [σ, j] ⊨ p) x 0 → False)
+                   ∨ (∀ k1 : nat, k1 ≥ 0 ∧ (λ (σ : Stream E.a) (j : nat), [σ, j] ⊨ p) x 0)))
+             → False) ∨ (∀ k0 : nat, k0 ≥ 0 ∧ (λ (σ : Stream E.a) (j : nat), [σ, j] ⊨ p) x 0))). {
+    clear -H0.
+    intros.
+    specialize (H0 k).
+    destruct H0.
+    - split.
+      + exact (PeanoNat.Nat.le_0_l k).
+      + unfold In in H.
+        left.
+        intro.
+        apply H; clear H.
+        intros.
+        destruct (H0 i), H1.
+        * left.
+          unfold In.
+          admit.
+        * admit.
+    - admit.
+  }
+  clear H0.
+  specialize (H 0 (H1 _)); clear H1.
+  destruct H.
+  - left.
+    unfold In.
+    intro.
+    apply H; clear H.
+    destruct H0.
+    exists x0.
+    split.
+    + exact (PeanoNat.Nat.le_0_l x0).
+    + intros.
+      split.
+      * exact (PeanoNat.Nat.le_0_l k).
+      * setoid_rewrite from_plus in H.
+        setoid_rewrite PeanoNat.Nat.add_comm in H.
+        admit.
+  - right.
+    unfold In.
+    intros.
+    admit.
+Abort.
 
 End StreamLTLW.
 

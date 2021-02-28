@@ -11,17 +11,23 @@ Require Import
   Bool
   LTL.
 
-Module StreamLTLW <: LinearTemporalLogicW.
+Module Type StreamType.
 
-Definition t := nat -> Prop.
+Parameter t : Type.
 
-Definition not        := fun (p : t) j => ~ p j.
-Definition or         := fun (p q : t) j => p j \/ q j.
-Definition true       := fun _ : nat => True.
-Definition false      := fun _ : nat => False.
-Definition and        := fun (p q : t) j => p j /\ q j.
-Definition implies    := fun p q : t => forall j, p j -> q j.
-Definition equivalent := fun p q : t => implies p q /\ implies q p.
+End StreamType.
+
+Module StreamLTLW (S : StreamType) <: LinearTemporalLogicW.
+
+Definition t := S.t -> nat -> Prop.
+
+Definition not        := fun (p : t) s j => ~ p s j.
+Definition or         := fun (p q : t) s j => p s j \/ q s j.
+Definition true       := fun (_ : S.t) (_ : nat) => True.
+Definition false      := fun (_ : S.t) (_ : nat) => False.
+Definition and        := fun (p q : t) s j => p s j /\ q s j.
+Definition implies    := fun (p q : t) => forall s j, p s j -> q s j.
+Definition equivalent := fun (p q : t) => implies p q /\ implies q p.
 
 #[local] Obligation Tactic := firstorder.
 
@@ -52,7 +58,7 @@ Proof. now firstorder. Qed.
 Theorem true_def p : p ∨ ¬p ≈ ⊤.
 Proof.
   split; repeat intro; firstorder.
-  exact (classic (p j)).
+  exact (classic (p s j)).
 Qed.
 
 Theorem false_def p : ¬(p ∨ ¬p) ≈ ⊥.
@@ -90,12 +96,12 @@ Delimit Scope ltl_scope with ltl.
 Open Scope boolean_scope.
 Open Scope ltl_scope.
 
-Definition next : t -> t := λ p j, p (S j).
+Definition next : t -> t := λ p s j, p s (S j).
 
 Program Instance next_respects_implies : Proper (implies ==> implies) next.
 
 Definition until : t -> t -> t :=
-  λ p q j, ∃ k, k ≥ j /\ q k /\ ∀ i, j ≤ i -> i < k -> p i.
+  λ p q s j, ∃ k, j ≤ k /\ q s k /\ ∀ i, j ≤ i -> i < k -> p s i.
 
 Program Instance until_respects_implies :
   Proper (implies ==> implies ==> implies) until.
@@ -147,6 +153,8 @@ Proof. now firstorder. Qed.
 Theorem (* NEW *) until_and_not p q : p U q ∧ ¬q ⟹ (p ∧ ¬q) U (p ∧ ¬q ∧ ◯ q).
 Proof.
   repeat intro; firstorder.
+  exists (Nat.pred x).
+  split; auto.
 Admitted.
 
 Theorem (* 13 *) until_right_or p q r : (p U r) ∨ (q U r) ⟹ (p ∨ q) U r.
@@ -162,7 +170,26 @@ Theorem (* NEW *) until_and_until p q r s :
   p U q ∧ r U s ⟹ (p ∧ r) U ((q ∧ r) ∨ (p ∧ s) ∨ (q ∧ s)).
 Proof.
   repeat intro; firstorder.
-Admitted.
+  exists (Nat.min x x0).
+  split.
+  - lia.
+  - split.
+    + destruct (Compare_dec.lt_dec x x0).
+      * right; left; split.
+        ** apply H4; lia.
+        ** rewrite PeanoNat.Nat.min_l; auto; lia.
+      * assert (x0 <= x) by lia; clear n.
+        destruct (PeanoNat.Nat.eq_dec x x0).
+        ** subst.
+           rewrite PeanoNat.Nat.min_l; auto.
+           right; right; split; auto.
+        ** rewrite PeanoNat.Nat.min_r; auto.
+           left; split; auto.
+           apply H2; lia.
+    + split; intros.
+      * apply H4; lia.
+      * apply H2; lia.
+Qed.
 
 Theorem (* 17 *) until_left_or_order p q r : p U (q U r) ⟹ (p ∨ q) U r.
 Proof.
@@ -179,8 +206,8 @@ Proof.
   split; repeat intro; firstorder.
 Admitted.
 
-Definition eventually : t -> t := fun p j => ∃ k, k ≥ j /\ p j.
-Definition always     : t -> t := fun p j => ∀ k, k ≥ j /\ p j.
+Definition eventually : t -> t := fun p s j => ∃ k, j ≤ k /\ p s k.
+Definition always     : t -> t := fun p s j => ∀ k, j ≤ k -> p s k.
 Definition wait       : t -> t -> t := fun p q => always p ∨ p U q.
 
 Notation "◇ p"     := (eventually p) (at level 75, right associativity) : ltl_scope.
@@ -192,14 +219,17 @@ Program Instance always_respects_implies : Proper (implies ==> implies) always.
 Program Instance wait_respects_implies : Proper (implies ==> implies ==> implies) wait.
 
 Theorem (* 38 *) evn_def p : ◇ p ≈ ⊤ U p.
-Proof.
-  split; repeat intro; firstorder.
-Admitted.
+Proof. now firstorder. Qed.
 
 Theorem (* 54 *) always_def p : □ p ≈ ¬◇ ¬p.
 Proof.
   split; repeat intro; firstorder.
-Admitted.
+  specialize (H k).
+  simpl in H.
+  apply not_and_or in H.
+  firstorder.
+  now apply NNPP.
+Qed.
 
 Theorem (* 169 *) wait_def p q : p W q ≈ □ p ∨ p U q.
 Proof. now firstorder. Qed.
@@ -207,13 +237,31 @@ Proof. now firstorder. Qed.
 Definition F p q := □ (p ⇒ □ q).
 
 Theorem Dummett p : F (F p p) p ⟹ (◇ □ p ⇒ □ p).
-Proof. now firstorder. Qed.
+Proof.
+  unfold F.
+  unfold always, eventually.
+  repeat intro; firstorder.
+  apply NNPP; intro.
+  apply not_or_and in H0.
+  destruct H0.
+  apply H0; intro; clear H0.
+  apply not_all_ex_not in H1.
+  destruct H2, H0.
+  specialize (H x H0).
+  inv H.
+  - apply H3; clear H3; intros.
+    right; intros.
+    apply H2; lia.
+  - destruct H1.
+    apply H; clear H; intros.
+    apply H3; clear H2 H3.
+Abort.
 
 End StreamLTLW.
 
-Module StreamLTL <: LinearTemporalLogic.
+Module StreamLTL (S : StreamType) <: LinearTemporalLogic.
 
-Include StreamLTLW.
+Include StreamLTLW S.
 
 Definition release        : t -> t -> t := fun x _ => x.
 Definition strong_release : t -> t -> t := fun x _ => x.
