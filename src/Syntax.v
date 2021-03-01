@@ -5,6 +5,7 @@ Require Import
   Coq.Classes.Morphisms
   Coq.Logic.Classical
   FunInd
+  Model
   Stream
   Bool
   LTL.
@@ -17,12 +18,6 @@ Import ListNotations.
 Generalizable All Variables.
 Set Transparent Obligations.
 Set Decidable Equality Schemes.
-
-Module Type StreamType.
-
-Parameter a : Type.              (* The type of entries in the trace *)
-
-End StreamType.
 
 Module LTL (S : StreamType) <: LinearTemporalLogicW <: LinearTemporalLogic.
 
