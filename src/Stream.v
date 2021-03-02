@@ -1,9 +1,9 @@
 Require Import
+  Coq.Program.Program
   Coq.Classes.Equivalence
   Coq.Classes.Morphisms
   Coq.Classes.SetoidClass
   Coq.Arith.PeanoNat
-  Coq.Program.Basics
   Coq.Sets.Ensembles
   Same_set.
 
@@ -103,6 +103,62 @@ Notation "[ s , n ]  ⊨ P" := (P (from n s)) (at level 85) : stream_scope.
 
 Definition every (P : Stream -> Prop) (s : Stream) := forall i, [s, i] ⊨ P.
 Definition any   (P : Stream -> Prop) (s : Stream) := exists i, [s, i] ⊨ P.
+
+Section Stream_Properties.
+
+Variable P : Stream -> Type.
+
+Inductive Exists (x : Stream) : Type :=
+  | Here : P x -> Exists x
+  | Further : Exists (tail x) -> Exists x.
+
+Fixpoint Exists_depth (x : Stream) (X : Exists x) : nat :=
+  match X with
+  | Here _ _ => 0
+  | Further _ c => 1 + Exists_depth (tail x) c
+  end.
+
+Theorem Exists_any s : Exists s -> any (fun x => inhabited (P x)) s.
+Proof.
+  intros.
+  exists (Exists_depth s X).
+  induction X.
+  + constructor.
+    exact p.
+  + destruct IHX.
+    constructor.
+    rewrite from_tail_S in X0.
+    exact X0.
+Qed.
+
+CoInductive ForAll (x : Stream) : Type :=
+  HereAndFurther : P x -> ForAll (tail x) -> ForAll x.
+
+Theorem ForAll_tail s : ForAll s -> ForAll (tail s).
+Proof.
+  intros.
+  destruct X.
+  inversion X.
+  now constructor.
+Qed.
+
+Theorem ForAll_every s : ForAll s -> every (fun x => inhabited (P x)) s.
+Proof.
+  intros.
+  intro.
+  generalize dependent s.
+  induction i; intros.
+  + inversion X.
+    constructor.
+    exact X0.
+  + specialize (IHi (from 1 s)).
+    setoid_rewrite from_plus in IHi.
+    setoid_rewrite Nat.add_1_r in IHi.
+    apply IHi.
+    now inversion X.
+Qed.
+
+End Stream_Properties.
 
 Section stream_eq_coind.
   Variable R : Stream -> Stream -> Prop.
@@ -296,4 +352,3 @@ Open Scope stream_scope.
 Notation "[ s , n ]  ⊨ P" := (P (from n s)) (at level 75) : stream_scope.
 
 CoFixpoint constant {a : Type} (x : a) : Stream a := Cons x (constant x).
-

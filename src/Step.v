@@ -31,7 +31,7 @@ Inductive Failed : Type :=
   | RightFailed (q : Failed).
 
 Inductive Result : Type :=
-  | Failure (e : Failed)
+  | Failure  (e : Failed)
   | Continue (l : Formula)
   | Success.
 

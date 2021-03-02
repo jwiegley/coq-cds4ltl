@@ -1,11 +1,74 @@
 #+TITLE: Linear Temporal Logic in Coq
 
-This project is an implementation in Coq of an axiomatic system for linear
-temporal logic as described in: [[https://dl.acm.org/doi/10.1145/3387109][A Calculational Deductive System for Linear
+This project is an implementation in Coq of the axiomatic system for linear
+temporal logic described in: [[https://dl.acm.org/doi/10.1145/3387109][A Calculational Deductive System for Linear
 Temporal Logic]], ACM Computing Surveys, Vol. 53, No. 3, June 2020.
 
 With many thanks to Professor Stan Warford and Dr. Scott Staley for answering
-all my questions and offering their support and encouragement.
+my questions and offering their support and encouragement.
+
+* Overview of Contents
+
+The following is a brief overview of what is provided by this repository. Note
+that for axiomatic foundations, both a =Module Type= is given that offers the
+axioms, and a =Module= based on that Module Type which develops all of the
+theorems that follow from those axiom.
+
+** MinBool
+
+=MinBool.v= defines Boolean logic, based on \not (not), ∨ (or) and three axioms,
+using the foundation discovered by Edward Huntington. Note that this is a
+classical development, and as such requires assuming the law of the excluded
+middle for some of the basic proofs to go through. Future work will include
+reworking this foundation on a constructive basis.
+
+** Bool
+
+=Bool.v= extends =MinBool.v= to include the ∧ (and) operation and related
+theorems.
+
+** MinLTL
+
+=MinLTL.v= defines the axioms and theorems of Linear Temporal Logic in terms of
+the ◯ (next) and U (until) modalities.
+
+** LTL
+
+=LTL.v= extends =MinLTL.v= to include the ◇ (eventually), □ (always) and W (wait)
+derived modalities and their theorems. There is also another module type
+defining R (release) and M (strong release), although this is relatively
+undeveloped at the moment.
+
+** Model
+
+The system of axioms given for LTL above is proved to be sound using a
+semantic model of infinite streams, where the propositions of the logic are
+taken to be propositional predicates on streams -- that is, mathematical sets
+of streams -- where a propoosition is "true" when its set is inhabited,
+meaning the predicate holds for all inhabitants of that set at offset zero.
+This is expressed using the a satisfaction operator:
+#+begin_src coq
+[σ, j] ⊨ P
+#+end_src
+
+which states that =P= holds at position =j= in stream =σ=. Thus, modalities such as
+◯ may be easily defined semantically as:
+#+begin_src coq
+Definition next := λ p σ, [σ, 1] ⊨ p.
+#+end_src
+
+** Syntax and Step
+
+The semantic =Model= above denotes propositions directly into a propositional
+logic of sets, which although sound is neither decidable nor computable. To
+make practical use of LTL, we require a more reified development. This is
+given by the two modules =Syntax.v= and =Step.v=. Syntax defines a deep syntactic
+embedding of LTL formula using Positive Normal Form (PNF), although with a
+denotation of such constructions into propositional logic similar to =Model.v=,
+and a proof that the axioms are sound over this denotation. =Step.v= allows for
+a "single step" of reduction given a formula and and a single element of the
+input stream, such that it results in either a definitive answer or the next
+formula to use on future inputs.
 
 * Work list
 

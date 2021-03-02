@@ -26,7 +26,7 @@ Definition t := Ensemble (Stream S.a).
 Infix    "∪"     := (Union _)        (at level 85, right associativity).
 Notation "∅"     := (Empty_set _)    (at level 0, no associativity).
 Infix    "∩"     := (Intersection _) (at level 80, right associativity).
-Infix    "∈"     := (In _)           (at level 88, no associativity).
+Notation "p ∈ q" := (In _ q p)       (at level 88, no associativity).
 Notation "p ⊆ q" := (Included _ q p) (at level 89, no associativity).
 
 Definition not        := Complement (Stream S.a).
@@ -784,9 +784,9 @@ Abort.
 
 End StreamLTLW.
 
-Module StreamLTL <: LinearTemporalLogic.
+Module StreamLTL (S : StreamType) <: LinearTemporalLogic.
 
-Include StreamLTLW.
+Include StreamLTLW S.
 
 Definition release        : t -> t -> t := fun x _ => x.
 Definition strong_release : t -> t -> t := fun x _ => x.
