@@ -2,21 +2,11 @@ Require Import
   Coq.Program.Program
   Coq.Classes.Morphisms
   Coq.Lists.List
+  Model
   Syntax.
 
 Open Scope program_scope.
 Open Scope list_scope.
-
-Fixpoint add {A B C D : Type} (f : list A -> list C) (g : list B -> list D)
-  (xs : list (A + B)) : list (C + D) :=
-    match xs with
-    | nil => nil
-    | cons x xs =>
-      match x with
-      | inl x => map inl (f (cons x nil))
-      | inr x => map inr (g (cons x nil))
-      end ++ add f g xs
-    end.
 
 Module LTLStep (S : StreamType).
 

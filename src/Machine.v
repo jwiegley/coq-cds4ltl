@@ -3,6 +3,7 @@ Require Import
   Coq.Unicode.Utf8
   Coq.Classes.Morphisms
   Coq.Lists.List
+  Model
   Syntax.
 
 Open Scope program_scope.
