@@ -372,7 +372,7 @@ Proof.
   inv H.
   generalize dependent x.
   induction x0; intros; [contradiction|].
-  destruct (classic (q ∈ from 1 x)).
+  destruct (classic (from 1 x ∈ q)).
   - exists 0.
     split.
     + split.
@@ -680,11 +680,13 @@ Qed.
 
 Definition eventually : t -> t := any.
 Definition always     : t -> t := every.
-Definition wait       : t -> t -> t := fun p q => always p ∨ p U q.
 
-Notation "◇ p"     := (eventually p) (at level 75, right associativity) : ltl_scope.
-Notation "□ p"     := (always p)     (at level 75, right associativity) : ltl_scope.
-Notation "p 'W' q" := (wait p q)     (at level 79, right associativity) : ltl_scope.
+Notation "◇ p" := (eventually p) (at level 75, right associativity) : ltl_scope.
+Notation "□ p" := (always p)     (at level 75, right associativity) : ltl_scope.
+
+Definition wait : t -> t -> t := fun p q => □ p ∨ p U q.
+
+Notation "p 'W' q" := (wait p q) (at level 79, right associativity) : ltl_scope.
 
 Program Instance eventually_respects_implies : Proper (implies ==> implies) eventually.
 Next Obligation.
@@ -788,8 +790,8 @@ Module StreamLTL (S : StreamType) <: LinearTemporalLogic.
 
 Include StreamLTLW S.
 
-Definition release        : t -> t -> t := fun x _ => x.
-Definition strong_release : t -> t -> t := fun x _ => x.
+Definition release        : t -> t -> t := fun p q => q W (q ∧ p).
+Definition strong_release : t -> t -> t := fun p q => q U (q ∧ p).
 
 Notation "p 'R' q" := (release p q)        (at level 79, right associativity) : ltl_scope.
 Notation "p 'M' q" := (strong_release p q) (at level 79, right associativity) : ltl_scope.
@@ -797,19 +799,37 @@ Notation "p 'M' q" := (strong_release p q) (at level 79, right associativity) : 
 Program Instance release_respects_implies :
   Proper (implies ==> implies ==> implies) release.
 Next Obligation.
-Admitted.
+  unfold release.
+  do 6 intro.
+  now rewrite H, H0.
+Qed.
 
 Program Instance strong_release_respects_implies :
   Proper (implies ==> implies ==> implies) strong_release.
 Next Obligation.
-Admitted.
+  unfold strong_release.
+  do 6 intro.
+  now rewrite H, H0.
+Qed.
 
 Theorem release_def p q : p R q ≈ ¬(¬p U ¬q).
 Proof.
+  unfold release, wait.
 Admitted.
 
 Theorem strong_release_def p q : p M q ≈ q U (p ∧ q).
 Proof.
-Admitted.
+  unfold strong_release.
+  assert (q ∧ p ≈ p ∧ q). {
+    split; repeat intro.
+    - destruct H.
+      now constructor.
+    - destruct H.
+      now constructor.
+  }
+  split; intros.
+  - now rewrite H.
+  - now rewrite <- H.
+Qed.
 
 End StreamLTL.
