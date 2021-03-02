@@ -1,8 +1,8 @@
 Require Import
   Coq.Program.Program
-  Coq.Classes.Equivalence
-  Coq.Classes.Morphisms
-  Coq.Classes.SetoidClass
+  Coq.Classes.CEquivalence
+  Coq.Classes.CRelationClasses
+  Coq.Classes.CMorphisms
   Coq.Arith.PeanoNat
   Coq.Sets.Ensembles
   Same_set.
@@ -13,7 +13,7 @@ Variable a : Type.
 
 CoInductive Stream := Cons : a -> Stream -> Stream.
 
-CoInductive stream_eq : Stream -> Stream -> Prop :=
+CoInductive stream_eq : Stream -> Stream -> Type :=
   | Stream_eq : forall h t1 t2,
       stream_eq t1 t2 -> stream_eq (Cons h t1) (Cons h t2).
 
@@ -161,18 +161,35 @@ Qed.
 End Stream_Properties.
 
 Section stream_eq_coind.
-  Variable R : Stream -> Stream -> Prop.
 
-  Hypothesis Cons_case_hd : forall s1 s2, R s1 s2 -> head s1 = head s2.
-  Hypothesis Cons_case_tl : forall s1 s2, R s1 s2 -> R (tail s1) (tail s2).
+Variable R : Stream -> Stream -> Type.
 
-  Theorem stream_eq_coind : forall s1 s2, R s1 s2 -> stream_eq s1 s2.
-    cofix stream_eq_coind; destruct s1; destruct s2; intro.
-    generalize (Cons_case_hd _ _ H); intro Heq; simpl in Heq; rewrite Heq.
-    constructor.
-    apply stream_eq_coind.
-    apply (Cons_case_tl _ _ H).
-  Qed.
+Hypothesis Cons_case_hd : forall s1 s2, R s1 s2 -> head s1 = head s2.
+Hypothesis Cons_case_tl : forall s1 s2, R s1 s2 -> R (tail s1) (tail s2).
+
+Theorem stream_eq_coind : forall s1 s2, R s1 s2 -> stream_eq s1 s2.
+Proof.
+  cofix stream_eq_coind.
+  destruct s1, s2; intro.
+  generalize (Cons_case_hd _ _ X);
+  intro Heq; simpl in Heq; rewrite Heq.
+  subst.
+  constructor.
+  apply stream_eq_coind.
+  apply (Cons_case_tl _ _ X).
+Qed.
+
+Hypothesis Cons_case_r : forall s1 s2,
+  (head s1 = head s2) * R (tail s1) (tail s2) -> R s1 s2.
+
+Theorem stream_eq_bisim : forall s1 s2, stream_eq s1 s2 -> R s1 s2.
+Proof.
+  intros.
+  destruct s1, s2.
+  inversion X; subst; clear X.
+  apply Cons_case_r; simpl.
+Abort.
+
 End stream_eq_coind.
 
 Global Program Instance stream_eq_Equivalence : Equivalence stream_eq.
@@ -191,16 +208,18 @@ Qed.
 Next Obligation.
   repeat intro.
   eapply stream_eq_coind
-    with (R := fun s1 s2 => exists s3, stream_eq s1 s3 /\ stream_eq s3 s2);
+    with (R := fun s1 s2 => { s3 & stream_eq s1 s3 * stream_eq s3 s2 }%type);
     eauto; clear; intros ? ? [s3 [H0 H1] ].
   - destruct H0; inversion H1; subst; simpl; etransitivity; eauto.
   - destruct H0; inversion H1; subst; simpl; eexists; eauto.
 Qed.
 
+(*
 Global Instance Stream_Setoid `{Setoid a} : Setoid Stream := {
   equiv := stream_eq;
   setoid_equiv := stream_eq_Equivalence
 }.
+*)
 
 Global Program Instance Cons_Proper :
   Proper (eq ==> stream_eq ==> stream_eq) Cons.
@@ -216,7 +235,7 @@ Next Obligation.
   unfold head.
   repeat intro.
   destruct x, y.
-  inversion H; subst.
+  inversion X; subst.
   reflexivity.
 Qed.
 
@@ -226,7 +245,7 @@ Next Obligation.
   unfold tail.
   repeat intro.
   destruct x, y.
-  inversion H; subst.
+  inversion X; subst.
   assumption.
 Qed.
 
@@ -244,9 +263,10 @@ Global Program Instance any_Proper f :
 Next Obligation.
   unfold any.
   repeat intro; subst.
-  destruct H1.
+  destruct H0.
   exists x0.
-  now rewrite <- H0.
+  eapply H; eauto.
+  now rewrite <- X.
 Qed.
 
 Global Program Instance any_flip_Proper f :
@@ -255,9 +275,10 @@ Global Program Instance any_flip_Proper f :
 Next Obligation.
   unfold any.
   repeat intro; subst.
-  destruct H1.
+  destruct H0.
   exists x0.
-  now rewrite H0.
+  eapply H; eauto.
+  now rewrite <- X.
 Qed.
 
 Global Program Instance any_Same_set_Proper :
@@ -279,7 +300,8 @@ Global Program Instance every_Proper f :
 Next Obligation.
   unfold every.
   repeat intro; subst.
-  now rewrite <- H0.
+  eapply H; eauto.
+  now rewrite <- X.
 Qed.
 
 Global Program Instance every_flip_Proper f :
@@ -288,7 +310,8 @@ Global Program Instance every_flip_Proper f :
 Next Obligation.
   unfold every.
   repeat intro; subst.
-  now rewrite H0.
+  eapply H; eauto.
+  now rewrite X.
 Qed.
 
 Global Program Instance every_Same_set_Proper :
