@@ -72,13 +72,13 @@ formula to use on future inputs.
 
 * Work list
 
-** TODO Produce a CDS4LTL proof of (55)
+** DONE Produce a CDS4LTL proof of (55)
 :PROPERTIES:
 :ID:       6F57D36C-AE95-4AB6-8843-6A338055DBC3
 :CREATED:  [2021-02-11 Thu 08:52]
 :END:
 
-** TODO Complete the stream semantic model of LinearTemporalLogic
+** DONE Complete the stream semantic model of LinearTemporalLogic
 This may be found in Model.v
 :PROPERTIES:
 :ID:       20B4D94E-BA32-420E-9EAC-D75FF2E59938
@@ -292,3 +292,14 @@ p ∧ q U ¬p ⇒ (q ∧ p) U (q ∧ p ∧ ¬◯ p)
 :ID:       6848091F-39F6-4D56-AD71-540C507BBF95
 :CREATED:  [2021-02-19 Fri 10:56]
 :END:
+
+* Agenda for [2021-03-05 Fri]
+
+1. Some information on [p U q]. I don’t remember the discussion that raised
+   this point, but a few comments anyway.
+
+2. Proofs for (12) (15) and (16) on the basis of the new set of axioms.
+
+3. Discuss outline of new paper proposed by Prof. Warford.
+
+4. CDS proof of (55) and calculational deductive system proofs in general.

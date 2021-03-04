@@ -221,7 +221,8 @@ Qed.
 (81) □ p ⇒ ¬(q U ¬p)
 *)
 
-Theorem (* 88 *) law_88_strong p q : □ p ∧ ◇ q ⟹ p U (p ∧ q).
+(** (88) is effectively (170) in another form. *)
+Corollary (* 88 *) law_88_strong p q : □ p ∧ ◇ q ⟹ p U (p ∧ q).
 Proof.
   rewrite always_def.
   rewrite <- (law_42 (¬q)).
