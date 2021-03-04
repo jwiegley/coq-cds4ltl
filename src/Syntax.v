@@ -975,7 +975,7 @@ Proof.
   rewrite denote_negate in H.
   apply H.
   rewrite true_def.
-  constructor.
+  now constructor.
 Qed.
 
 Theorem or_comm p q : p ∨ q ≈ q ∨ p.
@@ -985,11 +985,7 @@ Theorem or_assoc p q r : (p ∨ q) ∨ r ≈ p ∨ (q ∨ r).
 Proof. now induct. Qed.
 
 Theorem and_def p q : p ∧ q ≈ ¬(¬p ∨ ¬q).
-Proof.
-  unfold and, or, not.
-  simpl.
-  now rewrite !negate_negate.
-Qed.
+Proof. now induct; rewrite !negate_negate in *. Qed.
 
 Theorem huntington p q : ¬(¬p ∨ ¬q) ∨ ¬(¬p ∨ q) ≈ p.
 Proof.
@@ -1001,7 +997,7 @@ Proof.
   clear H0.
   specialize (H1 s I).
   simpl in H1.
-  intuition.
+  now intuition.
 Qed.
 
 Theorem (* 1 *) next_not p : ◯ ¬p ≈ ¬◯ p.
@@ -1015,11 +1011,11 @@ Proof. now induct. Qed.
 
 Theorem (* 9 *) next_until p q : ◯ (p U q) ≈ (◯ p) U (◯ q).
 Proof.
-  unfold next, until.
   split; repeat intro;
   induction s; intuition;
-  rewrite until_expand; simpl;
-  rewrite until_expand in H; simpl in H;
+  rewrite until_expand;
+  rewrite until_expand in H;
+  simpl in *;
   now intuition.
 Qed.
 
@@ -1027,10 +1023,7 @@ Theorem (* 11 *) until_false p : p U ⊥ ≈ ⊥.
 Proof. now induct. Qed.
 
 Theorem (* NEW *) looped p : ◯ ¬p U p ⟹ p.
-Proof.
-  induct.
-  contradiction (denote_not_false H1 H).
-Qed.
+Proof. now induct; contradiction (denote_not_false H1 H). Qed.
 
 Theorem (* 12 *) until_left_or p q r : p U (q ∨ r) ≈ (p U q) ∨ (p U r).
 Proof. now induct. Qed.
@@ -1043,78 +1036,18 @@ Theorem (* NEW *) until_and_until p q r s :
 Proof. now induct. Qed.
 
 Theorem (* 17 *) until_left_or_order p q r : p U (q U r) ⟹ (p ∨ q) U r.
-Proof.
-  induct.
-  right.
-  now induct.
-Qed.
-
-Lemma denote_top s : denote Top s <-> True.
-Proof. reflexivity. Qed.
-
-Lemma denote_bottom s : denote Bottom s <-> False.
-Proof. reflexivity. Qed.
-
-Lemma denote_examine_nil v :
-  denote (Examine v) nil <-> denote (v None) nil.
-Proof. reflexivity. Qed.
-
-Lemma denote_examine_cons x xs v :
-  denote (Examine v) (x :: xs) <-> denote (v (Some x)) (x :: xs).
-Proof. reflexivity. Qed.
-
-Lemma denote_and s p q : denote (And p q) s <-> denote p s /\ denote q s.
-Proof. reflexivity. Qed.
-
-Lemma denote_or s p q : denote (Or p q) s <-> denote p s \/ denote q s.
-Proof. reflexivity. Qed.
-
-Lemma denote_next x xs p : denote (Next p) (x :: xs) <-> denote p xs.
-Proof. reflexivity. Qed.
-
-Lemma denote_until x xs p q :
-  denote (Until p q) (x :: xs) <->
-  denote q (x :: xs) \/ (denote p (x :: xs) /\ denote (Until p q) xs).
-Proof. reflexivity. Qed.
-
-Lemma denote_wait x xs p q :
-  denote (Wait p q) (x :: xs) <->
-  denote q (x :: xs) \/ (denote p (x :: xs) /\ denote (Wait p q) xs).
-Proof. reflexivity. Qed.
-
-Lemma denote_always x xs p :
-  denote (Always p) (x :: xs) <->
-  denote p (x :: xs) /\ denote (Always p) xs.
-Proof. reflexivity. Qed.
-
-Lemma denote_eventually x xs p :
-  denote (Eventually p) (x :: xs) <->
-  denote p (x :: xs) \/ denote (Eventually p) xs.
-Proof. reflexivity. Qed.
-
-Lemma denote_release x xs p q :
-  denote (Release p q) (x :: xs) <->
-  denote q (x :: xs) /\ (denote p (x :: xs) \/ denote (Release p q) xs).
-Proof. reflexivity. Qed.
-
-Lemma denote_strongrelease x xs p q :
-  denote (StrongRelease p q) (x :: xs) <->
-  denote q (x :: xs) /\ (denote p (x :: xs) \/ denote (StrongRelease p q) xs).
-Proof. reflexivity. Qed.
+Proof. now induct; right; induct. Qed.
 
 Theorem (* 18 *) until_right_and_order p q r : p U (q ∧ r) ⟹ (p U q) U r.
 Proof.
-  unfold until, and.
   repeat intro;
   induction s; intuition.
   - now simpl in *; intuition.
-  - rewrite denote_until, denote_and in *.
+  - simpl in *.
     firstorder.
     destruct (classic (denote r (a :: s))); auto.
     right; split; auto.
     destruct (classic (denote q (a :: s))); auto.
-      now left.
-    rewrite denote_until in *.
     right; split; auto.
     clear -H0.
     now induct.
@@ -1127,13 +1060,13 @@ Theorem (* 38 *) evn_def p : ◇ p ≈ ⊤ U p.
 Proof. now induct. Qed.
 
 Theorem (* 54 *) always_def p : □ p ≈ ¬◇ ¬p.
-Proof. induct; rewrite ?negate_negate in *; intuition. Qed.
+Proof. now induct; rewrite ?negate_negate in *; intuition. Qed.
 
 Theorem (* 169 *) wait_def p q : p W q ≈ □ p ∨ p U q.
 Proof. now induct. Qed.
 
 Theorem release_def p q : p R q ≈ ¬(¬p U ¬q).
-Proof. induct; rewrite ?negate_negate in *; intuition. Qed.
+Proof. now induct; rewrite ?negate_negate in *; intuition. Qed.
 
 Theorem strong_release_def p q : p M q ≈ q U (p ∧ q).
 Proof. now induct. Qed.
