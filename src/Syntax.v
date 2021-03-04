@@ -15,38 +15,44 @@ Open Scope list_scope.
 
 Import ListNotations.
 
-Generalizable All Variables.
-Set Transparent Obligations.
-Set Decidable Equality Schemes.
-
 Module LTL (S : StreamType) <: LinearTemporalLogicW <: LinearTemporalLogic.
 
 (** This data type encodes the syntax of LTL in Positive Normal Form (PNF). *)
 Inductive Formula : Type :=
-  (* Boolean layer *)
   | Top
   | Bottom
-
-  | Examine (v : option S.a -> Formula)
-
-  | And   (p q : Formula)
-  | Or    (p q : Formula)
-
-  (* Temporal layer *)
-  | Next       (p : Formula)
-
-  | Until      (p q : Formula)
-  | Release    (p q : Formula)
-
-  | Always     (p : Formula)
-  | Eventually (p : Formula)
-
+  | Examine       (v   : option S.a -> Formula)
+  | And           (p q : Formula)
+  | Or            (p q : Formula)
+  | Next          (p   : Formula)
+  | Until         (p q : Formula)
   | Wait          (p q : Formula)
+  | Always        (p   : Formula)
+  | Eventually    (p   : Formula)
+  | Release       (p q : Formula)
   | StrongRelease (p q : Formula).
 
 Definition t := Formula.
 
-Fixpoint size (p : t) : nat :=
+(*
+Fixpoint denote (l : Formula) : L.t :=
+  match l with
+  | Top               => true
+  | Bottom            => false
+  | Examine v         => fun s => denote (v (head s)) s
+  | And p q           => denote p ∧ denote q
+  | Or p q            => denote p ∨ denote q
+  | Next p            => ◯ (denote p)
+  | Until p q         => (denote p) U (denote q)
+  | Wait p q          => (denote p) W (denote q)
+  | Always p          => □ (denote p)
+  | Eventually p      => ◇ (denote p)
+  | Release p q       => (denote p) R (denote q)
+  | StrongRelease p q => (denote p) M (denote q)
+  end.
+*)
+
+Fixpoint size (p : Formula) : nat :=
   match p with
   | Top               => 1
   | Bottom            => 1
@@ -55,14 +61,14 @@ Fixpoint size (p : t) : nat :=
   | Or p q            => 1 + size p + size q
   | Next p            => 1 + size p
   | Until p q         => 1 + size p + size q
-  | Release p q       => 1 + size p + size q
+  | Wait p q          => 1 + size p + size q
   | Always p          => 1 + size p
   | Eventually p      => 1 + size p
-  | Wait p q          => 1 + size p + size q
+  | Release p q       => 1 + size p + size q
   | StrongRelease p q => 1 + size p + size q
   end.
 
-Function negate (l : t) : t :=
+Function negate (l : Formula) : Formula :=
   match l with
   | Top               => Bottom
   | Bottom            => Top
@@ -71,43 +77,36 @@ Function negate (l : t) : t :=
   | Or p q            => And (negate p) (negate q)
   | Next p            => Next (negate p)
   | Until p q         => Release (negate p) (negate q)
-  | Release p q       => Until (negate p) (negate q)
+  | Wait p q          => StrongRelease (negate p) (negate q)
   | Always p          => Eventually (negate p)
   | Eventually p      => Always (negate p)
-  | Wait p q          => StrongRelease (negate p) (negate q)
+  | Release p q       => Until (negate p) (negate q)
   | StrongRelease p q => Wait (negate p) (negate q)
   end.
 
-Fixpoint expand (l : t) : t :=
+Fixpoint expand (l : Formula) : Formula :=
   match l with
   | Top               => l
   | Bottom            => l
-
   | Examine v         => Examine (expand ∘ v)
-
   | And p q           => And (expand p) (expand q)
   | Or p q            => Or (expand p) (expand q)
-
   | Next p            => Next (expand p)
-
   | Until p q         => Or (expand q) (And (expand p) (Next (Until p q)))
-  | Release p q       => And (expand q) (Or (expand p) (Next (Release p q)))
-
-  (* jww (2021-02-18): NYI *)
+  | Wait p q          => Or (expand q) (And (expand p) (Next (Wait p q)))
   | Always p          => And (expand p) (Next (Always p))
   | Eventually p      => Or (expand p) (Next (Eventually p))
-
-  | Wait p q          => Or (expand q) (And (expand p) (Next (Wait p q)))
+  | Release p q       => And (expand q) (Or (expand p) (Next (Release p q)))
   | StrongRelease p q => And (expand q) (Or (expand p) (Next (StrongRelease p q)))
   end.
 
-Definition basic (l : t) : Prop :=
+Definition basic (l : Formula) : Prop :=
   match l with
   | Until p q         => False
-  | Release p q       => False
+  | Wait p q          => False
   | Always p          => False
   | Eventually p      => False
-  | Wait p q          => False
+  | Release p q       => False
   | StrongRelease p q => False
   | _                 => True
   end.
@@ -115,7 +114,7 @@ Definition basic (l : t) : Prop :=
 Lemma basic_expand : forall l, basic (expand l).
 Proof. induction l; simpl; auto. Qed.
 
-Fixpoint shallow (l : t) : Prop :=
+Fixpoint shallow (l : Formula) : Prop :=
   match l with
   | Top               => True
   | Bottom            => True
@@ -124,169 +123,494 @@ Fixpoint shallow (l : t) : Prop :=
   | Or p q            => shallow p /\ shallow q
   | Next p            => True
   | Until p q         => False
+  | Wait p q          => False
   | Always p          => False
   | Eventually p      => False
   | Release p q       => False
-  | Wait p q          => False
   | StrongRelease p q => False
   end.
 
-Lemma expand_complete (l : t) : shallow (expand l).
+Lemma expand_complete (l : Formula) : shallow (expand l).
 Proof. induction l; simpl in *; intuition auto. Qed.
 
 (** Prune out any instances of Top or Bottom *)
-Function prune (l : t) : t :=
+Function prune (l : Formula) : Formula :=
   match l with
-  | Top       => l
-  | Bottom    => l
-  | Examine v => l
-
-  | And p q =>
-    match prune p with
-    | Top => prune q
-    | _   =>
-      match prune q with
-      | Top => prune p
-      | _   => And (prune p) (prune q)
-      end
-    end
-
-  | Or p q =>
-    match prune p with
-    | Bottom => prune q
-    | _      =>
-      match prune q with
-      | Bottom => prune p
-      | _      => Or (prune p) (prune q)
-      end
-    end
-
+  | Top               => l
+  | Bottom            => l
+  | Examine v         => l
+  | And p q           => match prune p with
+                         | Top => prune q
+                         | _   =>
+                           match prune q with
+                           | Top => prune p
+                           | _   => And (prune p) (prune q)
+                           end
+                         end
+  | Or p q            => match prune p with
+                         | Bottom => prune q
+                         | _      =>
+                           match prune q with
+                           | Bottom => prune p
+                           | _      => Or (prune p) (prune q)
+                           end
+                         end
   | Next p            => Next (prune p)
   | Until p q         => Until (prune p) (prune q)
-  | Release p q       => Release (prune p) (prune q)
+  | Wait p q          => Wait (prune p) (prune q)
   | Always p          => Always (prune p)
   | Eventually p      => Eventually (prune p)
-  | Wait p q          => Wait (prune p) (prune q)
+  | Release p q       => Release (prune p) (prune q)
   | StrongRelease p q => StrongRelease (prune p) (prune q)
   end.
 
-Inductive Matches : t -> Stream S.a -> Prop :=
-  | MatchTop s :
-      Matches Top s
-  | MatchBottom s :
-      Matches Bottom s
+Inductive Matches : Formula -> list S.a -> Type :=
+  | MatchTop x xs : Matches Top (x :: xs)
+
+  | MatchBottom p :
+      (* The following operators cannot match at the end of a finite input,
+         meaning for example that you cannot have an [◇ p] that does not
+         eventually match [p]. *)
+      match prune p with
+      | Top               => False
+      | Next _            => False
+      | Until _ _         => False
+      | Eventually _      => False
+      | StrongRelease _ _ => False
+      | _                 => True
+      end ->
+      Matches p []
+
+  | MatchExamineEnd v :
+      Matches (v None) [] -> Matches (Examine v) []
   | MatchExamine v x xs :
-      Matches (v (Some x)) (Cons x xs) -> Matches (Examine v) (Cons x xs)
+      Matches (v (Some x)) (x :: xs) -> Matches (Examine v) (x :: xs)
+
   | MatchAnd p q s :
       Matches p s -> Matches q s -> Matches (And p q) s
-  | MatchOr p q s :
-      Matches p s \/ Matches q s -> Matches (Or p q) s
-  | MatchNext p x xs :
-      Matches p xs -> Matches (Next p) (Cons x xs)
-  | MatchUntil p q x xs :
-      Matches q (Cons x xs)
-        \/ (Matches p (Cons x xs) /\ Matches (Until p q) xs) ->
-      Matches (Until p q) (Cons x xs)
-  | MatchAlways p x xs :
-      Matches p (Cons x xs) -> Matches (Always p) xs ->
-      Matches (Always p) (Cons x xs)
-  | MatchEventually p x xs :
-      Matches p (Cons x xs) \/ Matches (Eventually p) xs ->
-      Matches (Eventually p) (Cons x xs)
-  | MatchRelease p q x xs :
-      Matches q (Cons x xs)
-        -> (Matches p (Cons x xs) \/ Matches (Release p q) xs) ->
-      Matches (Release p q) (Cons x xs)
-  | MatchWait p q x xs :
-      Matches q (Cons x xs)
-        \/ (Matches p (Cons x xs) /\ Matches (Wait p q) xs) ->
-      Matches (Wait p q) (Cons x xs)
-  | MatchStrongRelease p q x xs :
-      Matches q (Cons x xs)
-        \/ (Matches p (Cons x xs) /\ Matches (StrongRelease p q) xs) ->
-      Matches (StrongRelease p q) (Cons x xs).
 
-Fixpoint matches (l : Formula) (s : list S.a) {struct l} : Prop :=
+  | MatchOrLeft p q s :
+      Matches p s -> Matches (Or p q) s
+  | MatchOrRight p q s :
+      Matches q s -> Matches (Or p q) s
+
+  | MatchNext p x xs :
+      Matches p xs -> Matches (Next p) (x :: xs)
+
+  | MatchUntilStop p q s :
+      Matches q s ->
+      Matches (Until p q) s
+  | MatchUntilFwd p q x xs :
+      Matches p (x :: xs) ->
+      Matches (Until p q) xs ->
+      Matches (Until p q) (x :: xs)
+
+  | MatchWaitStop p q s :
+      Matches q s ->
+      Matches (Wait p q) s
+  | MatchWaitFwd p q x xs :
+      Matches p (x :: xs) ->
+      Matches (Wait p q) xs ->
+      Matches (Wait p q) (x :: xs)
+
+  | MatchAlways p x xs :
+      Matches p (x :: xs) ->
+      Matches (Always p) xs ->
+      Matches (Always p) (x :: xs)
+
+  | MatchEventuallyStop p s :
+      Matches p s ->
+      Matches (Eventually p) s
+  | MatchEventuallyFwd p x xs :
+      Matches (Eventually p) xs ->
+      Matches (Eventually p) (x :: xs)
+
+  | MatchReleaseStop p q s :
+      Matches q s ->
+      Matches p s ->
+      Matches (Release p q) s
+  | MatchReleaseFwd p q x xs :
+      Matches q (x :: xs) ->
+      Matches (Release p q) xs ->
+      Matches (Release p q) (x :: xs)
+
+  | MatchStrongReleaseStop p q s :
+      Matches q s ->
+      Matches p s ->
+      Matches (StrongRelease p q) s
+  | MatchStrongReleaseFwd p q x xs :
+      Matches q (x :: xs) ->
+      Matches (StrongRelease p q) xs ->
+      Matches (StrongRelease p q) (x :: xs).
+
+Import EqNotations.
+
+Fixpoint matches (l : Formula) (s : list S.a) : option (Matches l s) :=
+  match l with
+  | Top    =>
+    match s with
+    | nil => None
+    | x :: xs => Some (MatchTop x xs)
+    end
+  | Bottom => None
+
+  | Examine v =>
+    match s as s' return s = s' -> _ with
+    | nil => fun _ =>
+      match matches (v None) nil with
+      | Some r => Some (MatchExamineEnd v r)
+      | None   => None
+      end
+    | x :: xs => fun Heqe : s = x :: xs =>
+      match matches (v (Some x)) s with
+      | Some r => Some (MatchExamine v x xs (rew Heqe in r))
+      | None   => None
+      end
+    end eq_refl
+
+  | And p q =>
+    match matches p s with
+    | Some r =>
+      match matches q s with
+      | Some t => Some (MatchAnd p q s r t)
+      | None   => None
+      end
+    | None   => None
+    end
+
+  | Or p q  =>
+    match matches p s with
+    | Some r => Some (MatchOrLeft p q s r)
+    | None   =>
+      match matches q s with
+      | Some t => Some (MatchOrRight p q s t)
+      | None   => None
+      end
+    end
+
+  | Next p =>
+    match s with
+    | nil => None
+    | x :: xs =>
+      match matches p xs with
+      | Some r => Some (MatchNext p x xs r)
+      | None   => None
+      end
+    end
+
+  | Until p q =>
+    let fix go s : option (Matches (Until p q) s) :=
+        match matches q s with
+        | Some r  => Some (MatchUntilStop p q s r)
+        | None =>
+          match s as s' return s = s' -> _ with
+          | nil => fun _ => None
+          | x :: xs => fun Heqe : s = x :: xs =>
+            match matches p s with
+            | Some r =>
+              match go xs with
+              | Some t => Some (MatchUntilFwd p q x xs (rew Heqe in r) t)
+              | None => None
+              end
+            | None => None
+            end
+          end eq_refl
+        end in go s
+
+  | Wait p q =>
+    let fix go s : option (Matches (Wait p q) s) :=
+        match s as s' return s = s' -> option (Matches (Wait p q) s') with
+        | nil => fun _ => None
+        | x :: xs =>
+          fun Heqe : s = x :: xs =>
+            match matches q s with
+            | Some r  => Some (rew Heqe in MatchWaitStop p q s r)
+            | None =>
+              match matches p s with
+              | Some r =>
+                match xs as xs' return xs = xs' -> option (Matches (Wait p q) (x :: xs')) with
+                | nil =>
+                  fun Heqe2 : xs = nil =>
+                    None
+                    (* Some (MatchWaitEnd *)
+                    (*         p q x (rew [fun z => Matches p (x :: z)] Heqe2 *)
+                    (*                 in rew Heqe in r)) *)
+                | y :: ys =>
+                  fun Heqe2 : xs = y :: ys =>
+                    match go xs with
+                    | Some t => Some (rew [fun z => Matches (Wait p q) (x :: z)] Heqe2
+                                       in MatchWaitFwd p q x xs (rew Heqe in r) t)
+                    | None => None
+                    end
+                end eq_refl
+              | None => None
+              end
+            end
+        end eq_refl in go s
+
+  | Always p =>
+    let fix go s : option (Matches (Always p) s) :=
+        match s as s' return s = s' -> option (Matches (Always p) s') with
+        | nil => fun _ => None
+        | x :: xs =>
+          fun Heqe : s = x :: xs =>
+            match matches p s with
+            | Some r =>
+              match xs as xs' return xs = xs' -> option (Matches (Always p) (x :: xs')) with
+              | nil =>
+                fun Heqe2 : xs = nil =>
+                  None
+                  (* Some (MatchAlwaysEnd *)
+                  (*         p x (rew [fun z => Matches p (x :: z)] Heqe2 *)
+                  (*               in rew Heqe in r)) *)
+              | y :: ys =>
+                fun Heqe2 : xs = y :: ys =>
+                  match go xs with
+                  | Some t => Some (rew [fun z => Matches (Always p) (x :: z)] Heqe2
+                                     in MatchAlways p x xs (rew Heqe in r) t)
+                  | None => None
+                  end
+              end eq_refl
+            | None => None
+            end
+        end eq_refl in go s
+
+  | Eventually p =>
+    let fix go s : option (Matches (Eventually p) s) :=
+        match s as s' return s = s' -> _ with
+        | nil => fun _ => None
+        | x :: xs => fun Heqe : s = x :: xs =>
+          match matches p s with
+          | Some r => Some (MatchEventuallyStop p s r)
+          | None =>
+            match go xs with
+            | Some t => Some (rew <- Heqe in MatchEventuallyFwd p x xs t)
+            | None => None
+            end
+          end
+        end eq_refl in go s
+
+  | Release p q =>
+    let fix go s : option (Matches (Release p q) s) :=
+        match s as s' return s = s' -> option (Matches (Release p q) s') with
+        | nil => fun _ => None
+        | x :: xs =>
+          fun Heqe : s = x :: xs =>
+            match matches q s with
+            | Some r  =>
+              match xs as xs' return xs = xs' -> option (Matches (Release p q) (x :: xs')) with
+              | nil =>
+                fun Heqe2 : xs = nil =>
+                  None
+                  (* Some (MatchReleaseEnd *)
+                  (*         p q x (rew [fun z => Matches q (x :: z)] Heqe2 *)
+                  (*                 in rew Heqe in r)) *)
+              | y :: ys =>
+                fun Heqe2 : xs = y :: ys =>
+                  match matches p s with
+                  | Some t => Some (rew [fun z => Matches (Release p q) (x :: z)] Heqe2
+                                     in rew Heqe in MatchReleaseStop p q s r t)
+                  | None =>
+                    match go xs with
+                    | Some t => Some (rew [fun z => Matches (Release p q) (x :: z)] Heqe2
+                                       in MatchReleaseFwd p q x xs (rew Heqe in r) t)
+                    | None => None
+                    end
+                  end
+              end eq_refl
+            | None => None
+            end
+        end eq_refl in go s
+
+  | StrongRelease p q =>
+    let fix go s : option (Matches (StrongRelease p q) s) :=
+        match s as s' return s = s' -> _ with
+        | nil => fun _ => None
+        | x :: xs => fun Heqe : s = x :: xs =>
+          match matches q s with
+          | Some r  =>
+            match matches p s with
+            | Some t => Some (MatchStrongReleaseStop p q s r t)
+            | None =>
+              match go xs with
+              | Some t => Some (rew <- Heqe in
+                                   MatchStrongReleaseFwd p q x xs (rew Heqe in r) t)
+              | None => None
+              end
+            end
+          | None => None
+          end
+        end eq_refl in go s
+  end.
+
+Fixpoint denote (l : Formula) (s : list S.a) {struct l} : Prop :=
   match l with
   | Top    => True
   | Bottom => False
 
   | Examine v =>
     match s with
-    | nil    => matches (v None) s
-    | x :: _ => matches (v (Some x)) s
+    | nil    => denote (v None) s
+    | x :: _ => denote (v (Some x)) s
     end
 
-  | And p q => matches p s /\ matches q s
-  | Or p q  => matches p s \/ matches q s
+  | And p q => denote p s /\ denote q s
+  | Or p q  => denote p s \/ denote q s
 
   | Next p =>
     match s with
-    | nil     => matches p nil
-    | x :: xs => matches p xs
+    | nil     => denote p nil
+    | x :: xs => denote p xs
     end
 
   | Until p q =>
     let fix go s :=
         match s with
-        | nil     => matches q s
-        | _ :: xs => matches q s \/ (matches p s /\ go xs)
-        end in go s
-
-  | Release p q =>
-    let fix go s :=
-        match s with
-        | nil     => matches q s
-        | _ :: xs => matches q s /\ (matches p s \/ go xs)
-        end in go s
-
-  | Always p =>
-    let fix go s :=
-        match s with
-        | nil     => matches p s
-        | _ :: xs => matches p s /\ go xs
-        end in go s
-
-  | Eventually p =>
-    let fix go s :=
-        match s with
-        | nil     => matches p s
-        | _ :: xs => matches p s \/ go xs
+        | nil     => denote q s
+        | _ :: xs => denote q s \/ (denote p s /\ go xs)
         end in go s
 
   | Wait p q =>
     let fix go s :=
         match s with
-        | nil     => matches q s \/ matches p s
-        | _ :: xs => matches q s \/ (matches p s /\ go xs)
+        | nil     => denote q s \/ denote p s
+        | _ :: xs => denote q s \/ (denote p s /\ go xs)
+        end in go s
+
+  | Always p =>
+    let fix go s :=
+        match s with
+        | nil     => denote p s
+        | _ :: xs => denote p s /\ go xs
+        end in go s
+
+  | Eventually p =>
+    let fix go s :=
+        match s with
+        | nil     => denote p s
+        | _ :: xs => denote p s \/ go xs
+        end in go s
+
+  | Release p q =>
+    let fix go s :=
+        match s with
+        | nil     => denote q s
+        | _ :: xs => denote q s /\ (denote p s \/ go xs)
         end in go s
 
   | StrongRelease p q =>
     let fix go s :=
         match s with
-        | nil     => matches q s /\ matches p s
-        | _ :: xs => matches q s /\ (matches p s \/ go xs)
+        | nil     => denote q s /\ denote p s
+        | _ :: xs => denote q s /\ (denote p s \/ go xs)
         end in go s
   end.
+
+Ltac inv H := inversion H; subst; clear H.
+
+Theorem matches_denote l s x : matches l s = Some x -> denote l s.
+Proof.
+  intros.
+  generalize dependent s.
+  induction l; simpl; intros.
+  + destruct s; inv H.
+    now constructor.
+  + now inv H.
+  + destruct s; inv H0.
+    * destruct (matches (v None) []) eqn:Heqe; inv H2.
+      now intuition eauto.
+    * destruct (matches (v (Some a)) (a :: s)) eqn:Heqe; inv H2.
+      now intuition eauto.
+  + destruct (matches l1 s) eqn:Heqe1; inv H.
+    destruct (matches l2 s) eqn:Heqe2; inv H1.
+    now split; intuition eauto.
+  + destruct (matches l1 s) eqn:Heqe1; inv H.
+    * now left; intuition eauto.
+    * destruct (matches l2 s) eqn:Heqe2; inv H1.
+      now right; intuition eauto.
+  + destruct s; inv H.
+    destruct (matches l s) eqn:Heqe; inv H1.
+    now intuition eauto.
+  + induction s.
+    * destruct (matches l2 []) eqn:Heqe2; inv H.
+      now intuition eauto.
+    * destruct (matches l2 (a :: s)) eqn:Heqe2; inv H.
+      ** now left; intuition eauto.
+      ** destruct (matches l1 (a :: s)) eqn:Heqe1; inv H1.
+         destruct (_ s); inv H0.
+         right; intuition eauto.
+         now eapply IHs; eauto.
+  + induction s.
+    * destruct (matches l2 []) eqn:Heqe2; inv H.
+    * destruct (matches l2 (a :: s)) eqn:Heqe2; inv H.
+      ** now left; intuition eauto.
+      ** destruct (matches l1 (a :: s)) eqn:Heqe1; inv H1.
+         destruct (_ s); inv H0.
+         *** right; intuition eauto.
+             now eapply IHs; eauto.
+         *** right.
+             split.
+             **** now intuition eauto.
+             **** now destruct s; inv H1.
+  + induction s.
+    * now inv H.
+    * destruct (matches l (a :: s)) eqn:Heqe; inv H.
+      split.
+      ** now intuition eauto.
+      ** destruct (_ s).
+         *** now eapply IHs; eauto.
+         *** destruct s.
+             **** now inv H1.
+             **** now inv H1.
+  + induction s.
+    * now inv H.
+    * destruct (matches l (a :: s)) eqn:Heqe; inv H.
+      ** now left; intuition eauto.
+      ** right.
+         destruct (_ s).
+         *** now eapply IHs; eauto.
+         *** now inv H1.
+  + induction s.
+    * now inv H.
+    * destruct (matches l2 (a :: s)) eqn:Heqe2; inv H.
+      destruct (matches l1 (a :: s)) eqn:Heqe1; inv H1.
+      ** now intuition eauto.
+      ** destruct (_ s); inv H0.
+         *** intuition eauto.
+             right; intuition eauto.
+             now eapply IHs; eauto.
+         *** split.
+             **** now intuition eauto.
+             **** now destruct s; inv H1.
+  + induction s.
+    * now inv H.
+    * destruct (matches l2 (a :: s)) eqn:Heqe2; inv H.
+      destruct (matches l1 (a :: s)) eqn:Heqe1; inv H1.
+      ** now intuition eauto.
+      ** destruct (_ s); inv H0.
+         intuition eauto.
+         right; intuition eauto.
+         now eapply IHs; eauto.
+Qed.
 
 Definition true           := Top.
 Definition false          := Bottom.
 Definition and            := And.
 Definition or             := Or.
 Definition not            := negate.
-Definition implies        := fun p q => forall s, matches p s -> matches q s.
+Definition implies        := fun p q => forall s, denote p s -> denote q s.
 Definition equivalent     := fun p q => implies p q /\ implies q p.
 Definition next           := Next.
 Definition until          := Until.
-Definition release        := Release.
+Definition wait           := Wait.
 Definition always         := Always.
 Definition eventually     := Eventually.
-Definition wait           := Wait.
+Definition release        := Release.
 Definition strong_release := StrongRelease.
 Definition examine        := Examine.
 
 Declare Scope boolean_scope.
-Bind Scope boolean_scope with t.
+Bind Scope boolean_scope with Formula.
 Delimit Scope boolean_scope with boolean.
 Open Scope boolean_scope.
 
@@ -300,7 +624,7 @@ Infix    "⟹"     := implies         (at level 99, right associativity) : boole
 Infix    "≈"      := equivalent      (at level 90, no associativity) : boolean_scope.
 
 Declare Scope ltl_scope.
-Bind Scope ltl_scope with t.
+Bind Scope ltl_scope with Formula.
 Delimit Scope ltl_scope with ltl.
 Open Scope boolean_scope.
 Open Scope ltl_scope.
@@ -336,8 +660,6 @@ Next Obligation.
   - now rewrite H0, <- H1.
 Qed.
 
-Ltac inv H := inversion H; subst; clear H.
-
 Ltac induct :=
   try split; repeat intro; simpl in *;
   match goal with
@@ -353,14 +675,14 @@ Program Instance Examine_respects_equivalent :
   Proper ((eq ==> equivalent) ==> equivalent) Examine.
 
 Program Instance matches_respects_implies :
-  Proper (implies ==> eq ==> Basics.impl) matches.
+  Proper (implies ==> eq ==> Basics.impl) denote.
 Next Obligation.
   - subst; now apply H.
   - subst; now apply H.
 Qed.
 
 Program Instance matches_respects_equivalent :
-  Proper (equivalent ==> eq ==> iff) (matches).
+  Proper (equivalent ==> eq ==> iff) denote.
 Next Obligation.
   - subst; now apply H.
   - subst; now apply H.
@@ -392,11 +714,11 @@ Program Instance Until_respects_implies :
 Program Instance Until_respects_equivalent :
   Proper (equivalent ==> equivalent ==> equivalent) Until.
 
-Program Instance Release_respects_implies :
-  Proper (implies ==> implies ==> implies) Release.
+Program Instance Wait_respects_implies :
+  Proper (implies ==> implies ==> implies) Wait.
 
-Program Instance Release_respects_equivalent :
-  Proper (equivalent ==> equivalent ==> equivalent) Release.
+Program Instance Wait_respects_equivalent :
+  Proper (equivalent ==> equivalent ==> equivalent) Wait.
 
 Program Instance Always_respects_implies :
   Proper (implies ==> implies) Always.
@@ -410,11 +732,11 @@ Program Instance Eventually_respects_implies :
 Program Instance Eventually_respects_equivalent :
   Proper (equivalent ==> equivalent) Eventually.
 
-Program Instance Wait_respects_implies :
-  Proper (implies ==> implies ==> implies) Wait.
+Program Instance Release_respects_implies :
+  Proper (implies ==> implies ==> implies) Release.
 
-Program Instance Wait_respects_equivalent :
-  Proper (equivalent ==> equivalent ==> equivalent) Wait.
+Program Instance Release_respects_equivalent :
+  Proper (equivalent ==> equivalent ==> equivalent) Release.
 
 Program Instance StrongRelease_respects_implies :
   Proper (implies ==> implies ==> implies) StrongRelease.
@@ -449,10 +771,10 @@ Proof.
     repeat intro; subst.
     now rewrite H.
   - now rewrite <- expand_until.
-  - now rewrite <- expand_release.
+  - now rewrite <- expand_wait.
   - now rewrite <- expand_always.
   - now rewrite <- expand_eventually.
-  - now rewrite <- expand_wait.
+  - now rewrite <- expand_release.
   - now rewrite <- expand_strong_release.
 Qed.
 
@@ -498,7 +820,7 @@ Proof.
   - now rewrite H, H0.
 Qed.
 
-Lemma matches_negate x s : matches (negate x) s <-> ~ matches x s.
+Lemma denote_negate x s : denote (negate x) s <-> ~ denote x s.
 Proof.
   split; intro.
   - intro.
@@ -521,7 +843,7 @@ Proof.
     + simpl negate.
       induction s.
         now simpl in *; intuition.
-      simpl matches in H.
+      simpl denote in H.
       apply not_or_and in H.
       destruct H.
       apply not_and_or in H0.
@@ -529,38 +851,38 @@ Proof.
     + simpl negate.
       induction s.
         now simpl in *; intuition.
-      simpl matches in H.
-      apply not_and_or in H.
-      destruct H;
-      now simpl in *; intuition.
-    + simpl negate.
-      induction s.
-        now simpl in *; intuition.
-      simpl matches in H.
-      apply not_and_or in H.
-      destruct H;
-      now simpl in *; intuition.
-    + simpl negate.
-      induction s.
-        now simpl in *; intuition.
-      simpl matches in H.
-      apply not_or_and in H.
-      destruct H;
-      now simpl in *; intuition.
-    + simpl negate.
-      induction s.
-        now simpl in *; intuition.
-      simpl matches in H.
+      simpl denote in H.
       apply not_or_and in H.
       destruct H.
       apply not_and_or in H0.
       now simpl in *; intuition.
     + simpl negate.
       induction s.
-        simpl matches in H.
+        now simpl in *; intuition.
+      simpl denote in H.
+      apply not_and_or in H.
+      destruct H;
+      now simpl in *; intuition.
+    + simpl negate.
+      induction s.
+        now simpl in *; intuition.
+      simpl denote in H.
+      apply not_or_and in H.
+      destruct H;
+      now simpl in *; intuition.
+    + simpl negate.
+      induction s.
+        now simpl in *; intuition.
+      simpl denote in H.
+      apply not_and_or in H.
+      destruct H;
+      now simpl in *; intuition.
+    + simpl negate.
+      induction s.
+        simpl denote in H.
         apply not_and_or in H.
         now simpl in *; intuition.
-      simpl matches in H.
+      simpl denote in H.
       apply not_and_or in H.
       destruct H.
         now simpl in *; intuition.
@@ -571,7 +893,7 @@ Qed.
 Lemma negate_negate p : negate (negate p) ≈ p.
 Proof.
   split; repeat intro;
-  rewrite !matches_negate in *.
+  rewrite !denote_negate in *.
   - apply NNPP; intro.
     apply H; clear H; intro.
     apply H0; clear H0.
@@ -585,32 +907,32 @@ Proof.
     induction s; intuition auto.
 Qed.
 
-Lemma matches_not_false {p s} : matches p s -> matches (¬ p) s -> False.
+Lemma denote_not_false {p s} : denote p s -> denote (¬ p) s -> False.
 Proof.
   intros.
-  rewrite matches_negate in H0.
+  rewrite denote_negate in H0.
   contradiction.
 Qed.
 
 Program Instance negate_respects_implies : Proper (implies --> implies) negate | 1.
 Next Obligation.
-  - apply matches_negate.
-    apply matches_negate in H0.
+  - apply denote_negate.
+    apply denote_negate in H0.
     now firstorder.
-  - apply matches_negate.
-    apply matches_negate in H0.
+  - apply denote_negate.
+    apply denote_negate in H0.
     now firstorder.
 Qed.
 
 Program Instance not_respects_implies : Proper (implies --> implies) not | 1.
 Next Obligation.
   - unfold not in *.
-    apply matches_negate.
-    apply matches_negate in H0.
+    apply denote_negate.
+    apply denote_negate in H0.
     now firstorder.
   - unfold not in *.
-    apply matches_negate.
-    apply matches_negate in H0.
+    apply denote_negate.
+    apply denote_negate in H0.
     now firstorder.
 Qed.
 
@@ -622,12 +944,12 @@ Instance next_respects_implies :
   Proper (implies ==> implies) next := Next_respects_implies.
 Instance until_respects_implies :
   Proper (implies ==> implies ==> implies) until := Until_respects_implies.
+Instance wait_respects_implies :
+  Proper (implies ==> implies ==> implies) wait := Wait_respects_implies.
 Instance eventually_respects_implies :
   Proper (implies ==> implies) eventually := Eventually_respects_implies.
 Instance always_respects_implies :
   Proper (implies ==> implies) always := Always_respects_implies.
-Instance wait_respects_implies :
-  Proper (implies ==> implies ==> implies) wait := Wait_respects_implies.
 Instance release_respects_implies :
   Proper (implies ==> implies ==> implies) release := Release_respects_implies.
 Instance strong_release_respects_implies :
@@ -642,15 +964,15 @@ Proof.
   split; repeat intro;
   simpl; intuition.
   clear H.
-  rewrite matches_negate.
-  exact (classic (matches p s)).
+  rewrite denote_negate.
+  exact (classic (denote p s)).
 Qed.
 
 Theorem false_def p : ¬(p ∨ ¬p) ≈ ⊥.
 Proof.
   split; repeat intro;
   simpl; intuition.
-  rewrite matches_negate in H.
+  rewrite denote_negate in H.
   apply H.
   rewrite true_def.
   constructor.
@@ -704,26 +1026,29 @@ Qed.
 Theorem (* 11 *) until_false p : p U ⊥ ≈ ⊥.
 Proof. now induct. Qed.
 
-Theorem (* NEW *) until_and_not p q : p U q ∧ ¬q ⟹ (p ∧ ¬q) U (p ∧ ¬q ∧ ◯ q).
+Theorem (* NEW *) looped p : ◯ ¬p U p ⟹ p.
+Proof.
+  induct.
+  contradiction (denote_not_false H1 H).
+Qed.
+
+Theorem (* NEW *) until_and_not_ p q : p U q ∧ ¬q ⟹ (p ∧ ¬q) U (p ∧ ¬q ∧ ◯ q).
 Proof.
   unfold until.
   repeat intro; simpl in *.
   induction s; intuition.
-  - contradiction (matches_not_false H0 H1).
-  - contradiction (matches_not_false H H1).
-  - destruct (classic (matches q s)).
+  - contradiction (denote_not_false H0 H1).
+  - contradiction (denote_not_false H H1).
+  - destruct (classic (denote q s)).
     + now firstorder.
-    + apply matches_negate in H.
+    + apply denote_negate in H.
       now firstorder.
 Qed.
 
-Theorem (* 13 *) until_right_or p q r : (p U r) ∨ (q U r) ⟹ (p ∨ q) U r.
+Theorem (* 12 *) until_left_or p q r : p U (q ∨ r) ≈ (p U q) ∨ (p U r).
 Proof. now induct. Qed.
 
 Theorem (* 14 *) until_left_and p q r : p U (q ∧ r) ⟹ (p U q) ∧ (p U r).
-Proof. now induct. Qed.
-
-Theorem (* NEW *) until_or_until p q r s : (p ∧ r) U (q ∨ s) ⟹ (p U q) ∨ (r U s).
 Proof. now induct. Qed.
 
 Theorem (* NEW *) until_and_until p q r s :
@@ -737,57 +1062,57 @@ Proof.
   now induct.
 Qed.
 
-Lemma matches_top s : matches Top s <-> True.
+Lemma denote_top s : denote Top s <-> True.
 Proof. reflexivity. Qed.
 
-Lemma matches_bottom s : matches Bottom s <-> False.
+Lemma denote_bottom s : denote Bottom s <-> False.
 Proof. reflexivity. Qed.
 
-Lemma matches_examine_nil v :
-  matches (Examine v) nil <-> matches (v None) nil.
+Lemma denote_examine_nil v :
+  denote (Examine v) nil <-> denote (v None) nil.
 Proof. reflexivity. Qed.
 
-Lemma matches_examine_cons x xs v :
-  matches (Examine v) (x :: xs) <-> matches (v (Some x)) (x :: xs).
+Lemma denote_examine_cons x xs v :
+  denote (Examine v) (x :: xs) <-> denote (v (Some x)) (x :: xs).
 Proof. reflexivity. Qed.
 
-Lemma matches_and s p q : matches (And p q) s <-> matches p s /\ matches q s.
+Lemma denote_and s p q : denote (And p q) s <-> denote p s /\ denote q s.
 Proof. reflexivity. Qed.
 
-Lemma matches_or s p q : matches (Or p q) s <-> matches p s \/ matches q s.
+Lemma denote_or s p q : denote (Or p q) s <-> denote p s \/ denote q s.
 Proof. reflexivity. Qed.
 
-Lemma matches_next x xs p : matches (Next p) (x :: xs) <-> matches p xs.
+Lemma denote_next x xs p : denote (Next p) (x :: xs) <-> denote p xs.
 Proof. reflexivity. Qed.
 
-Lemma matches_until x xs p q :
-  matches (Until p q) (x :: xs) <->
-  matches q (x :: xs) \/ (matches p (x :: xs) /\ matches (Until p q) xs).
+Lemma denote_until x xs p q :
+  denote (Until p q) (x :: xs) <->
+  denote q (x :: xs) \/ (denote p (x :: xs) /\ denote (Until p q) xs).
 Proof. reflexivity. Qed.
 
-Lemma matches_release x xs p q :
-  matches (Release p q) (x :: xs) <->
-  matches q (x :: xs) /\ (matches p (x :: xs) \/ matches (Release p q) xs).
+Lemma denote_wait x xs p q :
+  denote (Wait p q) (x :: xs) <->
+  denote q (x :: xs) \/ (denote p (x :: xs) /\ denote (Wait p q) xs).
 Proof. reflexivity. Qed.
 
-Lemma matches_always x xs p :
-  matches (Always p) (x :: xs) <->
-  matches p (x :: xs) /\ matches (Always p) xs.
+Lemma denote_always x xs p :
+  denote (Always p) (x :: xs) <->
+  denote p (x :: xs) /\ denote (Always p) xs.
 Proof. reflexivity. Qed.
 
-Lemma matches_eventually x xs p :
-  matches (Eventually p) (x :: xs) <->
-  matches p (x :: xs) \/ matches (Eventually p) xs.
+Lemma denote_eventually x xs p :
+  denote (Eventually p) (x :: xs) <->
+  denote p (x :: xs) \/ denote (Eventually p) xs.
 Proof. reflexivity. Qed.
 
-Lemma matches_wait x xs p q :
-  matches (Wait p q) (x :: xs) <->
-  matches q (x :: xs) \/ (matches p (x :: xs) /\ matches (Wait p q) xs).
+Lemma denote_release x xs p q :
+  denote (Release p q) (x :: xs) <->
+  denote q (x :: xs) /\ (denote p (x :: xs) \/ denote (Release p q) xs).
 Proof. reflexivity. Qed.
 
-Lemma matches_strongrelease x xs p q :
-  matches (StrongRelease p q) (x :: xs) <->
-  matches q (x :: xs) /\ (matches p (x :: xs) \/ matches (StrongRelease p q) xs).
+Lemma denote_strongrelease x xs p q :
+  denote (StrongRelease p q) (x :: xs) <->
+  denote q (x :: xs) /\ (denote p (x :: xs) \/ denote (StrongRelease p q) xs).
 Proof. reflexivity. Qed.
 
 Theorem (* 18 *) until_right_and_order p q r : p U (q ∧ r) ⟹ (p U q) U r.
@@ -796,13 +1121,13 @@ Proof.
   repeat intro;
   induction s; intuition.
   - now simpl in *; intuition.
-  - rewrite matches_until, matches_and in *.
+  - rewrite denote_until, denote_and in *.
     firstorder.
-    destruct (classic (matches r (a :: s))); auto.
+    destruct (classic (denote r (a :: s))); auto.
     right; split; auto.
-    destruct (classic (matches q (a :: s))); auto.
+    destruct (classic (denote q (a :: s))); auto.
       now left.
-    rewrite matches_until in *.
+    rewrite denote_until in *.
     right; split; auto.
     clear -H0.
     now induct.
@@ -867,19 +1192,19 @@ Definition num (n : nat) :=
        end.
 
 Example ex_match_query  :
-  matches (num 1 ∧ ◯ (num 2)) [1; 2].
+  denote (num 1 ∧ ◯ (num 2)) [1; 2].
 Proof. simpl; auto. Qed.
 
 Example ex_match_series :
-  matches (series [num 1; num 2]) [1; 2].
+  denote (series [num 1; num 2]) [1; 2].
 Proof. simpl; auto. Qed.
 
 Example ex_match_sample1 :
-  matches (◇ (num 3 ⇒ ◇ (num 8))) [1; 2; 3; 4; 5; 6; 7; 8; 9].
+  denote (◇ (num 3 ⇒ ◇ (num 8))) [1; 2; 3; 4; 5; 6; 7; 8; 9].
 Proof. simpl; intuition auto. Qed.
 
 Example ex_match_sample2 :
-  matches (◇ (if_then (λ n, n =? 3) (λ n, ◇ (num (n + 5)))))
+  denote (◇ (if_then (λ n, n =? 3) (λ n, ◇ (num (n + 5)))))
           [1; 2; 3; 4; 5; 6; 7; 8; 9].
 Proof. simpl; intuition auto. Qed.
 

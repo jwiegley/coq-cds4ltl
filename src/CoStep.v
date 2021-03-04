@@ -3,7 +3,7 @@ Require Import
   Coq.Classes.Morphisms
   Coq.Lists.List
   Model
-  Syntax.
+  CoSyntax.
 
 Open Scope program_scope.
 Open Scope list_scope.
@@ -49,78 +49,49 @@ Definition or_result (f g : Result) : Result :=
   | f', Failure _  => f'
   end.
 
-Fixpoint compile (l : Formula) : option S.a -> Result := fun mx =>
+Fixpoint step (l : Formula) (x : S.a) : Result :=
   match l with
-  | Top    => Success
-  | Bottom => Failure HitBottom
+  | Top               => Success
+  | Bottom            => Failure HitBottom
+  | Examine v         => step (v x) x
+  | And p q           => and_result (step p x) (step q x)
+  | Or p q            => or_result (step p x) (step q x)
+  | Next p            => Continue p
+  | Until p q         => or_result  (step q x) (and_result (step p x) (Continue (Until p q)))
+  | Release p q       => and_result (step q x) (or_result  (step p x) (Continue (Release p q)))
+  | Always p          => and_result (step p x) (Continue (Always p))
+  | Eventually p      => or_result  (step p x) (Continue (Eventually p))
+  | Wait p q          => or_result  (step q x) (and_result (step p x) (Continue (Wait p q)))
+  | StrongRelease p q => and_result (step q x) (or_result (step p x) (Continue (StrongRelease p q)))
+  end.
 
-  | Examine v =>
-    match mx with
-    | None   => compile (v None) None
-    | Some x => compile (v (Some x)) (Some x)
-    end
-
-  | And p q => and_result (compile p mx) (compile q mx)
-  | Or p q  => or_result (compile p mx) (compile q mx)
-
-  | Next p   =>
-    match mx with
-    | None   => compile p None
-    | Some _ => Continue p
-    end
-
-  | Until p q =>
-    match mx with
-    | None   => compile q None
-    | Some x => or_result (compile q mx)
-                          (and_result (compile p mx) (Continue (Until p q)))
-    end
-
-  | Release p q =>
-    match mx with
-    | None   => compile q None
-    | Some x => and_result (compile q mx)
-                           (or_result (compile p mx) (Continue (Release p q)))
-    end
-
-  | Always p =>
-    match mx with
-    | None   => compile p None
-    | Some x => and_result (compile p mx) (Continue (Always p))
-    end
-
-  | Eventually p =>
-    match mx with
-    | None   => compile p None
-    | Some x => or_result (compile p mx) (Continue (Eventually p))
-    end
-
-  | Wait p q =>
-    match mx with
-    | None   => or_result (compile q None) (compile p None)
-    | Some x => or_result (compile q mx)
-                          (and_result (compile p mx) (Continue (Wait p q)))
-    end
-
-  | StrongRelease p q =>
-    match mx with
-    | None   => and_result (compile q None) (compile p None)
-    | Some x => and_result (compile q mx)
-                           (or_result (compile p mx) (Continue (StrongRelease p q)))
-    end
+Fixpoint step (l : Formula) (x : S.a) : Result :=
+  match l with
+  | Top               => Success
+  | Bottom            => Failure HitBottom
+  | Examine v         => step (v x) x
+  | And p q           => and_result (step p x) (step q x)
+  | Or p q            => or_result (step p x) (step q x)
+  | Next p            => Continue p
+  | Until p q         => or_result  (step q x) (and_result (step p x) (Continue (Until p q)))
+  | Release p q       => and_result (step q x) (or_result  (step p x) (Continue (Release p q)))
+  | Always p          => and_result (step p x) (Continue (Always p))
+  | Eventually p      => or_result  (step p x) (Continue (Eventually p))
+  | Wait p q          => or_result  (step q x) (and_result (step p x) (Continue (Wait p q)))
+  | StrongRelease p q => and_result (step q x) (or_result (step p x) (Continue (StrongRelease p q)))
   end.
 
 Definition step (m : Result) (x : S.a) : Result :=
   match m with
-  | Continue l => compile l (Some x)
+  | Continue l => step l (Some x)
   | r => r
   end.
 
 Function run (m : Formula) (xs : list S.a) : Result :=
   match xs with
-  | nil     => compile m None
+  | nil     => step m None
   | x :: xs =>
-    match compile m (Some x) with
+    match step m (Some x) with
     | Continue l => run l xs
     | Failure e  => Failure e
     | Success    => Success
@@ -160,22 +131,22 @@ Proof.
   - generalize dependent p.
     generalize dependent q.
     induction s; simpl; intros; intuition.
-    + destruct (compile p None); simpl in *; intuition.
-    + destruct (compile q None); simpl in *; intuition.
-      destruct (compile p None); simpl in *; intuition.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition.
-      destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (step p None); simpl in *; intuition.
+    + destruct (step q None); simpl in *; intuition.
+      destruct (step p None); simpl in *; intuition.
+    + destruct (step p (Some a)) eqn:?; simpl in *; intuition.
+      destruct (step q (Some a)) eqn:?; simpl in *; intuition.
       now specialize (IHs _ _ H).
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-      destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (step p (Some a)) eqn:?; simpl in *; intuition;
+      destruct (step q (Some a)) eqn:?; simpl in *; intuition.
       now specialize (IHs _ _ H).
   - generalize dependent p.
     generalize dependent q.
     induction s; simpl; intros; intuition.
-    + destruct (compile p None) eqn:?; simpl in *; intuition;
-      destruct (compile q None) eqn:?; simpl in *; intuition.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-      destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (step p None) eqn:?; simpl in *; intuition;
+      destruct (step q None) eqn:?; simpl in *; intuition.
+    + destruct (step p (Some a)) eqn:?; simpl in *; intuition;
+      destruct (step q (Some a)) eqn:?; simpl in *; intuition.
 Qed.
 
 Lemma run_or p q s :
@@ -186,21 +157,21 @@ Proof.
   - generalize dependent p.
     generalize dependent q.
     induction s; simpl; intros; intuition.
-    + destruct (compile p None); simpl in *; intuition;
-      destruct (compile q None); simpl in *; intuition.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-      destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (step p None); simpl in *; intuition;
+      destruct (step q None); simpl in *; intuition.
+    + destruct (step p (Some a)) eqn:?; simpl in *; intuition;
+      destruct (step q (Some a)) eqn:?; simpl in *; intuition.
   - generalize dependent p.
     generalize dependent q.
     induction s; simpl; intros; intuition.
-    + destruct (compile p None) eqn:?; simpl in *; intuition;
-      destruct (compile q None) eqn:?; simpl in *; intuition.
-    + destruct (compile p None) eqn:?; simpl in *; intuition;
-      destruct (compile q None) eqn:?; simpl in *; intuition.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-      destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-      destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (step p None) eqn:?; simpl in *; intuition;
+      destruct (step q None) eqn:?; simpl in *; intuition.
+    + destruct (step p None) eqn:?; simpl in *; intuition;
+      destruct (step q None) eqn:?; simpl in *; intuition.
+    + destruct (step p (Some a)) eqn:?; simpl in *; intuition;
+      destruct (step q (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (step p (Some a)) eqn:?; simpl in *; intuition;
+      destruct (step q (Some a)) eqn:?; simpl in *; intuition.
 Qed.
 
 Lemma run_next p x xs :
@@ -220,8 +191,8 @@ Proof.
   - generalize dependent p.
     generalize dependent q.
     induction s; simpl; intros; intuition.
-    destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-    destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    destruct (step p (Some a)) eqn:?; simpl in *; intuition;
+    destruct (step q (Some a)) eqn:?; simpl in *; intuition.
     + rewrite run_and in H.
       now firstorder.
     + rewrite run_or, run_and in H.
@@ -232,14 +203,14 @@ Proof.
   - generalize dependent p.
     generalize dependent q.
     induction s; simpl; intros; intuition.
-    destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-    destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    destruct (step p (Some a)) eqn:?; simpl in *; intuition;
+    destruct (step q (Some a)) eqn:?; simpl in *; intuition.
     + rewrite run_or, run_and.
       now firstorder.
     + rewrite run_or.
       now firstorder.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-      destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (step p (Some a)) eqn:?; simpl in *; intuition;
+      destruct (step q (Some a)) eqn:?; simpl in *; intuition.
       * rewrite run_and.
         now firstorder.
       * rewrite run_or, run_and.
@@ -261,10 +232,10 @@ Proof.
   - generalize dependent p.
     generalize dependent q.
     induction s; simpl; intros; intuition.
-    + destruct (compile p None) eqn:?; simpl in *; intuition;
-      destruct (compile q None) eqn:?; simpl in *; intuition.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-      destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (step p None) eqn:?; simpl in *; intuition;
+      destruct (step q None) eqn:?; simpl in *; intuition.
+    + destruct (step p (Some a)) eqn:?; simpl in *; intuition;
+      destruct (step q (Some a)) eqn:?; simpl in *; intuition.
       * rewrite run_and in H.
         now firstorder.
       * rewrite run_or, run_and in H.
@@ -275,18 +246,18 @@ Proof.
   - generalize dependent p.
     generalize dependent q.
     induction s; simpl; intros; intuition.
-    + destruct (compile p None) eqn:?; simpl in *; intuition;
-      destruct (compile q None) eqn:?; simpl in *; intuition.
-    + destruct (compile p None) eqn:?; simpl in *; intuition;
-      destruct (compile q None) eqn:?; simpl in *; intuition.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-      destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (step p None) eqn:?; simpl in *; intuition;
+      destruct (step q None) eqn:?; simpl in *; intuition.
+    + destruct (step p None) eqn:?; simpl in *; intuition;
+      destruct (step q None) eqn:?; simpl in *; intuition.
+    + destruct (step p (Some a)) eqn:?; simpl in *; intuition;
+      destruct (step q (Some a)) eqn:?; simpl in *; intuition.
       * rewrite run_or, run_and.
         now firstorder.
       * rewrite run_or.
         now firstorder.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-      destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (step p (Some a)) eqn:?; simpl in *; intuition;
+      destruct (step q (Some a)) eqn:?; simpl in *; intuition.
       * rewrite run_and.
         now firstorder.
       * rewrite run_or, run_and.
@@ -307,16 +278,16 @@ Proof.
   split; intros.
   - generalize dependent p.
     induction s; simpl; intros; intuition.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (step p (Some a)) eqn:?; simpl in *; intuition.
       rewrite run_and in H.
       now firstorder.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (step p (Some a)) eqn:?; simpl in *; intuition.
       * rewrite run_and in H.
         now firstorder.
       * now firstorder.
   - generalize dependent p.
     induction s; simpl; intros; intuition.
-    destruct (compile p (Some a)) eqn:?; simpl in *; intuition.
+    destruct (step p (Some a)) eqn:?; simpl in *; intuition.
     rewrite run_and.
     now firstorder.
 Qed.
@@ -333,16 +304,16 @@ Proof.
   split; intros.
   - generalize dependent p.
     induction s; simpl; intros; intuition.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (step p (Some a)) eqn:?; simpl in *; intuition.
       * now firstorder.
       * rewrite run_or in H.
         now firstorder.
   - generalize dependent p.
     induction s; simpl; intros; intuition.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (step p (Some a)) eqn:?; simpl in *; intuition.
       rewrite run_or.
       now firstorder.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (step p (Some a)) eqn:?; simpl in *; intuition.
       rewrite run_or.
       now firstorder.
 Qed.
@@ -360,14 +331,14 @@ Proof.
   - generalize dependent p.
     generalize dependent q.
     induction s; simpl; intros; intuition.
-    destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-    destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    destruct (step p (Some a)) eqn:?; simpl in *; intuition;
+    destruct (step q (Some a)) eqn:?; simpl in *; intuition.
     + rewrite run_and in H.
       now firstorder.
     + rewrite run_and, run_or in H.
       now firstorder.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-      destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (step p (Some a)) eqn:?; simpl in *; intuition;
+      destruct (step q (Some a)) eqn:?; simpl in *; intuition.
       * rewrite run_and in H.
         now firstorder.
       * now firstorder.
@@ -378,14 +349,14 @@ Proof.
   - generalize dependent p.
     generalize dependent q.
     induction s; simpl; intros; intuition.
-    destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-    destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    destruct (step p (Some a)) eqn:?; simpl in *; intuition;
+    destruct (step q (Some a)) eqn:?; simpl in *; intuition.
     + rewrite run_and, run_or.
       now firstorder.
     + rewrite run_or.
       now firstorder.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-      destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (step p (Some a)) eqn:?; simpl in *; intuition;
+      destruct (step q (Some a)) eqn:?; simpl in *; intuition.
       * rewrite run_and.
         now firstorder.
       * rewrite run_and, run_or.
@@ -407,18 +378,18 @@ Proof.
   - generalize dependent p.
     generalize dependent q.
     induction s; simpl; intros; intuition.
-    + destruct (compile p None) eqn:?; simpl in *; intuition;
-      destruct (compile q None) eqn:?; simpl in *; intuition.
-    + destruct (compile p None) eqn:?; simpl in *; intuition;
-      destruct (compile q None) eqn:?; simpl in *; intuition.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-      destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (step p None) eqn:?; simpl in *; intuition;
+      destruct (step q None) eqn:?; simpl in *; intuition.
+    + destruct (step p None) eqn:?; simpl in *; intuition;
+      destruct (step q None) eqn:?; simpl in *; intuition.
+    + destruct (step p (Some a)) eqn:?; simpl in *; intuition;
+      destruct (step q (Some a)) eqn:?; simpl in *; intuition.
       * rewrite run_and in H.
         now firstorder.
       * rewrite run_and, run_or in H.
         now firstorder.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-      destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (step p (Some a)) eqn:?; simpl in *; intuition;
+      destruct (step q (Some a)) eqn:?; simpl in *; intuition.
       * rewrite run_and in H.
         now firstorder.
       * now firstorder.
@@ -429,16 +400,16 @@ Proof.
   - generalize dependent p.
     generalize dependent q.
     induction s; simpl; intros; intuition.
-    + destruct (compile p None) eqn:?; simpl in *; intuition;
-      destruct (compile q None) eqn:?; simpl in *; intuition.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-      destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (step p None) eqn:?; simpl in *; intuition;
+      destruct (step q None) eqn:?; simpl in *; intuition.
+    + destruct (step p (Some a)) eqn:?; simpl in *; intuition;
+      destruct (step q (Some a)) eqn:?; simpl in *; intuition.
       * rewrite run_and, run_or.
         now firstorder.
       * rewrite run_or.
         now firstorder.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-      destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (step p (Some a)) eqn:?; simpl in *; intuition;
+      destruct (step q (Some a)) eqn:?; simpl in *; intuition.
       * rewrite run_and.
         now firstorder.
       * rewrite run_and, run_or.
@@ -448,7 +419,7 @@ Proof.
 Qed.
 
 Lemma run_correct (l : Formula) (s : list S.a) :
- denote l s <-> passes (run l s).
+  matches l s <-> passes (run l s).
 Proof.
   generalize dependent s.
   induction l; intros.

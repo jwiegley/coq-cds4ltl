@@ -364,7 +364,26 @@ Proof.
     lia.
 Qed.
 
-Theorem (* NEW *) until_and_not p q : p U q ∧ ¬q ⟹ (p ∧ ¬q) U (p ∧ ¬q ∧ ◯ q).
+Theorem (* NEW *) looped p : ◯ ¬p U p ⟹ p.
+Proof.
+  unfold next, not, Complement, Logic.not.
+  repeat intro.
+  inv H.
+  inv H0.
+  unfold In in *.
+  setoid_rewrite from_plus in H1.
+  simpl plus in H1.
+  destruct (Compare_dec.le_lt_dec x0 0).
+    assert (x0 = 0) by lia.
+    subst.
+    exact H.
+  assert (Nat.pred x0 < x0) by lia.
+  specialize (H1 _ H0).
+  rewrite PeanoNat.Nat.succ_pred_pos in H1; [|lia].
+  contradiction.
+Qed.
+
+Theorem (* NEW *) until_and_not_ p q : p U q ∧ ¬q ⟹ (p ∧ ¬q) U (p ∧ ¬q ∧ ◯ q).
 Proof.
   repeat intro.
   inv H.
@@ -418,23 +437,38 @@ Proof.
         split; auto.
 Qed.
 
-Theorem (* 13 *) until_right_or p q r : (p U r) ∨ (q U r) ⟹ (p ∨ q) U r.
+Theorem (* 12 *) until_left_or p q r : p U (q ∨ r) ≈ (p U q) ∨ (p U r).
 Proof.
-  repeat intro; unfold In in *.
+  split; repeat intro; unfold In in *.
   unfold until, or in *.
-  destruct H; unfold In in *.
   - destruct H.
     destruct H.
-    exists x0.
-    split; auto; intros.
-    left.
-    now intuition.
+    inv H.
+    + left.
+      unfold In in *.
+      exists x0.
+      now split.
+    + right.
+      unfold In in *.
+      exists x0.
+      now split.
   - destruct H.
     destruct H.
-    exists x0.
-    split; auto; intros.
-    right.
-    now intuition.
+    destruct H.
+    + unfold until.
+      exists x0.
+      split.
+      * now left.
+      * intros.
+        now apply H0.
+    + destruct H.
+      destruct H.
+      unfold until.
+      exists x0.
+      split.
+      * now right.
+      * intros.
+        now apply H0.
 Qed.
 
 Theorem (* 14 *) until_left_and p q r : p U (q ∧ r) ⟹ (p U q) ∧ (p U r).
@@ -449,24 +483,6 @@ Proof.
     now split.
   - exists x0.
     now split.
-Qed.
-
-Theorem (* NEW *) until_or_until p q r s : (p ∧ r) U (q ∨ s) ⟹ (p U q) ∨ (r U s).
-Proof.
-  repeat intro.
-  inv H.
-  inv H0.
-  inv H.
-  - left.
-    exists x0.
-    split; auto; intros.
-    specialize (H1 _ H).
-    now inv H1.
-  - right.
-    exists x0.
-    split; auto; intros.
-    specialize (H1 _ H).
-    now inv H1.
 Qed.
 
 Theorem (* NEW *) until_and_until p q r s :

@@ -41,12 +41,12 @@ Axiom (* 9 *)   next_until : ∀ p q, ◯ (p U q) ≈ (◯ p) U (◯ q).
 
 Axiom (* 10 *)  until_expand  : ∀ p q, p U q ≈ q ∨ (p ∧ ◯ (p U q)).
 Axiom (* 11 *)  until_false   : ∀ p,   p U ⊥ ≈ ⊥.
-Axiom (* NEW *) until_and_not : ∀ p q, p U q ∧ ¬q ⟹ (p ∧ ¬q) U (p ∧ ¬q ∧ ◯ q).
+Axiom (* NEW *) looped        : ∀ p,   ◯ ¬p U p ⟹ p.
+(* Axiom (* NEW *) until_and_not : ∀ p q, p U q ∧ ¬q ⟹ (p ∧ ¬q) U (p ∧ ¬q ∧ ◯ q). *)
 
-Axiom (* 13 *)  until_right_or : ∀ p q r, (p U r) ∨ (q U r) ⟹ (p ∨ q) U r.
+Axiom (* 12 *)  until_left_or  : ∀ p q r, p U (q ∨ r) ≈  (p U q) ∨ (p U r).
 Axiom (* 14 *)  until_left_and : ∀ p q r, p U (q ∧ r) ⟹ (p U q) ∧ (p U r).
 
-Axiom (* NEW *) until_or_until  : ∀ p q r s, (p ∧ r) U (q ∨ s) ⟹ (p U q) ∨ (r U s).
 Axiom (* NEW *) until_and_until : ∀ p q r s,
   (p U q) ∧ (r U s) ⟹ (p ∧ r) U ((q ∧ r) ∨ (p ∧ s) ∨ (q ∧ s)).
 
@@ -176,29 +176,51 @@ Qed.
 (37) Right absorption of U : (p U q) U q ≡ p U q
 *)
 
+Theorem (* NEW *) and_until_and p q r s : (p ∧ r) U (q ∧ s) ⟹ (p U q) ∧ (r U s).
+Proof.
+  rewrite until_left_and.
+  rewrite (and_proj p) at 1.
+  rewrite (and_proj_r r) at 1.
+  reflexivity.
+Qed.
+
+Theorem (* NEW *) and_until_or p q r s : (p ∧ r) U (q ∨ s) ⟹ (p U q) ∨ (r U s).
+Proof.
+  intros.
+  rewrite <- (and_proj p r) at 2.
+  rewrite <- (and_proj r p) at 3.
+  rewrite (and_comm r p).
+  rewrite <- until_left_or.
+  reflexivity.
+Qed.
+
 Theorem (* NEW *) until_or_until_ext p q r s :
   (p ∧ r) U ((q ∨ r) ∧ (p ∨ s) ∧ (q ∨ s)) ⟹ (p U q) ∨ (r U s).
 Proof.
   intros.
-  rewrite <- until_or_until.
-  rewrite (and_proj_r (q ∨ s)).
-  now rewrite (and_proj_r (q ∨ s)).
+  rewrite <- (and_proj p r) at 3.
+  rewrite <- (and_proj r p) at 4.
+  rewrite (and_comm r p).
+  rewrite <- until_left_or.
+  rewrite (and_proj_r (_ ∨ _)).
+  rewrite (and_proj_r (_ ∨ _)).
+  reflexivity.
 Qed.
 
-Theorem (* NEW *) until_and_until_ext p q r s : (p U q) ∧ (r U s) ⟹ (p ∧ r) U (q ∨ s).
+Theorem (* 13 *)  until_right_or : ∀ p q r, (p U r) ∨ (q U r) ⟹ (p ∨ q) U r.
 Proof.
   intros.
-  rewrite until_and_until.
-  rewrite (and_proj q).
-  rewrite (and_proj_r s).
-  rewrite (and_proj_r s).
+  rewrite (or_inj p q) at 1.
+  rewrite (or_inj q p) at 2.
+  rewrite (or_comm q p).
+  rewrite <- until_left_or.
   now rewrite or_idem.
 Qed.
 
-Theorem (* 12 *)  until_left_or p q r : p U (q ∨ r) ≈ (p U q) ∨ (p U r).
+Theorem (* 12 *)  until_left_or_alt p q r : p U (q ∨ r) ≈ (p U q) ∨ (p U r).
 Proof.
   split.
-  - rewrite <- until_or_until.
+  - rewrite <- and_until_or.
     now rewrite and_idem.
   - rewrite <- (or_idem p) at 3.
     rewrite <- until_right_or.
@@ -206,17 +228,28 @@ Proof.
     now rewrite <- (or_inj_r r) at 1.
 Qed.
 
-Theorem (* NEW *)  until_left_and_r p q r : (p U q) ∧ (p U r) ⟹ p U (q ∨ r).
+Theorem (* NEW *)  until_and_right_or p q r : (p U r) ∧ (q U r) ⟹ p U (q ∨ r).
 Proof.
-  rewrite until_and_until.
-  boolean.
   rewrite and_proj.
+  now rewrite <- or_inj_r.
+Qed.
+
+Theorem (* NEW *)  until_and_left_or p q r : (p U r) ∧ (q U r) ⟹ (p ∨ q) U r.
+Proof.
+  rewrite and_proj.
+  now rewrite <- or_inj.
+Qed.
+
+Theorem (* NEW *)  until_and_or_right p q r : (p U q) ∧ (p U r) ⟹ p U (q ∨ r).
+Proof.
+  rewrite and_proj.
+  now rewrite <- or_inj.
+Qed.
+
+Theorem (* NEW *)  until_and_or_left p q r : (p U q) ∧ (p U r) ⟹ (p ∨ q) U r.
+Proof.
   rewrite and_proj_r.
-  rewrite and_proj.
-  apply until_respects_implies; [reflexivity|].
-  rewrite or_comm.
-  rewrite or_assoc.
-  now boolean.
+  now rewrite <- or_inj.
 Qed.
 
 Theorem (* 15 *) until_right_and p q r : (p ∧ q) U r ≈ (p U r) ∧ (q U r).
@@ -233,15 +266,37 @@ Proof.
     now boolean.
 Qed.
 
-Theorem (* NEW *)  until_right_or_r p q r : (p ∧ q) U r ⟹ (p U r) ∨ (q U r).
+Theorem (* NEW *) until_and_until_ext p q r s : (p U q) ∧ (r U s) ⟹ (p ∧ r) U (q ∨ s).
 Proof.
-  rewrite <- until_or_until_ext.
-  boolean.
-  rewrite (and_comm _ r).
-  rewrite (or_comm _ r).
-  rewrite and_absorb.
-  rewrite (and_comm _ r).
-  now rewrite and_absorb.
+  intros.
+  rewrite until_right_and.
+  rewrite <- (or_inj q) at 1.
+  rewrite <- (or_inj_r s).
+  reflexivity.
+Qed.
+
+Theorem (* NEW *)  until_or_right_and p q r : p U (q ∧ r) ⟹ (p U r) ∨ (q U r).
+Proof.
+  rewrite and_proj_r.
+  now rewrite <- or_inj.
+Qed.
+
+Theorem (* NEW *)  until_or_left_and p q r : (p ∧ q) U r ⟹ (p U r) ∨ (q U r).
+Proof.
+  rewrite and_proj_r.
+  now rewrite <- or_inj_r.
+Qed.
+
+Theorem (* NEW *)  until_or_and_right p q r : p U (q ∧ r) ⟹ (p U q) ∨ (p U r).
+Proof.
+  rewrite and_proj_r.
+  now rewrite <- or_inj_r.
+Qed.
+
+Theorem (* NEW *)  until_or_and_left p q r : (p ∧ q) U r ⟹ (p U q) ∨ (p U r).
+Proof.
+  rewrite and_proj.
+  now rewrite <- or_inj_r.
 Qed.
 
 Theorem (* 16 *) until_impl_order p q r : (p U q) ∧ (¬q U r) ⟹ p U r.
@@ -412,23 +467,6 @@ Proof.
   rewrite or_respects.
   rewrite until_28.
   now rewrite or_idem.
-Qed.
-
-Theorem (* NEW *) looped p : (p ⇒ ◯ p) U ¬p ⟹ ¬p.
-Proof.
-  rewrite <- (or_false (¬p)) at 3.
-  apply and_impl_iff.
-  rewrite <- (not_not p) at 4.
-  rewrite until_and_not.
-  rewrite not_not.
-  rewrite next_not.
-  rewrite and_or_r.
-  rewrite <- and_assoc.
-  rewrite (and_comm (p ⇒ ◯ p) p).
-  rewrite and_apply.
-  rewrite and_assoc.
-  boolean.
-  now apply until_false.
 Qed.
 
 End MinimalLinearTemporalLogicFacts.

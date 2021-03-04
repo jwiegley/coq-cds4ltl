@@ -150,6 +150,11 @@ Admitted.
 Theorem (* 11 *) until_false p : p U ⊥ ≈ ⊥.
 Proof. now firstorder. Qed.
 
+Theorem (* NEW *) looped p : ◯ ¬p U p ⟹ p.
+Proof.
+  repeat intro; firstorder.
+Admitted.
+
 Theorem (* NEW *) until_and_not p q : p U q ∧ ¬q ⟹ (p ∧ ¬q) U (p ∧ ¬q ∧ ◯ q).
 Proof.
   repeat intro; firstorder.
@@ -157,13 +162,10 @@ Proof.
   split; auto.
 Admitted.
 
-Theorem (* 13 *) until_right_or p q r : (p U r) ∨ (q U r) ⟹ (p ∨ q) U r.
+Theorem (* 12 *) until_left_or p q r : p U (q ∨ r) ≈ (p U q) ∨ (p U r).
 Proof. now firstorder. Qed.
 
 Theorem (* 14 *) until_left_and p q r : p U (q ∧ r) ⟹ (p U q) ∧ (p U r).
-Proof. now firstorder. Qed.
-
-Theorem (* NEW *) until_or_until p q r s : (p ∧ r) U (q ∨ s) ⟹ (p U q) ∨ (r U s).
 Proof. now firstorder. Qed.
 
 Theorem (* NEW *) until_and_until p q r s :
