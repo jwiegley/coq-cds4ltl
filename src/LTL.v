@@ -290,27 +290,6 @@ Proof.
     now rewrite and_absorb.
 Qed.
 
-(*
-Theorem (* 10 *) until_expand p q : p U q ≈ q ∨ (p ∧ ◯ (p U q)).
-Proof.
-  split.
-  - pose proof (until_and_not p q).
-    apply and_impl_iff in H.
-    rewrite not_not in H.
-    rewrite H at 1; clear H.
-    rewrite and_until_and.
-    rewrite until_idem.
-    rewrite next_until.
-    rewrite (and_proj_r (◯ q)).
-    admit.
-  - pose proof (until_and_not p q).
-    apply and_impl_iff in H.
-    rewrite not_not in H.
-    rewrite H at 1; clear H.
-    admit.
-Abort.
-*)
-
 Theorem (* NEW *) until_and_not p q : p U q ∧ ¬q ⟹ (p ∧ ¬q) U (p ∧ ¬q ∧ ◯ q).
 Proof.
   rewrite <- (not_not (◯ q)).

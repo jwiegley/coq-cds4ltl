@@ -926,17 +926,10 @@ Qed.
 Theorem (* 11 *) until_false p : p U ⊥ ≈ ⊥.
 Proof. now induct. Qed.
 
-Theorem (* NEW *) until_and_not p q : p U q ∧ ¬q ⟹ (p ∧ ¬q) U (p ∧ ¬q ∧ ◯ q).
+Theorem (* NEW *) looped p : ◯ ¬p U p ⟹ p.
 Proof.
-  unfold until.
-  repeat intro; simpl in *.
-  induction s; intuition.
-  - contradiction (matches_not_false H0 H1).
-  - contradiction (matches_not_false H H1).
-  - destruct (classic (matches q s)).
-    + now firstorder.
-    + apply matches_negate in H.
-      now firstorder.
+  induct.
+  contradiction (denote_not_false H1 H).
 Qed.
 
 Theorem (* 13 *) until_right_or p q r : (p U r) ∨ (q U r) ⟹ (p ∨ q) U r.

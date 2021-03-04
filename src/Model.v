@@ -383,60 +383,6 @@ Proof.
   contradiction.
 Qed.
 
-Theorem (* NEW *) until_and_not_ p q : p U q ∧ ¬q ⟹ (p ∧ ¬q) U (p ∧ ¬q ∧ ◯ q).
-Proof.
-  repeat intro.
-  inv H.
-  inv H0.
-  inv H.
-  generalize dependent x.
-  induction x0; intros; [contradiction|].
-  destruct (classic (from 1 x ∈ q)).
-  - exists 0.
-    split.
-    + split.
-      * apply H2; lia.
-      * split.
-        ** exact H1.
-        ** exact H.
-    + lia.
-  - specialize (IHx0 (from 1 x) H).
-    rewrite from_plus in IHx0.
-    rewrite PeanoNat.Nat.add_1_r in IHx0.
-    assert (∀ i : nat, i < x0 → [from 1 x, i] ⊨ p). {
-      intros.
-      rewrite from_plus.
-      rewrite PeanoNat.Nat.add_1_r.
-      apply H2; lia.
-    }
-    specialize (IHx0 H0 H3).
-    clear -IHx0 H1 H2.
-    inv IHx0.
-    inv H.
-    inv H0.
-    inv H4.
-    setoid_rewrite from_plus in H3.
-    setoid_rewrite PeanoNat.Nat.add_1_r in H3.
-    rewrite from_plus in *.
-    rewrite PeanoNat.Nat.add_1_r in *.
-    unfold next, In in H5.
-    exists (S x1).
-    split.
-    + split; auto.
-      split; auto.
-    + intros.
-      destruct (Compare_dec.le_lt_dec i 0).
-      * assert (i = 0) by lia.
-        subst.
-        split; auto.
-        apply H2; lia.
-      * assert (Nat.pred i < x1) by lia.
-        specialize (H3 (Nat.pred i) H6).
-        inv H3.
-        rewrite PeanoNat.Nat.succ_pred_pos in *; try lia.
-        split; auto.
-Qed.
-
 Theorem (* 12 *) until_left_or p q r : p U (q ∨ r) ≈ (p U q) ∨ (p U r).
 Proof.
   split; repeat intro; unfold In in *.

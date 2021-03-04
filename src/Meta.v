@@ -155,13 +155,6 @@ Proof.
   repeat intro; firstorder.
 Admitted.
 
-Theorem (* NEW *) until_and_not p q : p U q ∧ ¬q ⟹ (p ∧ ¬q) U (p ∧ ¬q ∧ ◯ q).
-Proof.
-  repeat intro; firstorder.
-  exists (Nat.pred x).
-  split; auto.
-Admitted.
-
 Theorem (* 12 *) until_left_or p q r : p U (q ∨ r) ≈ (p U q) ∨ (p U r).
 Proof. now firstorder. Qed.
 

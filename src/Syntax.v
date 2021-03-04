@@ -1032,19 +1032,6 @@ Proof.
   contradiction (denote_not_false H1 H).
 Qed.
 
-Theorem (* NEW *) until_and_not_ p q : p U q ∧ ¬q ⟹ (p ∧ ¬q) U (p ∧ ¬q ∧ ◯ q).
-Proof.
-  unfold until.
-  repeat intro; simpl in *.
-  induction s; intuition.
-  - contradiction (denote_not_false H0 H1).
-  - contradiction (denote_not_false H H1).
-  - destruct (classic (denote q s)).
-    + now firstorder.
-    + apply denote_negate in H.
-      now firstorder.
-Qed.
-
 Theorem (* 12 *) until_left_or p q r : p U (q ∨ r) ≈ (p U q) ∨ (p U r).
 Proof. now induct. Qed.
 
