@@ -6,7 +6,6 @@ src/LTL.v
 src/Same_set.v
 src/Stream.v
 src/Model.v
-src/Meta.v
 src/Syntax.v
 src/Step.v
 src/Machine.v

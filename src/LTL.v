@@ -1588,7 +1588,7 @@ Proof.
     + rewrite <- !or_inj_r.
       rewrite law_72.
       now rewrite and_idem.
-Admitted.
+Abort.
 
 Theorem (* 165 *) law_165 p q : □ ((p ∨ □ q) ∧ (□ p ∨ q)) ≈ □ p ∨ □ q.
 Proof.
