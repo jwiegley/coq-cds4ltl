@@ -10,7 +10,9 @@ Require Import
   Coq.Classes.Morphisms
   Same_set
   Stream
+  MinBool
   Bool
+  MinLTL
   LTL.
 
 Module Type StreamType.
@@ -19,13 +21,12 @@ Parameter a : Type.              (* The type of entries in the trace *)
 
 End StreamType.
 
-Module StreamLTLW (S : StreamType) <: LinearTemporalLogicW.
+Module StreamMinBool (S : StreamType) <: MinimalBooleanLogic.
 
 Definition t := Ensemble (Stream S.a).
 
 Infix    "∪"     := (Union _)        (at level 85, right associativity).
 Notation "∅"     := (Empty_set _)    (at level 0, no associativity).
-Infix    "∩"     := (Intersection _) (at level 80, right associativity).
 Notation "p ∈ q" := (In _ q p)       (at level 88, no associativity).
 Notation "p ⊆ q" := (Included _ q p) (at level 89, no associativity).
 
@@ -33,7 +34,6 @@ Definition not        := Complement (Stream S.a).
 Definition or         := Union (Stream S.a).
 Definition true       := Full_set (Stream S.a).
 Definition false      := Empty_set (Stream S.a).
-Definition and        := Intersection (Stream S.a).
 Definition implies    := Included (Stream S.a).
 Definition equivalent := Same_set (Stream S.a).
 
@@ -69,16 +69,6 @@ Next Obligation.
     now apply H0.
 Qed.
 
-Program Instance and_respects_implies : Proper (implies ==> implies ==> implies) and.
-Next Obligation.
-  unfold implies, and.
-  repeat intro.
-  destruct H1; unfold Included, In in *.
-  constructor.
-  - now apply H.
-  - now apply H0.
-Qed.
-
 Declare Scope boolean_scope.
 Bind Scope boolean_scope with t.
 Delimit Scope boolean_scope with boolean.
@@ -91,34 +81,6 @@ Notation "⊤"      := true            (at level 0, no associativity) : boolean_
 Notation "⊥"      := false           (at level 0, no associativity) : boolean_scope.
 Infix    "⟹"     := implies         (at level 99, right associativity) : boolean_scope.
 Infix    "≈"      := equivalent      (at level 90, no associativity) : boolean_scope.
-Infix    "∧"      := and             (at level 80, right associativity) : boolean_scope.
-Notation "p ≡ q"  := (p ⇒ q ∧ q ⇒ p) (at level 89, right associativity, only parsing) : boolean_scope.
-
-Theorem or_inj p q : p ⟹ p ∨ q.
-Proof. repeat intro; now left. Qed.
-
-Theorem true_def p : p ∨ ¬p ≈ ⊤.
-Proof.
-  split; intros.
-  - constructor.
-  - repeat intro.
-    pose proof (classic (In _ p x)).
-    destruct H0.
-      now left.
-    now right.
-Qed.
-
-Theorem false_def p : ¬(p ∨ ¬p) ≈ ⊥.
-Proof.
-  split; intros.
-  - rewrite true_def.
-    repeat intro.
-    destruct H.
-    now constructor.
-  - rewrite true_def.
-    repeat intro.
-    contradiction.
-Qed.
 
 Theorem or_comm p q : p ∨ q ≈ q ∨ p.
 Proof.
@@ -134,6 +96,7 @@ Qed.
 
 Ltac inv H := inversion H; subst; clear H.
 
+(** These next three theorems are missing from the standard library. *)
 Theorem Intersection_Union {A : Type} p q :
   Same_set A (Intersection A p q)
              (Complement A (Union A (Complement A p) (Complement A q))).
@@ -147,7 +110,7 @@ Proof.
     intro.
     apply H.
     unfold In, Complement, Logic.not in H0.
-    assert (In A p x /\ In A q x → False).
+    assert (In A p x ∧ In A q x → False).
       intros.
       apply H0.
       now constructor.
@@ -157,7 +120,7 @@ Proof.
     now right.
 Qed.
 
-Theorem Union_Complement {A : Type} p q :
+Theorem Complement_Union {A : Type} p q :
   Same_set A (Complement A (Union A p q))
              (Intersection A (Complement A p) (Complement A q)).
 Proof.
@@ -168,7 +131,7 @@ Proof.
     now rewrite !Complement_Complement in H.
 Qed.
 
-Theorem Intersection_Complement {A : Type} p q :
+Theorem Complement_Intersection {A : Type} p q :
   Same_set A (Complement A (Intersection A p q))
              (Union A (Complement A p) (Complement A q)).
 Proof.
@@ -177,6 +140,82 @@ Proof.
     now rewrite !Complement_Complement in H.
   - destruct H0.
     destruct H; now apply H.
+Qed.
+
+Theorem Excluded_Middle {A : Type} p :
+  Same_set A (p ∪ Complement A p) (Full_set A).
+Proof.
+  split; repeat intro.
+  - now constructor.
+  - destruct (classic (In A p x)).
+    + now left.
+    + now right.
+Qed.
+
+Corollary Complement_Full {A : Type} :
+  Same_set A (Complement A (Full_set A)) (Empty_set A).
+Proof.
+  split; repeat intro.
+  - elimtype False.
+    apply H.
+    now constructor.
+  - contradiction.
+Qed.
+
+Theorem huntington p q : ¬(¬p ∨ ¬q) ∨ ¬(¬p ∨ q) ≈ p.
+Proof.
+  unfold not, or.
+  split; intros.
+  - rewrite !Complement_Union.
+    rewrite !Complement_Complement.
+    rewrite <- Distributivity.
+    rewrite Excluded_Middle.
+    repeat intro.
+    now inv H.
+  - rewrite !Complement_Union.
+    rewrite !Complement_Complement.
+    rewrite <- Distributivity.
+    rewrite Excluded_Middle.
+    repeat intro.
+    split; auto.
+    now constructor.
+Qed.
+
+Theorem or_inj p q : p ⟹ p ∨ q.
+Proof. repeat intro; now left. Qed.
+
+Theorem true_def p : p ∨ ¬p ≈ ⊤.
+Proof. now apply Excluded_Middle. Qed.
+
+Theorem false_def p : ¬(p ∨ ¬p) ≈ ⊥.
+Proof.
+  unfold or, not.
+  rewrite Excluded_Middle.
+  now apply Complement_Full.
+Qed.
+
+End StreamMinBool.
+
+Module StreamBool (S : StreamType) <: BooleanLogic.
+
+Module MB := StreamMinBool S.
+Include MB.
+
+Infix    "∩"     := (Intersection _) (at level 80, right associativity).
+
+Definition and        := Intersection (Stream S.a).
+
+Infix    "∧"      := and             (at level 80, right associativity) : boolean_scope.
+Notation "p ≡ q"  := (p ⇒ q ∧ q ⇒ p) (at level 89, right associativity, only parsing) : boolean_scope.
+
+Program Instance and_respects_implies : Proper (implies ==> implies ==> implies) and.
+Next Obligation.
+  unfold implies, and.
+  repeat intro.
+  destruct H1; unfold Included, In in *.
+  constructor.
+  - now apply H.
+  - now apply H0.
 Qed.
 
 Theorem and_def p q : p ∧ q ≈ ¬(¬p ∨ ¬q).
@@ -188,36 +227,31 @@ Proof.
     exact H.
 Qed.
 
-Theorem huntington p q : ¬(¬p ∨ ¬q) ∨ ¬(¬p ∨ q) ≈ p.
-Proof.
-  split; intros.
-  - rewrite <- (Complement_Complement _ q) at 2.
-    rewrite <- !and_def.
-    unfold or.
-    rewrite <- Distributivity.
-    rewrite true_def.
-    repeat intro.
-    now destruct H.
-  - rewrite <- (Complement_Complement _ q) at 2.
-    rewrite <- !and_def.
-    unfold or.
-    rewrite <- Distributivity.
-    rewrite true_def.
-    repeat intro.
-    constructor; auto.
-    now constructor.
-Qed.
+End StreamBool.
 
-Definition next : t -> t := λ p σ, [σ, 1] ⊨ p.
+Module StreamMinLTL (S : StreamType) <: MinimalLinearTemporalLogic.
+
+Module B := StreamBool S.
+Include B.
+
+Definition next : t → t := λ p σ, [σ, 1] ⊨ p.
+Definition until : t → t → t :=
+  λ p q σ, ∃ k, [σ, k] ⊨ q /\ ∀ i, i < k → [σ, i] ⊨ p.
+
+Declare Scope ltl_scope.
+Bind Scope ltl_scope with t.
+Delimit Scope ltl_scope with ltl.
+Open Scope boolean_scope.
+Open Scope ltl_scope.
+
+Notation "◯ p"     := (next p)    (at level 75, right associativity) : ltl_scope.
+Notation "p 'U' q" := (until p q) (at level 79, right associativity) : ltl_scope.
 
 Program Instance next_respects_implies : Proper (implies ==> implies) next.
 Next Obligation.
   repeat intro.
   apply H, H0.
 Qed.
-
-Definition until : t -> t -> t :=
-  λ p q σ, ∃ k, [σ, k] ⊨ q /\ ∀ i, i < k -> [σ, i] ⊨ p.
 
 Program Instance until_respects_implies :
   Proper (implies ==> implies ==> implies) until.
@@ -231,58 +265,6 @@ Next Obligation.
   - intros.
     apply H.
     now apply H2.
-Qed.
-
-Declare Scope ltl_scope.
-Bind Scope ltl_scope with t.
-Delimit Scope ltl_scope with ltl.
-Open Scope boolean_scope.
-Open Scope ltl_scope.
-
-Notation "◯ p"     := (next p)    (at level 75, right associativity) : ltl_scope.
-Notation "p 'U' q" := (until p q) (at level 79, right associativity) : ltl_scope.
-
-Theorem next_semantics : ∀ σ j p, [σ, j] ⊨ (◯ p) <-> [σ, j + 1] ⊨ p.
-Proof.
-  unfold next.
-  split; intros.
-  - rewrite PeanoNat.Nat.add_comm.
-    now rewrite <- from_plus.
-  - rewrite PeanoNat.Nat.add_comm in H.
-    now rewrite <- from_plus in H.
-Qed.
-
-Theorem until_semantics : ∀ σ j p q,
-  [σ, j] ⊨ (p U q) <->
-  ∃ k, k ≥ j /\ [σ, k] ⊨ q /\ ∀ i, j ≤ i -> i < k -> [σ, i] ⊨ p.
-Proof.
-  unfold until.
-  repeat setoid_rewrite from_plus.
-  split; intros.
-  - destruct H.
-    destruct H.
-    exists (x + j).
-    split.
-      lia.
-    split; auto.
-    intros.
-    specialize (H0 (i - j)).
-    rewrite PeanoNat.Nat.sub_add in H0.
-      apply H0.
-      lia.
-    lia.
-  - destruct H.
-    destruct H.
-    destruct H0.
-    exists (x - j).
-    rewrite PeanoNat.Nat.sub_add.
-      split; auto.
-      intros.
-      specialize (H1 (i + j)).
-      apply H1.
-        lia.
-      lia.
-    lia.
 Qed.
 
 Theorem (* 1 *) next_not p : ◯ ¬p ≈ ¬◯ p.
@@ -529,7 +511,7 @@ Theorem (* 170 *) not_until p q : ⊤ U ¬p ∧ ¬(p U q) ≈ ¬q U (¬p ∧ ¬q
 Proof.
   split.
   - apply and_impl_iff_.
-    assert (forall P, ¬¬P ≈ P). {
+    assert (∀ P, ¬¬P ≈ P). {
       split; intros;
       unfold not;
       rewrite Complement_Complement;
@@ -640,13 +622,68 @@ Proof.
         now apply H3.
 Qed.
 
-Definition eventually : t -> t := any.
-Definition always     : t -> t := every.
+End StreamMinLTL.
+
+Module StreamMinLTLFacts (S : StreamType).
+
+Module Import ML := StreamMinLTL S.
+
+Theorem next_semantics σ j p : [σ, j] ⊨ (◯ p) ↔ [σ, j + 1] ⊨ p.
+Proof.
+  unfold next.
+  split; intros.
+  - rewrite PeanoNat.Nat.add_comm.
+    now rewrite <- from_plus.
+  - rewrite PeanoNat.Nat.add_comm in H.
+    now rewrite <- from_plus in H.
+Qed.
+
+Theorem until_semantics σ j p q :
+  [σ, j] ⊨ (p U q) ↔ ∃ k, k ≥ j /\ [σ, k] ⊨ q ∧ ∀ i, j ≤ i → i < k → [σ, i] ⊨ p.
+Proof.
+  unfold until.
+  repeat setoid_rewrite from_plus.
+  split; intros.
+  - destruct H.
+    destruct H.
+    exists (x + j).
+    split.
+      lia.
+    split; auto.
+    intros.
+    specialize (H0 (i - j)).
+    rewrite PeanoNat.Nat.sub_add in H0.
+      apply H0.
+      lia.
+    lia.
+  - destruct H.
+    destruct H.
+    destruct H0.
+    exists (x - j).
+    rewrite PeanoNat.Nat.sub_add.
+      split; auto.
+      intros.
+      specialize (H1 (i + j)).
+      apply H1.
+        lia.
+      lia.
+    lia.
+Qed.
+
+End StreamMinLTLFacts.
+
+Module StreamLTLW (S : StreamType) <: LinearTemporalLogicW.
+
+Module ML := StreamMinLTL S.
+Include ML.
+
+Definition eventually : t → t := any.
+Definition always     : t → t := every.
 
 Notation "◇ p" := (eventually p) (at level 75, right associativity) : ltl_scope.
 Notation "□ p" := (always p)     (at level 75, right associativity) : ltl_scope.
 
-Definition wait : t -> t -> t := fun p q => □ p ∨ p U q.
+Definition wait : t → t → t := λ p q, □ p ∨ p U q.
 
 Notation "p 'W' q" := (wait p q) (at level 79, right associativity) : ltl_scope.
 
@@ -696,20 +733,6 @@ Next Obligation.
       now apply H2.
 Qed.
 
-Theorem eventually_semantics : ∀ σ j p, [σ, j] ⊨ ◇ p.
-Proof.
-Admitted.
-
-Theorem always_semantics : ∀ σ j p, [σ, j] ⊨ □ p.
-Proof.
-Admitted.
-
-Theorem wait_semantics : ∀ σ j p q,
-  [σ, j] ⊨ (p U q) <->
-  ∃ k, k ≥ j /\ [σ, k] ⊨ q /\ ∀ i, j ≤ i -> i < k -> [σ, i] ⊨ p.
-Proof.
-Admitted.
-
 Theorem (* 38 *) evn_def p : ◇ p ≈ ⊤ U p.
 Proof.
   unfold eventually, until, any.
@@ -741,19 +764,78 @@ Qed.
 Theorem (* 169 *) wait_def p q : p W q ≈ □ p ∨ p U q.
 Proof. reflexivity. Qed.
 
+End StreamLTLW.
+
+Module StreamLTLWFacts (S : StreamType).
+
+Module Import L := StreamLTLW S.
+Module Import MLF := StreamMinLTLFacts S.
+
+Theorem eventually_semantics σ j p : [σ, j] ⊨ (◇ p) ↔ ∃ k, k ≥ j /\ [σ, k] ⊨ p.
+Proof.
+  split; intros.
+  - inv H.
+    rewrite from_plus in H0.
+    exists (x + j).
+    split; auto.
+    lia.
+  - inv H.
+    destruct H0.
+    exists (x - j).
+    rewrite from_plus.
+    now rewrite PeanoNat.Nat.sub_add.
+Qed.
+
+Theorem always_semantics σ j p : [σ, j] ⊨ (□ p) ↔ ∀ k, k ≥ j → [σ, k] ⊨ p.
+Proof.
+  split; intros.
+  - specialize (H (k - j)).
+    rewrite from_plus in H.
+    now rewrite PeanoNat.Nat.sub_add in H.
+  - intro.
+    rewrite from_plus.
+    apply H.
+    lia.
+Qed.
+
+Theorem wait_semantics σ j p q :
+  [σ, j] ⊨ (p W q) ↔ [σ, j] ⊨ (p U q) ∨ [σ, j] ⊨ □ p.
+Proof.
+  unfold wait.
+  split; intros.
+  - inv H.
+    + right.
+      apply always_semantics; intros.
+      now eapply always_semantics in H0; eauto.
+    + left.
+      apply until_semantics; intros.
+      now eapply until_semantics in H0; eauto.
+  - inv H.
+    + right.
+      apply until_semantics; intros.
+      now eapply until_semantics in H0; eauto.
+    + left.
+      apply always_semantics; intros.
+      now eapply always_semantics in H0; eauto.
+Qed.
+
 Definition F p q := □ (p ⇒ □ q).
 
 Theorem Dummett p : F (F p p) p ⟹ (◇ □ p ⇒ □ p).
 Abort.
 
-End StreamLTLW.
+End StreamLTLWFacts.
 
 Module StreamLTL (S : StreamType) <: LinearTemporalLogic.
 
-Include StreamLTLW S.
+Module LW := StreamLTLW S.
+Include LW.
 
-Definition release        : t -> t -> t := fun p q => q W (q ∧ p).
-Definition strong_release : t -> t -> t := fun p q => q U (q ∧ p).
+Module Import MBF := MinimalBooleanLogicFacts LW.
+Module Import LWF := LinearTemporalLogicWFacts LW.
+
+Definition release        : t → t → t := λ p q, q W (q ∧ p).
+Definition strong_release : t → t → t := λ p q, q U (q ∧ p).
 
 Notation "p 'R' q" := (release p q)        (at level 79, right associativity) : ltl_scope.
 Notation "p 'M' q" := (strong_release p q) (at level 79, right associativity) : ltl_scope.
@@ -777,7 +859,18 @@ Qed.
 Theorem release_def p q : p R q ≈ ¬(¬p U ¬q).
 Proof.
   unfold release, wait.
-Admitted.
+  assert (q ∧ p ≈ p ∧ q). {
+    split; repeat intro.
+    - destruct H.
+      now constructor.
+    - destruct H.
+      now constructor.
+  }
+  rewrite H.
+  rewrite law_173.
+  rewrite !not_not.
+  now rewrite wait_def.
+Qed.
 
 Theorem strong_release_def p q : p M q ≈ q U (p ∧ q).
 Proof.
@@ -796,16 +889,13 @@ Qed.
 
 End StreamLTL.
 
-Require Import
-  Coq.Classes.SetoidClass.
-
 Module DynamicLTL (S : StreamType).
 
 Module Import L := StreamLTL S.
 
-Definition examine : (S.a -> t) -> t := fun f s => f (head s) s.
+Definition examine : (S.a → t) → t := λ f s, f (head s) s.
 
-Notation "'Λ' x .. y , t" := (examine (fun x => .. (fun y => t) ..))
+Notation "'Λ' x .. y , t" := (examine (λ x, .. (λ y, t) ..))
   (at level 200, x binder, y binder, right associativity,
   format "'[  ' '[  ' 'Λ'  x  ..  y ']' ,  '/' t ']'").
 
