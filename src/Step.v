@@ -1,5 +1,6 @@
 Require Import
   Coq.Program.Program
+  Coq.Unicode.Utf8
   Coq.Classes.Morphisms
   Coq.Lists.List
   Model
@@ -448,7 +449,7 @@ Proof.
 Qed.
 
 Lemma run_correct (l : Formula) (s : list S.a) :
- denote l s <-> passes (run l s).
+ matches l s <-> passes (run l s).
 Proof.
   generalize dependent s.
   induction l; intros.
@@ -489,10 +490,10 @@ Proof.
     apply run_until in H.
     now induction s; firstorder.
   - split; intros.
-      apply run_release.
+      apply run_wait.
       simpl.
       now induction s; firstorder.
-    apply run_release in H.
+    apply run_wait in H.
     now induction s; firstorder.
   - split; intros.
       apply run_always.
@@ -507,10 +508,10 @@ Proof.
     apply run_eventually in H.
     now induction s; firstorder.
   - split; intros.
-      apply run_wait.
+      apply run_release.
       simpl.
       now induction s; firstorder.
-    apply run_wait in H.
+    apply run_release in H.
     now induction s; firstorder.
   - split; intros.
       apply run_strong_release.
@@ -520,22 +521,38 @@ Proof.
     now induction s; firstorder.
 Qed.
 
-(*
-Section Examples.
+End LTLStep.
+
+Require Import Coq.Arith.PeanoNat.
+
+Module StepExamples.
+
+Module Import S := LTLStep NatStream.
+Import S.LTL.
 
 Import ListNotations.
 
-Open Scope list_scope.
+Definition num (n : nat) :=
+  Λ x, match x with
+       | Some x => if x =? n then ⊤ else ⊥
+       | None => ⊥
+       end.
 
-Goal passes _ (run _ (□ (num 3 ⇒ X (num 4))) [2; 3; 4]).
-  simpl.
-Abort.
+Example ex_match_query  :
+  passes (run (num 1 ∧ ◯ (num 2)) [1; 2]).
+Proof. constructor. Qed.
 
-Goal passes _ (run _ (□ (num 3 ⇒ ◇ (num 8))) [1; 2; 3; 4; 5; 6; 7; 8; 9]).
-  simpl.
-Abort.
+Example ex_match_series :
+  passes (run (series [num 1; num 2]) [1; 2]).
+Proof. constructor. Qed.
 
-End Examples.
-*)
+Example ex_match_sample1 :
+  passes (run (◇ (num 3 ⇒ ◇ (num 8))) [1; 2; 3; 4; 5; 6; 7; 8; 9]).
+Proof. constructor. Qed.
 
-End LTLStep.
+Example ex_match_sample2 :
+  passes (run (◇ (if_then (λ n, n =? 3) (λ n, ◇ (num (n + 5)))))
+              [1; 2; 3; 4; 5; 6; 7; 8; 9]).
+Proof. constructor. Qed.
+
+End StepExamples.

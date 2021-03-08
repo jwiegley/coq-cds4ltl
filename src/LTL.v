@@ -36,8 +36,8 @@ End LinearTemporalLogicW.
 Module LinearTemporalLogicWFacts (L : LinearTemporalLogicW).
 
 Import L.
-Module Import MLTLW := MinimalLinearTemporalLogicFacts L.
-Module Import BFW := MLTLW.BF.
+Module Import MLTL := MinimalLinearTemporalLogicFacts L.
+Module Import BFW := MLTL.BF.
 Module Import MBFW := BFW.MBF.
 
 #[local] Obligation Tactic := solve [ one_arg | two_arg ].
@@ -222,7 +222,7 @@ Qed.
 *)
 
 (** (88) is effectively (170) in another form. *)
-Corollary (* 88 *) law_88_strong p q : □ p ∧ ◇ q ⟹ p U (p ∧ q).
+Theorem (* 88 *) law_88_strong p q : □ p ∧ ◇ q ⟹ p U (p ∧ q).
 Proof.
   rewrite always_def.
   rewrite <- (law_42 (¬q)).
@@ -241,8 +241,8 @@ Proof.
     rewrite (and_proj (p ∧ r) q).
     rewrite (and_proj (p ∧ r) r).
     now rewrite !or_idem.
+  rewrite <- A; clear A.
 
-  rewrite <- A.
   rewrite <- law_88_strong.
   rewrite <- (law_42 q).
   rewrite and_assoc.
@@ -262,7 +262,9 @@ Theorem (* 190 *) law_190_early p q : p U q ≈ (p ∨ q) U q.
 Proof.
   split.
   - now rewrite <- or_inj.
-  - assert (A : ¬(p U q) ⟹ ⊤ U q ⇒ ¬ q U (¬ p ∧ ¬ q)).
+  - rewrite <- (not_not (p U q)).
+
+    assert (A : ¬(p U q) ⟹ ⊤ U q ⇒ ¬ q U (¬ p ∧ ¬ q)).
       rewrite <- (or_idem (p U q)).
       rewrite <- law_84 at 1.
       rewrite <- law_39.
@@ -276,8 +278,8 @@ Proof.
       rewrite not_not.
       rewrite not_until.
       reflexivity.
-    rewrite <- (not_not (p U q)).
     rewrite A; clear A.
+
     assert (B : ¬ (¬ p ∧ ¬ q) U (q ∧ ¬ (¬ p ∧ ¬ q)) ⟹ ¬ (⊤ U q ⇒ ¬ q U (¬ p ∧ ¬ q))).
       rewrite <- (not_not q) at 2.
       rewrite <- not_until.
@@ -285,6 +287,7 @@ Proof.
       rewrite !not_not.
       reflexivity.
     rewrite <- B; clear B.
+
     rewrite !not_and.
     boolean.
     rewrite or_comm.
@@ -355,7 +358,7 @@ Qed.
 
 Theorem (* 75 *) law_75_strong p : p ∧ ◇ ¬p ≈ p U (p ∧ ¬◯ p).
 Proof.
-  split; intros.
+  split.
   - apply and_impl_iff.
     apply contrapositive.
     rewrite not_or.
@@ -380,14 +383,6 @@ Proof.
     now rewrite next_not.
 Qed.
 
-Theorem (* 76 *) law_76 p : □ p ⟹ p.
-Proof.
-  rewrite always_def.
-  apply contrapositive.
-  rewrite not_not.
-  now apply evn_weaken.
-Qed.
-
 Theorem (* 90 *) law_90 p : □ p ∨ ◇ ¬p ≈ ⊤.
 Proof.
   rewrite always_def.
@@ -401,9 +396,9 @@ Proof.
 
   rewrite <- (not_not (p ⇒ □ q ∨ q U r)).
   rewrite (* 54 *) always_def.
-  rewrite (* 38 *) evn_def.
   rewrite !not_or.
   rewrite !not_not.
+  rewrite (* 38 *) evn_def.
   rewrite (* 170 *) not_until.
   rewrite <- (true_and p).
   rewrite (* 90 *) <- (law_90 p).
@@ -411,12 +406,10 @@ Proof.
   rewrite and_or_r.
   rewrite (and_proj (□ p)).
   rewrite (and_comm (◇ ¬p) p).
-
   rewrite (* 83 *) always_and_until.
   rewrite (* 42 *) law_42.
   rewrite (or_inj (¬q) (¬◯ p)) at 1.
   rewrite (or_comm (¬q)) at 1.
-
   rewrite (* 75 *) law_75_strong.
   rewrite (* NEW *) until_and_until.
   rewrite (* 42 *) law_42.
@@ -626,6 +619,14 @@ Proof.
   now rewrite true_and.
 Qed.
 
+Theorem (* 76 *) law_76 p : □ p ⟹ p.
+Proof.
+  rewrite always_def.
+  apply contrapositive.
+  rewrite not_not.
+  now apply evn_weaken.
+Qed.
+
 Corollary (* NEW *) always_apply p q : □ (p ⇒ q) ∧ p ⟹ q.
 Proof.
   rewrite law_76.
@@ -662,7 +663,7 @@ Qed.
 
 Theorem (* NEW *) always_induction_alt p : □ (p ⇒ ◯ p) ∧ p ≈ □ p.
 Proof.
-  split; intros.
+  split.
   - apply and_impl_iff.
     now apply always_induction.
   - rewrite <- or_inj_r.
@@ -1568,6 +1569,26 @@ Proof.
     rewrite law_63.
     now rewrite <- law_152 at 1.
 Qed.
+
+Theorem (* 165 *) law_165_alt p q : □ ((p ∨ □ q) ∧ (□ p ∨ q)) ≈ □ p ∨ □ q.
+Proof.
+  split.
+  - remember (□ ((p ∨ □ q) ∧ (□ p ∨ q))) as s.
+    rewrite <- (not_not (□ p ∨ □ q)).
+    rewrite <- (not_not (□ p)).
+    rewrite <- (not_not (□ q)).
+    rewrite <- and_def.
+    admit.
+  - rewrite law_99.
+    rewrite <- (or_idem (□ (p ∨ □ q) ∧ □ (□ p ∨ q))).
+    apply or_respects_implies.
+    + rewrite <- !or_inj.
+      rewrite law_72.
+      now rewrite and_idem.
+    + rewrite <- !or_inj_r.
+      rewrite law_72.
+      now rewrite and_idem.
+Admitted.
 
 Theorem (* 165 *) law_165 p q : □ ((p ∨ □ q) ∧ (□ p ∨ q)) ≈ □ p ∨ □ q.
 Proof.

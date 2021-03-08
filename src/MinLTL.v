@@ -185,7 +185,6 @@ Qed.
 
 Theorem (* NEW *) and_until_or p q r s : (p ∧ r) U (q ∨ s) ⟹ (p U q) ∨ (r U s).
 Proof.
-  intros.
   rewrite <- (and_proj p r) at 2.
   rewrite <- (and_proj r p) at 3.
   rewrite (and_comm r p).
@@ -196,7 +195,6 @@ Qed.
 Theorem (* NEW *) until_or_until_ext p q r s :
   (p ∧ r) U ((q ∨ r) ∧ (p ∨ s) ∧ (q ∨ s)) ⟹ (p U q) ∨ (r U s).
 Proof.
-  intros.
   rewrite <- (and_proj p r) at 3.
   rewrite <- (and_proj r p) at 4.
   rewrite (and_comm r p).
@@ -206,9 +204,8 @@ Proof.
   reflexivity.
 Qed.
 
-Theorem (* 13 *)  until_right_or : ∀ p q r, (p U r) ∨ (q U r) ⟹ (p ∨ q) U r.
+Theorem (* 13 *) until_right_or p q r : (p U r) ∨ (q U r) ⟹ (p ∨ q) U r.
 Proof.
-  intros.
   rewrite (or_inj p q) at 1.
   rewrite (or_inj q p) at 2.
   rewrite (or_comm q p).
@@ -221,10 +218,9 @@ Proof.
   split.
   - rewrite <- and_until_or.
     now rewrite and_idem.
-  - rewrite <- (or_idem p) at 3.
-    rewrite <- until_right_or.
-    rewrite <- (or_inj q) at 1.
-    now rewrite <- (or_inj_r r) at 1.
+  - rewrite (or_inj q r) at 1.
+    rewrite (or_inj_r r q) at 2.
+    now rewrite or_idem.
 Qed.
 
 Theorem (* NEW *)  until_and_right_or p q r : (p U r) ∧ (q U r) ⟹ p U (q ∨ r).
@@ -253,7 +249,7 @@ Qed.
 
 Theorem (* 15 *) until_right_and p q r : (p ∧ q) U r ≈ (p U r) ∧ (q U r).
 Proof.
-  split; intros.
+  split.
   - rewrite <- (and_idem r) at 1.
     rewrite until_left_and.
     rewrite (and_proj p) at 1.
@@ -267,7 +263,6 @@ Qed.
 
 Theorem (* NEW *) until_and_until_ext p q r s : (p U q) ∧ (r U s) ⟹ (p ∧ r) U (q ∨ s).
 Proof.
-  intros.
   rewrite until_right_and.
   rewrite <- (or_inj q) at 1.
   rewrite <- (or_inj_r s).
@@ -300,7 +295,6 @@ Qed.
 
 Theorem (* 16 *) until_impl_order p q r : (p U q) ∧ (¬q U r) ⟹ p U r.
 Proof.
-  intros.
   rewrite until_and_until.
   boolean.
   rewrite <- and_or_r.
@@ -462,7 +456,6 @@ Qed.
 
 Corollary (* NEW *) until_impl p q r : (p ⇒ r) ∧ (q ⇒ r) ⟹ (p U q ⇒ r).
 Proof.
-  intros.
   rewrite or_respects.
   rewrite until_28.
   now rewrite or_idem.

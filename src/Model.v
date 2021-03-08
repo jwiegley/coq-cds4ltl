@@ -795,3 +795,66 @@ Proof.
 Qed.
 
 End StreamLTL.
+
+Require Import
+  Coq.Classes.SetoidClass.
+
+Module DynamicLTL (S : StreamType).
+
+Module Import L := StreamLTL S.
+
+Definition examine : (S.a -> t) -> t := fun f s => f (head s) s.
+
+Notation "'Λ' x .. y , t" := (examine (fun x => .. (fun y => t) ..))
+  (at level 200, x binder, y binder, right associativity,
+  format "'[  ' '[  ' 'Λ'  x  ..  y ']' ,  '/' t ']'").
+
+Program Instance examine_respects_implies :
+  Proper (pointwise_relation S.a implies ==> implies) examine.
+Next Obligation.
+  unfold examine.
+  repeat intro.
+  unfold In in *.
+  now apply H.
+Qed.
+
+Program Instance examine_respects_equivalent :
+  (* Proper ((SetoidClass.equiv ==> equivalent) ==> equivalent) examine. *)
+  Proper (pointwise_relation S.a equivalent ==> equivalent) examine.
+Next Obligation.
+  repeat intro.
+  split; repeat intro;
+  unfold In in *;
+  now apply H.
+Qed.
+
+Theorem examine_id p : p ≈ Λ _, p.
+Proof. reflexivity. Qed.
+
+Theorem not_examine f : ¬ (Λ a, f a) ≈ Λ a, ¬ (f a).
+Proof. reflexivity. Qed.
+
+Theorem or_examine f g : (Λ a, f a) ∨ (Λ a, g a) ≈ Λ a, f a ∨ g a.
+Proof.
+  unfold examine.
+  split; repeat intro;
+  unfold In in *.
+  - destruct H.
+    + now left.
+    + now right.
+  - inv H.
+    + now left.
+    + now right.
+Qed.
+
+Theorem and_examine f g : (Λ a, f a) ∧ (Λ a, g a) ≈ Λ a, f a ∧ g a.
+Proof.
+  rewrite and_def.
+  rewrite !not_examine.
+  rewrite or_examine.
+  rewrite not_examine.
+  setoid_rewrite <- and_def.
+  reflexivity.
+Qed.
+
+End DynamicLTL.
