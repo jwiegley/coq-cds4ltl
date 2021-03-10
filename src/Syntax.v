@@ -19,22 +19,7 @@ Open Scope list_scope.
 
 Import ListNotations.
 
-Module OptionStreamType (S : StreamType).
-
-Definition a := option S.a.
-
-End OptionStreamType.
-
-Module LTL (S : StreamType) <: LinearTemporalLogicW <: LinearTemporalLogic.
-
-Module O := OptionStreamType S.
-Module SL := StreamLTL O.
-Module Import L   := LinearTemporalLogicFacts SL.
-Module Import LW  := LinearTemporalLogicWFacts SL.
-Module Import ML  := MinimalLinearTemporalLogicFacts SL.
-Module Import BF  := ML.BF.
-Module Import MBF := BF.MBF.
-Import SL.
+Module LTLSyntax (S : StreamType).
 
 (** This data type encodes the syntax of LTL in Positive Normal Form (PNF). *)
 Inductive Formula : Type :=
@@ -50,24 +35,6 @@ Inductive Formula : Type :=
   | Eventually    (p   : Formula)
   | Release       (p q : Formula)
   | StrongRelease (p q : Formula).
-
-Fixpoint denote (l : Formula) : t :=
-  match l with
-  | Top               => ⊤
-  | Bottom            => ⊥
-  | Examine v         => λ s, denote (v (head s)) s
-  | And p q           => denote p ∧ denote q
-  | Or p q            => denote p ∨ denote q
-  | Next p            => ◯ (denote p)
-  | Until p q         => denote p U denote q
-  | Wait p q          => denote p W denote q
-  | Always p          => □ (denote p)
-  | Eventually p      => ◇ (denote p)
-  | Release p q       => denote p R denote q
-  | StrongRelease p q => denote p M denote q
-  end.
-
-Definition t := Formula.
 
 Function negate (l : Formula) : Formula :=
   match l with
@@ -85,29 +52,6 @@ Function negate (l : Formula) : Formula :=
   | StrongRelease p q => Wait (negate p) (negate q)
   end.
 
-Theorem not_denote p : ¬ (denote p) ≈ denote (negate p).
-Proof.
-  induction p; simpl.
-  - now rewrite not_true.
-  - now rewrite not_false.
-  - split; repeat intro; unfold Ensembles.In in *.
-    + now apply H, H0.
-    + apply H in H0.
-      contradiction.
-  - rewrite not_and.
-    now rewrite IHp1, IHp2.
-  - rewrite not_or.
-    now rewrite IHp1, IHp2.
-  - rewrite <- next_not.
-    now rewrite IHp.
-  - admit.
-  - admit.
-  - admit.
-  - admit.
-  - admit.
-  - admit.
-Admitted.
-
 Fixpoint size (p : Formula) : nat :=
   match p with
   | Top               => 1
@@ -123,55 +67,6 @@ Fixpoint size (p : Formula) : nat :=
   | Release p q       => 1 + size p + size q
   | StrongRelease p q => 1 + size p + size q
   end.
-
-Fixpoint expand (l : Formula) : Formula :=
-  match l with
-  | Top               => l
-  | Bottom            => l
-  | Examine v         => Examine (expand ∘ v)
-  | And p q           => And (expand p) (expand q)
-  | Or p q            => Or (expand p) (expand q)
-  | Next p            => Next (expand p)
-  | Until p q         => Or (expand q) (And (expand p) (Next (Until p q)))
-  | Wait p q          => Or (expand q) (And (expand p) (Next (Wait p q)))
-  | Always p          => And (expand p) (Next (Always p))
-  | Eventually p      => Or (expand p) (Next (Eventually p))
-  | Release p q       => And (expand q) (Or (expand p) (Next (Release p q)))
-  | StrongRelease p q => And (expand q) (Or (expand p) (Next (StrongRelease p q)))
-  end.
-
-Definition basic (l : Formula) : Prop :=
-  match l with
-  | Until p q         => False
-  | Wait p q          => False
-  | Always p          => False
-  | Eventually p      => False
-  | Release p q       => False
-  | StrongRelease p q => False
-  | _                 => True
-  end.
-
-Lemma basic_expand : forall l, basic (expand l).
-Proof. induction l; simpl; auto. Qed.
-
-Fixpoint shallow (l : Formula) : Prop :=
-  match l with
-  | Top               => True
-  | Bottom            => True
-  | Examine v         => True
-  | And p q           => shallow p /\ shallow q
-  | Or p q            => shallow p /\ shallow q
-  | Next p            => True
-  | Until p q         => False
-  | Wait p q          => False
-  | Always p          => False
-  | Eventually p      => False
-  | Release p q       => False
-  | StrongRelease p q => False
-  end.
-
-Lemma expand_complete (l : Formula) : shallow (expand l).
-Proof. induction l; simpl in *; intuition auto. Qed.
 
 (** Prune out any instances of Top or Bottom *)
 Function prune (l : Formula) : Formula :=
@@ -266,91 +161,6 @@ Fixpoint matches (l : Formula) (s : list S.a) {struct l} : Prop :=
         | _ :: xs => matches q s /\ (matches p s \/ go xs)
         end in go s
   end.
-
-Fixpoint project {A : Type} (xs : list A) : Stream (option A) :=
-  match xs with
-  | nil => constant None
-  | cons x xs => Cons (Some x) (project xs)
-  end.
-
-Theorem denote_matches l s : matches l s <-> denote l (project s).
-Proof.
-  split; intros.
-  - generalize dependent s.
-    induction l; simpl; intros.
-    + now constructor.
-    + contradiction.
-    + now destruct s; intuition.
-    + now inv H; split; firstorder.
-    + inv H.
-      * now left; firstorder.
-      * now right; firstorder.
-    + now destruct s; firstorder.
-    + induction s.
-      * apply IHl2 in H.
-        exists 0.
-        intuition.
-        lia.
-      * destruct H.
-        ** apply IHl2 in H.
-           exists 0.
-           intuition.
-           lia.
-        ** destruct H.
-           apply IHl1 in H.
-           apply IHs in H0; clear IHs.
-           clear -H H0.
-           inv H0.
-           destruct H1.
-           exists (S x).
-           intuition.
-           destruct i.
-           *** exact H.
-           *** simpl.
-               apply H1; lia.
-    + admit.
-    + admit.
-    + admit.
-    + admit.
-    + admit.
-  - generalize dependent s.
-    induction l; simpl; intros.
-    + now constructor.
-    + contradiction.
-    + now destruct s; intuition.
-    + now inv H; split; firstorder.
-    + inv H.
-      * now left; firstorder.
-      * now right; firstorder.
-    + now destruct s; firstorder.
-    + induction s.
-      * apply IHl2.
-        inv H; destruct H0.
-        simpl in *.
-        clear -H.
-        now induction x; simpl in H; auto.
-      * inv H; destruct H0.
-        destruct x.
-        ** left.
-           apply IHl2.
-           exact H.
-        ** right.
-           split.
-           *** apply IHl1.
-               apply (H0 0).
-               lia.
-           *** apply IHs.
-               exists x.
-               simpl in H.
-               intuition.
-               apply (H0 (S i)).
-               lia.
-    + admit.
-    + admit.
-    + admit.
-    + admit.
-    + admit.
-Admitted.
 
 Inductive Matches : Formula -> list S.a -> Type :=
   | MatchTop x xs : Matches Top (x :: xs)
@@ -718,72 +528,11 @@ Proof.
          now eapply IHs; eauto.
 Qed.
 
-Definition true           := Top.
-Definition false          := Bottom.
-Definition and            := And.
-Definition or             := Or.
-Definition not            := negate.
-Definition implies        := fun p q => forall s, matches p s -> matches q s.
-Definition equivalent     := fun p q => implies p q /\ implies q p.
-Definition next           := Next.
-Definition until          := Until.
-Definition wait           := Wait.
-Definition always         := Always.
-Definition eventually     := Eventually.
-Definition release        := Release.
-Definition strong_release := StrongRelease.
-Definition examine        := Examine.
+Definition impl  := fun p q => forall s, matches p s -> matches q s.
+Definition equiv := fun p q => impl p q /\ impl q p.
 
-Declare Scope boolean_scope.
-Bind Scope boolean_scope with Formula.
-Delimit Scope boolean_scope with boolean.
-Open Scope boolean_scope.
-
-Notation "¬ p"    := (not p)         (at level 75, right associativity) : boolean_scope.
-Infix    "∨"      := or              (at level 85, right associativity) : boolean_scope.
-Notation "p ⇒ q"  := (¬ p ∨ q)       (at level 86, right associativity) : boolean_scope.
-Notation "⊤"      := true            (at level 0, no associativity) : boolean_scope.
-Notation "⊥"      := false           (at level 0, no associativity) : boolean_scope.
-Infix    "∧"      := and             (at level 80, right associativity) : boolean_scope.
-Infix    "⟹"     := implies         (at level 99, right associativity) : boolean_scope.
-Infix    "≈"      := equivalent      (at level 90, no associativity) : boolean_scope.
-
-Declare Scope ltl_scope.
-Bind Scope ltl_scope with Formula.
-Delimit Scope ltl_scope with ltl.
-Open Scope boolean_scope.
-Open Scope ltl_scope.
-
-Notation "◯ p"       := (next p)             (at level 75, right associativity) : ltl_scope.
-Notation "◇ p"       := (eventually p)       (at level 75, right associativity) : ltl_scope.
-Notation "□ p"       := (always p)           (at level 75, right associativity) : ltl_scope.
-Notation "p 'U' q"   := (until p q)          (at level 79, right associativity) : ltl_scope.
-Notation "p 'W' q"   := (wait p q)           (at level 79, right associativity) : ltl_scope.
-Notation "p 'R' q"   := (release p q)        (at level 79, right associativity) : ltl_scope.
-Notation "p 'M' q"   := (strong_release p q) (at level 79, right associativity) : ltl_scope.
-Notation "'Λ' x , p" := (examine (λ x , p))  (at level 97, no associativity) : ltl_scope.
-
-Program Instance implies_reflexive : Reflexive implies.
-Next Obligation. now repeat intro. Qed.
-
-Program Instance implies_transitive : Transitive implies.
-Next Obligation.
-  repeat intro.
-  now apply H0, H.
-Qed.
-
-Program Instance Equivalence_equivalent : Equivalence equivalent.
-Next Obligation. split; repeat intro; auto. Qed.
-Next Obligation. split; repeat intro; firstorder. Qed.
-Next Obligation. split; repeat intro; firstorder. Qed.
-
-Program Instance equivalent_respects_equivalent :
-  Proper (equivalent ==> equivalent ==> iff) equivalent.
-Next Obligation.
-  split; repeat intro.
-  - now rewrite <- H0, <- H1, <- H.
-  - now rewrite H0, <- H1.
-Qed.
+#[local] Infix "⟹" := impl  (at level 99, right associativity).
+#[local] Infix "≈"  := equiv (at level 90, no associativity).
 
 Ltac induct :=
   try split; repeat intro; simpl in *;
@@ -793,157 +542,90 @@ Ltac induct :=
 
 #[local] Obligation Tactic := induct.
 
-Program Instance Examine_respects_implies :
-  Proper ((eq ==> implies) ==> implies) Examine.
+Program Instance impl_reflexive : Reflexive impl.
+Program Instance impl_transitive : Transitive impl.
+Program Instance Equivalence_equiv : Equivalence equiv.
 
-Program Instance Examine_respects_equivalent :
-  Proper ((eq ==> equivalent) ==> equivalent) Examine.
+#[local] Obligation Tactic := program_simpl.
 
-Program Instance matches_respects_implies :
-  Proper (implies ==> eq ==> Basics.impl) matches.
+Program Instance equiv_respects_equiv :
+  Proper (equiv ==> equiv ==> iff) equiv.
 Next Obligation.
-  - subst; now apply H.
-  - subst; now apply H.
+  split; repeat intro.
+  - now rewrite <- H0, <- H1, <- H.
+  - now rewrite H0, <- H1.
 Qed.
 
-Program Instance matches_respects_equivalent :
-  Proper (equivalent ==> eq ==> iff) matches.
+Program Instance matches_respects_impl :
+  Proper (impl ==> eq ==> Basics.impl) matches.
 Next Obligation.
+  repeat intro.
+  subst; now apply H.
+Qed.
+
+Program Instance matches_respects_equiv :
+  Proper (equiv ==> eq ==> iff) matches.
+Next Obligation.
+  split; repeat intro.
   - subst; now apply H.
   - subst; now apply H.
-  - subst; now apply H2.
-  - subst; now apply H2.
 Qed.
 
-Program Instance And_respects_implies :
-  Proper (implies ==> implies ==> implies) And.
+#[local] Obligation Tactic := induct.
 
-Program Instance And_respects_equivalent :
-  Proper (equivalent ==> equivalent ==> equivalent) And.
+Program Instance And_respects_impl :
+  Proper (impl ==> impl ==> impl) And.
 
-Program Instance Or_respects_implies :
-  Proper (implies ==> implies ==> implies) Or.
+Program Instance And_respects_equiv :
+  Proper (equiv ==> equiv ==> equiv) And.
 
-Program Instance Or_respects_equivalent :
-  Proper (equivalent ==> equivalent ==> equivalent) Or.
+Program Instance Or_respects_impl :
+  Proper (impl ==> impl ==> impl) Or.
 
-Program Instance Next_respects_implies :
-  Proper (implies ==> implies) Next.
+Program Instance Or_respects_equiv :
+  Proper (equiv ==> equiv ==> equiv) Or.
 
-Program Instance Next_respects_equivalent :
-  Proper (equivalent ==> equivalent) Next.
+Program Instance Next_respects_impl :
+  Proper (impl ==> impl) Next.
 
-Program Instance Until_respects_implies :
-  Proper (implies ==> implies ==> implies) Until.
+Program Instance Next_respects_equiv :
+  Proper (equiv ==> equiv) Next.
 
-Program Instance Until_respects_equivalent :
-  Proper (equivalent ==> equivalent ==> equivalent) Until.
+Program Instance Until_respects_impl :
+  Proper (impl ==> impl ==> impl) Until.
 
-Program Instance Wait_respects_implies :
-  Proper (implies ==> implies ==> implies) Wait.
+Program Instance Until_respects_equiv :
+  Proper (equiv ==> equiv ==> equiv) Until.
 
-Program Instance Wait_respects_equivalent :
-  Proper (equivalent ==> equivalent ==> equivalent) Wait.
+Program Instance Wait_respects_impl :
+  Proper (impl ==> impl ==> impl) Wait.
 
-Program Instance Always_respects_implies :
-  Proper (implies ==> implies) Always.
+Program Instance Wait_respects_equiv :
+  Proper (equiv ==> equiv ==> equiv) Wait.
 
-Program Instance Always_respects_equivalent :
-  Proper (equivalent ==> equivalent) Always.
+Program Instance Always_respects_impl :
+  Proper (impl ==> impl) Always.
 
-Program Instance Eventually_respects_implies :
-  Proper (implies ==> implies) Eventually.
+Program Instance Always_respects_equiv :
+  Proper (equiv ==> equiv) Always.
 
-Program Instance Eventually_respects_equivalent :
-  Proper (equivalent ==> equivalent) Eventually.
+Program Instance Eventually_respects_impl :
+  Proper (impl ==> impl) Eventually.
 
-Program Instance Release_respects_implies :
-  Proper (implies ==> implies ==> implies) Release.
+Program Instance Eventually_respects_equiv :
+  Proper (equiv ==> equiv) Eventually.
 
-Program Instance Release_respects_equivalent :
-  Proper (equivalent ==> equivalent ==> equivalent) Release.
+Program Instance Release_respects_impl :
+  Proper (impl ==> impl ==> impl) Release.
 
-Program Instance StrongRelease_respects_implies :
-  Proper (implies ==> implies ==> implies) StrongRelease.
+Program Instance Release_respects_equiv :
+  Proper (equiv ==> equiv ==> equiv) Release.
 
-Program Instance StrongRelease_respects_equivalent :
-  Proper (equivalent ==> equivalent ==> equivalent) StrongRelease.
+Program Instance StrongRelease_respects_impl :
+  Proper (impl ==> impl ==> impl) StrongRelease.
 
-Lemma expand_until (φ ψ : Formula) : φ U ψ ≈ ψ ∨ (φ ∧ ◯ (φ U ψ)).
-Proof. now induct. Qed.
-
-Lemma expand_release (φ ψ : Formula) : φ R ψ ≈ ψ ∧ (φ ∨ ◯ (φ R ψ)).
-Proof. now induct. Qed.
-
-Lemma expand_always (φ : Formula) : □ φ ≈ φ ∧ ◯ □ φ.
-Proof. now induct. Qed.
-
-Lemma expand_eventually (φ : Formula) : ◇ φ ≈ φ ∨ ◯ ◇ φ.
-Proof. now induct. Qed.
-
-Lemma expand_wait (φ ψ : Formula) : φ W ψ ≈ ψ ∨ (φ ∧ ◯ (φ W ψ)).
-Proof. now induct. Qed.
-
-Lemma expand_strong_release (φ ψ : Formula) : φ M ψ ≈ ψ ∧ (φ ∨ ◯ (φ M ψ)).
-Proof. now induct. Qed.
-
-Lemma expand_correct l : expand l ≈ l.
-Proof.
-  induction l; simpl; intuition;
-  rewrite ?IHl, ?IHl1, ?IHl2; simpl in *; intuition.
-  - unfold Basics.compose.
-    apply Examine_respects_equivalent.
-    repeat intro; subst.
-    now rewrite H.
-  - now rewrite <- expand_until.
-  - now rewrite <- expand_wait.
-  - now rewrite <- expand_always.
-  - now rewrite <- expand_eventually.
-  - now rewrite <- expand_release.
-  - now rewrite <- expand_strong_release.
-Qed.
-
-Lemma prune_correct l : prune l ≈ l.
-Proof.
-  apply prune_ind; simpl; intros; subst; intuition.
-  - split; repeat intro; simpl; intuition.
-    + rewrite <- H.
-      now rewrite e0.
-    + now rewrite <- H0.
-    + simpl in H1.
-      now rewrite H0.
-  - split; repeat intro; simpl; intuition.
-    + now rewrite <- H.
-    + rewrite <- H0.
-      now rewrite e1.
-    + simpl in H2.
-      now rewrite H1.
-  - now rewrite H1, H2.
-  - split; repeat intro; simpl; intuition.
-    + right.
-      now rewrite <- H0.
-    + simpl in H1.
-      destruct H1.
-      * rewrite <- H, e0 in H1.
-        contradiction.
-      * now rewrite H0.
-  - split; repeat intro; simpl; intuition.
-    + left.
-      now rewrite <- H1.
-    + simpl in H2.
-      destruct H2.
-      * now rewrite H1.
-      * rewrite <- H0, e1 in H2.
-        contradiction.
-  - now rewrite H1, H2.
-  - now rewrite H.
-  - now rewrite H, H0.
-  - now rewrite H, H0.
-  - now rewrite H.
-  - now rewrite H.
-  - now rewrite H, H0.
-  - now rewrite H, H0.
-Qed.
+Program Instance StrongRelease_respects_equiv :
+  Proper (equiv ==> equiv ==> equiv) StrongRelease.
 
 Lemma matches_negate x s : matches (negate x) s <-> ~ matches x s.
 Proof.
@@ -1032,56 +714,498 @@ Proof.
     induction s; intuition auto.
 Qed.
 
-Lemma matches_not_false {p s} : matches p s -> matches (¬ p) s -> False.
+Lemma matches_not_false {p s} : matches p s -> matches (negate p) s -> False.
 Proof.
   intros.
   rewrite matches_negate in H0.
   contradiction.
 Qed.
 
-Program Instance negate_respects_implies : Proper (implies --> implies) negate | 1.
+#[local] Obligation Tactic := program_simpl.
+
+Program Instance negate_respects_impl : Proper (impl --> impl) negate | 1.
 Next Obligation.
-  - apply matches_negate.
-    apply matches_negate in H0.
-    now firstorder.
-  - apply matches_negate.
-    apply matches_negate in H0.
-    now firstorder.
+  repeat intro.
+  apply matches_negate.
+  apply matches_negate in H0.
+  now firstorder.
 Qed.
 
-Program Instance not_respects_implies : Proper (implies --> implies) not | 1.
-Next Obligation.
-  - unfold not in *.
-    apply matches_negate.
-    apply matches_negate in H0.
-    now firstorder.
-  - unfold not in *.
-    apply matches_negate.
-    apply matches_negate in H0.
-    now firstorder.
+Lemma prune_correct l : prune l ≈ l.
+Proof.
+  apply prune_ind; simpl; intros; subst; intuition.
+  - split; repeat intro; simpl; intuition.
+    + rewrite <- H.
+      now rewrite e0.
+    + now rewrite <- H0.
+    + simpl in H1.
+      now rewrite H0.
+  - split; repeat intro; simpl; intuition.
+    + now rewrite <- H.
+    + rewrite <- H0.
+      now rewrite e1.
+    + simpl in H2.
+      now rewrite H1.
+  - now rewrite H1, H2.
+  - split; repeat intro; simpl; intuition.
+    + right.
+      now rewrite <- H0.
+    + simpl in H1.
+      destruct H1.
+      * rewrite <- H, e0 in H1.
+        contradiction.
+      * now rewrite H0.
+  - split; repeat intro; simpl; intuition.
+    + left.
+      now rewrite <- H1.
+    + simpl in H2.
+      destruct H2.
+      * now rewrite H1.
+      * rewrite <- H0, e1 in H2.
+        contradiction.
+  - now rewrite H1, H2.
+  - now rewrite H.
+  - now rewrite H, H0.
+  - now rewrite H, H0.
+  - now rewrite H.
+  - now rewrite H.
+  - now rewrite H, H0.
+  - now rewrite H, H0.
 Qed.
+
+End LTLSyntax.
+
+Module OptionStreamType (S : StreamType).
+
+Definition a := option S.a.
+
+End OptionStreamType.
+
+Module LTL (S : StreamType) <: LinearTemporalLogicW <: LinearTemporalLogic.
+
+Module AST := LTLSyntax S.
+Import AST.
+
+Module O := OptionStreamType S.
+Module SL := StreamLTL O.
+Module Import L   := LinearTemporalLogicFacts SL.
+Module Import LW  := LinearTemporalLogicWFacts SL.
+Module Import ML  := MinimalLinearTemporalLogicFacts SL.
+Module Import BF  := ML.BF.
+Module Import MBF := BF.MBF.
+Import SL.
+
+Fixpoint denote (l : Formula) : t :=
+  match l with
+  | Top               => ⊤
+  | Bottom            => ⊥
+  | Examine v         => λ s, denote (v (head s)) s
+  | And p q           => denote p ∧ denote q
+  | Or p q            => denote p ∨ denote q
+  | Next p            => ◯ (denote p)
+  | Until p q         => denote p U denote q
+  | Wait p q          => denote p W denote q
+  | Always p          => □ (denote p)
+  | Eventually p      => ◇ (denote p)
+  | Release p q       => denote p R denote q
+  | StrongRelease p q => denote p M denote q
+  end.
+
+Definition t := Formula.
+
+Theorem not_denote p : ¬ (denote p) ≈ denote (negate p).
+Proof.
+  induction p; simpl.
+  - now rewrite not_true.
+  - now rewrite not_false.
+  - split; repeat intro; unfold Ensembles.In in *.
+    + now apply H, H0.
+    + apply H in H0.
+      contradiction.
+  - rewrite not_and.
+    now rewrite IHp1, IHp2.
+  - rewrite not_or.
+    now rewrite IHp1, IHp2.
+  - rewrite <- next_not.
+    now rewrite IHp.
+  - unfold release.
+    rewrite <- !IHp1.
+    rewrite <- !IHp2.
+    rewrite and_comm.
+    now rewrite <- law_173.
+  - unfold strong_release.
+    rewrite <- !IHp1.
+    rewrite <- !IHp2.
+    rewrite and_comm.
+    rewrite <- not_until.
+    unfold wait.
+    rewrite always_def.
+    rewrite evn_def.
+    rewrite and_def.
+    now rewrite not_not.
+  - rewrite always_def.
+    rewrite not_not.
+    now rewrite IHp.
+  - rewrite always_def.
+    rewrite <- IHp.
+    now rewrite not_not.
+  - unfold release.
+    rewrite not_swap.
+    rewrite <- !IHp1.
+    rewrite <- !IHp2.
+    rewrite law_199.
+    now rewrite and_comm.
+  - unfold strong_release.
+    rewrite and_comm.
+    rewrite <- law_201.
+    rewrite <- !IHp1.
+    rewrite <- !IHp2.
+    now rewrite not_not.
+Qed.
+
+Fixpoint project {A : Type} (xs : list A) : Stream (option A) :=
+  match xs with
+  | nil => constant None
+  | cons x xs => Cons (Some x) (project xs)
+  end.
+
+Theorem denote_matches l s : matches l s <-> denote l (project s).
+Proof.
+  split; intros.
+  - generalize dependent s.
+    induction l; simpl; intros.
+    + now constructor.
+    + contradiction.
+    + now destruct s; intuition.
+    + now inv H; split; firstorder.
+    + inv H.
+      * now left; firstorder.
+      * now right; firstorder.
+    + now destruct s; firstorder.
+    + induction s.
+      * apply IHl2 in H.
+        exists 0.
+        intuition.
+        lia.
+      * destruct H.
+        ** apply IHl2 in H.
+           exists 0.
+           intuition.
+           lia.
+        ** destruct H.
+           apply IHl1 in H.
+           apply IHs in H0; clear IHs.
+           clear -H H0.
+           inv H0.
+           destruct H1.
+           exists (S x).
+           intuition.
+           destruct i.
+           *** exact H.
+           *** apply H1; lia.
+    + unfold wait.
+      induction s.
+      * destruct H.
+        ** apply IHl2 in H.
+           right.
+           exists 0.
+           intuition.
+           lia.
+        ** apply IHl1 in H.
+           left.
+           intro.
+           now induction i.
+      * destruct H.
+        ** clear IHs.
+           right.
+           apply IHl2 in H.
+           exists 0.
+           intuition.
+           lia.
+        ** destruct H.
+           apply IHl1 in H.
+           apply IHs in H0; clear IHs.
+           clear -H H0.
+           inv H0.
+           *** left.
+               intro.
+               induction i.
+               **** exact H.
+               **** now apply H1.
+           *** inv H1.
+               destruct H0.
+               right.
+               exists (S x).
+               intuition.
+               destruct i.
+               **** exact H.
+               **** apply H1; lia.
+    + induction s.
+      * apply IHl in H.
+        intro.
+        now induction i.
+      * destruct H.
+        apply IHl in H.
+        apply IHs in H0; clear IHs.
+        intro.
+        now induction i; simpl.
+    + induction s.
+      * apply IHl in H.
+        exists 0.
+        exact H.
+      * destruct H.
+        ** exists 0.
+           now firstorder.
+        ** apply IHs in H; clear IHs.
+           inv H.
+           now exists (S x).
+    + unfold release, wait.
+      induction s.
+      * apply IHl2 in H.
+        left.
+        intro.
+        now induction i.
+      * destruct H.
+        destruct H0.
+        ** clear IHs.
+           right.
+           apply IHl1 in H0.
+           apply IHl2 in H.
+           exists 0.
+           split.
+           *** now split.
+           *** lia.
+        ** apply IHl2 in H.
+           apply IHs in H0; clear IHs.
+           clear -H H0.
+           inv H0.
+           *** left.
+               intro.
+               induction i.
+               **** exact H.
+               **** now apply H1.
+           *** inv H1.
+               destruct H0.
+               right.
+               exists (S x).
+               intuition.
+               destruct i.
+               **** exact H.
+               **** apply H1; lia.
+    + unfold strong_release.
+      induction s.
+      * destruct H.
+        apply IHl1 in H0.
+        apply IHl2 in H.
+        exists 0.
+        split.
+        ** now split.
+        ** lia.
+      * destruct H.
+        destruct H0.
+        ** clear IHs.
+           exists 0.
+           apply IHl1 in H0.
+           apply IHl2 in H.
+           split.
+           *** now split.
+           *** lia.
+        ** apply IHl2 in H.
+           apply IHs in H0; clear IHs.
+           clear -H H0.
+           inv H0.
+           inv H1.
+           inv H0.
+           exists (S x).
+           split.
+           *** now split.
+           *** intros.
+               induction i.
+               **** exact H.
+               **** apply H2; lia.
+  - generalize dependent s.
+    induction l; simpl; intros.
+    + now constructor.
+    + contradiction.
+    + now destruct s; intuition.
+    + now inv H; split; firstorder.
+    + inv H.
+      * now left; firstorder.
+      * now right; firstorder.
+    + now destruct s; firstorder.
+    + induction s.
+      * apply IHl2.
+        inv H; destruct H0.
+        simpl in *.
+        clear -H.
+        now induction x; simpl in H; auto.
+      * inv H; destruct H0.
+        destruct x.
+        ** left.
+           apply IHl2.
+           exact H.
+        ** right.
+           split.
+           *** apply IHl1.
+               apply (H0 0).
+               lia.
+           *** apply IHs.
+               exists x.
+               simpl in H.
+               intuition.
+               apply (H0 (S i)).
+               lia.
+    + unfold wait in H.
+      induction s.
+      * inv H.
+        ** right.
+           apply IHl1.
+           now apply (H0 0).
+        ** inv H0.
+           destruct H.
+           destruct x; intuition.
+           right.
+           apply IHl1.
+           apply (H0 0).
+           lia.
+      * inv H.
+        ** right.
+           split.
+           *** apply IHl1.
+               now apply (H0 0).
+           *** apply IHs.
+               left.
+               intro.
+               now apply (H0 (S i)).
+        ** inv H0.
+           destruct H.
+           destruct x.
+           *** left.
+               now apply IHl2.
+           *** right.
+               split.
+               **** apply IHl1.
+                    apply (H0 0).
+                    lia.
+               **** apply IHs.
+                    right.
+                    exists x.
+                    split; auto; intros.
+                    apply (H0 (S i)).
+                    lia.
+    + induction s.
+      * apply IHl.
+        now apply (H 0).
+      * split.
+        ** apply IHl.
+           now apply (H 0).
+        ** apply IHs; clear IHs.
+           intro.
+           now apply (H (S i)).
+    + induction s.
+      * apply IHl.
+        inv H.
+        now induction x; auto.
+      * inv H.
+        destruct x.
+        ** left.
+           now apply IHl.
+        ** right.
+           apply IHs; clear IHs.
+           now exists x.
+    + admit.
+    + admit.
+Admitted.
+
+Definition true           := Top.
+Definition false          := Bottom.
+Definition and            := And.
+Definition or             := Or.
+Definition not            := negate.
+Definition implies        := impl.
+Definition equivalent     := equiv.
+Definition next           := Next.
+Definition until          := Until.
+Definition wait           := Wait.
+Definition always         := Always.
+Definition eventually     := Eventually.
+Definition release        := Release.
+Definition strong_release := StrongRelease.
+Definition examine        := Examine.
+
+Declare Scope boolean_scope.
+Bind Scope boolean_scope with Formula.
+Delimit Scope boolean_scope with boolean.
+Open Scope boolean_scope.
+
+Notation "¬ p"    := (not p)         (at level 75, right associativity) : boolean_scope.
+Infix    "∨"      := or              (at level 85, right associativity) : boolean_scope.
+Notation "p ⇒ q"  := (¬ p ∨ q)       (at level 86, right associativity) : boolean_scope.
+Notation "⊤"      := true            (at level 0, no associativity) : boolean_scope.
+Notation "⊥"      := false           (at level 0, no associativity) : boolean_scope.
+Infix    "∧"      := and             (at level 80, right associativity) : boolean_scope.
+Infix    "⟹"     := implies         (at level 99, right associativity) : boolean_scope.
+Infix    "≈"      := equivalent      (at level 90, no associativity) : boolean_scope.
+
+Declare Scope ltl_scope.
+Bind Scope ltl_scope with Formula.
+Delimit Scope ltl_scope with ltl.
+Open Scope boolean_scope.
+Open Scope ltl_scope.
+
+Notation "◯ p"       := (next p)             (at level 75, right associativity) : ltl_scope.
+Notation "◇ p"       := (eventually p)       (at level 75, right associativity) : ltl_scope.
+Notation "□ p"       := (always p)           (at level 75, right associativity) : ltl_scope.
+Notation "p 'U' q"   := (until p q)          (at level 79, right associativity) : ltl_scope.
+Notation "p 'W' q"   := (wait p q)           (at level 79, right associativity) : ltl_scope.
+Notation "p 'R' q"   := (release p q)        (at level 79, right associativity) : ltl_scope.
+Notation "p 'M' q"   := (strong_release p q) (at level 79, right associativity) : ltl_scope.
+Notation "'Λ' x , p" := (examine (λ x , p))  (at level 97, no associativity) : ltl_scope.
+
+Program Instance implies_reflexive : Reflexive implies := impl_reflexive.
+Program Instance implies_transitive : Transitive implies := impl_transitive.
+Program Instance Equivalence_equivalent : Equivalence equivalent := Equivalence_equiv.
+
+Program Instance equivalent_respects_equivalent :
+  Proper (equivalent ==> equivalent ==> iff) equivalent := equiv_respects_equiv.
+
+Program Instance not_respects_implies : Proper (implies --> implies) not | 1 :=
+  negate_respects_impl.
+
+Ltac induct :=
+  try split; repeat intro; simpl in *;
+  match goal with
+    [ S : list S.a |- _ ] => induction S
+  end; firstorder.
+
+#[local] Obligation Tactic := induct.
+
+Program Instance Examine_respects_implies :
+  Proper ((eq ==> implies) ==> implies) Examine.
+Program Instance Examine_respects_equivalent :
+  Proper ((eq ==> equivalent) ==> equivalent) Examine.
 
 Instance and_respects_implies :
-  Proper (implies ==> implies ==> implies) and := And_respects_implies.
+  Proper (implies ==> implies ==> implies) and := And_respects_impl.
 Instance or_respects_implies :
-  Proper (implies ==> implies ==> implies) or := Or_respects_implies.
+  Proper (implies ==> implies ==> implies) or := Or_respects_impl.
 Instance next_respects_implies :
-  Proper (implies ==> implies) next := Next_respects_implies.
+  Proper (implies ==> implies) next := Next_respects_impl.
 Instance until_respects_implies :
-  Proper (implies ==> implies ==> implies) until := Until_respects_implies.
+  Proper (implies ==> implies ==> implies) until := Until_respects_impl.
 Instance wait_respects_implies :
-  Proper (implies ==> implies ==> implies) wait := Wait_respects_implies.
+  Proper (implies ==> implies ==> implies) wait := Wait_respects_impl.
 Instance eventually_respects_implies :
-  Proper (implies ==> implies) eventually := Eventually_respects_implies.
+  Proper (implies ==> implies) eventually := Eventually_respects_impl.
 Instance always_respects_implies :
-  Proper (implies ==> implies) always := Always_respects_implies.
+  Proper (implies ==> implies) always := Always_respects_impl.
 Instance release_respects_implies :
-  Proper (implies ==> implies ==> implies) release := Release_respects_implies.
+  Proper (implies ==> implies ==> implies) release := Release_respects_impl.
 Instance strong_release_respects_implies :
   Proper (implies ==> implies ==> implies) strong_release :=
-  StrongRelease_respects_implies.
+  StrongRelease_respects_impl.
 
-Theorem implication p q : SL.implies (denote p) (denote q) -> (p ⟹ q).
+Lemma implication p q : SL.implies (denote p) (denote q) -> (p ⟹ q).
 Proof.
   repeat intro.
   apply denote_matches.
