@@ -12,6 +12,7 @@ Open Scope list_scope.
 Module LTLStep (S : StreamType).
 
 Module Import LTL := LTL S.
+Import LTL.AST.
 
 Inductive Failed : Type :=
   | HitBottom

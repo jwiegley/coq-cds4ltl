@@ -795,6 +795,7 @@ Module Import BF  := ML.BF.
 Module Import MBF := BF.MBF.
 Import SL.
 
+(** Syntactic formulae denote directly into stream-based LTL formulae. *)
 Fixpoint denote (l : Formula) : t :=
   match l with
   | Top               => ⊤
@@ -802,73 +803,25 @@ Fixpoint denote (l : Formula) : t :=
   | Examine v         => λ s, denote (v (head s)) s
   | And p q           => denote p ∧ denote q
   | Or p q            => denote p ∨ denote q
-  | Next p            => ◯ (denote p)
+  | Next p            => ◯ denote p
   | Until p q         => denote p U denote q
   | Wait p q          => denote p W denote q
-  | Always p          => □ (denote p)
-  | Eventually p      => ◇ (denote p)
+  | Always p          => □ denote p
+  | Eventually p      => ◇ denote p
   | Release p q       => denote p R denote q
   | StrongRelease p q => denote p M denote q
   end.
 
-Definition t := Formula.
-
-Theorem not_denote p : ¬ (denote p) ≈ denote (negate p).
-Proof.
-  induction p; simpl.
-  - now rewrite not_true.
-  - now rewrite not_false.
-  - split; repeat intro; unfold Ensembles.In in *.
-    + now apply H, H0.
-    + apply H in H0.
-      contradiction.
-  - rewrite not_and.
-    now rewrite IHp1, IHp2.
-  - rewrite not_or.
-    now rewrite IHp1, IHp2.
-  - rewrite <- next_not.
-    now rewrite IHp.
-  - unfold release.
-    rewrite <- !IHp1.
-    rewrite <- !IHp2.
-    rewrite and_comm.
-    now rewrite <- law_173.
-  - unfold strong_release.
-    rewrite <- !IHp1.
-    rewrite <- !IHp2.
-    rewrite and_comm.
-    rewrite <- not_until.
-    unfold wait.
-    rewrite always_def.
-    rewrite evn_def.
-    rewrite and_def.
-    now rewrite not_not.
-  - rewrite always_def.
-    rewrite not_not.
-    now rewrite IHp.
-  - rewrite always_def.
-    rewrite <- IHp.
-    now rewrite not_not.
-  - unfold release.
-    rewrite not_swap.
-    rewrite <- !IHp1.
-    rewrite <- !IHp2.
-    rewrite law_199.
-    now rewrite and_comm.
-  - unfold strong_release.
-    rewrite and_comm.
-    rewrite <- law_201.
-    rewrite <- !IHp1.
-    rewrite <- !IHp2.
-    now rewrite not_not.
-Qed.
-
 Fixpoint project {A : Type} (xs : list A) : Stream (option A) :=
   match xs with
-  | nil => constant None
+  | nil       => constant None
   | cons x xs => Cons (Some x) (project xs)
   end.
 
+(** Prove that a constructive match against a finite trace is isomorphic to
+    denoting that same formula into a stream-based model where we project the
+    finite trace into an infinite stream by lifting the basis set to a pointed
+    set and continuing the "point" to eternity beyond the end of the trace. *)
 Theorem denote_matches l s : matches l s <-> denote l (project s).
 Proof.
   split; intros.
@@ -1113,10 +1066,165 @@ Proof.
         ** right.
            apply IHs; clear IHs.
            now exists x.
-    + admit.
-    + admit.
-Admitted.
+    + unfold release, wait in H.
+      induction s.
+      * inv H.
+        ** apply IHl2.
+           now apply (H0 0).
+        ** inv H0.
+           destruct H.
+           inv H.
+           apply IHl2.
+           now induction x; intuition.
+      * inv H.
+        ** split.
+           *** apply IHl2.
+               now apply (H0 0).
+           *** right.
+               apply IHs.
+               left.
+               intro.
+               now apply (H0 (S i)).
+        ** inv H0.
+           destruct H.
+           inv H.
+           split.
+           *** apply IHl2.
+               destruct x.
+               **** exact H1.
+               **** apply (H0 0); lia.
+           *** destruct x.
+               **** left.
+                    apply IHl1.
+                    exact H2.
+               **** right.
+                    apply IHs.
+                    right.
+                    exists x.
+                    split; auto; intros.
+                    ***** now split.
+                    ***** apply (H0 (S i)).
+                          lia.
+    + unfold strong_release in H.
+      induction s.
+      * inv H.
+        destruct H0.
+        inv H.
+        split.
+        ** apply IHl2.
+           now induction x; intuition.
+        ** apply IHl1.
+           now induction x; intuition.
+      * inv H.
+        destruct H0.
+        inv H.
+        split.
+        ** apply IHl2.
+           destruct x.
+           *** exact H1.
+           *** apply (H0 0); lia.
+        ** destruct x.
+           *** left.
+               apply IHl1.
+               exact H2.
+           *** right.
+               apply IHs.
+               exists x.
+               split.
+               **** now split.
+               **** intros.
+                    apply (H0 (S i)); lia.
+Qed.
 
+(** Homomorphisms *)
+
+Lemma denote_true : ⊤ ≈ denote Top.
+Proof. reflexivity. Qed.
+
+Lemma denote_false : ⊥ ≈ denote Bottom.
+Proof. reflexivity. Qed.
+
+Lemma denote_and p q : denote p ∧ denote q ≈ denote (And p q).
+Proof. reflexivity. Qed.
+
+Lemma denote_or p q : denote p ∨ denote q ≈ denote (Or p q).
+Proof. reflexivity. Qed.
+
+Lemma denote_next p : ◯ denote p ≈ denote (Next p).
+Proof. reflexivity. Qed.
+
+Lemma denote_until p q : denote p U denote q ≈ denote (Until p q).
+Proof. reflexivity. Qed.
+
+Lemma denote_wait p q : denote p W denote q ≈ denote (Wait p q).
+Proof. reflexivity. Qed.
+
+Lemma denote_always p : □ denote p ≈ denote (Always p).
+Proof. reflexivity. Qed.
+
+Lemma denote_eventually p : ◇ denote p ≈ denote (Eventually p).
+Proof. reflexivity. Qed.
+
+Lemma denote_release p q : denote p R denote q ≈ denote (Release p q).
+Proof. reflexivity. Qed.
+
+Lemma denote_strong_release p q : denote p M denote q ≈ denote (StrongRelease p q).
+Proof. reflexivity. Qed.
+
+Lemma denote_not p : ¬ (denote p) ≈ denote (negate p).
+Proof.
+  induction p; simpl.
+  - now rewrite not_true.
+  - now rewrite not_false.
+  - split; repeat intro; unfold Ensembles.In in *.
+    + now apply H, H0.
+    + apply H in H0.
+      contradiction.
+  - rewrite not_and.
+    now rewrite IHp1, IHp2.
+  - rewrite not_or.
+    now rewrite IHp1, IHp2.
+  - rewrite <- next_not.
+    now rewrite IHp.
+  - unfold release.
+    rewrite <- !IHp1.
+    rewrite <- !IHp2.
+    rewrite and_comm.
+    now rewrite <- law_173.
+  - unfold strong_release.
+    rewrite <- !IHp1.
+    rewrite <- !IHp2.
+    rewrite and_comm.
+    rewrite <- not_until.
+    unfold wait.
+    rewrite always_def.
+    rewrite evn_def.
+    rewrite and_def.
+    now rewrite not_not.
+  - rewrite always_def.
+    rewrite not_not.
+    now rewrite IHp.
+  - rewrite always_def.
+    rewrite <- IHp.
+    now rewrite not_not.
+  - unfold release.
+    rewrite not_swap.
+    rewrite <- !IHp1.
+    rewrite <- !IHp2.
+    rewrite law_199.
+    now rewrite and_comm.
+  - unfold strong_release.
+    rewrite and_comm.
+    rewrite <- law_201.
+    rewrite <- !IHp1.
+    rewrite <- !IHp2.
+    now rewrite not_not.
+Qed.
+
+(** Since we have proven our denotation, shift to a user syntax that builds
+    syntactic formulae directly, since we can now translate those to stream-
+    based formulae at will. *)
+Definition t              := Formula.
 Definition true           := Top.
 Definition false          := Bottom.
 Definition and            := And.
@@ -1162,8 +1270,9 @@ Notation "p 'R' q"   := (release p q)        (at level 79, right associativity) 
 Notation "p 'M' q"   := (strong_release p q) (at level 79, right associativity) : ltl_scope.
 Notation "'Λ' x , p" := (examine (λ x , p))  (at level 97, no associativity) : ltl_scope.
 
-Program Instance implies_reflexive : Reflexive implies := impl_reflexive.
-Program Instance implies_transitive : Transitive implies := impl_transitive.
+(** Prove the monotonicity homomorphisms. *)
+Program Instance implies_reflexive      : Reflexive implies      := impl_reflexive.
+Program Instance implies_transitive     : Transitive implies     := impl_transitive.
 Program Instance Equivalence_equivalent : Equivalence equivalent := Equivalence_equiv.
 
 Program Instance equivalent_respects_equivalent :
@@ -1171,19 +1280,6 @@ Program Instance equivalent_respects_equivalent :
 
 Program Instance not_respects_implies : Proper (implies --> implies) not | 1 :=
   negate_respects_impl.
-
-Ltac induct :=
-  try split; repeat intro; simpl in *;
-  match goal with
-    [ S : list S.a |- _ ] => induction S
-  end; firstorder.
-
-#[local] Obligation Tactic := induct.
-
-Program Instance Examine_respects_implies :
-  Proper ((eq ==> implies) ==> implies) Examine.
-Program Instance Examine_respects_equivalent :
-  Proper ((eq ==> equivalent) ==> equivalent) Examine.
 
 Instance and_respects_implies :
   Proper (implies ==> implies ==> implies) and := And_respects_impl.
@@ -1205,6 +1301,15 @@ Instance strong_release_respects_implies :
   Proper (implies ==> implies ==> implies) strong_release :=
   StrongRelease_respects_impl.
 
+#[local] Obligation Tactic := induct.
+
+Program Instance Examine_respects_implies :
+  Proper ((eq ==> implies) ==> implies) Examine.
+Program Instance Examine_respects_equivalent :
+  Proper ((eq ==> equivalent) ==> equivalent) Examine.
+
+#[local] Obligation Tactic := program_simpl.
+
 Lemma implication p q : SL.implies (denote p) (denote q) -> (p ⟹ q).
 Proof.
   repeat intro.
@@ -1213,101 +1318,101 @@ Proof.
   now apply H.
 Qed.
 
+Ltac defer H :=
+  first [ apply implication
+        | split; apply implication
+        ];
+  repeat first
+         [ rewrite <- denote_true
+         | rewrite <- denote_false
+         | rewrite <- denote_and
+         | rewrite <- denote_or
+         | rewrite <- denote_next
+         | rewrite <- denote_until
+         | rewrite <- denote_wait
+         | rewrite <- denote_always
+         | rewrite <- denote_eventually
+         | rewrite <- denote_release
+         | rewrite <- denote_strong_release
+         | rewrite <- denote_not
+         ];
+  try apply H.
+
+(** Since the algebraic homomorpmisms were proven above, all the theorems of
+    our algebra/logic trivially follow. *)
+
 Theorem or_inj p q : p ⟹ p ∨ q.
-Proof. now induct. Qed.
+Proof. defer or_inj. Qed.
 
 Theorem true_def p : p ∨ ¬p ≈ ⊤.
-Proof.
-  split; repeat intro;
-  simpl; intuition.
-  clear H.
-  rewrite matches_negate.
-  exact (classic (matches p s)).
-Qed.
+Proof. defer true_def. Qed.
 
 Theorem false_def p : ¬(p ∨ ¬p) ≈ ⊥.
-Proof.
-  split; repeat intro;
-  simpl; intuition.
-  rewrite matches_negate in H.
-  apply H.
-  rewrite true_def.
-  now constructor.
-Qed.
+Proof. defer false_def. Qed.
 
 Theorem or_comm p q : p ∨ q ≈ q ∨ p.
-Proof. now induct. Qed.
+Proof. defer or_comm. Qed.
 
 Theorem or_assoc p q r : (p ∨ q) ∨ r ≈ p ∨ (q ∨ r).
-Proof. now induct. Qed.
+Proof. defer or_assoc. Qed.
 
 Theorem and_def p q : p ∧ q ≈ ¬(¬p ∨ ¬q).
-Proof. now induct; rewrite !negate_negate in *. Qed.
+Proof. defer and_def. Qed.
 
 Theorem huntington p q : ¬(¬p ∨ ¬q) ∨ ¬(¬p ∨ q) ≈ p.
-Proof.
-  unfold or, not; simpl.
-  rewrite !negate_negate.
-  split; repeat intro; simpl in *; intuition.
-  pose proof (true_def q).
-  destruct H0.
-  clear H0.
-  specialize (H1 s I).
-  simpl in H1.
-  now intuition.
-Qed.
+Proof. defer huntington. Qed.
 
 Theorem (* 1 *) next_not p : ◯ ¬p ≈ ¬◯ p.
-Proof. now auto. Qed.
+Proof. defer next_not. Qed.
 
 Theorem (* 2 *) next_impl p q : ◯ (p ⇒ q) ≈ ◯ p ⇒ ◯ q.
-Proof. now induct. Qed.
+Proof. defer next_impl. Qed.
 
 Theorem (* 10 *) until_expand p q : p U q ≈ q ∨ (p ∧ ◯ (p U q)).
-Proof. now induct. Qed.
+Proof. defer until_expand. Qed.
 
 Theorem (* 9 *) next_until p q : ◯ (p U q) ≈ (◯ p) U (◯ q).
-Proof. now split; apply implication, next_until. Qed.
+Proof. defer next_until. Qed.
 
 Theorem (* 11 *) until_false p : p U ⊥ ≈ ⊥.
-Proof. now induct. Qed.
+Proof. defer until_false. Qed.
 
 Theorem (* NEW *) looped p : ◯ ¬p U p ⟹ p.
-Proof. now induct; contradiction (matches_not_false H1 H). Qed.
+Proof. defer looped. Qed.
 
 Theorem (* 12 *) until_left_or p q r : p U (q ∨ r) ≈ (p U q) ∨ (p U r).
-Proof. now induct. Qed.
+Proof. defer until_left_or. Qed.
 
 Theorem (* 14 *) until_left_and p q r : p U (q ∧ r) ⟹ (p U q) ∧ (p U r).
-Proof. now induct. Qed.
+Proof. defer until_left_and. Qed.
 
 Theorem (* NEW *) until_and_until p q r s :
   (p U q) ∧ (r U s) ⟹ (p ∧ r) U ((q ∧ r) ∨ (p ∧ s) ∨ (q ∧ s)).
-Proof. now induct. Qed.
+Proof. defer until_and_until. Qed.
 
 Theorem (* 17 *) until_left_or_order p q r : p U (q U r) ⟹ (p ∨ q) U r.
-Proof. now induct; right; induct. Qed.
+Proof. defer until_left_or_order. Qed.
 
 Theorem (* 18 *) until_right_and_order p q r : p U (q ∧ r) ⟹ (p U q) U r.
-Proof. now apply implication, until_right_and_order. Qed.
+Proof. defer until_right_and_order. Qed.
 
 Theorem (* 170 *) not_until p q : ⊤ U ¬p ∧ ¬(p U q) ≈ ¬q U (¬p ∧ ¬q).
-Proof. now induct. Qed.
+Proof. defer not_until. Qed.
 
 Theorem (* 38 *) evn_def p : ◇ p ≈ ⊤ U p.
-Proof. now induct. Qed.
+Proof. defer evn_def. Qed.
 
 Theorem (* 54 *) always_def p : □ p ≈ ¬◇ ¬p.
-Proof. now induct; rewrite ?negate_negate in *; intuition. Qed.
+Proof. defer always_def. Qed.
 
 Theorem (* 169 *) wait_def p q : p W q ≈ □ p ∨ p U q.
-Proof. now induct. Qed.
+Proof. defer wait_def. Qed.
 
 Theorem release_def p q : p R q ≈ ¬(¬p U ¬q).
-Proof. now induct; rewrite ?negate_negate in *; intuition. Qed.
+Proof. defer release_def. Qed.
 
 Theorem strong_release_def p q : p M q ≈ q U (p ∧ q).
-Proof. now induct. Qed.
+Proof. defer strong_release_def. Qed.
 
 Section Combinators.
 
@@ -1339,6 +1444,7 @@ End NatStream.
 Module LTLExamples.
 
 Module Import L := LTL NatStream.
+Import L.AST.
 
 Definition num (n : nat) :=
   Λ x, match x with
