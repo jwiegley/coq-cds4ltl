@@ -1,16 +1,8 @@
 Set Warnings "-notation-overridden".
 
 Require Import
-  Coq.Program.Program
   Coq.Unicode.Utf8
-  Coq.micromega.Lia
-  Coq.Lists.List
   Coq.Classes.Morphisms
-  Coq.Logic.Classical
-  FunInd
-  Model
-  Stream
-  Bool
   MinLTL
   LTL.
 
@@ -99,11 +91,10 @@ Qed.
 
 Ltac defer H :=
   repeat intro;
-  unfold flip in *;
+  unfold Basics.flip in *;
   first [ apply denote_implies
         | split; apply denote_implies
         ];
-  unfold flip in *;
   repeat first
          [ rewrite <- denote_true
          | rewrite <- denote_false
