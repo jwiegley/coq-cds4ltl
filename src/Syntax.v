@@ -542,9 +542,9 @@ Ltac induct :=
 
 #[local] Obligation Tactic := induct.
 
-Program Instance impl_reflexive : Reflexive impl.
-Program Instance impl_transitive : Transitive impl.
-Program Instance Equivalence_equiv : Equivalence equiv.
+Program Instance impl_Reflexive : Reflexive impl.
+Program Instance impl_Transitive : Transitive impl.
+Program Instance equiv_Equivalence : Equivalence equiv.
 
 #[local] Obligation Tactic := program_simpl.
 
@@ -1271,9 +1271,9 @@ Notation "p 'M' q"   := (strong_release p q) (at level 79, right associativity) 
 Notation "'Λ' x , p" := (examine (λ x , p))  (at level 97, no associativity) : ltl_scope.
 
 (** Prove the monotonicity homomorphisms. *)
-Program Instance implies_reflexive      : Reflexive implies      := impl_reflexive.
-Program Instance implies_transitive     : Transitive implies     := impl_transitive.
-Program Instance Equivalence_equivalent : Equivalence equivalent := Equivalence_equiv.
+Program Instance implies_Reflexive      : Reflexive implies      := impl_Reflexive.
+Program Instance implies_Transitive     : Transitive implies     := impl_Transitive.
+Program Instance equivalent_Equivalence : Equivalence equivalent := equiv_Equivalence.
 
 Program Instance equivalent_respects_equivalent :
   Proper (equivalent ==> equivalent ==> iff) equivalent := equiv_respects_equiv.

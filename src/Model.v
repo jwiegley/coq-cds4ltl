@@ -37,13 +37,13 @@ Definition false      := Empty_set (Stream S.a).
 Definition implies    := Included (Stream S.a).
 Definition equivalent := Same_set (Stream S.a).
 
-Program Instance implies_reflexive : Reflexive implies.
+Program Instance implies_Reflexive : Reflexive implies.
 Next Obligation.
   unfold implies.
   now repeat intro.
 Qed.
 
-Program Instance implies_transitive : Transitive implies.
+Program Instance implies_Transitive : Transitive implies.
 Next Obligation.
   unfold implies in *.
   repeat intro.

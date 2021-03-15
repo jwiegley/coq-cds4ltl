@@ -37,8 +37,8 @@ Notation "⊥"     := false     (at level 0, no associativity) : boolean_scope.
 
 Definition equivalent p q := implies p q /\ implies q p.
 
-Declare Instance implies_reflexive : Reflexive implies.
-Declare Instance implies_transitive : Transitive implies.
+Declare Instance implies_Reflexive : Reflexive implies.
+Declare Instance implies_Transitive : Transitive implies.
 
 Declare Instance not_respects_implies : Proper (implies --> implies) not.
 Declare Instance or_respects_implies : Proper (implies ==> implies ==> implies) or.
