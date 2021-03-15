@@ -531,6 +531,7 @@ Module StepExamples.
 
 Module Import S := LTLStep NatStream.
 Import S.LTL.
+Import S.LTL.DF.
 
 Import ListNotations.
 
