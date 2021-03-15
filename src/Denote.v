@@ -15,11 +15,11 @@ Require Import
   LTL.
 
 (** When we wish to show that there is a sound interpretation of LTL for a
-    particular representation, we can either prove that all the core axioms
-    hold under that representation, or we can provide functions that denote
-    the terms into a simpler model and then just show that the LTL algebra is
-    homomorphic with regard to that model. All the theorems of LTL will then
-    follow from these homomorphisms, as shown by [DenotationFacts] below. *)
+    particular representation, we can either prove the axioms hold under that
+    representation, or we can provide functions to denote all terms into a
+    simpler model and then show the LTL algebra is homomorphic for that model.
+    All the theorems of LTL then follow from the homomorphisms, as shown by
+    [DenotationFacts] below. *)
 Module Type Denotation (Import L : LinearTemporalLogic).
 
 Parameter A : Type.
