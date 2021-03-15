@@ -2680,26 +2680,47 @@ Program Instance strong_release_respects_equivalent :
 
 Theorem law_256 p q : p U q ≈ ¬(¬p R ¬q).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite release_def.
+  now rewrite !not_not.
+Qed.
 
 Theorem law_257 p q : p W q ≈ q R (q ∨ p).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite wait_def, release_def.
+  rewrite not_or.
+  rewrite and_comm.
+  rewrite <- not_until.
+  rewrite not_and.
+  rewrite <- evn_def.
+  rewrite <- always_def.
+  now rewrite !not_not.
+Qed.
 
 Theorem law_258 p q : p R q ≈ q W (q ∧ p).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite wait_def, release_def.
+  rewrite law_173.
+  rewrite wait_def.
+  rewrite !not_not.
+  now rewrite and_comm.
+Qed.
 
 Theorem law_259 p q : p R q ≈ q ∧ (p ∨ ◯ (p R q)).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite !release_def.
+  rewrite until_expand at 1.
+  rewrite not_or.
+  rewrite not_and.
+  rewrite !not_not.
+  now rewrite next_not.
+Qed.
 
 Theorem law_260 p q r : p R (q ∨ r) ≈ (p R q) ∨ (p R r).
 Proof.
+  rewrite !release_def.
+  rewrite not_swap.
+  rewrite !not_or.
+  rewrite !not_not.
   (* FILL IN HERE *)
 Admitted.
 
