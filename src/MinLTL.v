@@ -56,10 +56,9 @@ Axiom (* 170 *) not_until : ∀ p q, ⊤ U ¬p ∧ ¬(p U q) ≈ ¬q U (¬p ∧ 
 
 End MinimalLinearTemporalLogic.
 
-Module MinimalLinearTemporalLogicFacts (L : MinimalLinearTemporalLogic).
+Module MinimalLinearTemporalLogicFacts (Import L : MinimalLinearTemporalLogic).
 
-Import L.
-Module Import BF := BooleanLogicFacts L.
+Module Import BF  := BooleanLogicFacts L.
 Module Import MBF := BF.MBF.
 
 #[local] Obligation Tactic := solve [ one_arg | two_arg ].

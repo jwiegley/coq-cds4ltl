@@ -33,11 +33,10 @@ Axiom (* 169 *) wait_def   : ∀ p q, p W q ≈ □ p ∨ p U q.
 
 End LinearTemporalLogicW.
 
-Module LinearTemporalLogicWFacts (L : LinearTemporalLogicW).
+Module LinearTemporalLogicWFacts (Import L : LinearTemporalLogicW).
 
-Import L.
 Module Import MLTL := MinimalLinearTemporalLogicFacts L.
-Module Import BFW := MLTL.BF.
+Module Import BFW  := MLTL.BF.
 Module Import MBFW := BFW.MBF.
 
 #[local] Obligation Tactic := solve [ one_arg | two_arg ].
@@ -2663,13 +2662,12 @@ Axiom strong_release_def : ∀ p q, p M q ≈ q U (p ∧ q).
 
 End LinearTemporalLogic.
 
-Module LinearTemporalLogicFacts (L : LinearTemporalLogic).
+Module LinearTemporalLogicFacts (Import L : LinearTemporalLogic).
 
-Import L.
 Module Import LTLW := LinearTemporalLogicWFacts L.
 Module Import MLTL := MinimalLinearTemporalLogicFacts L.
-Module Import BF := MLTL.BF.
-Module Import MBF := BF.MBF.
+Module Import BF   := MLTL.BF.
+Module Import MBF  := BF.MBF.
 
 #[local] Obligation Tactic := solve [ one_arg | two_arg ].
 

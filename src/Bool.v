@@ -30,9 +30,8 @@ Axiom and_def : ∀ p q, p ∧ q ≈ ¬(¬p ∨ ¬q).
 
 End BooleanLogic.
 
-Module BooleanLogicFacts (B : BooleanLogic).
+Module BooleanLogicFacts (Import B : BooleanLogic).
 
-Import B.
 Module Import MBF := MinimalBooleanLogicFacts B.
 
 #[local] Obligation Tactic := solve [ one_arg | two_arg ].

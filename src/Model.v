@@ -16,9 +16,7 @@ Require Import
   LTL.
 
 Module Type StreamType.
-
 Parameter a : Type.              (* The type of entries in the trace *)
-
 End StreamType.
 
 Module StreamMinBool (S : StreamType) <: MinimalBooleanLogic.

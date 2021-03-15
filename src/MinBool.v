@@ -68,9 +68,7 @@ Axiom false_def    : ∀ p,     ¬(p ∨ ¬p) ≈ ⊥.
 
 End MinimalBooleanLogic.
 
-Module MinimalBooleanLogicFacts (B : MinimalBooleanLogic).
-
-Import B.
+Module MinimalBooleanLogicFacts (Import B : MinimalBooleanLogic).
 
 Program Instance equivalent_Equivalence : Equivalence equivalent.
 Next Obligation. now intro x; split. Qed.
