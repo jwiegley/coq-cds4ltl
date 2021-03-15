@@ -13,6 +13,7 @@ Module LTLStep (S : StreamType).
 
 Module Import LTL := LTL S.
 Import LTL.AST.
+Import LTL.DF.
 
 Inductive Failed : Type :=
   | HitBottom

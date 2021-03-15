@@ -12,7 +12,8 @@ Require Import
   Stream
   Bool
   MinLTL
-  LTL.
+  LTL
+  Denote.
 
 Open Scope program_scope.
 Open Scope list_scope.
@@ -776,24 +777,23 @@ Qed.
 End LTLSyntax.
 
 Module OptionStreamType (S : StreamType).
-
 Definition a := option S.a.
-
 End OptionStreamType.
 
-Module LTL (S : StreamType) <: LinearTemporalLogicW <: LinearTemporalLogic.
+Module LTL (S : StreamType).
 
-Module AST := LTLSyntax S.
-Import AST.
-
-Module O := OptionStreamType S.
-Module SL := StreamLTL O.
+Module        O   := OptionStreamType S.
+Module Import SL  := StreamLTL O.
 Module Import L   := LinearTemporalLogicFacts SL.
 Module Import LW  := LinearTemporalLogicWFacts SL.
 Module Import ML  := MinimalLinearTemporalLogicFacts SL.
 Module Import BF  := ML.BF.
 Module Import MBF := BF.MBF.
-Import SL.
+Module Import AST := LTLSyntax S.
+
+Module Denoted <: Denotation SL.
+
+Definition A := Formula.
 
 (** Syntactic formulae denote directly into stream-based LTL formulae. *)
 Fixpoint denote (l : Formula) : t :=
@@ -811,6 +811,23 @@ Fixpoint denote (l : Formula) : t :=
   | Release p q       => denote p R denote q
   | StrongRelease p q => denote p M denote q
   end.
+
+Definition Top           : A              := Top.
+Definition Bottom        : A              := Bottom.
+Definition And           : A -> A -> A    := And.
+Definition Or            : A -> A -> A    := Or.
+Definition Not           : A -> A         := negate.
+Definition Implies       : A -> A -> Prop := impl.
+Definition Equivalent    : A -> A -> Prop := equiv.
+Definition Next          : A -> A         := Next.
+Definition Until         : A -> A -> A    := Until.
+Definition Wait          : A -> A -> A    := Wait.
+Definition Always        : A -> A         := Always.
+Definition Eventually    : A -> A         := Eventually.
+Definition Release       : A -> A -> A    := Release.
+Definition StrongRelease : A -> A -> A    := StrongRelease.
+
+Notation "'Λ' x , p" := (Examine (λ x , p))  (at level 97, no associativity) : ltl_scope.
 
 Fixpoint project {A : Type} (xs : list A) : Stream (option A) :=
   match xs with
@@ -1150,27 +1167,6 @@ Proof. reflexivity. Qed.
 Lemma denote_or p q : denote p ∨ denote q ≈ denote (Or p q).
 Proof. reflexivity. Qed.
 
-Lemma denote_next p : ◯ denote p ≈ denote (Next p).
-Proof. reflexivity. Qed.
-
-Lemma denote_until p q : denote p U denote q ≈ denote (Until p q).
-Proof. reflexivity. Qed.
-
-Lemma denote_wait p q : denote p W denote q ≈ denote (Wait p q).
-Proof. reflexivity. Qed.
-
-Lemma denote_always p : □ denote p ≈ denote (Always p).
-Proof. reflexivity. Qed.
-
-Lemma denote_eventually p : ◇ denote p ≈ denote (Eventually p).
-Proof. reflexivity. Qed.
-
-Lemma denote_release p q : denote p R denote q ≈ denote (Release p q).
-Proof. reflexivity. Qed.
-
-Lemma denote_strong_release p q : denote p M denote q ≈ denote (StrongRelease p q).
-Proof. reflexivity. Qed.
-
 Lemma denote_not p : ¬ (denote p) ≈ denote (negate p).
 Proof.
   induction p; simpl.
@@ -1221,200 +1217,50 @@ Proof.
     now rewrite not_not.
 Qed.
 
-(** Since we have proven our denotation, shift to a user syntax that builds
-    syntactic formulae directly, since we can now translate those to stream-
-    based formulae at will. *)
-Definition t              := Formula.
-Definition true           := Top.
-Definition false          := Bottom.
-Definition and            := And.
-Definition or             := Or.
-Definition not            := negate.
-Definition implies        := impl.
-Definition equivalent     := equiv.
-Definition next           := Next.
-Definition until          := Until.
-Definition wait           := Wait.
-Definition always         := Always.
-Definition eventually     := Eventually.
-Definition release        := Release.
-Definition strong_release := StrongRelease.
-Definition examine        := Examine.
-
-Declare Scope boolean_scope.
-Bind Scope boolean_scope with Formula.
-Delimit Scope boolean_scope with boolean.
-Open Scope boolean_scope.
-
-Notation "¬ p"    := (not p)         (at level 75, right associativity) : boolean_scope.
-Infix    "∨"      := or              (at level 85, right associativity) : boolean_scope.
-Notation "p ⇒ q"  := (¬ p ∨ q)       (at level 86, right associativity) : boolean_scope.
-Notation "⊤"      := true            (at level 0, no associativity) : boolean_scope.
-Notation "⊥"      := false           (at level 0, no associativity) : boolean_scope.
-Infix    "∧"      := and             (at level 80, right associativity) : boolean_scope.
-Infix    "⟹"     := implies         (at level 99, right associativity) : boolean_scope.
-Infix    "≈"      := equivalent      (at level 90, no associativity) : boolean_scope.
-
-Declare Scope ltl_scope.
-Bind Scope ltl_scope with Formula.
-Delimit Scope ltl_scope with ltl.
-Open Scope boolean_scope.
-Open Scope ltl_scope.
-
-Notation "◯ p"       := (next p)             (at level 75, right associativity) : ltl_scope.
-Notation "◇ p"       := (eventually p)       (at level 75, right associativity) : ltl_scope.
-Notation "□ p"       := (always p)           (at level 75, right associativity) : ltl_scope.
-Notation "p 'U' q"   := (until p q)          (at level 79, right associativity) : ltl_scope.
-Notation "p 'W' q"   := (wait p q)           (at level 79, right associativity) : ltl_scope.
-Notation "p 'R' q"   := (release p q)        (at level 79, right associativity) : ltl_scope.
-Notation "p 'M' q"   := (strong_release p q) (at level 79, right associativity) : ltl_scope.
-Notation "'Λ' x , p" := (examine (λ x , p))  (at level 97, no associativity) : ltl_scope.
-
-(** Prove the monotonicity homomorphisms. *)
-Program Instance implies_Reflexive      : Reflexive implies      := impl_Reflexive.
-Program Instance implies_Transitive     : Transitive implies     := impl_Transitive.
-Program Instance equivalent_Equivalence : Equivalence equivalent := equiv_Equivalence.
-
-Program Instance equivalent_respects_equivalent :
-  Proper (equivalent ==> equivalent ==> iff) equivalent := equiv_respects_equiv.
-
-Program Instance not_respects_implies : Proper (implies --> implies) not | 1 :=
-  negate_respects_impl.
-
-Instance and_respects_implies :
-  Proper (implies ==> implies ==> implies) and := And_respects_impl.
-Instance or_respects_implies :
-  Proper (implies ==> implies ==> implies) or := Or_respects_impl.
-Instance next_respects_implies :
-  Proper (implies ==> implies) next := Next_respects_impl.
-Instance until_respects_implies :
-  Proper (implies ==> implies ==> implies) until := Until_respects_impl.
-Instance wait_respects_implies :
-  Proper (implies ==> implies ==> implies) wait := Wait_respects_impl.
-Instance eventually_respects_implies :
-  Proper (implies ==> implies) eventually := Eventually_respects_impl.
-Instance always_respects_implies :
-  Proper (implies ==> implies) always := Always_respects_impl.
-Instance release_respects_implies :
-  Proper (implies ==> implies ==> implies) release := Release_respects_impl.
-Instance strong_release_respects_implies :
-  Proper (implies ==> implies ==> implies) strong_release :=
-  StrongRelease_respects_impl.
-
-#[local] Obligation Tactic := induct.
-
-Program Instance Examine_respects_implies :
-  Proper ((eq ==> implies) ==> implies) Examine.
-Program Instance Examine_respects_equivalent :
-  Proper ((eq ==> equivalent) ==> equivalent) Examine.
-
-#[local] Obligation Tactic := program_simpl.
-
-Lemma implication p q : SL.implies (denote p) (denote q) -> (p ⟹ q).
+Lemma denote_implies p q : (denote p ⟹ denote q) -> Implies p q.
 Proof.
   repeat intro.
-  apply denote_matches.
-  apply denote_matches in H0.
-  now apply H.
+  now apply denote_matches, H, denote_matches.
 Qed.
 
-Ltac defer H :=
-  first [ apply implication
-        | split; apply implication
-        ];
-  repeat first
-         [ rewrite <- denote_true
-         | rewrite <- denote_false
-         | rewrite <- denote_and
-         | rewrite <- denote_or
-         | rewrite <- denote_next
-         | rewrite <- denote_until
-         | rewrite <- denote_wait
-         | rewrite <- denote_always
-         | rewrite <- denote_eventually
-         | rewrite <- denote_release
-         | rewrite <- denote_strong_release
-         | rewrite <- denote_not
-         ];
-  try apply H.
+Lemma denote_next p : ◯ denote p ≈ denote (Next p).
+Proof. reflexivity. Qed.
 
-(** Since the algebraic homomorpmisms were proven above, all the theorems of
-    our algebra/logic trivially follow. *)
+Lemma denote_until p q : denote p U denote q ≈ denote (Until p q).
+Proof. reflexivity. Qed.
 
-Theorem or_inj p q : p ⟹ p ∨ q.
-Proof. defer or_inj. Qed.
+Lemma denote_wait p q : denote p W denote q ≈ denote (Wait p q).
+Proof. reflexivity. Qed.
 
-Theorem true_def p : p ∨ ¬p ≈ ⊤.
-Proof. defer true_def. Qed.
+Lemma denote_always p : □ denote p ≈ denote (Always p).
+Proof. reflexivity. Qed.
 
-Theorem false_def p : ¬(p ∨ ¬p) ≈ ⊥.
-Proof. defer false_def. Qed.
+Lemma denote_eventually p : ◇ denote p ≈ denote (Eventually p).
+Proof. reflexivity. Qed.
 
-Theorem or_comm p q : p ∨ q ≈ q ∨ p.
-Proof. defer or_comm. Qed.
+Lemma denote_release p q : denote p R denote q ≈ denote (Release p q).
+Proof. reflexivity. Qed.
 
-Theorem or_assoc p q r : (p ∨ q) ∨ r ≈ p ∨ (q ∨ r).
-Proof. defer or_assoc. Qed.
+Lemma denote_strong_release p q : denote p M denote q ≈ denote (StrongRelease p q).
+Proof. reflexivity. Qed.
 
-Theorem and_def p q : p ∧ q ≈ ¬(¬p ∨ ¬q).
-Proof. defer and_def. Qed.
+Program Instance Implies_Reflexive  : Reflexive Implies.
+Next Obligation. now firstorder. Qed.
 
-Theorem huntington p q : ¬(¬p ∨ ¬q) ∨ ¬(¬p ∨ q) ≈ p.
-Proof. defer huntington. Qed.
+Program Instance Implies_Transitive : Transitive Implies.
+Next Obligation. now firstorder. Qed.
 
-Theorem (* 1 *) next_not p : ◯ ¬p ≈ ¬◯ p.
-Proof. defer next_not. Qed.
+End Denoted.
 
-Theorem (* 2 *) next_impl p q : ◯ (p ⇒ q) ≈ ◯ p ⇒ ◯ q.
-Proof. defer next_impl. Qed.
+Module Import D  := Denoted.
+Module Import DF := DenotationFacts SL D.
 
-Theorem (* 10 *) until_expand p q : p U q ≈ q ∨ (p ∧ ◯ (p U q)).
-Proof. defer until_expand. Qed.
-
-Theorem (* 9 *) next_until p q : ◯ (p U q) ≈ (◯ p) U (◯ q).
-Proof. defer next_until. Qed.
-
-Theorem (* 11 *) until_false p : p U ⊥ ≈ ⊥.
-Proof. defer until_false. Qed.
-
-Theorem (* NEW *) looped p : ◯ ¬p U p ⟹ p.
-Proof. defer looped. Qed.
-
-Theorem (* 12 *) until_left_or p q r : p U (q ∨ r) ≈ (p U q) ∨ (p U r).
-Proof. defer until_left_or. Qed.
-
-Theorem (* 14 *) until_left_and p q r : p U (q ∧ r) ⟹ (p U q) ∧ (p U r).
-Proof. defer until_left_and. Qed.
-
-Theorem (* NEW *) until_and_until p q r s :
-  (p U q) ∧ (r U s) ⟹ (p ∧ r) U ((q ∧ r) ∨ (p ∧ s) ∨ (q ∧ s)).
-Proof. defer until_and_until. Qed.
-
-Theorem (* 17 *) until_left_or_order p q r : p U (q U r) ⟹ (p ∨ q) U r.
-Proof. defer until_left_or_order. Qed.
-
-Theorem (* 18 *) until_right_and_order p q r : p U (q ∧ r) ⟹ (p U q) U r.
-Proof. defer until_right_and_order. Qed.
-
-Theorem (* 170 *) not_until p q : ⊤ U ¬p ∧ ¬(p U q) ≈ ¬q U (¬p ∧ ¬q).
-Proof. defer not_until. Qed.
-
-Theorem (* 38 *) evn_def p : ◇ p ≈ ⊤ U p.
-Proof. defer evn_def. Qed.
-
-Theorem (* 54 *) always_def p : □ p ≈ ¬◇ ¬p.
-Proof. defer always_def. Qed.
-
-Theorem (* 169 *) wait_def p q : p W q ≈ □ p ∨ p U q.
-Proof. defer wait_def. Qed.
-
-Theorem release_def p q : p R q ≈ ¬(¬p U ¬q).
-Proof. defer release_def. Qed.
-
-Theorem strong_release_def p q : p M q ≈ q U (p ∧ q).
-Proof. defer strong_release_def. Qed.
+Notation "'Λ' x , p" := (Examine (λ x , p))  (at level 97, no associativity) : ltl_scope.
 
 Section Combinators.
+
+Open Scope boolean_scope.
+Open Scope ltl_scope.
 
 Definition if_then (p : S.a -> bool) (f : S.a -> Formula) :=
   Λ x, match x with
@@ -1445,6 +1291,7 @@ Module LTLExamples.
 
 Module Import L := LTL NatStream.
 Import L.AST.
+Import L.DF.
 
 Definition num (n : nat) :=
   Λ x, match x with
