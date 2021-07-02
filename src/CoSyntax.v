@@ -926,7 +926,7 @@ Qed.
 Theorem (* 11 *) until_false p : p U ⊥ ≈ ⊥.
 Proof. now induct. Qed.
 
-Theorem (* NEW *) looped p : ◯ ¬p U p ≈ p.
+Theorem (* NEW *) looped p : ◯ ¬p U p ⟹ p.
 Proof.
   induct.
   contradiction (denote_not_false H1 H).

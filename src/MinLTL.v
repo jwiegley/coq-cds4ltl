@@ -41,7 +41,7 @@ Axiom (* 9 *)   next_until : ∀ p q, ◯ (p U q) ≈ (◯ p) U (◯ q).
 
 Axiom (* 10 *)  until_expand  : ∀ p q, p U q ≈ q ∨ (p ∧ ◯ (p U q)).
 Axiom (* 11 *)  until_false   : ∀ p,   p U ⊥ ≈ ⊥.
-Axiom (* NEW *) looped        : ∀ p,   ◯ ¬p U p ≈ p.
+Axiom (* NEW *) looped        : ∀ p,   ◯ ¬p U p ⟹ p.
 
 Axiom (* 12 *)  until_left_or  : ∀ p q r, p U (q ∨ r) ≈  (p U q) ∨ (p U r).
 Axiom (* 14 *)  until_left_and : ∀ p q r, p U (q ∧ r) ⟹ (p U q) ∧ (p U r).
