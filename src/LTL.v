@@ -342,19 +342,6 @@ Proof.
   now apply looped.
 Qed.
 
-Theorem (* NEW *) looped_alt p : ◯ ¬p U p ⟹ p.
-Proof.
-  rewrite <- (or_false p) at 3.
-  rewrite <- (not_not p) at 3.
-  apply and_impl_iff.
-  rewrite until_and_not.
-  rewrite (and_comm _ (◯ p)).
-  rewrite next_not.
-  rewrite <- and_assoc.
-  boolean.
-  now apply until_false.
-Qed.
-
 Theorem (* 75 *) law_75_strong p : p ∧ ◇ ¬p ≈ p U (p ∧ ¬◯ p).
 Proof.
   split.

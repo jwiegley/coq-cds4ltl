@@ -1,9 +1,8 @@
 args@{ packages ? "coqPackages_8_13"
 
-, rev      ? "a2b0ea6865b2346ceb015259c76e111dcca039c5"
-, sha256   ? "12dgwajv3w94p13scj68c24v01p055k9hcpcsn7w9i8fys72s99d"
-
-, pkgs     ? import (builtins.fetchTarball {
+, rev    ? "c74fa74867a3cce6ab8371dfc03289d9cc72a66e"
+, sha256 ? "13bnmpdmh1h6pb7pfzw5w3hm6nzkg9s1kcrwgw1gmdlhivrmnx75"
+, pkgs   ? import (builtins.fetchTarball {
     url = "https://github.com/NixOS/nixpkgs/archive/${rev}.tar.gz";
     inherit sha256; }) {
     config.allowUnfree = true;
@@ -31,7 +30,6 @@ pkgs.stdenv.mkDerivation rec {
 
   env = pkgs.buildEnv { name = name; paths = buildInputs; };
   passthru = {
-    compatibleCoqVersions = v:
-      builtins.elem v [ "8.13" ];
+    compatibleCoqVersions = v: builtins.elem v [ "8.13" ];
  };
 }

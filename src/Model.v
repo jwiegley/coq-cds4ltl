@@ -344,23 +344,26 @@ Proof.
     lia.
 Qed.
 
-Theorem (* NEW *) looped p : ◯ ¬p U p ⟹ p.
+Theorem (* NEW *) looped p : ◯ ¬p U p ≈ p.
 Proof.
   unfold next, not, Complement, Logic.not.
-  repeat intro.
-  inv H.
-  inv H0.
-  unfold In in *.
-  setoid_rewrite from_plus in H1.
-  simpl plus in H1.
-  destruct (Compare_dec.le_lt_dec x0 0).
-    assert (x0 = 0) by lia.
-    subst.
-    exact H.
-  assert (Nat.pred x0 < x0) by lia.
-  specialize (H1 _ H0).
-  rewrite PeanoNat.Nat.succ_pred_pos in H1; [|lia].
-  contradiction.
+  split; repeat intro.
+  - inv H.
+    inv H0.
+    unfold In in *.
+    setoid_rewrite from_plus in H1.
+    simpl plus in H1.
+    destruct (Compare_dec.le_lt_dec x0 0).
+      assert (x0 = 0) by lia.
+      subst.
+      exact H.
+    assert (Nat.pred x0 < x0) by lia.
+    specialize (H1 _ H0).
+    rewrite PeanoNat.Nat.succ_pred_pos in H1; [|lia].
+    contradiction.
+  - unfold In in *.
+    exists 0.
+    split; auto; intros; lia.
 Qed.
 
 Theorem (* 12 *) until_left_or p q r : p U (q ∨ r) ≈ (p U q) ∨ (p U r).
