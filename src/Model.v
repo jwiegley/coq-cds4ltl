@@ -333,15 +333,12 @@ Proof.
         lia.
 Qed.
 
-Theorem (* 11 *) until_false p : p U ⊥ ≈ ⊥.
+Theorem (* 11 *) until_false p : p U ⊥ ⟹ ⊥.
 Proof.
   unfold next, until, or, and.
-  split; repeat intro; unfold In in *.
-  - destruct H, H.
-    contradiction.
-  - exists 0.
-    split; auto; intros.
-    lia.
+  repeat intro; unfold In in *.
+  destruct H, H.
+  contradiction.
 Qed.
 
 Theorem (* NEW *) looped p : ◯ ¬p U p ⟹ p.

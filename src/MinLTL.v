@@ -32,15 +32,15 @@ Open Scope ltl_scope.
 Notation "◯ p"     := (next p)    (at level 75, right associativity) : ltl_scope.
 Notation "p 'U' q" := (until p q) (at level 79, right associativity) : ltl_scope.
 
-Declare Instance next_respects_implies : Proper (implies ==> implies) next.
+Declare Instance next_respects_implies  : Proper (implies ==> implies) next.
 Declare Instance until_respects_implies : Proper (implies ==> implies ==> implies) until.
 
 Axiom (* 1 *)   next_not   : ∀ p,   ◯ ¬p ≈ ¬◯ p.
 Axiom (* 2 *)   next_impl  : ∀ p q, ◯ (p ⇒ q) ≈ ◯ p ⇒ ◯ q.
-Axiom (* 9 *)   next_until : ∀ p q, ◯ (p U q) ≈ (◯ p) U (◯ q).
+Axiom (* 9 *)   next_until : ∀ p q, ◯ (p U q) ≈ ◯ p U ◯ q.
 
 Axiom (* 10 *)  until_expand  : ∀ p q, p U q ≈ q ∨ (p ∧ ◯ (p U q)).
-Axiom (* 11 *)  until_false   : ∀ p,   p U ⊥ ≈ ⊥.
+Axiom (* 11 *)  until_false   : ∀ p,   p U ⊥ ⟹ ⊥.
 Axiom (* NEW *) looped        : ∀ p,   ◯ ¬p U p ⟹ p.
 
 Axiom (* 12 *)  until_left_or  : ∀ p q r, p U (q ∨ r) ≈  (p U q) ∨ (p U r).

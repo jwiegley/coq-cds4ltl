@@ -218,7 +218,7 @@ Proof. defer until_expand. Qed.
 Theorem (* 9 *) next_until p q : ◯ (p U q) ≈ (◯ p) U (◯ q).
 Proof. defer next_until. Qed.
 
-Theorem (* 11 *) until_false p : p U ⊥ ≈ ⊥.
+Theorem (* 11 *) until_false p : p U ⊥ ⟹ ⊥.
 Proof. defer until_false. Qed.
 
 Theorem (* NEW *) looped p : ◯ ¬p U p ⟹ p.

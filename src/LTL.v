@@ -112,7 +112,9 @@ Qed.
 Theorem (* 44 *) law_44 : ◇ ⊥ ≈ ⊥.
 Proof.
   rewrite evn_def.
-  now apply until_false.
+  split.
+  - now rewrite until_false.
+  - now apply false_impl.
 Qed.
 
 Theorem (* 45 *) evn_expand p : ◇ p ≈ p ∨ ◯ ◇ p.
@@ -349,24 +351,24 @@ Proof.
     apply contrapositive.
     rewrite not_or.
     rewrite not_not.
-    rewrite evn_def.
-    rewrite not_until.
+    rewrite (* 38 *) evn_def.
+    rewrite (* 170 *) not_until.
     rewrite !not_and.
     rewrite !not_not.
     rewrite and_or.
     boolean.
     rewrite or_comm.
-    rewrite <- law_190_early.
+    rewrite (* 190 *) <- law_190_early.
     rewrite <- (not_not p) at 1.
-    now apply looped.
-  - rewrite until_left_and.
-    rewrite until_idem.
+    now apply (* NEW *) looped.
+  - rewrite (* 14 *) until_left_and.
+    rewrite (* 22 *) until_idem.
     apply and_respects_implies; [reflexivity|].
-    rewrite evn_expand.
+    rewrite (* 45 *) evn_expand.
     rewrite law_42.
     rewrite <- or_inj_r.
     rewrite law_51.
-    now rewrite next_not.
+    now rewrite (* 1 *) next_not.
 Qed.
 
 Theorem (* 90 *) law_90 p : □ p ∨ ◇ ¬p ≈ ⊤.
@@ -603,6 +605,15 @@ Proof.
   rewrite or_comm at 1.
   rewrite true_def.
   now rewrite true_and.
+Qed.
+
+Theorem (* 75 *) law_75 p : p ∧ ◇ ¬p ⟹ ◇ (p ∧ ¬◯ p).
+Proof.
+  rewrite law_75_strong.
+  rewrite evn_def.
+  apply until_respects_implies.
+  - apply impl_true.
+  - reflexivity.
 Qed.
 
 Theorem (* 76 *) law_76 p : □ p ⟹ p.
@@ -2312,8 +2323,10 @@ Qed.
 Theorem (* 224 *) law_224 p : □ p ≈ p W ⊥.
 Proof.
   rewrite wait_def.
-  rewrite until_false.
-  now boolean.
+  split.
+  - now rewrite <- or_inj.
+  - rewrite until_false.
+    now boolean.
 Qed.
 
 Theorem (* 225 *) law_225 p : ◇ p ≈ ¬(¬p W ⊥).
