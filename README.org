@@ -173,6 +173,74 @@ p ∧ q U ¬p ⇒ (q ∧ p) U (q ∧ p ∧ ¬◯ p)
 :ID:       DB0F1502-BE6B-4F48-B524-25CD4A0D8A4C
 :CREATED:  [2021-02-22 Mon 14:35]
 :END:
+** DONE Typeset the proof of (55) in LaTeX
+#+begin_src text
+(55) □ (p ⇒ (◯ p ∧ q) ∨ r) ⟹ p ⇒ □ q ∨ q U r
+
+  Proof:
+
+      p ⇒ □ q ∨ q U r
+    =   ⟨¬¬p ≡ p⟩
+      ¬¬(p ⇒ □ q ∨ q U r)
+    =   ⟨(54) Definition of □⟩
+      ¬¬(p ⇒ ¬◇ ¬q ∨ q U r)
+    =   ⟨(38) Deﬁnition of ◇⟩
+      ¬¬(p ⇒ ¬(⊤ U ¬q) ∨ q U r)
+    =   ⟨p ⇒ q ≡ ¬p ∨ q, ¬(p ∨ q) ≡ ¬p ∧ ¬q⟩
+      ¬(¬¬p ∧ ¬¬(⊤ U ¬q) ∧ ¬(q U r))
+    =   ⟨¬¬p ≡ p⟩
+      ¬(p ∧ ⊤ U ¬q ∧ ¬(q U r))
+    =   ⟨(170) Axiom, Distributivity of ¬over W⟩
+      ¬(p ∧ ¬r U (¬q ∧ ¬r))
+    =   ⟨p ≡ ⊤ ∧ p⟩
+      ¬((⊤ ∧ p) ∧ ¬r U (¬q ∧ ¬r))
+    =   ⟨(90) □ excluded middle⟩
+      ¬(((□ p ∨ ◇ ¬p) ∧ p) ∧ ¬r U (¬q ∧ ¬r))
+    =   ⟨(p ∨ q) ∧ r ≡ (p ∧ r) ∨ (p ∧ q)⟩
+      ¬((□ p ∧ p ∨ ◇ ¬p ∧ p) ∧ ¬r U (¬q ∧ ¬r))
+    =   ⟨(p ∨ q) ∧ r ≡ (p ∧ r) ∨ (p ∧ q)⟩
+      ¬((□ p ∧ p) ∧ ¬r U (¬q ∧ ¬r) ∨ (◇ ¬p ∧ p) ∧ ¬r U (¬q ∧ ¬r))
+    ⇒   ⟨p ∧ q ⇒ p⟩
+      ¬(□ p ∧ ¬r U (¬q ∧ ¬r) ∨ (◇ ¬p ∧ p) ∧ ¬r U (¬q ∧ ¬r))
+    =   ⟨p ∧ q ≡ q ∧ p⟩
+      ¬(□ p ∧ ¬r U (¬q ∧ ¬r) ∨ (p ∧ ◇ ¬p) ∧ ¬r U (¬q ∧ ¬r))
+    ⇒   ⟨(83) Distributivity of ∧ over U⟩
+      ¬((p ∧ ¬r) U (p ∧ ¬q ∧ ¬r) ∨ (p ∧ ◇ ¬p) ∧ ¬r U (¬q ∧ ¬r))
+    =   ⟨(42) Eventuality⟩
+      ¬(◇ (p ∧ ¬q ∧ ¬r) ∨ (p ∧ ◇ ¬p) ∧ ¬r U (¬q ∧ ¬r))
+    =   ⟨p ≡ p ∨ q, p ⇒ q ≡ ¬p ∨ q⟩
+      ¬(◇ (p ∧ (q ⇒ ¬◯ p) ∧ ¬r) ∨ (p ∧ ◇ ¬p) ∧ ¬r U (¬q ∧ ¬r))
+    =   ⟨p ∨ q ≡ q ∨ p⟩
+      ¬(◇ (p ∧ (◯ p ⇒ ¬q) ∧ ¬r) ∨ (p ∧ ◇ ¬p) ∧ ¬r U (¬q ∧ ¬r))
+    ⇒   ⟨(75) p ∧ ◇ ¬p ⇒ ◇ (p ∧ ◯ ¬p)⟩
+      ¬(◇ (p ∧ (◯ p ⇒ ¬q) ∧ ¬r) ∨ p U (p ∧ ¬◯ p) ∧ ¬r U (¬q ∧ ¬r))
+    ⇒   ⟨(NEW) Axiom, Distributivity of ∧ over U⟩
+      ¬(◇ (p ∧ (◯ p ⇒ ¬q) ∧ ¬r) ∨ (p ∧ ¬r) U ((p ∧ ¬◯ p) ∧ ¬r ∨ p ∧ ¬q ∧ ¬r ∨ (p ∧ ¬◯ p) ∧ ¬q ∧ ¬r))
+    =   ⟨(42) Eventuality⟩
+      ¬(◇ (p ∧ (◯ p ⇒ ¬q) ∧ ¬r) ∨ ◇ ((p ∧ ¬◯ p) ∧ ¬r ∨ p ∧ ¬q ∧ ¬r ∨ (p ∧ ¬◯ p) ∧ ¬q ∧ ¬r))
+    ⇒   ⟨p ∧ q ⇒ p⟩
+      ¬(◇ (p ∧ (◯ p ⇒ ¬q) ∧ ¬r) ∨ ◇ ((p ∧ ¬◯ p) ∧ ¬r ∨ p ∧ ¬q ∧ ¬r ∨ p ∧ ¬q ∧ ¬r))
+    =   ⟨p ∨ p ≡ p⟩
+      ¬(◇ (p ∧ (◯ p ⇒ ¬q) ∧ ¬r) ∨ ◇ ((p ∧ ¬◯ p) ∧ ¬r ∨ p ∧ ¬q ∧ ¬r))
+    =   ⟨p ∧ (q ∧ r) ≡ (p ∧ q) ∧ r⟩
+      ¬(◇ (p ∧ (◯ p ⇒ ¬q) ∧ ¬r) ∨ ◇ (p ∧ ¬◯ p ∧ ¬r ∨ p ∧ ¬q ∧ ¬r))
+    =   ⟨(p ∧ q) ∨ (p ∧ r) ≡ p ∧ (q ∨ r)⟩
+      ¬(◇ (p ∧ (◯ p ⇒ ¬q) ∧ ¬r) ∨ ◇ (p ∧ (¬◯ p ∧ ¬r ∨ ¬q ∧ ¬r)))
+    =   ⟨(p ∧ r) ∨ (q ∧ r) ≡ (p ∨ q) ∧ r⟩
+      ¬(◇ (p ∧ (◯ p ⇒ ¬q) ∧ ¬r) ∨ ◇ (p ∧ (◯ p ⇒ ¬q) ∧ ¬r))
+    =   ⟨p ∨ p ≡ p⟩
+      ¬◇ (p ∧ (◯ p ⇒ ¬q) ∧ ¬r)
+    =   ⟨p ∧ q ≡ ¬(¬p ∨ ¬q)⟩
+      ¬◇ ¬(p ⇒ ¬¬((◯ p ⇒ ¬q) ⇒ ¬¬r))
+    =   ⟨¬¬p ≡ p⟩
+      ¬◇ ¬(p ⇒ (◯ p ⇒ ¬q) ⇒ r)
+    =   ⟨¬(p ∨ q) ≡ ¬p ∧ ¬q⟩
+      ¬◇ ¬(p ⇒ ¬¬◯ p ∧ ¬¬q ∨ r)
+    =   ⟨¬¬p ≡ p⟩
+      ¬◇ ¬(p ⇒ ◯ p ∧ q ∨ r)
+    =   ⟨(54) Definition of □⟩
+      □ (p ⇒ ◯ p ∧ q ∨ r)    ∎
+#+end_src
 ** DONE Typeset the proof of (56) in LaTeX
 - Note taken on [2021-02-11 Thu 08:57] \\
   Scott to provide a template LaTeX file for John to typeset his new (56)
