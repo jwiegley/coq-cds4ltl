@@ -72,12 +72,6 @@ formula to use on future inputs.
 
 * Work list
 
-** DONE Produce a CDS4LTL proof of (55)
-:PROPERTIES:
-:ID:       6F57D36C-AE95-4AB6-8843-6A338055DBC3
-:CREATED:  [2021-02-11 Thu 08:52]
-:END:
-
 ** DONE Complete the stream semantic model of LinearTemporalLogic
 This may be found in Model.v
 :PROPERTIES:
@@ -216,7 +210,7 @@ p ∧ q U ¬p ⇒ (q ∧ p) U (q ∧ p ∧ ¬◯ p)
       ¬(◇ (p ∧ (◯ p ⇒ ¬q) ∧ ¬r) ∨ p U (p ∧ ¬◯ p) ∧ ¬r U (¬q ∧ ¬r))
     ⇒   ⟨(NEW) Axiom, Distributivity of ∧ over U⟩
       ¬(◇ (p ∧ (◯ p ⇒ ¬q) ∧ ¬r) ∨ (p ∧ ¬r) U ((p ∧ ¬◯ p) ∧ ¬r ∨ p ∧ ¬q ∧ ¬r ∨ (p ∧ ¬◯ p) ∧ ¬q ∧ ¬r))
-    =   ⟨(42) Eventuality⟩
+    ⇒   ⟨(42) Eventuality⟩
       ¬(◇ (p ∧ (◯ p ⇒ ¬q) ∧ ¬r) ∨ ◇ ((p ∧ ¬◯ p) ∧ ¬r ∨ p ∧ ¬q ∧ ¬r ∨ (p ∧ ¬◯ p) ∧ ¬q ∧ ¬r))
     ⇒   ⟨p ∧ q ⇒ p⟩
       ¬(◇ (p ∧ (◯ p ⇒ ¬q) ∧ ¬r) ∨ ◇ ((p ∧ ¬◯ p) ∧ ¬r ∨ p ∧ ¬q ∧ ¬r ∨ p ∧ ¬q ∧ ¬r))

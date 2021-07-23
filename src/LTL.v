@@ -97,10 +97,8 @@ Qed.
 
 Theorem (* 42 *) law_42 p q : p U q ⟹ ◇ q.
 Proof.
-  rewrite <- (until_absorb_evn p).
-  apply until_respects_implies; [reflexivity|].
-  rewrite evn_def.
-  now rewrite <- until_insertion.
+  rewrite <- law_39.
+  boolean.
 Qed.
 
 Theorem (* 43 *) law_43 : ◇ ⊤ ≈ ⊤.
