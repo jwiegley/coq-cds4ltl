@@ -212,7 +212,7 @@ Proof.
   now rewrite or_idem.
 Qed.
 
-Theorem (* 12 *)  until_left_or_alt p q r : p U (q ∨ r) ≈ (p U q) ∨ (p U r).
+Theorem (* 12 *) until_left_or_alt p q r : p U (q ∨ r) ≈ (p U q) ∨ (p U r).
 Proof.
   split.
   - rewrite <- and_until_or.
@@ -222,25 +222,25 @@ Proof.
     now rewrite or_idem.
 Qed.
 
-Theorem (* NEW *)  until_and_right_or p q r : (p U r) ∧ (q U r) ⟹ p U (q ∨ r).
+Theorem (* NEW *) until_and_right_or p q r : (p U r) ∧ (q U r) ⟹ p U (q ∨ r).
 Proof.
   rewrite and_proj.
   now rewrite <- or_inj_r.
 Qed.
 
-Theorem (* NEW *)  until_and_left_or p q r : (p U r) ∧ (q U r) ⟹ (p ∨ q) U r.
+Theorem (* NEW *) until_and_left_or p q r : (p U r) ∧ (q U r) ⟹ (p ∨ q) U r.
 Proof.
   rewrite and_proj.
   now rewrite <- or_inj.
 Qed.
 
-Theorem (* NEW *)  until_and_or_right p q r : (p U q) ∧ (p U r) ⟹ p U (q ∨ r).
+Theorem (* NEW *) until_and_or_right p q r : (p U q) ∧ (p U r) ⟹ p U (q ∨ r).
 Proof.
   rewrite and_proj.
   now rewrite <- or_inj.
 Qed.
 
-Theorem (* NEW *)  until_and_or_left p q r : (p U q) ∧ (p U r) ⟹ (p ∨ q) U r.
+Theorem (* NEW *) until_and_or_left p q r : (p U q) ∧ (p U r) ⟹ (p ∨ q) U r.
 Proof.
   rewrite and_proj_r.
   now rewrite <- or_inj.
@@ -268,25 +268,25 @@ Proof.
   reflexivity.
 Qed.
 
-Theorem (* NEW *)  until_or_right_and p q r : p U (q ∧ r) ⟹ (p U r) ∨ (q U r).
+Theorem (* NEW *) until_or_right_and p q r : p U (q ∧ r) ⟹ (p U r) ∨ (q U r).
 Proof.
   rewrite and_proj_r.
   now rewrite <- or_inj.
 Qed.
 
-Theorem (* NEW *)  until_or_left_and p q r : (p ∧ q) U r ⟹ (p U r) ∨ (q U r).
+Theorem (* NEW *) until_or_left_and p q r : (p ∧ q) U r ⟹ (p U r) ∨ (q U r).
 Proof.
   rewrite and_proj_r.
   now rewrite <- or_inj_r.
 Qed.
 
-Theorem (* NEW *)  until_or_and_right p q r : p U (q ∧ r) ⟹ (p U q) ∨ (p U r).
+Theorem (* NEW *) until_or_and_right p q r : p U (q ∧ r) ⟹ (p U q) ∨ (p U r).
 Proof.
   rewrite and_proj_r.
   now rewrite <- or_inj_r.
 Qed.
 
-Theorem (* NEW *)  until_or_and_left p q r : (p ∧ q) U r ⟹ (p U q) ∨ (p U r).
+Theorem (* NEW *) until_or_and_left p q r : (p ∧ q) U r ⟹ (p U q) ∨ (p U r).
 Proof.
   rewrite and_proj.
   now rewrite <- or_inj_r.

@@ -57,14 +57,14 @@ Infix "≈"  := equivalent (at level 90, no associativity) : boolean_scope.
  * are laborious and left as an exercise to the motivated reader. Further
  * notes may be found in the paper "Short Single Axioms for Boolean Algebra"
  * by McCune, et al. *)
-Axiom or_comm      : ∀ p q,   p ∨ q ≈ q ∨ p.
-Axiom or_assoc     : ∀ p q r, (p ∨ q) ∨ r ≈ p ∨ (q ∨ r).
-Axiom huntington   : ∀ p q,   ¬(¬p ∨ ¬q) ∨ ¬(¬p ∨ q) ≈ p.
+Axiom or_comm    : ∀ p q,   p ∨ q ≈ q ∨ p.
+Axiom or_assoc   : ∀ p q r, (p ∨ q) ∨ r ≈ p ∨ (q ∨ r).
+Axiom huntington : ∀ p q,   ¬(¬p ∨ ¬q) ∨ ¬(¬p ∨ q) ≈ p.
 
 (** These axioms establish the meaning of the syntactic terms. *)
-Axiom or_inj       : ∀ p q,   p ⟹ p ∨ q.
-Axiom true_def     : ∀ p,     p ∨ ¬p ≈ ⊤.
-Axiom false_def    : ∀ p,     ¬(p ∨ ¬p) ≈ ⊥.
+Axiom or_inj     : ∀ p q,   p ⟹ p ∨ q.
+Axiom true_def   : ∀ p,     p ∨ ¬p ≈ ⊤.
+Axiom false_def  : ∀ p,     ¬(p ∨ ¬p) ≈ ⊥.
 
 End MinimalBooleanLogic.
 
