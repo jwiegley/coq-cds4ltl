@@ -208,7 +208,7 @@ Proof.
   rewrite (or_inj p q) at 1.
   rewrite (or_inj q p) at 2.
   rewrite (or_comm q p).
-  rewrite <- until_left_or.
+  rewrite (* 12 *) <- until_left_or.
   now rewrite or_idem.
 Qed.
 
@@ -250,10 +250,10 @@ Theorem (* 15 *) until_right_and p q r : (p ∧ q) U r ≈ (p U r) ∧ (q U r).
 Proof.
   split.
   - rewrite <- (and_idem r) at 1.
-    rewrite until_left_and.
+    rewrite (* 14 *) until_left_and.
     rewrite (and_proj p) at 1.
     now rewrite (and_proj_r q).
-  - rewrite until_and_until.
+  - rewrite (* NEW *) until_and_until.
     boolean.
     rewrite (and_proj r).
     rewrite (and_proj_r r).
@@ -294,10 +294,10 @@ Qed.
 
 Theorem (* 16 *) until_impl_order p q r : (p U q) ∧ (¬q U r) ⟹ p U r.
 Proof.
-  rewrite until_and_until.
+  rewrite (* NEW *) until_and_until.
   boolean.
   rewrite <- and_or_r.
-  rewrite until_left_and.
+  rewrite (* 14 *) until_left_and.
   rewrite and_proj_r.
   now rewrite and_proj.
 Qed.
