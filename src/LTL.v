@@ -16,16 +16,13 @@ Parameter eventually : t -> t.
 Parameter always     : t -> t.
 Parameter wait       : t -> t -> t.
 
+Declare Instance eventually_respects_implies : Proper (implies ==> implies) eventually.
+Declare Instance always_respects_implies : Proper (implies ==> implies) always.
+Declare Instance wait_respects_implies : Proper (implies ==> implies ==> implies) wait.
+
 Notation "◇ p"     := (eventually p)       (at level 75, right associativity) : ltl_scope.
 Notation "□ p"     := (always p)           (at level 75, right associativity) : ltl_scope.
 Notation "p 'W' q" := (wait p q)           (at level 79, right associativity) : ltl_scope.
-
-Declare Instance eventually_respects_implies :
-  Proper (implies ==> implies) eventually.
-Declare Instance always_respects_implies :
-  Proper (implies ==> implies) always.
-Declare Instance wait_respects_implies :
-  Proper (implies ==> implies ==> implies) wait.
 
 Axiom (* 38 *)  evn_def    : ∀ p,   ◇ p ≈ ⊤ U p.
 Axiom (* 54 *)  always_def : ∀ p,   □ p ≈ ¬◇ ¬p.

@@ -17,8 +17,7 @@ Include MinimalBooleanLogic.
 
 Parameter and : t -> t -> t.
 
-Declare Instance and_respects_implies :
-  Proper (implies ==> implies ==> implies) and.
+Declare Instance and_respects_implies : Proper (implies ==> implies ==> implies) and.
 
 Infix    "∧"     := and                 (at level 80, right associativity) : boolean_scope.
 Notation "p ≡ q" := ((p ⇒ q) ∧ (q ⇒ p)) (at level 86, right associativity) : boolean_scope.

@@ -12,17 +12,23 @@ Module Type MinimalBooleanLogic.
 
 Parameter t : Type.             (* The type of boolean propositions *)
 
-(** The following are fundamental to a classical definition of this logic. *)
-Parameter not : t -> t.
-Parameter or  : t -> t -> t.
-
-(** The next three terms are syntactic and can be defined in terms of the
+(** These three terms are syntactic and can be defined in terms of the
     fundamentals above. They are given as parameters so that module authors
     may chose economical definitions; we also provides implies as a relation
     in Prop to facilitate use of Coq's rewriting system. *)
 Parameter implies : t -> t -> Prop.
 Parameter true    : t.
 Parameter false   : t.
+
+Declare Instance implies_Reflexive : Reflexive implies.
+Declare Instance implies_Transitive : Transitive implies.
+
+(** The following are fundamental to a classical definition of this logic. *)
+Parameter not : t -> t.
+Parameter or  : t -> t -> t.
+
+Declare Instance not_respects_implies : Proper (implies --> implies) not.
+Declare Instance or_respects_implies : Proper (implies ==> implies ==> implies) or.
 
 Declare Scope boolean_scope.
 Bind Scope boolean_scope with t.
@@ -36,12 +42,6 @@ Notation "⊤"     := true      (at level 0, no associativity) : boolean_scope.
 Notation "⊥"     := false     (at level 0, no associativity) : boolean_scope.
 
 Definition equivalent p q := implies p q /\ implies q p.
-
-Declare Instance implies_Reflexive : Reflexive implies.
-Declare Instance implies_Transitive : Transitive implies.
-
-Declare Instance not_respects_implies : Proper (implies --> implies) not.
-Declare Instance or_respects_implies : Proper (implies ==> implies ==> implies) or.
 
 Infix "⟹" := implies    (at level 99, right associativity) : boolean_scope.
 Infix "≈"  := equivalent (at level 90, no associativity) : boolean_scope.

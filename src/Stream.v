@@ -101,8 +101,8 @@ Open Scope stream_scope.
 
 Notation "[ s , n ]  ⊨ P" := (P (from n s)) (at level 85) : stream_scope.
 
-Definition every (P : Stream -> Prop) (s : Stream) := forall i, [s, i] ⊨ P.
-Definition any   (P : Stream -> Prop) (s : Stream) := exists i, [s, i] ⊨ P.
+Definition every (P : Ensemble Stream) (s : Stream) := forall i, [s, i] ⊨ P.
+Definition any   (P : Ensemble Stream) (s : Stream) := exists i, [s, i] ⊨ P.
 
 Section Stream_Properties.
 
