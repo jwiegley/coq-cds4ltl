@@ -1,7 +1,7 @@
-args@{ packages ? "coqPackages_8_13"
+args@{ coqPackages ? "coqPackages_8_15"
 
-, rev    ? "c71c411d8f9ec5bd746fcd925555cee5b3cdd297"
-, sha256 ? "039aldz9mram45jlicab5sa83ygsj7vmzgqf04bks77f173c6pk2"
+, rev    ? "9222ae36b208d1c6b55d88e10aa68f969b5b5244"
+, sha256 ? "0dvl990alr4bb64w9b32dhzacvchpsspj8p3zqcgk7q5akvqh1mw"
 , pkgs   ? import (builtins.fetchTarball {
     url = "https://github.com/NixOS/nixpkgs/archive/${rev}.tar.gz";
     inherit sha256; }) {
@@ -10,7 +10,7 @@ args@{ packages ? "coqPackages_8_13"
   }
 }:
 
-with pkgs.${packages};
+with pkgs.${coqPackages};
 
 pkgs.stdenv.mkDerivation rec {
   name = "coq${coq.coq-version}-ltl-${version}";
