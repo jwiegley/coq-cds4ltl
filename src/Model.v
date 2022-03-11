@@ -26,7 +26,7 @@ Definition t := Ensemble (Stream S.a).
 Infix    "∪"     := (Union _)        (at level 85, right associativity).
 Notation "∅"     := (Empty_set _)    (at level 0, no associativity).
 Notation "p ∈ q" := (In _ q p)       (at level 88, no associativity).
-Notation "p ⊆ q" := (Included _ q p) (at level 89, no associativity).
+Notation "p ⊆ q" := (Included _ p q) (at level 89, no associativity).
 
 Definition not        := Complement (Stream S.a).
 Definition or         := Union (Stream S.a).
