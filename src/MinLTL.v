@@ -74,8 +74,8 @@ Program Instance until_respects_equivalent :
 (1) Axiom, Self-dual : ◯ ¬p ≡ ¬◯ p
 (2) Axiom, Distributivity of ◯ over ⟹ : ◯ (p ⇒ q) ≡ ◯ p ⇒ ◯ q
 (3) Linearity : ◯ p ≡ ¬◯ ¬p
-(4) Distributivity of ◯ over ∨ : ◯ (p ∨ q) ◯ ≡ p ∨ ◯ q
-(5) Distributivity of ◯ over ∧ : ◯ (p ∧ q) ◯ ≡ p ∧ ◯ q
+(4) Distributivity of ◯ over ∨ : ◯ (p ∨ q) ≡ ◯ p ∨ ◯ q
+(5) Distributivity of ◯ over ∧ : ◯ (p ∧ q) ≡ ◯ p ∧ ◯ q
 (6) Distributivity of ◯ over ≡ : ◯ (p ≡ q) ≡ ◯ p ≡ ◯ q
 (7) Truth of ◯ : ◯ true ≡ true
 (8) Falsehood of ◯ : ◯ false ≡ false
