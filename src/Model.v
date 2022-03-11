@@ -80,6 +80,21 @@ Notation "⊥"      := false           (at level 0, no associativity) : boolean_
 Infix    "⟹"     := implies         (at level 99, right associativity) : boolean_scope.
 Infix    "≈"      := equivalent      (at level 90, no associativity) : boolean_scope.
 
+Theorem implies_inclusion : forall A P Q, P ⊆ Q ↔ ∀ x : A, x ∈ P -> x ∈ Q.
+Proof. split; intros; intuition. Qed.
+
+Theorem implies_true : forall P, P ⟹ ⊤.
+Proof.
+  repeat intro.
+  constructor.
+Qed.
+
+Theorem false_implies : forall P, ⊥ ⟹ P.
+Proof.
+  repeat intro.
+  contradiction H.
+Qed.
+
 Theorem or_comm p q : p ∨ q ≈ q ∨ p.
 Proof.
   unfold or.
@@ -192,6 +207,20 @@ Proof.
   now apply Complement_Full.
 Qed.
 
+Theorem empty_implication p : ¬ Inhabited _ p -> p ⊆ ¬p.
+Proof.
+  repeat intro.
+  firstorder.
+Qed.
+
+Theorem non_empty_implication p : Inhabited _ p -> ¬(p ⊆ ¬p).
+Proof.
+  repeat intro.
+  destruct H.
+  specialize (H0 _ H).
+  contradiction.
+Qed.
+
 End StreamMinBool.
 
 Module StreamBool (S : StreamType) <: BooleanLogic.
@@ -201,10 +230,10 @@ Include MB.
 
 Infix    "∩"     := (Intersection _) (at level 80, right associativity).
 
-Definition and        := Intersection (Stream S.a).
+Definition and   := Intersection (Stream S.a).
 
-Infix    "∧"      := and             (at level 80, right associativity) : boolean_scope.
-Notation "p ≡ q"  := (p ⇒ q ∧ q ⇒ p) (at level 89, right associativity, only parsing) : boolean_scope.
+Infix    "∧"     := and             (at level 80, right associativity) : boolean_scope.
+Notation "p ≡ q" := (p ⇒ q ∧ q ⇒ p) (at level 89, right associativity, only parsing) : boolean_scope.
 
 Program Instance and_respects_implies : Proper (implies ==> implies ==> implies) and.
 Next Obligation.
@@ -247,17 +276,21 @@ Notation "p 'U' q" := (until p q) (at level 79, right associativity) : ltl_scope
 
 Program Instance next_respects_implies : Proper (implies ==> implies) next.
 Next Obligation.
+  unfold respectful.
+  intros.
+  unfold implies in *.
   repeat intro.
-  apply H, H0.
+  unfold next, Included, In, from in *.
+  apply H.
+  apply H0.
 Qed.
 
 Program Instance until_respects_implies :
   Proper (implies ==> implies ==> implies) until.
 Next Obligation.
   repeat intro.
-  destruct H1.
+  destruct H1, H1.
   exists x2.
-  destruct H1.
   split.
   - now apply H0.
   - intros.
@@ -617,6 +650,20 @@ Proof.
         now apply H3.
 Qed.
 
+Theorem (* NEW *) impl_link p q : (p ⟹ q) ↔ (p ⇒ q) ≈ ⊤.
+Proof.
+  unfold implies, or, not, equivalent, true, Included.
+  split; repeat intro.
+  - split; unfold Included; intros.
+      constructor.
+    destruct (classic (x ∈ p));
+    intuition.
+  - inv H.
+    unfold Included, In in *.
+    specialize (H2 _ (Full_intro _ x)).
+    inv H2; intuition.
+Qed.
+
 End StreamMinLTL.
 
 Module StreamMinLTLFacts (S : StreamType).
@@ -758,6 +805,47 @@ Qed.
 
 Theorem (* 169 *) wait_def p q : p W q ≈ □ p ∨ p U q.
 Proof. reflexivity. Qed.
+
+(* This unfolds to:
+
+     ∀ x, (∀ y, p y ⟹ q y) → (◯ p) x ⟹ (◯ q) x *)
+Theorem (* NEW *) external p q : (p ⟹ q) → ◯ p ⟹ ◯ q.
+Proof.
+  unfold implies, next.
+  repeat intro.
+  unfold In, Complement in *.
+  simpl in *.
+  destruct x.
+  apply H, H0.
+Qed.
+
+Theorem (* NEW *) imposible p q : (p ⇒ q) ⟹ (◯ p ⇒ ◯ q).
+Proof.
+  rewrite <- next_impl.
+  unfold implies, next, always, every.
+  repeat intro.
+  unfold In, Complement in *.
+  simpl in *.
+  destruct x.
+  inv H.
+Abort.
+
+(* Without □ this unfolds to:
+
+     ∀ x, (p x ⇒ q x) ⟹ (◯ p) x ⇒ (◯ q) x
+
+   but with □ it unfolds to the same structure as [external]:
+
+     ∀ x, (∀ y, p y ⇒ q y) ⟹ (◯ p) x ⇒ (◯ q) x
+ *)
+Theorem (* NEW *) internal p q : □ (p ⇒ q) ⟹ (◯ p ⇒ ◯ q).
+Proof.
+  rewrite <- next_impl.
+  unfold implies, next, always, every.
+  repeat intro.
+  unfold In, Complement in *.
+  apply H.
+Qed.
 
 End StreamLTLW.
 
