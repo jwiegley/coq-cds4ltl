@@ -819,7 +819,7 @@ Proof.
   apply H, H0.
 Qed.
 
-Theorem (* NEW *) imposible p q : (p ⇒ q) ⟹ (◯ p ⇒ ◯ q).
+Theorem (* NEW *) impossible p q : (p ⇒ q) ⟹ (◯ p ⇒ ◯ q).
 Proof.
   rewrite <- next_impl.
   unfold implies, next, always, every.
@@ -846,6 +846,17 @@ Proof.
   unfold In, Complement in *.
   apply H.
 Qed.
+
+(* Temporal deduction is Theorem (2.1.6) of Kröger and Merz [20], who also
+   give the justiﬁcation. Note that if you assume P in a step of an LTL proof
+   of Q, you have not proved that P ⇒ Q, but rather that □ P ⇒ Q. *)
+Theorem (* 82 *) temporal_deduction p q : (p ⟹ q) → (⊤ ⟹ □ (p ⇒ q)).
+Proof.
+  unfold implies, always, every, Included, In in *.
+  intros.
+  right.
+  apply H.
+Abort.
 
 End StreamLTLW.
 
@@ -916,6 +927,14 @@ Include LW.
 
 Module Import MBF := MinimalBooleanLogicFacts LW.
 Module Import LWF := LinearTemporalLogicWFacts LW.
+
+Theorem (* NEW *) impossible p : (p ≈ ⊤) → (□ p ≈ ⊤).
+Proof.
+  intros.
+  rewrite H.
+  rewrite law_64.
+  reflexivity.
+Qed.
 
 Definition release        : t → t → t := λ p q, q W (q ∧ p).
 Definition strong_release : t → t → t := λ p q, q U (q ∧ p).
