@@ -850,13 +850,16 @@ Qed.
 (* Temporal deduction is Theorem (2.1.6) of Kröger and Merz [20], who also
    give the justiﬁcation. Note that if you assume P in a step of an LTL proof
    of Q, you have not proved that P ⇒ Q, but rather that □ P ⇒ Q. *)
-Theorem (* 82 *) temporal_deduction p q : (p ⟹ q) → (⊤ ⟹ □ (p ⇒ q)).
+Theorem (* 82 *) temporal_deduction p q : (p ⟹ q) → (□ p ⟹ □ q).
 Proof.
   unfold implies, always, every, Included, In in *.
   intros.
-  right.
-  apply H.
-Abort.
+  destruct (classic (In _ p (from i x))).
+  + now apply H.
+  + elimtype False.
+    apply H1.
+    now apply H0.
+Qed.
 
 End StreamLTLW.
 
