@@ -855,8 +855,7 @@ Proof.
     + induction s.
       * apply IHl2 in H.
         exists 0.
-        intuition.
-        lia.
+        intuition; lia.
       * destruct H.
         ** apply IHl2 in H.
            exists 0.
