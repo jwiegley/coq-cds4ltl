@@ -859,8 +859,7 @@ Proof.
       * destruct H.
         ** apply IHl2 in H.
            exists 0.
-           intuition.
-           lia.
+           intuition; lia.
         ** destruct H.
            apply IHl1 in H.
            apply IHs in H0; clear IHs.
@@ -878,8 +877,7 @@ Proof.
         ** apply IHl2 in H.
            right.
            exists 0.
-           intuition.
-           lia.
+           intuition; lia.
         ** apply IHl1 in H.
            left.
            intro.
@@ -889,8 +887,7 @@ Proof.
            right.
            apply IHl2 in H.
            exists 0.
-           intuition.
-           lia.
+           intuition; lia.
         ** destruct H.
            apply IHl1 in H.
            apply IHs in H0; clear IHs.
@@ -943,7 +940,7 @@ Proof.
            exists 0.
            split.
            *** now split.
-           *** lia.
+           *** intros; lia.
         ** apply IHl2 in H.
            apply IHs in H0; clear IHs.
            clear -H H0.
@@ -969,7 +966,7 @@ Proof.
         exists 0.
         split.
         ** now split.
-        ** lia.
+        ** intros; lia.
       * destruct H.
         destruct H0.
         ** clear IHs.
@@ -978,7 +975,7 @@ Proof.
            apply IHl2 in H.
            split.
            *** now split.
-           *** lia.
+           *** intros; lia.
         ** apply IHl2 in H.
            apply IHs in H0; clear IHs.
            clear -H H0.
