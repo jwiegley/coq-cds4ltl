@@ -267,7 +267,9 @@ Next Obligation.
     [ H : exists _, _ |- _ ] => destruct H as [x0 H0]
   end.
   exists x0.
-  eapply H; eauto.
+  match goal with
+    [ H : Proper _ _ |- _ ] => eapply H; eauto
+  end.
   now rewrite <- X.
 Qed.
 
@@ -281,7 +283,9 @@ Next Obligation.
     [ H : exists _, _ |- _ ] => destruct H as [x0 H0]
   end.
   exists x0.
-  eapply H; eauto.
+  match goal with
+    [ H : Proper _ _ |- _ ] => eapply H; eauto
+  end.
   now rewrite <- X.
 Qed.
 
@@ -316,7 +320,9 @@ Global Program Instance every_flip_Proper f :
 Next Obligation.
   unfold every.
   repeat intro; subst.
-  eapply H; eauto.
+  match goal with
+    [ H : Proper _ _ |- _ ] => eapply H; eauto
+  end.
   now rewrite X.
 Qed.
 
