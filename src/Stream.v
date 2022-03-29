@@ -263,7 +263,9 @@ Global Program Instance any_Proper f :
 Next Obligation.
   unfold any.
   repeat intro; subst.
-  destruct H0.
+  match goal with
+    [ H : exists _, _ |- _ ] => destruct H as [x0 H0]
+  end.
   exists x0.
   eapply H; eauto.
   now rewrite <- X.
@@ -275,7 +277,9 @@ Global Program Instance any_flip_Proper f :
 Next Obligation.
   unfold any.
   repeat intro; subst.
-  destruct H0.
+  match goal with
+    [ H : exists _, _ |- _ ] => destruct H as [x0 H0]
+  end.
   exists x0.
   eapply H; eauto.
   now rewrite <- X.
@@ -286,11 +290,13 @@ Global Program Instance any_Same_set_Proper :
 Next Obligation.
   unfold any.
   split; repeat intro; unfold In in *.
-  - destruct H0.
-    exists x1.
+  all:
+    match goal with
+      [ H : exists _, _ |- _ ] => destruct H as [x1 H1]
+    end.
+  - exists x1.
     now apply H.
-  - destruct H0.
-    exists x1.
+  - exists x1.
     now apply H.
 Qed.
 
