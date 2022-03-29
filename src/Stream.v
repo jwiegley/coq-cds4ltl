@@ -310,7 +310,9 @@ Global Program Instance every_Proper f :
 Next Obligation.
   unfold every.
   repeat intro; subst.
-  eapply H; eauto.
+  match goal with
+    [ H : Proper _ _ |- _ ] => eapply H; eauto
+  end.
   now rewrite <- X.
 Qed.
 
