@@ -108,7 +108,8 @@ Definition passes (r : Result) : Prop :=
 Definition passes_equiv (p q : Result) : Prop := passes p <-> passes q.
 Arguments passes_equiv p q /.
 
-Global Program Instance Equivalence_passes_equiv : Equivalence passes_equiv.
+#[global]
+Program Instance Equivalence_passes_equiv : Equivalence passes_equiv.
 Next Obligation.
   unfold passes_equiv.
   repeat intro; auto.

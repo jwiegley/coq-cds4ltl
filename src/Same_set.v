@@ -6,6 +6,7 @@ Require Import
   Coq.Setoids.Setoid
   Coq.Relations.Relation_Definitions.
 
+#[global]
 Program Instance Same_set_Equivalence {A} : Equivalence (@Same_set A).
 Obligation 1.
   intro x.
@@ -186,6 +187,7 @@ Proof.
   exact (H1 _ H2).
 Qed.
 
+#[global]
 Instance Included_Same_set_subrelation A :
   subrelation (@Same_set A) (@Included A).
 Proof. intros ? ? [? ?]; assumption. Qed.

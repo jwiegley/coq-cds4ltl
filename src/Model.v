@@ -35,12 +35,14 @@ Definition false      := Empty_set (Stream S.a).
 Definition implies    := Included (Stream S.a).
 Definition equivalent := Same_set (Stream S.a).
 
+#[global]
 Program Instance implies_Reflexive : Reflexive implies.
 Next Obligation.
   unfold implies.
   now repeat intro.
 Qed.
 
+#[global]
 Program Instance implies_Transitive : Transitive implies.
 Next Obligation.
   unfold implies in *.
@@ -48,6 +50,7 @@ Next Obligation.
   now intuition.
 Qed.
 
+#[global]
 Program Instance not_respects_implies : Proper (implies --> implies) not | 1.
 Next Obligation.
   unfold flip, implies.
@@ -56,6 +59,7 @@ Next Obligation.
   now apply H.
 Qed.
 
+#[global]
 Program Instance or_respects_implies : Proper (implies ==> implies ==> implies) or.
 Next Obligation.
   unfold implies, or.
@@ -67,6 +71,7 @@ Next Obligation.
     now apply H0.
 Qed.
 
+#[global]
 Declare Scope boolean_scope.
 Bind Scope boolean_scope with t.
 Delimit Scope boolean_scope with boolean.
@@ -235,6 +240,7 @@ Definition and   := Intersection (Stream S.a).
 Infix    "∧"     := and             (at level 80, right associativity) : boolean_scope.
 Notation "p ≡ q" := (p ⇒ q ∧ q ⇒ p) (at level 89, right associativity, only parsing) : boolean_scope.
 
+#[global]
 Program Instance and_respects_implies : Proper (implies ==> implies ==> implies) and.
 Next Obligation.
   unfold implies, and.
@@ -265,6 +271,7 @@ Definition next : t → t := λ p σ, [σ, 1] ⊨ p.
 Definition until : t → t → t :=
   λ p q σ, ∃ k, [σ, k] ⊨ q /\ ∀ i, i < k → [σ, i] ⊨ p.
 
+#[global]
 Declare Scope ltl_scope.
 Bind Scope ltl_scope with t.
 Delimit Scope ltl_scope with ltl.
@@ -274,6 +281,7 @@ Open Scope ltl_scope.
 Notation "◯ p"     := (next p)    (at level 75, right associativity) : ltl_scope.
 Notation "p 'U' q" := (until p q) (at level 79, right associativity) : ltl_scope.
 
+#[global]
 Program Instance next_respects_implies : Proper (implies ==> implies) next.
 Next Obligation.
   unfold respectful.
@@ -285,6 +293,7 @@ Next Obligation.
   apply H0.
 Qed.
 
+#[global]
 Program Instance until_respects_implies :
   Proper (implies ==> implies ==> implies) until.
 Next Obligation.
@@ -729,6 +738,7 @@ Definition wait : t → t → t := λ p q, □ p ∨ p U q.
 
 Notation "p 'W' q" := (wait p q) (at level 79, right associativity) : ltl_scope.
 
+#[global]
 Program Instance eventually_respects_implies : Proper (implies ==> implies) eventually.
 Next Obligation.
   unfold eventually, any.
@@ -740,6 +750,7 @@ Next Obligation.
   exact H0.
 Qed.
 
+#[global]
 Program Instance always_respects_implies : Proper (implies ==> implies) always.
 Next Obligation.
   unfold always, every.
@@ -749,6 +760,7 @@ Next Obligation.
   now apply H0.
 Qed.
 
+#[global]
 Program Instance wait_respects_implies : Proper (implies ==> implies ==> implies) wait.
 Next Obligation.
   unfold wait, always, every, until.
@@ -945,6 +957,7 @@ Definition strong_release : t → t → t := λ p q, q U (q ∧ p).
 Notation "p 'R' q" := (release p q)        (at level 79, right associativity) : ltl_scope.
 Notation "p 'M' q" := (strong_release p q) (at level 79, right associativity) : ltl_scope.
 
+#[global]
 Program Instance release_respects_implies :
   Proper (implies ==> implies ==> implies) release.
 Next Obligation.
@@ -953,6 +966,7 @@ Next Obligation.
   now rewrite H, H0.
 Qed.
 
+#[global]
 Program Instance strong_release_respects_implies :
   Proper (implies ==> implies ==> implies) strong_release.
 Next Obligation.
@@ -1004,6 +1018,7 @@ Notation "'Λ' x .. y , t" := (examine (λ x, .. (λ y, t) ..))
   (at level 200, x binder, y binder, right associativity,
   format "'[  ' '[  ' 'Λ'  x  ..  y ']' ,  '/' t ']'").
 
+#[global]
 Program Instance examine_respects_implies :
   Proper (pointwise_relation S.a implies ==> implies) examine.
 Next Obligation.
@@ -1013,6 +1028,7 @@ Next Obligation.
   now apply H.
 Qed.
 
+#[global]
 Program Instance examine_respects_equivalent :
   (* Proper ((SetoidClass.equiv ==> equivalent) ==> equivalent) examine. *)
   Proper (pointwise_relation S.a equivalent ==> equivalent) examine.

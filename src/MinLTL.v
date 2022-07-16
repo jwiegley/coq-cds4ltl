@@ -23,6 +23,7 @@ Include BooleanLogic.
 Parameter next  : t -> t.
 Parameter until : t -> t -> t.
 
+#[global]
 Declare Scope ltl_scope.
 Bind Scope ltl_scope with t.
 Delimit Scope ltl_scope with ltl.
@@ -32,7 +33,9 @@ Open Scope ltl_scope.
 Notation "◯ p"     := (next p)    (at level 75, right associativity) : ltl_scope.
 Notation "p 'U' q" := (until p q) (at level 79, right associativity) : ltl_scope.
 
+#[global]
 Declare Instance next_respects_implies  : Proper (implies ==> implies) next.
+#[global]
 Declare Instance until_respects_implies : Proper (implies ==> implies ==> implies) until.
 
 Axiom (* 1 *)   next_not   : ∀ p,   ◯ ¬p ≈ ¬◯ p.
@@ -63,8 +66,10 @@ Module Import MBF := BF.MBF.
 
 #[local] Obligation Tactic := solve [ one_arg | two_arg ].
 
+#[global]
 Program Instance next_respects_equivalent :
   Proper (equivalent ==> equivalent) next.
+#[global]
 Program Instance until_respects_equivalent :
   Proper (equivalent ==> equivalent ==> equivalent) until.
 

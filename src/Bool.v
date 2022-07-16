@@ -17,6 +17,7 @@ Include MinimalBooleanLogic.
 
 Parameter and : t -> t -> t.
 
+#[global]
 Declare Instance and_respects_implies : Proper (implies ==> implies ==> implies) and.
 
 Infix    "∧"     := and                 (at level 80, right associativity) : boolean_scope.
@@ -35,6 +36,7 @@ Module Import MBF := MinimalBooleanLogicFacts B.
 
 #[local] Obligation Tactic := solve [ one_arg | two_arg ].
 
+#[global]
 Program Instance and_respects_equivalent :
   Proper (equivalent ==> equivalent ==> equivalent) and.
 

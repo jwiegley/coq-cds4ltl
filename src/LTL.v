@@ -16,8 +16,11 @@ Parameter eventually : t -> t.
 Parameter always     : t -> t.
 Parameter wait       : t -> t -> t.
 
+#[global]
 Declare Instance eventually_respects_implies : Proper (implies ==> implies) eventually.
+#[global]
 Declare Instance always_respects_implies : Proper (implies ==> implies) always.
+#[global]
 Declare Instance wait_respects_implies : Proper (implies ==> implies ==> implies) wait.
 
 Notation "◇ p"     := (eventually p)       (at level 75, right associativity) : ltl_scope.
@@ -38,10 +41,13 @@ Module Import MBFW := BFW.MBF.
 
 #[local] Obligation Tactic := solve [ one_arg | two_arg ].
 
+#[global]
 Program Instance eventually_respects_equivalent :
   Proper (equivalent ==> equivalent) eventually.
+#[global]
 Program Instance always_respects_equivalent :
   Proper (equivalent ==> equivalent) always.
+#[global]
 Program Instance wait_respects_equivalent :
   Proper (equivalent ==> equivalent ==> equivalent) wait.
 
@@ -2647,8 +2653,10 @@ Parameter strong_release : t -> t -> t.
 Notation "p 'R' q" := (release p q)        (at level 79, right associativity) : ltl_scope.
 Notation "p 'M' q" := (strong_release p q) (at level 79, right associativity) : ltl_scope.
 
+#[global]
 Declare Instance release_respects_implies :
   Proper (implies ==> implies ==> implies) release.
+#[global]
 Declare Instance strong_release_respects_implies :
   Proper (implies ==> implies ==> implies) strong_release.
 
@@ -2666,8 +2674,10 @@ Module Import MBF  := BF.MBF.
 
 #[local] Obligation Tactic := solve [ one_arg | two_arg ].
 
+#[global]
 Program Instance release_respects_equivalent :
   Proper (equivalent ==> equivalent ==> equivalent) release.
+#[global]
 Program Instance strong_release_respects_equivalent :
   Proper (equivalent ==> equivalent ==> equivalent) strong_release.
 

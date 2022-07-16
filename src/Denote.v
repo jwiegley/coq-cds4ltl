@@ -48,7 +48,9 @@ Axiom denote_eventually     : ∀ p, ◇ denote p ≈ denote (Eventually p).
 Axiom denote_release        : ∀ p q, denote p R denote q ≈ denote (Release p q).
 Axiom denote_strong_release : ∀ p q, denote p M denote q ≈ denote (StrongRelease p q).
 
+#[global]
 Declare Instance Implies_Reflexive  : Reflexive Implies.
+#[global]
 Declare Instance Implies_Transitive : Transitive Implies.
 
 End Denotation.
@@ -80,8 +82,11 @@ Definition eventually     := Eventually.
 Definition release        := Release.
 Definition strong_release := StrongRelease.
 
+#[global]
 Instance implies_Reflexive      : Reflexive  implies := Implies_Reflexive.
+#[global]
 Instance implies_Transitive     : Transitive implies := Implies_Transitive.
+#[global]
 Instance equivalent_Equivalence : Equivalence equivalent.
 Proof.
   unfold equivalent.
@@ -113,43 +118,54 @@ Ltac defer H :=
   try apply H; auto;
   try apply denote_implies; auto.
 
+#[global]
 Declare Instance denote_respects_implies : Proper (Implies ==> T.implies) denote.
 
+#[global]
 Program Instance not_respects_implies : Proper (implies --> implies) not | 1.
 Next Obligation. defer not_respects_implies; now rewrite H. Qed.
 
+#[global]
 Program Instance and_respects_implies :
   Proper (implies ==> implies ==> implies) and.
 Next Obligation. defer and_respects_implies; now rewrite ?H, ?H0. Qed.
 
+#[global]
 Program Instance or_respects_implies :
   Proper (implies ==> implies ==> implies) or.
 Next Obligation. defer or_respects_implies; now rewrite ?H, ?H0. Qed.
 
+#[global]
 Program Instance next_respects_implies :
   Proper (implies ==> implies) next.
 Next Obligation. defer next_respects_implies; now rewrite H. Qed.
 
+#[global]
 Program Instance until_respects_implies :
   Proper (implies ==> implies ==> implies) until.
 Next Obligation. defer until_respects_implies; now rewrite ?H, ?H0. Qed.
 
+#[global]
 Program Instance wait_respects_implies :
   Proper (implies ==> implies ==> implies) wait.
 Next Obligation. defer wait_respects_implies; now rewrite ?H, ?H0. Qed.
 
+#[global]
 Program Instance eventually_respects_implies :
   Proper (implies ==> implies) eventually.
 Next Obligation. defer eventually_respects_implies; now rewrite H. Qed.
 
+#[global]
 Program Instance always_respects_implies :
   Proper (implies ==> implies) always.
 Next Obligation. defer always_respects_implies; now rewrite H. Qed.
 
+#[global]
 Program Instance release_respects_implies :
   Proper (implies ==> implies ==> implies) release.
 Next Obligation. defer release_respects_implies; now rewrite ?H, ?H0. Qed.
 
+#[global]
 Program Instance strong_release_respects_implies :
   Proper (implies ==> implies ==> implies) strong_release.
 Next Obligation. defer strong_release_respects_implies; now rewrite ?H, ?H0. Qed.
@@ -157,6 +173,7 @@ Next Obligation. defer strong_release_respects_implies; now rewrite ?H, ?H0. Qed
 (** Since the algebraic homomorpmisms were proven above, all the theorems of
     our algebra/logic trivially follow. *)
 
+#[global]
 Declare Scope boolean_scope.
 Bind Scope boolean_scope with t.
 Delimit Scope boolean_scope with boolean.
@@ -171,6 +188,7 @@ Infix    "∧"      := and             (at level 80, right associativity) : bool
 Infix    "⟹"     := implies         (at level 99, right associativity) : boolean_scope.
 Infix    "≈"      := equivalent      (at level 90, no associativity) : boolean_scope.
 
+#[global]
 Declare Scope ltl_scope.
 Bind Scope ltl_scope with t.
 Delimit Scope ltl_scope with ltl.

@@ -543,12 +543,16 @@ Ltac induct :=
 
 #[local] Obligation Tactic := induct.
 
+#[global]
 Program Instance impl_Reflexive : Reflexive impl.
+#[global]
 Program Instance impl_Transitive : Transitive impl.
+#[global]
 Program Instance equiv_Equivalence : Equivalence equiv.
 
 #[local] Obligation Tactic := program_simpl.
 
+#[global]
 Program Instance equiv_respects_equiv :
   Proper (equiv ==> equiv ==> iff) equiv.
 Next Obligation.
@@ -557,6 +561,7 @@ Next Obligation.
   - now rewrite H0, <- H1.
 Qed.
 
+#[global]
 Program Instance matches_respects_impl :
   Proper (impl ==> eq ==> Basics.impl) matches.
 Next Obligation.
@@ -564,6 +569,7 @@ Next Obligation.
   subst; now apply H.
 Qed.
 
+#[global]
 Program Instance matches_respects_equiv :
   Proper (equiv ==> eq ==> iff) matches.
 Next Obligation.
@@ -574,57 +580,75 @@ Qed.
 
 #[local] Obligation Tactic := induct.
 
+#[global]
 Program Instance And_respects_impl :
   Proper (impl ==> impl ==> impl) And.
 
+#[global]
 Program Instance And_respects_equiv :
   Proper (equiv ==> equiv ==> equiv) And.
 
+#[global]
 Program Instance Or_respects_impl :
   Proper (impl ==> impl ==> impl) Or.
 
+#[global]
 Program Instance Or_respects_equiv :
   Proper (equiv ==> equiv ==> equiv) Or.
 
+#[global]
 Program Instance Next_respects_impl :
   Proper (impl ==> impl) Next.
 
+#[global]
 Program Instance Next_respects_equiv :
   Proper (equiv ==> equiv) Next.
 
+#[global]
 Program Instance Until_respects_impl :
   Proper (impl ==> impl ==> impl) Until.
 
+#[global]
 Program Instance Until_respects_equiv :
   Proper (equiv ==> equiv ==> equiv) Until.
 
+#[global]
 Program Instance Wait_respects_impl :
   Proper (impl ==> impl ==> impl) Wait.
 
+#[global]
 Program Instance Wait_respects_equiv :
   Proper (equiv ==> equiv ==> equiv) Wait.
 
+#[global]
 Program Instance Always_respects_impl :
   Proper (impl ==> impl) Always.
 
+#[global]
 Program Instance Always_respects_equiv :
   Proper (equiv ==> equiv) Always.
 
+#[global]
 Program Instance Eventually_respects_impl :
   Proper (impl ==> impl) Eventually.
 
+#[global]
 Program Instance Eventually_respects_equiv :
   Proper (equiv ==> equiv) Eventually.
 
+#[global]
 Program Instance Release_respects_impl :
   Proper (impl ==> impl ==> impl) Release.
 
+#[global]
 Program Instance Release_respects_equiv :
   Proper (equiv ==> equiv ==> equiv) Release.
 
+#[global]
 Program Instance StrongRelease_respects_impl :
   Proper (impl ==> impl ==> impl) StrongRelease.
 
+#[global]
 Program Instance StrongRelease_respects_equiv :
   Proper (equiv ==> equiv ==> equiv) StrongRelease.
 
@@ -724,6 +748,7 @@ Qed.
 
 #[local] Obligation Tactic := program_simpl.
 
+#[global]
 Program Instance negate_respects_impl : Proper (impl --> impl) negate | 1.
 Next Obligation.
   repeat intro.
@@ -1240,9 +1265,11 @@ Proof. reflexivity. Qed.
 Lemma denote_strong_release p q : denote p M denote q ≈ denote (StrongRelease p q).
 Proof. reflexivity. Qed.
 
+#[global]
 Program Instance Implies_Reflexive  : Reflexive Implies.
 Next Obligation. now firstorder. Qed.
 
+#[global]
 Program Instance Implies_Transitive : Transitive Implies.
 Next Obligation. now firstorder. Qed.
 

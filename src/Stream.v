@@ -192,7 +192,8 @@ Abort.
 
 End stream_eq_coind.
 
-Global Program Instance stream_eq_Equivalence : Equivalence stream_eq.
+#[global]
+Program Instance stream_eq_Equivalence : Equivalence stream_eq.
 Next Obligation.
   repeat intro.
   apply stream_eq_coind with (R:=fun s1 s2 => s1 = s2); intros; subst; auto.
@@ -215,13 +216,15 @@ Next Obligation.
 Qed.
 
 (*
-Global Instance Stream_Setoid `{Setoid a} : Setoid Stream := {
+#[global]
+Instance Stream_Setoid `{Setoid a} : Setoid Stream := {
   equiv := stream_eq;
   setoid_equiv := stream_eq_Equivalence
 }.
 *)
 
-Global Program Instance Cons_Proper :
+#[global]
+Program Instance Cons_Proper :
   Proper (eq ==> stream_eq ==> stream_eq) Cons.
 Next Obligation.
   repeat intro.
@@ -229,7 +232,8 @@ Next Obligation.
   now constructor.
 Qed.
 
-Global Program Instance head_Proper :
+#[global]
+Program Instance head_Proper :
   Proper (stream_eq ==> eq) head.
 Next Obligation.
   unfold head.
@@ -239,7 +243,8 @@ Next Obligation.
   reflexivity.
 Qed.
 
-Global Program Instance tail_Proper :
+#[global]
+Program Instance tail_Proper :
   Proper (stream_eq ==> stream_eq) tail.
 Next Obligation.
   unfold tail.
@@ -249,7 +254,8 @@ Next Obligation.
   assumption.
 Qed.
 
-Global Program Instance from_Proper :
+#[global]
+Program Instance from_Proper :
   Proper (@eq nat ==> stream_eq ==> stream_eq) from.
 Next Obligation.
   repeat intro; subst.
@@ -257,7 +263,8 @@ Next Obligation.
   now rewrite <- !from_tail_S, !from_tail, IHy.
 Qed.
 
-Global Program Instance any_Proper f :
+#[global]
+Program Instance any_Proper f :
   Proper (stream_eq ==> impl) f ->
   Proper (stream_eq ==> impl) (any f).
 Next Obligation.
@@ -273,7 +280,8 @@ Next Obligation.
   now rewrite <- X.
 Qed.
 
-Global Program Instance any_flip_Proper f :
+#[global]
+Program Instance any_flip_Proper f :
   Proper (stream_eq ==> flip impl) f ->
   Proper (stream_eq ==> flip impl) (any f).
 Next Obligation.
@@ -289,7 +297,8 @@ Next Obligation.
   now rewrite <- X.
 Qed.
 
-Global Program Instance any_Same_set_Proper :
+#[global]
+Program Instance any_Same_set_Proper :
   Proper (Same_set Stream ==> Same_set Stream) any.
 Next Obligation.
   unfold any.
@@ -304,7 +313,8 @@ Next Obligation.
     now apply H.
 Qed.
 
-Global Program Instance every_Proper f :
+#[global]
+Program Instance every_Proper f :
   Proper (stream_eq ==> impl) f ->
   Proper (stream_eq ==> impl) (every f).
 Next Obligation.
@@ -316,7 +326,8 @@ Next Obligation.
   now rewrite <- X.
 Qed.
 
-Global Program Instance every_flip_Proper f :
+#[global]
+Program Instance every_flip_Proper f :
   Proper (stream_eq ==> flip impl) f ->
   Proper (stream_eq ==> flip impl) (every f).
 Next Obligation.
@@ -328,7 +339,8 @@ Next Obligation.
   now rewrite X.
 Qed.
 
-Global Program Instance every_Same_set_Proper :
+#[global]
+Program Instance every_Same_set_Proper :
   Proper (Same_set Stream ==> Same_set Stream) every.
 Next Obligation.
   unfold every.
@@ -381,6 +393,7 @@ Arguments tail {a} s.
 Arguments every {a} P s.
 Arguments any {a} P s.
 
+#[global]
 Declare Scope stream_scope.
 Bind Scope stream_scope with Stream.
 Delimit Scope stream_scope with stream.

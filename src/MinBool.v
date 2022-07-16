@@ -20,16 +20,21 @@ Parameter implies : t -> t -> Prop.
 Parameter true    : t.
 Parameter false   : t.
 
+#[global]
 Declare Instance implies_Reflexive : Reflexive implies.
+#[global]
 Declare Instance implies_Transitive : Transitive implies.
 
 (** The following are fundamental to a classical definition of this logic. *)
 Parameter not : t -> t.
 Parameter or  : t -> t -> t.
 
+#[global]
 Declare Instance not_respects_implies : Proper (implies --> implies) not.
+#[global]
 Declare Instance or_respects_implies : Proper (implies ==> implies ==> implies) or.
 
+#[global]
 Declare Scope boolean_scope.
 Bind Scope boolean_scope with t.
 Delimit Scope boolean_scope with boolean.
@@ -70,11 +75,13 @@ End MinimalBooleanLogic.
 
 Module MinimalBooleanLogicFacts (Import B : MinimalBooleanLogic).
 
+#[global]
 Program Instance equivalent_Equivalence : Equivalence equivalent.
 Next Obligation. now intro x; split. Qed.
 Next Obligation. repeat intro; split; destruct H; now intuition. Qed.
 Next Obligation. repeat intro; split; destruct H, H0; now transitivity y. Qed.
 
+#[global]
 Program Instance implies_respects_implies :
   Proper (implies --> implies ==> Basics.impl) implies.
 Next Obligation.
@@ -83,6 +90,7 @@ Next Obligation.
   now rewrite <- H0, <- H1.
 Qed.
 
+#[global]
 Program Instance implies_respects_equivalent :
   Proper (equivalent ==> equivalent ==> iff) implies.
 Next Obligation.
@@ -93,6 +101,7 @@ Next Obligation.
   - now rewrite <- H2, <- H3, <- H.
 Qed.
 
+#[global]
 Program Instance equivalent_respects_equivalent :
   Proper (equivalent ==> equivalent ==> iff) equivalent.
 Next Obligation.
@@ -102,6 +111,7 @@ Next Obligation.
   - now rewrite H, H1, <- H0.
 Qed.
 
+#[global]
 Program Instance not_respects_equivalent :
   Proper (equivalent ==> equivalent) not | 9.
 Next Obligation.
@@ -112,6 +122,7 @@ Next Obligation.
   - now rewrite H.
 Qed.
 
+#[global]
 Program Instance or_respects_equivalent :
   Proper (equivalent ==> equivalent ==> equivalent) or.
 Next Obligation.
