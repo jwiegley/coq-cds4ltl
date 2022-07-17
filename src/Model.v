@@ -390,6 +390,11 @@ Ltac as_if :=
   | [ H : ∀ _ : ?T, _ |- ∀ _ : ?T, _ ] =>
       let n := fresh "n" in
       intro n; specialize (H n)
+  | [ |- _ < _ ] => lia
+  | [ |- _ <= _ ] => lia
+  | [ |- _ > _ ] => lia
+  | [ |- _ >= _ ] => lia
+  | [ H : _ < 0 |- _ ] => lia
   end.
 
 Theorem (* 9 *) next_until p q : ◯ (p U q) ≈ (◯ p) U (◯ q).
@@ -422,7 +427,6 @@ Proof.
   - exists 0.
     split; auto; intros;
     as_if.
-    lia.
   - exists (S x0).
     split; [as_if|].
     intros.
@@ -577,8 +581,7 @@ Proof.
     assert (∀ P, ¬¬P ≈ P). {
       split; intros;
       unfold not;
-      rewrite Complement_Complement;
-      reflexivity.
+      now rewrite Complement_Complement.
     }
     rewrite H; clear H.
     repeat intro.
@@ -590,17 +593,14 @@ Proof.
     + destruct (classic (q x)).
       * left.
         exists 0.
-        split; auto; intros.
-          simpl; as_if.
-        lia.
+        split; auto; intros;
+        simpl; as_if.
       * right.
         exists 0.
         split; auto; intros.
-        split; auto; intros.
-          intro.
-          apply H0.
-          as_if.
-        lia.
+        ** split; intro;
+           now apply H0; as_if.
+        ** lia.
     + destruct (classic (p x)).
       * simpl in *.
         rewrite <- PeanoNat.Nat.add_succ_comm in H.
@@ -624,25 +624,22 @@ Proof.
            destruct (classic (q x)).
            *** left.
                exists 0.
-               split; auto; intros.
-                 inv H1.
-                 reduce.
-                 as_if.
-               lia.
+               split; auto; intros;
+               simpl; as_if.
            *** right.
                exists (S x1).
                split; auto; intros.
-                 rewrite shift_succ.
-                 now rewrite PeanoNat.Nat.add_1_r.
-               specialize (H2 (Nat.pred i)).
-               destruct i; reduce.
-                 inv H1; reduce.
-                 intro.
-                 apply H.
-                 as_if.
-               rewrite <- plus_n_Sm.
-               apply H2.
-               lia.
+               **** rewrite shift_succ.
+                    now rewrite PeanoNat.Nat.add_1_r.
+               **** specialize (H2 (Nat.pred i)).
+                    destruct i; reduce.
+                    ***** inv H1; reduce.
+                          intro.
+                          apply H.
+                          as_if.
+                    ***** rewrite <- plus_n_Sm.
+                          apply H2.
+                          lia.
       * rewrite shift_succ in H.
         apply IHx0 in H; clear IHx0.
         inv H.
@@ -650,30 +647,28 @@ Proof.
            destruct (classic (q x)).
            *** left.
                exists 0.
-               split; auto; intros.
-                 simpl; as_if.
-               lia.
+               split; auto; intros;
+               simpl; as_if.
            *** right.
                exists 0.
                split; auto; intros.
                **** split; intro.
-                      now apply H0; as_if.
-                    now apply H1; as_if.
+                    ***** now apply H0; as_if.
+                    ***** now apply H1; as_if.
                **** lia.
         ** inv H1.
            reduce.
            destruct (classic (q x)).
            *** left.
                exists 0.
-               split; auto; intros.
-                 simpl; as_if.
-               lia.
+               split; auto; intros;
+               simpl; as_if.
            *** right.
                exists 0.
                split; auto; intros.
                **** simpl; split; intro.
-                      now apply H0; as_if.
-                    now apply H; as_if.
+                    ***** now apply H0; as_if.
+                    ***** now apply H; as_if.
                **** lia.
   - repeat intro.
     inv H.
