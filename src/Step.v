@@ -3,22 +3,38 @@ Require Import
   Coq.Unicode.Utf8
   Coq.Classes.Morphisms
   Coq.Lists.List
-  Model
-  Syntax.
+  Model.
 
 Open Scope program_scope.
 Open Scope list_scope.
 
-Module LTLStep (S : StreamType).
+Module LTLStep.
 
-Module Import LTL := LTL S.
-Import LTL.AST.
-Import LTL.DF.
+Module Import LTL := LTL.
+
+Section Step.
+
+Context {a : Type}.
+
+(** This data type encodes the syntax of LTL in Positive Normal Form (PNF). *)
+Inductive Formula : Type :=
+  | Top
+  | Bottom
+  | Examine       (v   : option a -> Formula)
+  | And           (p q : Formula)
+  | Or            (p q : Formula)
+  | Next          (p   : Formula)
+  | Until         (p q : Formula)
+  | Wait          (p q : Formula)
+  | Always        (p   : Formula)
+  | Eventually    (p   : Formula)
+  | Release       (p q : Formula)
+  | StrongRelease (p q : Formula).
 
 Inductive Failed : Type :=
   | HitBottom
   | EndOfTrace
-  | Rejected    (x : S.a)
+  | Rejected    (x : a)
   | BothFailed  (p q : Failed)
   | LeftFailed  (p : Failed)
   | RightFailed (q : Failed).
@@ -30,12 +46,44 @@ Inductive Result : Type :=
 
 Open Scope ltl_scope.
 
+Fixpoint negate (l : Formula) : Formula :=
+  match l with
+  | Top               => Bottom
+  | Bottom            => Top
+  | Examine v         => Examine (negate ∘ v)
+  | And p q           => Or (negate p) (negate q)
+  | Or p q            => And (negate p) (negate q)
+  | Next p            => Next (negate p)
+  | Until p q         => Release (negate p) (negate q)
+  | Wait p q          => StrongRelease (negate p) (negate q)
+  | Always p          => Eventually (negate p)
+  | Eventually p      => Always (negate p)
+  | Release p q       => Until (negate p) (negate q)
+  | StrongRelease p q => Wait (negate p) (negate q)
+  end.
+
+Fixpoint size (p : Formula) : nat :=
+  match p with
+  | Top               => 1
+  | Bottom            => 1
+  | Examine v         => 1
+  | And p q           => 1 + size p + size q
+  | Or p q            => 1 + size p + size q
+  | Next p            => 1 + size p
+  | Until p q         => 1 + size p + size q
+  | Wait p q          => 1 + size p + size q
+  | Always p          => 1 + size p
+  | Eventually p      => 1 + size p
+  | Release p q       => 1 + size p + size q
+  | StrongRelease p q => 1 + size p + size q
+  end.
+
 Definition and_result (f g : Result) : Result :=
   match f, g with
   | Failure e, _   => Failure (LeftFailed e)
   | _, Failure e   => Failure (RightFailed e)
   | Continue f',
-    Continue g'    => Continue (f' ∧ g')
+    Continue g'    => Continue (And f' g')
   | f', Success    => f'
   | Success, g'    => g'
   end.
@@ -47,12 +95,12 @@ Definition or_result (f g : Result) : Result :=
   | Success, _     => Success
   | _, Success     => Success
   | Continue f',
-    Continue g'    => Continue (f' ∨ g')
+    Continue g'    => Continue (Or f' g')
   | Failure _, g'  => g'
   | f', Failure _  => f'
   end.
 
-Fixpoint compile (l : Formula) : option S.a -> Result := fun mx =>
+Fixpoint compile (l : Formula) : option a -> Result := fun mx =>
   match l with
   | Top    => Success
   | Bottom => Failure HitBottom
@@ -113,13 +161,13 @@ Fixpoint compile (l : Formula) : option S.a -> Result := fun mx =>
     end
   end.
 
-Definition step (m : Result) (x : S.a) : Result :=
+Definition step (m : Result) (x : a) : Result :=
   match m with
   | Continue l => compile l (Some x)
   | r => r
   end.
 
-Function run (m : Formula) (xs : list S.a) : Result :=
+Fixpoint run (m : Formula) (xs : list a) : Result :=
   match xs with
   | nil     => compile m None
   | x :: xs =>
@@ -157,9 +205,8 @@ Next Obligation.
 Qed.
 
 Lemma run_and p q s :
-  passes (run (p ∧ q) s) <-> passes (run p s) /\ passes (run q s).
+  passes (run (And p q) s) <-> passes (run p s) /\ passes (run q s).
 Proof.
-  unfold and.
   split; intros.
   - generalize dependent p.
     generalize dependent q.
@@ -167,33 +214,32 @@ Proof.
     + destruct (compile p None); simpl in *; intuition.
     + destruct (compile q None); simpl in *; intuition.
       destruct (compile p None); simpl in *; intuition.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition.
-      destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (compile p (Some a0)) eqn:?; simpl in *; intuition.
+      destruct (compile q (Some a0)) eqn:?; simpl in *; intuition.
       now specialize (IHs _ _ H).
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-      destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (compile p (Some a0)) eqn:?; simpl in *; intuition;
+      destruct (compile q (Some a0)) eqn:?; simpl in *; intuition.
       now specialize (IHs _ _ H).
   - generalize dependent p.
     generalize dependent q.
     induction s; simpl; intros; intuition.
     + destruct (compile p None) eqn:?; simpl in *; intuition;
       destruct (compile q None) eqn:?; simpl in *; intuition.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-      destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (compile p (Some a0)) eqn:?; simpl in *; intuition;
+      destruct (compile q (Some a0)) eqn:?; simpl in *; intuition.
 Qed.
 
 Lemma run_or p q s :
-  passes (run (p ∨ q) s) <-> passes (run p s) \/ passes (run q s).
+  passes (run (Or p q) s) <-> passes (run p s) \/ passes (run q s).
 Proof.
-  unfold and.
   split; intros.
   - generalize dependent p.
     generalize dependent q.
     induction s; simpl; intros; intuition.
     + destruct (compile p None); simpl in *; intuition;
       destruct (compile q None); simpl in *; intuition.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-      destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (compile p (Some a0)) eqn:?; simpl in *; intuition;
+      destruct (compile q (Some a0)) eqn:?; simpl in *; intuition.
   - generalize dependent p.
     generalize dependent q.
     induction s; simpl; intros; intuition.
@@ -201,10 +247,10 @@ Proof.
       destruct (compile q None) eqn:?; simpl in *; intuition.
     + destruct (compile p None) eqn:?; simpl in *; intuition;
       destruct (compile q None) eqn:?; simpl in *; intuition.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-      destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-      destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (compile p (Some a0)) eqn:?; simpl in *; intuition;
+      destruct (compile q (Some a0)) eqn:?; simpl in *; intuition.
+    + destruct (compile p (Some a0)) eqn:?; simpl in *; intuition;
+      destruct (compile q (Some a0)) eqn:?; simpl in *; intuition.
 Qed.
 
 Lemma run_next p x xs :
@@ -219,13 +265,12 @@ Lemma run_until p q s :
       | _ :: xs => passes (run q s) \/ (passes (run p s) /\ go xs)
       end in go s.
 Proof.
-  unfold and.
   split; intros.
   - generalize dependent p.
     generalize dependent q.
     induction s; simpl; intros; intuition.
-    destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-    destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    destruct (compile p (Some a0)) eqn:?; simpl in *; intuition;
+    destruct (compile q (Some a0)) eqn:?; simpl in *; intuition.
     + rewrite run_and in H.
       now firstorder.
     + rewrite run_or, run_and in H.
@@ -236,14 +281,14 @@ Proof.
   - generalize dependent p.
     generalize dependent q.
     induction s; simpl; intros; intuition.
-    destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-    destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    destruct (compile p (Some a0)) eqn:?; simpl in *; intuition;
+    destruct (compile q (Some a0)) eqn:?; simpl in *; intuition.
     + rewrite run_or, run_and.
       now firstorder.
     + rewrite run_or.
       now firstorder.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-      destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (compile p (Some a0)) eqn:?; simpl in *; intuition;
+      destruct (compile q (Some a0)) eqn:?; simpl in *; intuition.
       * rewrite run_and.
         now firstorder.
       * rewrite run_or, run_and.
@@ -260,15 +305,14 @@ Lemma run_wait p q s :
       | _ :: xs => passes (run q s) \/ (passes (run p s) /\ go xs)
       end in go s.
 Proof.
-  unfold and.
   split; intros.
   - generalize dependent p.
     generalize dependent q.
     induction s; simpl; intros; intuition.
     + destruct (compile p None) eqn:?; simpl in *; intuition;
       destruct (compile q None) eqn:?; simpl in *; intuition.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-      destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (compile p (Some a0)) eqn:?; simpl in *; intuition;
+      destruct (compile q (Some a0)) eqn:?; simpl in *; intuition.
       * rewrite run_and in H.
         now firstorder.
       * rewrite run_or, run_and in H.
@@ -283,14 +327,14 @@ Proof.
       destruct (compile q None) eqn:?; simpl in *; intuition.
     + destruct (compile p None) eqn:?; simpl in *; intuition;
       destruct (compile q None) eqn:?; simpl in *; intuition.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-      destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (compile p (Some a0)) eqn:?; simpl in *; intuition;
+      destruct (compile q (Some a0)) eqn:?; simpl in *; intuition.
       * rewrite run_or, run_and.
         now firstorder.
       * rewrite run_or.
         now firstorder.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-      destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (compile p (Some a0)) eqn:?; simpl in *; intuition;
+      destruct (compile q (Some a0)) eqn:?; simpl in *; intuition.
       * rewrite run_and.
         now firstorder.
       * rewrite run_or, run_and.
@@ -307,20 +351,19 @@ Lemma run_always p s :
       | _ :: xs => passes (run p s) /\ go xs
       end in go s.
 Proof.
-  unfold and.
   split; intros.
   - generalize dependent p.
     induction s; simpl; intros; intuition.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (compile p (Some a0)) eqn:?; simpl in *; intuition.
       rewrite run_and in H.
       now firstorder.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (compile p (Some a0)) eqn:?; simpl in *; intuition.
       * rewrite run_and in H.
         now firstorder.
       * now firstorder.
   - generalize dependent p.
     induction s; simpl; intros; intuition.
-    destruct (compile p (Some a)) eqn:?; simpl in *; intuition.
+    destruct (compile p (Some a0)) eqn:?; simpl in *; intuition.
     rewrite run_and.
     now firstorder.
 Qed.
@@ -333,20 +376,19 @@ Lemma run_eventually p s :
       | _ :: xs => passes (run p s) \/ go xs
       end in go s.
 Proof.
-  unfold and.
   split; intros.
   - generalize dependent p.
     induction s; simpl; intros; intuition.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (compile p (Some a0)) eqn:?; simpl in *; intuition.
       * now firstorder.
       * rewrite run_or in H.
         now firstorder.
   - generalize dependent p.
     induction s; simpl; intros; intuition.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (compile p (Some a0)) eqn:?; simpl in *; intuition.
       rewrite run_or.
       now firstorder.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (compile p (Some a0)) eqn:?; simpl in *; intuition.
       rewrite run_or.
       now firstorder.
 Qed.
@@ -359,19 +401,18 @@ Lemma run_release p q s :
       | _ :: xs => passes (run q s) /\ (passes (run p s) \/ go xs)
       end in go s.
 Proof.
-  unfold and.
   split; intros.
   - generalize dependent p.
     generalize dependent q.
     induction s; simpl; intros; intuition.
-    destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-    destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    destruct (compile p (Some a0)) eqn:?; simpl in *; intuition;
+    destruct (compile q (Some a0)) eqn:?; simpl in *; intuition.
     + rewrite run_and in H.
       now firstorder.
     + rewrite run_and, run_or in H.
       now firstorder.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-      destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (compile p (Some a0)) eqn:?; simpl in *; intuition;
+      destruct (compile q (Some a0)) eqn:?; simpl in *; intuition.
       * rewrite run_and in H.
         now firstorder.
       * now firstorder.
@@ -382,14 +423,14 @@ Proof.
   - generalize dependent p.
     generalize dependent q.
     induction s; simpl; intros; intuition.
-    destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-    destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    destruct (compile p (Some a0)) eqn:?; simpl in *; intuition;
+    destruct (compile q (Some a0)) eqn:?; simpl in *; intuition.
     + rewrite run_and, run_or.
       now firstorder.
     + rewrite run_or.
       now firstorder.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-      destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (compile p (Some a0)) eqn:?; simpl in *; intuition;
+      destruct (compile q (Some a0)) eqn:?; simpl in *; intuition.
       * rewrite run_and.
         now firstorder.
       * rewrite run_and, run_or.
@@ -406,7 +447,6 @@ Lemma run_strong_release p q s :
       | _ :: xs => passes (run q s) /\ (passes (run p s) \/ go xs)
       end in go s.
 Proof.
-  unfold and.
   split; intros.
   - generalize dependent p.
     generalize dependent q.
@@ -415,14 +455,14 @@ Proof.
       destruct (compile q None) eqn:?; simpl in *; intuition.
     + destruct (compile p None) eqn:?; simpl in *; intuition;
       destruct (compile q None) eqn:?; simpl in *; intuition.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-      destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (compile p (Some a0)) eqn:?; simpl in *; intuition;
+      destruct (compile q (Some a0)) eqn:?; simpl in *; intuition.
       * rewrite run_and in H.
         now firstorder.
       * rewrite run_and, run_or in H.
         now firstorder.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-      destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (compile p (Some a0)) eqn:?; simpl in *; intuition;
+      destruct (compile q (Some a0)) eqn:?; simpl in *; intuition.
       * rewrite run_and in H.
         now firstorder.
       * now firstorder.
@@ -435,14 +475,14 @@ Proof.
     induction s; simpl; intros; intuition.
     + destruct (compile p None) eqn:?; simpl in *; intuition;
       destruct (compile q None) eqn:?; simpl in *; intuition.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-      destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (compile p (Some a0)) eqn:?; simpl in *; intuition;
+      destruct (compile q (Some a0)) eqn:?; simpl in *; intuition.
       * rewrite run_and, run_or.
         now firstorder.
       * rewrite run_or.
         now firstorder.
-    + destruct (compile p (Some a)) eqn:?; simpl in *; intuition;
-      destruct (compile q (Some a)) eqn:?; simpl in *; intuition.
+    + destruct (compile p (Some a0)) eqn:?; simpl in *; intuition;
+      destruct (compile q (Some a0)) eqn:?; simpl in *; intuition.
       * rewrite run_and.
         now firstorder.
       * rewrite run_and, run_or.
@@ -451,7 +491,8 @@ Proof.
         now firstorder.
 Qed.
 
-Lemma run_correct (l : Formula) (s : list S.a) :
+(*
+Lemma run_correct (l : Formula) (s : list a) :
  matches l s <-> passes (run l s).
 Proof.
   generalize dependent s.
@@ -523,6 +564,9 @@ Proof.
     apply run_strong_release in H.
     now induction s; firstorder.
 Qed.
+*)
+
+End Step.
 
 End LTLStep.
 
@@ -530,17 +574,62 @@ Require Import Coq.Arith.PeanoNat.
 
 Module StepExamples.
 
-Module Import S := LTLStep NatStream.
+Module Import S := LTLStep.
 Import S.LTL.
-Import S.LTL.DF.
 
 Import ListNotations.
 
-Definition num (n : nat) :=
+#[global]
+Declare Scope boolean_scope.
+Bind Scope boolean_scope with Formula.
+Delimit Scope boolean_scope with boolean.
+Open Scope boolean_scope.
+
+Notation "¬ p"    := (negate p)      (at level 75, right associativity) : boolean_scope.
+Infix    "∨"      := Or              (at level 85, right associativity) : boolean_scope.
+Notation "p ⇒ q"  := (¬ p ∨ q)       (at level 86, right associativity) : boolean_scope.
+Notation "⊤"      := True            (at level 0, no associativity) : boolean_scope.
+Notation "⊥"      := False           (at level 0, no associativity) : boolean_scope.
+Infix    "∧"      := And             (at level 80, right associativity) : boolean_scope.
+(* Infix    "⟹"     := implies         (at level 99, right associativity) : boolean_scope. *)
+(* Infix    "≈"      := equivalent      (at level 90, no associativity) : boolean_scope. *)
+
+#[global]
+Declare Scope ltl_scope.
+Bind Scope ltl_scope with Formula.
+Delimit Scope ltl_scope with ltl.
+Open Scope boolean_scope.
+Open Scope ltl_scope.
+
+Notation "◯ p"       := (Next p)             (at level 75, right associativity) : ltl_scope.
+Notation "◇ p"       := (Eventually p)       (at level 75, right associativity) : ltl_scope.
+Notation "□ p"       := (Always p)           (at level 75, right associativity) : ltl_scope.
+Notation "p 'U' q"   := (Until p q)          (at level 79, right associativity) : ltl_scope.
+Notation "p 'W' q"   := (Wait p q)           (at level 79, right associativity) : ltl_scope.
+Notation "p 'R' q"   := (Release p q)        (at level 79, right associativity) : ltl_scope.
+Notation "p 'M' q"   := (StrongRelease p q) (at level 79, right associativity) : ltl_scope.
+Notation "'Λ' x , p" := (Examine (λ x , p))  (at level 97, no associativity) : ltl_scope.
+
+Open Scope ltl_scope.
+
+Definition num (n : nat) : @Formula nat :=
   Λ x, match x with
-       | Some x => if x =? n then ⊤ else ⊥
-       | None => ⊥
+       | Some x => if x =? n then Top else Bottom
+       | None => Bottom
        end.
+
+Definition if_then {a : Type} (p : a -> bool) (f : a -> Formula) :=
+  Λ x, match x with
+       | Some x => if p x then f x else Top
+       | None => Top
+       end.
+
+Fixpoint series {a : Type} (l : list (@Formula a)) : @Formula a :=
+  match l with
+  | nil => Top
+  | x :: nil => x
+  | x :: xs => x ∧ Next (series xs)
+  end.
 
 Example ex_match_query  :
   passes (run (num 1 ∧ ◯ (num 2)) [1; 2]).
