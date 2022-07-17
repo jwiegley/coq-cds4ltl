@@ -4,9 +4,5 @@ src/Bool.v
 src/MinLTL.v
 src/LTL.v
 src/Same_set.v
-src/Stream.v
 src/Model.v
 src/Denote.v
-src/Syntax.v
-src/Step.v
-src/Machine.v
