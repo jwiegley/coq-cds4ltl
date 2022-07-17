@@ -21,21 +21,42 @@ Ltac matches :=
       destruct H as [x ?]; exists x
   end.
 
+Ltac as_if :=
+  repeat match goal with
+  | [ H : ?P ?X |- ?P ?Y ] =>
+      let H0 := fresh "H0" in
+      assert (X = Y) as H0 by lia;
+      now rewrite <- H0
+  | [ H : ∀ _ : ?T, _ |- ∀ _ : ?T, _ ] =>
+      let n := fresh "n" in
+      intro n; specialize (H n)
+  | [ |- _ < _ ] => lia
+  | [ |- _ <= _ ] => lia
+  | [ |- _ > _ ] => lia
+  | [ |- _ >= _ ] => lia
+  | [ H : _ < 0 |- _ ] => lia
+  end.
+
 Ltac reduce :=
   unfold Included, In in *; intros;
   repeat (match goal with
           | [ H : existT _ _ _ = existT _ _ _ |- _ ] =>
               apply inj_pair2 in H; subst
           | [ H : Union _ _ _ _ |- _ ] => inversion H; subst; clear H
+          | [ H : Union _ _ _ |- _ ] => inversion H; subst; clear H
           | [ H : Intersection _ _ _ _ |- _ ] => inversion H; subst; clear H
+          | [ H : Intersection _ _ _ |- _ ] => inversion H; subst; clear H
           | [ H : _ ∧ _ |- _ ] => inversion H; subst; clear H
           | [ H : _ * _ |- _ ] => inversion H; subst; clear H
           | [ H : ∃ _, _ |- _ ] => inversion H; subst; clear H
           | [ H : { _ : _ | _ } |- _ ] => inversion H; subst; clear H
           | [ H : { _ : _ & _ } |- _ ] => inversion H; subst; clear H
           end; subst;
-          unfold Included, In in *; intros);
+          unfold Included, In, Complement, Logic.not in *; intros);
   simpl in *.
+
+Ltac just_math :=
+  simpl; reduce; try extensionality n; f_equal; lia.
 
 Ltac inv H := inversion H; subst; clear H; reduce.
 
@@ -134,18 +155,14 @@ Proof.
   now rewrite Union_associative.
 Qed.
 
-Ltac inv H := inversion H; subst; clear H.
-
 (** These next three theorems are missing from the standard library. *)
 Theorem Intersection_Union {A : Type} p q :
   Same_set A (Intersection A p q)
              (Complement A (Union A (Complement A p) (Complement A q))).
 Proof.
   split; repeat intro.
-  - inv H.
-    destruct H0.
-    + now apply H.
-    + now apply H.
+  - inv H;
+    now apply H.
   - rewrite <- (Complement_Complement A (Intersection A p q)).
     intro.
     apply H.
@@ -292,9 +309,6 @@ Include B.
 Definition shift (k : nat) : t → t := λ p n, p (n + k).
 Arguments shift k _ /.
 
-Ltac just_math :=
-  simpl; reduce; try extensionality n; f_equal; lia.
-
 Lemma shift_comm i j s : shift i (shift j s) = shift j (shift i s).
 Proof. just_math. Qed.
 
@@ -364,7 +378,6 @@ Qed.
 
 Theorem (* 1 *) next_not p : ◯ ¬p ≈ ¬◯ p.
 Proof.
-  unfold next, not.
   split; repeat intro;
   now apply H.
 Qed.
@@ -372,30 +385,9 @@ Qed.
 Theorem (* 2 *) next_impl p q : ◯ (p ⇒ q) ≈ ◯ p ⇒ ◯ q.
 Proof.
   unfold next.
-  split; repeat intro.
-  - inv H.
-    + now left.
-    + now right.
-  - inv H.
-    + now left.
-    + now right.
+  split; repeat intro;
+  inv H; first [ now left | now right ].
 Qed.
-
-Ltac as_if :=
-  repeat match goal with
-  | [ H : ?P ?X |- ?P ?Y ] =>
-      let H0 := fresh "H0" in
-      assert (X = Y) as H0 by lia;
-      now rewrite <- H0
-  | [ H : ∀ _ : ?T, _ |- ∀ _ : ?T, _ ] =>
-      let n := fresh "n" in
-      intro n; specialize (H n)
-  | [ |- _ < _ ] => lia
-  | [ |- _ <= _ ] => lia
-  | [ |- _ > _ ] => lia
-  | [ |- _ >= _ ] => lia
-  | [ H : _ < 0 |- _ ] => lia
-  end.
 
 Theorem (* 9 *) next_until p q : ◯ (p U q) ≈ (◯ p) U (◯ q).
 Proof.
@@ -403,7 +395,7 @@ Proof.
   rewrite shift_push.
   apply univ; intros.
   split; intro; matches; reduce;
-  simpl in *; split; as_if.
+  split; as_if.
 Qed.
 
 Theorem (* 10 *) until_expand p q : p U q ≈ q ∨ (p ∧ ◯ (p U q)).
@@ -438,31 +430,24 @@ Qed.
 
 Theorem (* 11 *) until_false p : p U ⊥ ⟹ ⊥.
 Proof.
-  unfold next, until, or, and.
-  repeat intro; unfold In in *.
-  destruct H, H.
+  unfold until, implies; reduce.
   contradiction.
 Qed.
 
 Theorem (* NEW *) looped p : ◯ ¬p U p ⟹ p.
 Proof.
-  unfold next, not, until, Complement, Logic.not, implies.
-  reduce.
-  destruct (Compare_dec.le_lt_dec x0 0).
-  - assert (x0 = 0) by lia.
-    subst.
-    as_if.
-  - assert (Nat.pred x0 < x0) by lia.
-    specialize (H1 _ H0).
-    exfalso.
-    apply H1.
+  unfold next, not, until, implies; reduce.
+  destruct x0.
+  - as_if.
+  - exfalso.
+    eapply H1; eauto.
     as_if.
 Qed.
 
 Theorem (* 12 *) until_left_or p q r : p U (q ∨ r) ≈ (p U q) ∨ (p U r).
 Proof.
   split; repeat intro;
-  unfold In, until, or in *; reduce.
+  unfold until, or in *; reduce.
   - inv H.
     + left.
       reduce.
@@ -486,8 +471,7 @@ Qed.
 Theorem (* 14 *) until_left_and p q r : p U (q ∧ r) ⟹ (p U q) ∧ (p U r).
 Proof.
   repeat intro;
-  unfold In, until, or in *; reduce.
-  inv H.
+  unfold until, and, or in *; reduce.
   split; reduce;
   exists x0;
   now split.
@@ -538,9 +522,7 @@ Proof.
   intros.
   destruct (Compare_dec.le_lt_dec x0 i).
   + right.
-    specialize (H2 (i - x0)).
-    assert (i - x0 < x1) by lia.
-    specialize (H2 H3).
+    specialize (H2 (i - x0) ltac:(lia)).
     as_if.
   + left.
     now apply H1.
@@ -555,8 +537,7 @@ Proof.
   exists (x0 - i).
   split; [as_if|].
   intros.
-  assert (i + i0 < x0) by lia.
-  specialize (H1 _ H4).
+  specialize (H1 (i + i0) ltac:(lia)).
   as_if.
 Qed.
 
@@ -585,10 +566,9 @@ Proof.
     }
     rewrite H; clear H.
     repeat intro.
-    inv H.
-    inv H0.
-    clear H1.
+    inv H; clear H1.
     generalize dependent x.
+    (* This the only theorem that requires induction! *)
     induction x0; intros.
     + destruct (classic (q x)).
       * left.
@@ -605,10 +585,8 @@ Proof.
       * simpl in *.
         rewrite <- PeanoNat.Nat.add_succ_comm in H.
         apply IHx0 in H; clear IHx0.
-        inv H.
-        ** inv H1.
-           inv H.
-           left.
+        inv H; inv H1.
+        ** left.
            exists (S x1).
            split; [simpl in *; as_if|].
            intros.
@@ -619,9 +597,7 @@ Proof.
            rewrite <- plus_n_Sm.
            apply H2.
            lia.
-        ** inv H1.
-           inv H.
-           destruct (classic (q x)).
+        ** destruct (classic (q x)).
            *** left.
                exists 0.
                split; auto; intros;
@@ -640,40 +616,20 @@ Proof.
                     ***** rewrite <- plus_n_Sm.
                           apply H2.
                           lia.
-      * rewrite shift_succ in H.
-        apply IHx0 in H; clear IHx0.
-        inv H.
-        ** inv H1.
-           destruct (classic (q x)).
-           *** left.
-               exists 0.
-               split; auto; intros;
-               simpl; as_if.
-           *** right.
-               exists 0.
-               split; auto; intros.
-               **** split; intro.
-                    ***** now apply H0; as_if.
-                    ***** now apply H1; as_if.
-               **** lia.
-        ** inv H1.
-           reduce.
-           destruct (classic (q x)).
-           *** left.
-               exists 0.
-               split; auto; intros;
-               simpl; as_if.
-           *** right.
-               exists 0.
-               split; auto; intros.
-               **** simpl; split; intro.
-                    ***** now apply H0; as_if.
-                    ***** now apply H; as_if.
-               **** lia.
+      * destruct (classic (q x)).
+        ** left.
+           exists 0.
+           split; auto; intros;
+           simpl; as_if.
+        ** right.
+           exists 0.
+           split; auto; intros.
+           *** split; intro.
+               **** now apply H0; as_if.
+               **** now apply H1; as_if.
+           *** lia.
   - repeat intro.
-    inv H.
-    reduce.
-    inv H.
+    inv H; reduce; inv H.
     split; reduce.
     + eexists.
       split; eauto; intros.
@@ -691,7 +647,7 @@ Qed.
 
 Theorem (* NEW *) impl_link p q : (p ⟹ q) ↔ (p ⇒ q) ≈ ⊤.
 Proof.
-  unfold implies, or, not, equivalent, true, Included.
+  unfold implies, or, not, equivalent, true.
   split; repeat intro.
   - split; repeat intro.
     + constructor.
@@ -754,40 +710,31 @@ Next Obligation.
   - unfold In in *.
     right.
     unfold In in *.
-    destruct H2.
     exists x2.
-    destruct H1.
     split.
     + apply H0.
-      exact H1.
+      exact H2.
     + intros.
       apply H.
-      now apply H2.
+      now apply H3.
 Qed.
 
 Theorem (* 38 *) evn_def p : ◇ p ≈ ⊤ U p.
 Proof.
   unfold eventually, until.
-  split; repeat intro; unfold In in *.
-  - destruct H.
-    exists x0.
-    split; auto; intros.
-    now split.
-  - destruct H.
-    exists x0.
-    now destruct H.
+  split; repeat intro; reduce;
+  exists x0; auto.
+  split; auto; intros.
+  constructor.
 Qed.
 
 Theorem (* 54 *) always_def p : □ p ≈ ¬◇ ¬p.
 Proof.
   unfold always, eventually, until.
-  split; repeat intro; unfold In in *.
-  - destruct H0.
-    apply H0.
+  split; repeat intro; reduce.
+  - apply H1.
     now apply H.
-  - unfold not, Complement, Logic.not, In in H.
-    apply NNPP.
-    unfold Logic.not.
+  - apply NNPP.
     intro.
     apply H.
     now exists k.
@@ -797,8 +744,7 @@ Theorem (* 169 *) wait_def p q : p W q ≈ □ p ∨ p U q.
 Proof. reflexivity. Qed.
 
 (* This unfolds to:
-
-     ∀ x, (∀ y, p y ⟹ q y) → (◯ p) x ⟹ (◯ q) x *)
+   ∀ x, (∀ y, p y ⟹ q y) → (◯ p) x ⟹ (◯ q) x *)
 Theorem (* NEW *) external p q : (p ⟹ q) → ◯ p ⟹ ◯ q.
 Proof.
   unfold implies, next;
@@ -810,11 +756,8 @@ Theorem (* NEW *) impossible p q : (p ⇒ q) ⟹ (◯ p ⇒ ◯ q).
 Proof.
   rewrite <- next_impl.
   unfold implies, next, always.
-  repeat intro.
-  unfold In, Complement in *.
-  simpl in *.
-  destruct x.
-  inv H.
+  repeat intro; reduce.
+  destruct H.
 Abort.
 
 (* Without □ this unfolds to:
@@ -856,9 +799,7 @@ Module Import LWF := LinearTemporalLogicWFacts LW.
 Theorem (* NEW *) impossible p : (p ≈ ⊤) → (□ p ≈ ⊤).
 Proof.
   intros.
-  rewrite H.
-  rewrite law_64.
-  reflexivity.
+  now rewrite H, law_64.
 Qed.
 
 Definition release        : t → t → t := λ p q, q W (q ∧ p).
@@ -889,11 +830,9 @@ Theorem release_def p q : p R q ≈ ¬(¬p U ¬q).
 Proof.
   unfold release, wait.
   assert (q ∧ p ≈ p ∧ q). {
-    split; repeat intro.
-    - destruct H.
-      now constructor.
-    - destruct H.
-      now constructor.
+    split; repeat intro;
+    destruct H;
+    now constructor.
   }
   rewrite H.
   rewrite law_173.
@@ -905,11 +844,9 @@ Theorem strong_release_def p q : p M q ≈ q U (p ∧ q).
 Proof.
   unfold strong_release.
   assert (q ∧ p ≈ p ∧ q). {
-    split; repeat intro.
-    - destruct H.
-      now constructor.
-    - destruct H.
-      now constructor.
+    split; repeat intro;
+    destruct H;
+    now constructor.
   }
   split; intros.
   - now rewrite H.
