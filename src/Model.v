@@ -8,11 +8,11 @@ Require Import
   Coq.Sets.Classical_sets
   Coq.Sets.Ensembles
   Coq.Classes.Morphisms
-  Same_set
-  MinBool
-  Bool
-  MinLTL
-  LTL.
+  CDS4LTL.Same_set
+  CDS4LTL.MinBool
+  CDS4LTL.Bool
+  CDS4LTL.MinLTL
+  CDS4LTL.LTL.
 
 Ltac matches :=
   match goal with

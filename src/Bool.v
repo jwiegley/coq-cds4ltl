@@ -4,7 +4,7 @@ Require Import
   Coq.Unicode.Utf8
   Coq.Classes.Morphisms
   Coq.Setoids.Setoid
-  MinBool.
+  CDS4LTL.MinBool.
 
 (***********************************************************************
  * This Boolean Logic adds the concept of ∧, which although it can be

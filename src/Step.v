@@ -3,7 +3,7 @@ Require Import
   Coq.Unicode.Utf8
   Coq.Classes.Morphisms
   Coq.Lists.List
-  Model.
+  CDS4LTL.Model.
 
 Open Scope program_scope.
 Open Scope list_scope.

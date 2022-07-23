@@ -5,7 +5,7 @@ Require Import
   Coq.Program.Program
   Coq.Classes.Morphisms
   Coq.Setoids.Setoid
-  Bool.
+  CDS4LTL.Bool.
 
 (***********************************************************************
  * This axiomatization of Linear Temporal Logic follows directly from

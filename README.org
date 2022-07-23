@@ -355,13 +355,3 @@ p ∧ q U ¬p ⇒ (q ∧ p) U (q ∧ p ∧ ¬◯ p)
 :CREATED:  [2021-02-19 Fri 10:56]
 :END:
 
-* Agenda for [2021-03-05 Fri]
-
-1. Some information on [p U q]. I don’t remember the discussion that raised
-   this point, but a few comments anyway.
-
-2. Proofs for (12) (15) and (16) on the basis of the new set of axioms.
-
-3. Discuss outline of new paper proposed by Prof. Warford.
-
-4. CDS proof of (55) and calculational deductive system proofs in general.

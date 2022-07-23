@@ -6,7 +6,7 @@ Require Import
   Coq.micromega.Lia
   Coq.Classes.Morphisms
   Coq.Setoids.Setoid
-  MinLTL.
+  CDS4LTL.MinLTL.
 
 Module Type LinearTemporalLogicW <: MinimalLinearTemporalLogic.
 

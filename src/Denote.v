@@ -3,8 +3,8 @@ Set Warnings "-notation-overridden".
 Require Import
   Coq.Unicode.Utf8
   Coq.Classes.Morphisms
-  MinLTL
-  LTL.
+  CDS4LTL.MinLTL
+  CDS4LTL.LTL.
 
 (** When we wish to show that there is a sound interpretation of LTL for a
     particular representation, we can either prove the axioms hold under that

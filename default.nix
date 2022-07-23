@@ -9,9 +9,9 @@ args@{
   }
 }:
 
-let constructive-ltl = coqPackages:
+let coq-cds4ltl = coqPackages:
   with pkgs.${coqPackages}; pkgs.stdenv.mkDerivation rec {
-    name = "coq${coq.coq-version}-constructive-ltl-${version}";
+    name = "coq${coq.coq-version}-cds4ltl-${version}";
     version = "1.0";
 
     src = if pkgs ? coqFilterSource
@@ -23,10 +23,6 @@ let constructive-ltl = coqPackages:
     ];
     enableParallelBuilding = true;
 
-    buildFlags = [
-      "JOBS=$(NIX_BUILD_CORES)"
-    ];
-
     installFlags = "COQLIB=$(out)/lib/coq/${coq.coq-version}/";
 
     env = pkgs.buildEnv { inherit name; paths = buildInputs; };
@@ -36,6 +32,6 @@ let constructive-ltl = coqPackages:
   };
 
 in {
-  constructive-ltl_8_14 = constructive-ltl "coqPackages_8_14";
-  constructive-ltl_8_15 = constructive-ltl "coqPackages_8_15";
+  coq-cds4ltl_8_14 = coq-cds4ltl "coqPackages_8_14";
+  coq-cds4ltl_8_15 = coq-cds4ltl "coqPackages_8_15";
 }

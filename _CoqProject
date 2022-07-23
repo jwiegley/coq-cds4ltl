@@ -1,4 +1,4 @@
--R src Top
+-R src CDS4LTL
 src/MinBool.v
 src/Bool.v
 src/MinLTL.v
