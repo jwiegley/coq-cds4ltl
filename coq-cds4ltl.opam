@@ -20,7 +20,7 @@ depends: [
 
 url {
   src: "https://github.com/jwiegley/coq-cds4ltl/archive/refs/tags/1.0.0.tar.gz"
-  checksum: "sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  checksum: "sha256=7a0beafad11ca48775e404cabe25e5790d2c7ea59ef84aadf191a5e2d5b6e76a"
 }
 
 tags: [
