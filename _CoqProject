@@ -1,4 +1,5 @@
 -R src CDS4LTL
+src/EquationalReasoning.v
 src/MinBool.v
 src/Bool.v
 src/MinLTL.v
