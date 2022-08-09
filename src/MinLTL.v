@@ -5,6 +5,7 @@ Require Import
   Coq.Program.Program
   Coq.Classes.Morphisms
   Coq.Setoids.Setoid
+  EquationalReasoning
   CDS4LTL.Bool.
 
 (***********************************************************************
@@ -64,6 +65,9 @@ Module MinimalLinearTemporalLogicFacts (Import L : MinimalLinearTemporalLogic).
 Module Import BF  := BooleanLogicFacts L.
 Module Import MBF := BF.MBF.
 
+Program Instance Equational_implies : Equational implies.
+Program Instance Equational_equivalent : Equational equivalent.
+
 #[local] Obligation Tactic := solve [ one_arg | two_arg ].
 
 #[global]
@@ -85,6 +89,24 @@ Program Instance until_respects_equivalent :
 (7) Truth of ◯ : ◯ true ≡ true
 (8) Falsehood of ◯ : ◯ false ≡ false
 *)
+
+Definition next_linearity_new1 p : ◯ p ≈ ¬◯ ¬p :=
+  forward
+    ◯ p
+  ≡⟨ not_not ⟩
+    ¬¬◯ p
+  ≡⟨ next_not ⟩
+    ¬◯ ¬p
+  ∎ equivalent.
+
+Definition next_linearity_new2 p : ◯ p ≈ ¬◯ ¬p :=
+  backward
+    ¬◯ ¬p
+  ≡⟨ next_not ⟩
+    ¬¬◯ p
+  ≡⟨ not_not ⟩
+    ◯ p
+  ∎ equivalent.
 
 Theorem (* 3 *) next_linearity p : ◯ p ≈ ¬◯ ¬p.
 Proof.
@@ -186,6 +208,30 @@ Proof.
   rewrite (and_proj_r r) at 1.
   reflexivity.
 Qed.
+
+Definition and_until_and_new1 {p q r s} :
+  (p ∧ r) U (q ∧ s) ⟹ p U q ∧ r U s :=
+  begin
+    (p ∧ r) U (q ∧ s)
+  ⇒⟨ until_left_and ⟩
+    (p ∧ r) U q ∧ (p ∧ r) U s
+  ⇒1⟨ and_proj p ⟩
+    p U q ∧ (p ∧ r) U s
+  ⇒⟨ and_proj_r r ⟩
+    p U q ∧ r U s
+  ∎ implies.
+
+Definition and_until_and_new2 {p q r s} :
+  (p ∧ r) U (q ∧ s) ⟹ p U q ∧ r U s :=
+  begin
+    p U q ∧ r U s
+  ⇐⟨ and_proj_r r ⟩
+    p U q ∧ (p ∧ r) U s
+  ⇐1⟨ and_proj p ⟩
+    (p ∧ r) U q ∧ (p ∧ r) U s
+  ⇐⟨ until_left_and ⟩
+    (p ∧ r) U (q ∧ s)
+  ∎ implies.
 
 Theorem (* NEW *) and_until_or p q r s : (p ∧ r) U (q ∨ s) ⟹ (p U q) ∨ (r U s).
 Proof.
