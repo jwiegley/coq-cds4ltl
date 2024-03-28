@@ -213,7 +213,7 @@ Corollary Complement_Full {A : Type} :
   Same_set A (Complement A (Full_set A)) (Empty_set A).
 Proof.
   split; repeat intro.
-  - elimtype False.
+  - exfalso.
     apply H.
     now constructor.
   - contradiction.
