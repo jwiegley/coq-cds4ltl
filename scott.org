@@ -1,0 +1,529 @@
+* Note
+
+John and I met today for an hour to discuss the topics on the agenda I sent
+out.
+
+We discussed (55), which John now believes must be taken as an axiom. I concur
+with this assessment. We still have the success story of John’s finding a
+proof of (56), thereby reducing the no. of axioms by 1.
+
+If John takes (83) as an axiom then he can prove ALL the axioms in the paper
+using Coq semantics model. This is similar to the result I got with ACL2. This
+whole process that John went through can be detailed early in the new paper.
+This does not mean that (83) needs to be an axiom in the CDS4LTL work, as we
+already have a proof of (83) using Temporal Deduction.
+
+BTW, could you give the second proof of (82) (I sent this a couple of days
+ago) a quick look? It is not a very complex proof and I want to know if you
+agree I have valid proof of (82).
+
+We are all in agreement to “freeze” the CDS4LTL work on the Vega-paper, and
+move to another paper to capture the results of our work going forward. When
+we talked last Sunday you agreed that this was a good idea, and you had some
+ideas for setting up a working document that we could share on your GitHub
+site. If you could do that in the next week or so, that wold be helpful. Let’s
+call it Wiegley-paper and use the Vega-paper as a template. Thanks for doing
+the setup of this for us Stan.
+
+John’s new stronger (57) theorem which he sent out recently will go into the
+Wiegley-paper.
+
+John’s new theorem (238) is already included in the Vega-paper.
+
+We discussed potential external Publications that could be developed, but have
+no concrete plan at this time.
+
+I told John about our discussion Sunday where you mentioned you might be
+working with a colleague in the near future to develop some Mathematical
+Philosophy courses at Pepperdine. John may have some interest in this project.
+So I leave it to Stan and John to set up further discussion of the topic as
+they see fit.
+
+John reported that he has not had any success yet in proving the Dummett
+theorem in Coq. Scott and John will have further discussions on this topic.
+Scott reported he believes he has a proof of Dummett formula using (82)
+Temporal Deduction. But like (83), Coq might not be able to find a proof if
+that is truly the only proof strategy that works for this formula.
+
+* Note
+
+Before we go “back to the future” I think we should prioritize the next
+axiomatic basis for CDS4LTL and prove all the requisite theorems that are
+touched by the axioms we eliminate. For example, we need the proof of (55) and
+any theorems downstream that use (55). And also, I suspect (170), as it has
+the following theorems using it in proofs: (173), (189), (190), (198), (199)
+etc.
+
+If you can summarize the new axioms, and especially the proofs for (55) and
+(170) give the new basis, I can scan thru the tech report and look for other
+theorems that may be impacted by the new axioms basis.
+
+* Note
+
+John— ACL2 confirms that this formula is a theorem …   (h.a.t.)
+
+term and until (not proven yet, still a work in progress)
+
+   p ∧ q U ¬p ⇒ (q ∧ p) U (q ∧ p ∧ ¬◯ p)
+
+If you could check this second theorem using ACL2, it may save me
+some time
+trying to prove false... :)
+
+;;;
+;;; Theorem JW 1-2
+;;;
+(defthm JW1-2
+  (acl2::implies (acl2::and (boolean-listp p)
+   (boolean-listp q)
+   ;(boolean-listp r)
+   ;(boolean-listp s)
+   (= (len p) (len q))
+   ;(= (len p) (len r))
+         ;(= (len p) (len s))
+   )
+(truep (implies (and p (until q (not p)))
+(until (and p q)(and p (and (not (next p)) q))))))
+  :hints (("Goal" :in-theory (e/d ()
+(LTL-52-EVENTUALLY-IN-TERMS-OF-ALWAYS
+     CONJUCTION-CONSEQUENT DISTR-OF-AND-OVER-AND #|
+LTL-54-DUAL-OF-EVENTUALLY-2|#
+     ))
+  #|:do-not-induct t|#)))
+
+;;;;
+;;;; ACL2 proof summary
+
+Q.E.D.
+
+The storage of JW1-2 depends upon the :type-prescription rule TRUEP.
+
+Summary
+Form:  ( DEFTHM JW1-2 ...)
+Rules: ((:CONGRUENCE IFF-IMPLIES-EQUAL-NOT)
+        (:DEFINITION =)
+        (:DEFINITION AND)
+        (:DEFINITION BOOLEAN-LISTP)
+        (:DEFINITION ENDP)
+        (:DEFINITION FALSEP)
+        (:DEFINITION IMPLIES)
+        (:DEFINITION LEN)
+        (:DEFINITION MIN)
+        (:DEFINITION NEXT)
+        (:DEFINITION COMMON-LISP::NOT)
+        (:DEFINITION NOT)
+        (:DEFINITION OR)
+        (:DEFINITION SYNP)
+        (:DEFINITION TRUEP)
+        (:DEFINITION UNTIL)
+        (:ELIM CAR-CDR-ELIM)
+        (:EXECUTABLE-COUNTERPART <)
+        (:EXECUTABLE-COUNTERPART AND)
+        (:EXECUTABLE-COUNTERPART BINARY-+)
+        (:EXECUTABLE-COUNTERPART BOOLEAN-LISTP)
+        (:EXECUTABLE-COUNTERPART BOOLEANP)
+        (:EXECUTABLE-COUNTERPART CAR)
+        (:EXECUTABLE-COUNTERPART CDR)
+        (:EXECUTABLE-COUNTERPART CONS)
+        (:EXECUTABLE-COUNTERPART CONSP)
+        (:EXECUTABLE-COUNTERPART ENDP)
+        (:EXECUTABLE-COUNTERPART EQUAL)
+        (:EXECUTABLE-COUNTERPART FALSEP)
+        (:EXECUTABLE-COUNTERPART FORCE)
+        (:EXECUTABLE-COUNTERPART IMPLIES)
+        (:EXECUTABLE-COUNTERPART LEN)
+        (:EXECUTABLE-COUNTERPART MIN)
+        (:EXECUTABLE-COUNTERPART COMMON-LISP::NOT)
+        (:EXECUTABLE-COUNTERPART NOT)
+        (:EXECUTABLE-COUNTERPART TRUEP)
+        (:EXECUTABLE-COUNTERPART UNARY-/)
+        (:EXECUTABLE-COUNTERPART UNTIL)
+        (:FAKE-RUNE-FOR-LINEAR NIL)
+        (:FAKE-RUNE-FOR-TYPE-SET NIL)
+        (:FORWARD-CHAINING BOOLEAN-LISTP-FORWARD-TO-SYMBOL-LISTP)
+        (:FORWARD-CHAINING SYMBOL-LISTP-FORWARD-TO-TRUE-LISTP)
+        (:INDUCTION AND)
+        (:INDUCTION BOOLEAN-LISTP)
+        (:INDUCTION LEN)
+        (:INDUCTION NOT)
+        (:INDUCTION UNTIL)
+        (:REWRITE ACL2::|(* 0 x)|)
+        (:REWRITE ACL2::|(* a (/ a))|)
+        (:REWRITE ACL2::|(* y x)|)
+        (:REWRITE ACL2::|(+ c (+ d x))|)
+        (:REWRITE ACL2::|(+ x (- x))|)
+        (:REWRITE ACL2::|(+ x (if a b c))|)
+        (:REWRITE ACL2::|(+ y x)|)
+        (:REWRITE ACL2::|(/ (/ x))|)
+        (:REWRITE ACL2::|(< 0 (/ x))|)
+        (:REWRITE ACL2::|(< x (/ y)) with (< 0 y)|)
+        (:REWRITE ACL2::|(< x (if a b c))|)
+        (:REWRITE ACL2::|(equal (/ x) c)|)
+        (:REWRITE AND-IS-BOOLEAN-LISTP)
+        (:REWRITE AND-IS-CONSP)
+        (:REWRITE BOOLEAN-LISTP-CONS)
+        (:REWRITE ACL2::BUBBLE-DOWN-+-MATCH-1)
+        (:REWRITE CAR-CONS)
+        (:REWRITE CAR-OF-AND)
+        (:REWRITE CAR-OF-NOT)
+        (:REWRITE CAR-OF-UNTIL-IS-BOOLEANP)
+        (:REWRITE CDR-CONS)
+        (:REWRITE CDR-OF-NOT)
+        (:REWRITE CDR-UNTIL)
+        (:REWRITE DEMORGAN-3-47-A)
+        (:REWRITE IDENTITY-OF-AND-LEMMA)
+        (:REWRITE IDENTITY-OF-OR-LEMMA)
+        (:REWRITE IDENTITY-OF-OR-LEMMA-COMMUTED)
+        (:REWRITE IMPLIES-3-74-LEMMA)
+        (:REWRITE IMPLIES-3-75-LEMMA)
+        (:REWRITE IMPLIES-IS-BOOLEAN-LISTP)
+        (:REWRITE LEFT-IDENTITY-OF-IMPLIES-LEMMA)
+        (:REWRITE LEN-OF-AND)
+        (:REWRITE LEN-OF-CDR)
+        (:REWRITE LEN-OF-NOT)
+        (:REWRITE LEN-OF-UNTIL)
+        (:REWRITE LTL-15-LEMMA)
+        (:REWRITE
+LTL-16-AXIOM-RIGHT-DISTRIBUTIVITY-OF-UNTIL-OVER-AND)
+        (:REWRITE LTL-18-IDEMPOTENCY-OF-UNTIL)
+        (:REWRITE LTL-19-RIGHT-ZERO-OF-UNTIL-LEMMA)
+        (:REWRITE LTL-20-LEFT-IDENTITY-OF-UNTIL-LEMMA)
+        (:REWRITE LTL-NOT-DOUBLE-NEGATION)
+        (:REWRITE ACL2::NORMALIZE-ADDENDS)
+        (:REWRITE NOT-IS-BOOLEAN-LISTP)
+        (:REWRITE NOT-IS-CONSP)
+        (:REWRITE P-OR-NOT-P)
+        (:REWRITE RIGHT-ZERO-OF-IMPLIES-LEMMA)
+        (:REWRITE ACL2::SIMPLIFY-PRODUCTS-GATHER-EXPONENTS-<)
+        (:REWRITE ACL2::SIMPLIFY-SUMS-<)
+        (:REWRITE SYMMETRY-OF-AND)
+        (:REWRITE SYMMETRY-OF-AND-2)
+        (:REWRITE TRUE-IS-TRUEP)
+        (:REWRITE TRUEP-NOT)
+        (:REWRITE UNTIL-IS-BOOLEAN-LISTP)
+        (:REWRITE UNTIL-IS-CONSP)
+        (:REWRITE ZERO-OF-AND-LEMMA)
+        (:REWRITE ZERO-OF-OR-LEMMA-COMMUTED)
+        (:TYPE-PRESCRIPTION AND)
+        (:TYPE-PRESCRIPTION BOOLEAN-LISTP)
+        (:TYPE-PRESCRIPTION IMPLIES)
+        (:TYPE-PRESCRIPTION LEN)
+        (:TYPE-PRESCRIPTION MIN)
+        (:TYPE-PRESCRIPTION NOT)
+        (:TYPE-PRESCRIPTION SYMBOL-LISTP)
+        (:TYPE-PRESCRIPTION TRUE)
+        (:TYPE-PRESCRIPTION TRUEP)
+        (:TYPE-PRESCRIPTION UNTIL))
+Splitter rules (see :DOC splitter):
+  case-split: ((:REWRITE ACL2::SIMPLIFY-PRODUCTS-GATHER-EXPONENTS-<))
+  if-intro: ((:DEFINITION AND)
+             (:DEFINITION BOOLEAN-LISTP)
+             (:DEFINITION ENDP)
+             (:DEFINITION IMPLIES)
+             (:DEFINITION LEN)
+             (:DEFINITION COMMON-LISP::NOT)
+             (:DEFINITION TRUEP)
+             (:DEFINITION UNTIL)
+             (:REWRITE CAR-OF-AND)
+             (:REWRITE CAR-OF-NOT))
+Warnings:  Non-rec
+Time:  130.59 seconds (prove: 130.56, print: 0.03, other: 0.01)
+Prover steps counted:  14678294
+ JW1-2
+LTL !>
+
+* Note from Stan
+
+I propose that we write a paper based on John’s work. I have written up an
+abstract as follows:
+
+If we want to go this route, it seems like the first thing to do is to follow
+Scott’s suggestion to (1) make a list of the new set of axioms and
+definitions, and then (2) prove each axiom and definition that is discarded by
+the revised system. Then, the rest of the theorems from CDS4L4L will follow
+and we will have the new system.
+
+* Note from Stan
+
+I spent some time revising the Vega paper in preparation for our new one. See
+attached. It can be printed with all proofs in a complete version wit a simple
+LaTeX switch. It is an indispensable tool because it lets you shuffle the
+placement of the theorems while automatically renumbering them.
+
+* Note
+
+John, I forgot to tell you this in our call today… I checked all the formulas
+below on SPOT and they are all theorems. This is a good double check on your
+work with Coq on setting the axiomatic basis for CDS4LTL.
+
+I will do this again once you have declared a set of Axioms as final (for
+now). And, I also plan to triple check this all by confirming these theorems
+using ACL2.
+
+* Note
+
+Here are some of the key points that came out in our nearly 2 Hour Zoom
+Meeting today.
+
+1. Scott provided John information from the vega paper on the Until
+operators existential and universal characteristics. (included in attachment
+of back-up material)
+
+2. We discussed proofs of  (12), (15) and (16) based on new axiom
+set. Scott had developed some CDS proofs and John had done the same in Coq. It
+was agreed that proofs in CDS would be done by John and checked by Scott for
+all the first level of theorems (that used to be axioms) needed to support
+down-stream theorems.
+
+3. John will look into new ways of ordering the presentation of
+theorems in the ne paper based on optimal orderings by various new criteria,
+or other criteria. Scott believes this could be a significant new area of work
+and perhaps a key novel contribution of the Wiegley paper. We will look to
+Prof. Warford for guidance on the “student/learner” attributes of these
+ordering proposals that John will come up with.
+
+4. The Vega paper is now considered “frozen”. All work going forward
+will be in the newly created Wiegley paper. Prof. Warford has set up a new
+LaTeX file we will use to collaborate on this work. Scott provided a draft of
+an outline which is included in the back-up material. It needs to be
+rationalized with the Warford outline already in the LaTeX file.
+
+Prof. Warford, can you put the Wiegley paper in a GitHub spot where the three
+of us can begin working in?
+
+5. Proof of (55). This was the biggy. We discussed the difference
+between the CDS proof that Scott was trying to construct and the Coq proof
+John was developing, and has now completed. John will do some investigation
+into having Coq print out a proof in CDS4LTL format. It turns out that there
+are “proof metatheorems” used inside of Coq that the user does not see as a
+proof step. Contrapositive was one of these metatheorems. This explains a lot
+of the difficulty Scott was having trying to use Coq proof hints to build a
+CDS proof. This was discovered as we stepped line-by-line through a proof of
+(12) that Scott had developed. Scott has provided completed CDS proofs for 83,
+88, and the first part of (55) for John to review, with an eye to getting Coq
+to be more like CDS in proof steps and transparancy. This will be an aspect of
+the usability of Coq proofs in teaching proof in an equational style. This
+also could be a major novel contribution of this work/paper. It could directly
+address the comments on the usefulness of hand-proof and automatic theorem
+provers.
+
+6. I am very excited about the potential of this area of
+investigation. We are now confident that the new axiomatic basis will work,
+and that there are CDS proofs for the theorems removed from the axiom set.
+There is some solid work done here by John (good show, John), and I can see
+some future areas of work more in the applications arena being of potential
+interest in the future. But more on those ideas later.
+
+* Note
+
+Thank you for your generous comments. It has been my pleasure for sure. I look
+forward to the work we have outlined for ourselves, it should be an
+interesting ride, with a significant tangible output at the end of the
+journey. See attached teaser.
+
+* Note
+
+I hope you are having a nice restful weekend, and you do not see this email
+until Monday. While looking over the notes from our Friday Zoom meeting I came
+up with a new question for you. If you look at the attached equation sheet,
+theorems (239) - (254), they look to me as screaming for generalization or
+some other grouping modality. Do you see something in that set that is an
+organizing principle ? Are some of those theorems duplicates, or are we
+missing some logical adds? Is there a key “big theorem” of which these are
+simple corollaries?
+
+I am excited about your idea of reordering the theorem set according to some
+grand principle. This could be a big contribution to the paper. Our previous
+ordering was mostly by operator, and putting theorems in order of supporting
+downstream theorems. I remember at one time we moved the monotonicity of Until
+theorems well forward (they were at (136) and (137)) after we got the proof of
+(83). If we could brainstorm ideas for multiple competing ways of
+ordering/grouping theorems in this system. And then, rationalize our final
+pick of the best way to do this. It could be quite interesting.
+
+* Note
+
+By now you should have received the latest “draft” version of the Book I have
+put together to document the work we have done on LTL at Pepperdine since Stan
+and David began this major project. While I consider the scope and content of
+the book to be “frozen”, I am still happy to correct any errors/typos, and so
+on, that you might find. Please look over the book as your time permits and
+send me any corrections you think we need to make. John W. and I are
+discussing how to document the work he is currently undertaking on a new
+axiomatic basis for CDS4LTL (and has already completed, like the Coq
+verification of the ACM Computing Surveys paper content). We will keep you all
+posted on progress on that front.
+
+I hope everyone is doing well and staying safe. Here’s hoping that we are on a
+path (finally) that will get things back to normal.
+
+* Note
+
+I have been looking at the link you sent to Coq. Very interesting, but I am
+just getting started with all that.
+
+Attached is something to look at vis-a-vis Axiom Basis for LTL. This one is
+from Schneider’s book “On Concurrent Programming”.
+
+We need to look also at the one’s mentioned in the CDS4LTL paper. Those were…
+(see section 4.3 of the paper).
+
+- Ben-Ari
+- Emerson
+- Kroger and Merz
+- Manna and Pnueli
+- Schneider
+
+We should discuss how to proceed with comparing these different axiom bases.
+
+* Note
+
+I trust all is well. Semester is over. And, you are enjoying summer. John
+Wiegley was swamped with work and had to leave our joint project on the back
+burner. Now, however he has contacted me and we had our first discussion by
+Zoom meeting in several months last Friday. I expect you will see e-mail
+traffic ramp up as we get back to work.
+
+On another topic. I have finished the Pepperdine Papers Book and have sent
+final copies of the book to Vega, Wiegley and you. I sent you enough books
+that you could hopefully distribute them to students in your classes.
+Currently, the book can only be ordered through my book production lead Julee.
+She can be contacted at
+
+julees831@gmail.com
+
+The reason for this was to be sensitive to your desire to control student
+access to the book. If you change your mind, we can set it up so that anyone
+could buy the book through Lulu.com. In the meantime, the only way to get a
+copy is to give your permission to Julee that someone should receive a copy.
+
+I hope you have received your books by now and that you will find them useful.
+
+* Note
+
+I have tried proving a few theorems using the Schneider axioms with some
+success. I have attached the additional work for you to see. I was trying to
+prove Distributivity of (eventually) <> over (or) \/.
+
+(52) Distributivity of <> over \/:    <> ( p \/ q ) == <> p \/ <> q
+
+But did not have success. Can you see a way to prove (52) using the Schneider
+basis?
+
+I will work to put a table together to make it easier to compare the axiomatic
+basis of the systems we surveyed in the paper. It will include the following
+additional systems. The other system, (Schneider’s) is already detailed in the
+attachment above.
+
+- Ben-Ari
+- Emerson
+- Kroger and Merz
+- Manna and Pnueli
+
+* Note
+
+Thought you might find this of interest. Perhaps you and your Purdue Prof.
+friend could team up on something like this. I work too slow to enter into
+such stress.
+
+* Note
+
+I was lining up your Axioms against the CDS4LTL Axioms and I believe this is where we are…
+
+There are 15 Axioms total…
+
+(1), (2), (9), (10), (11), (new) looped, (12), (14), (new) until_and_until,
+(17), (18), (170), and the definitions of eventually, always and wait.
+
+With this set of axioms you can prove (13), (15), (16) from CDS4LTL; and using
+(new) looped you can prove a strong version of (75) which allows you to prove
+(55), which is then no longer an Axiom, but a theorem. Then all the theorems
+of CDS4LTL are provable on this new axiom set. One question I still have about
+this is: are you able to prove strong (75) before it is needed to prove (55)?
+It would be neat to see your proof of strong (75) and (55) in CDS4LTL-speak.
+
+If this is all settled, then we have the new axiom basis for LTL. Now we need
+to collect all your philosophical thinking as why/how this set was obtained
+and preferred using your concepts of, e.g., Aggressive weakening (and then
+adding helpful equivalents as theorems, not axioms); Most Illuminating set
+[minimum number of axioms required for an understandable (illuminating) and
+cogent set of descriptive properties]; others ???
+
+* Note from Stan
+
+If this works, it will be a big improvement over our paper. You are saying
+that this new set of 15 axioms can take the place of the 18 axioms in our
+paper! Furthermore, the two new axioms are shorter than the ones they replace!
+I especially like the elimination of (13), (15), and (16).
+
+I recommend as a first step, to use our calculation logic with the new set of
+15 axioms to prove each of the old axioms not in the new set. So, can you show
+me proofs of the following from the new set of 15 axioms using calculation
+logic:
+
+(13)
+(15)
+(16)
+(55)
+(56)
+
+Have we done this yet? I would like to see and verify these five proofs in
+calculation logic. Looks like you have done the first three and can do (55) by
+first doing a strong version of (75). What about (56)?
+
+* Note from Stan
+
+Also, whatever happened to
+
+O ¬ p U p => p
+
+Can we use that in place of (10)?
+
+* Note from Stan
+
+I cannot prove (10) from
+
+O ¬ p U p == p
+
+—Stan
+
+* Note
+
+For our meeting tomorrow I suggest the following topics, plus
+whatever else you want to add to this…
+
+1.  Stan Warford’s recent e-mail.
+
+    Scott and John,
+
+    If this works, it will be a big improvement over our paper. You are saying
+    that this new set of 15 axioms can take the place of the 18 axioms in our
+    paper! Furthermore, the two new axioms are shorter than the ones they
+    replace! I especially like the elimination of (13), (15), and (16).
+
+    I recommend as a first step, to use our calculation logic with the new set
+    of 15 axioms to prove each of the old axioms not in the new set. So, can
+    you show me proofs of the following from the new set of 15 axioms using
+    calculation logic:
+
+    (13)
+    (15)
+    (16)
+    (55)
+    (56)
+
+    Have we done this yet? I would like to see and verify these five proofs in
+    calculation logic. Looks like you have done the first three and can do
+    (55) by first doing a strong version of (75). What about (56)?
+
+    —Stan
+
+2.  Sketch proofs for the above.
+
+3.  Discuss Stan Warford’s other questions.
+
+    Also, whatever happened to
+
+    O ¬ p U p => p
+
+    Can we use that in place of (10)?
