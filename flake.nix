@@ -37,7 +37,7 @@
               "COQDOCINSTALL=$(out)/share/coq/${coq.coq-version}/user-contrib"
             ];
 
-            env = pkgs.buildEnv { inherit name; paths = buildInputs; };
+            env.env = pkgs.buildEnv { inherit name; paths = buildInputs; };
             passthru = {
               compatibleCoqVersions = v:
               builtins.elem v [ "8.14" "8.15" "8.16" "8.17" "8.18" "8.19" ];
