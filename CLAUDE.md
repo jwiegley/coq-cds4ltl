@@ -10,7 +10,7 @@
 **License:** BSD-3-Clause
 
 ### Project Goal
-Formalize the axiomatization of Linear Temporal Logic using minimal axioms (Huntington's Boolean axioms + 9 temporal axioms) and prove 240+ theorems. The project provides three semantic models: axiomatic (abstract), denotational (infinite streams), and computational (Mealy machine).
+Formalize the axiomatization of Linear Temporal Logic using minimal axioms (Huntington's Boolean axioms + 9 temporal axioms) and prove 240+ theorems. The project provides three semantic models: axiomatic (abstract), denotational (infinite streams), and computational (Positive Normal Form reduction).
 
 ## Tech Stack & Dependencies
 
@@ -20,6 +20,23 @@ Formalize the axiomatization of Linear Temporal Logic using minimal axioms (Hunt
 - **Build System:** `coq_makefile` + GNU Make
 - **Package Manager:** OPAM or Nix flakes
 
+### Environment Setup
+
+#### Using Nix (Recommended)
+```bash
+nix develop                  # Enter development shell with Coq 8.19
+nix build                    # Build the project
+nix flake check             # Run all checks
+```
+
+#### Using OPAM
+```bash
+opam switch create coq-cds4ltl 4.14.1
+opam repo add coq-released https://coq.inria.fr/opam/released
+opam install coq.8.19.0
+make
+```
+
 ### Coq Standard Library Modules Used
 ```coq
 Coq.Unicode.Utf8          (* Unicode notation *)
@@ -27,8 +44,11 @@ Coq.Program.Program       (* Program tactics *)
 Coq.Classes.Morphisms     (* Proper instances *)
 Coq.Setoids.Setoid       (* Setoid rewriting *)
 Coq.Sets.Ensembles       (* Classical set theory *)
+Coq.Sets.Classical_sets  (* Classical set operations *)
+Coq.Sets.Powerset_facts  (* Powerset operations *)
 Coq.Logic.Classical      (* Law of excluded middle *)
 Coq.micromega.Lia        (* Linear arithmetic *)
+Coq.Lists.List           (* List operations - used in Step.v *)
 ```
 
 ### No External Dependencies
@@ -38,19 +58,22 @@ The project is self-contained, using only Coq's standard library.
 
 ```
 src/
-├── MinBool.v      # Minimal Boolean logic (Huntington axioms)
-├── Bool.v         # Extended Boolean logic (adds AND operator)
-├── MinLTL.v       # Minimal LTL (Next + Until)
-├── LTL.v          # Full LTL (Eventually, Always, Wait, Release)
-├── Model.v        # Semantic soundness proofs (infinite streams)
-├── Same_set.v     # Set theory utilities
-├── Denote.v       # Homomorphic abstraction framework
-├── Step.v         # Computational model (single-step reduction)
-└── Working.v      # Experimental proofs and new techniques
+├── MinBool.v      # Minimal Boolean logic (348 lines, Huntington axioms)
+├── Bool.v         # Extended Boolean logic (512 lines, adds AND operator)
+├── MinLTL.v       # Minimal LTL (468 lines, Next + Until + 9 temporal axioms)
+├── LTL.v          # Full LTL (2,803 lines, 240+ theorems with ◇, □, W, R, M)
+├── Model.v        # Semantic soundness proofs (856 lines, infinite streams)
+├── Same_set.v     # Set theory utilities (204 lines)
+├── Denote.v       # Homomorphic abstraction framework (279 lines)
+├── Step.v         # Computational model (651 lines, PNF reduction)
+├── Bases.v        # Alternative Schneider axioms (54 lines, experimental)
+└── Working.v      # Experimental equational reasoning (557 lines)
 
-old/               # Deprecated modules (preserved for reference)
+old/               # Deprecated modules (Syntax.v, CoSyntax.v, Machine.v)
 _CoqProject        # Build configuration
 README.org         # Main documentation
+Makefile          # Build automation
+flake.nix         # Nix reproducible builds
 ```
 
 ## Mathematical Foundation
@@ -73,9 +96,25 @@ LinearTemporalLogic (+2 definitions: R, M)
 - **Temporal:** ◯ (next), U (until), ◇ (eventually), □ (always), W (wait), R (release), M (strong release)
 
 ### Key Axioms
-1. **Huntington's Boolean axioms** (MinBool.v)
-2. **9 temporal axioms** including `next_not`, `next_impl`, `until_expand`, `until_false`
-3. **Novel axiom:** `looped` for well-foundedness
+1. **Huntington's Boolean axioms** (MinBool.v):
+   - `or_comm`: p ∨ q ≈ q ∨ p
+   - `or_assoc`: (p ∨ q) ∨ r ≈ p ∨ (q ∨ r)
+   - `huntington`: ¬(¬p ∨ q) ∨ ¬(¬p ∨ ¬q) ≈ p
+
+2. **9 temporal axioms** (MinLTL.v):
+   - Axiom 1: `next_not` - ◯ ¬p ≈ ¬◯ p
+   - Axiom 2: `next_impl` - ◯ (p ⇒ q) ≈ ◯ p ⇒ ◯ q
+   - Axiom 9: `next_until` - ◯ (p U q) ≈ ◯ p U ◯ q
+   - Axiom 10: `until_expand` - p U q ≈ q ∨ (p ∧ ◯ (p U q))
+   - Axiom 11: `until_false` - p U ⊥ ⟹ ⊥
+   - Axiom 12: `or_until_distr` - (p ∨ q) U r ⟹ (p U r) ∨ (q U r)
+   - Axiom 14: `until_and_left` - (p ∧ q) U r ⟹ p U r
+   - Axiom 17/18: Until distribution laws
+   - Axiom 170: `not_until` - ¬(p U q) ≈ ¬q U (¬q ∧ ¬p)
+   - Novel axiom: `looped` - ◯ ¬p U p ⟹ p (well-foundedness)
+
+3. **Boolean extension** (Bool.v):
+   - `and_def`: p ∧ q ≈ ¬(¬p ∨ ¬q)
 
 ## Proof Strategies & Tactics
 
@@ -108,6 +147,8 @@ Automatically prove Proper instances for morphisms.
 - `as_if`: Solve arithmetic with lia
 - `reduce`: Unfold set operations
 - `just_math`: Combine extensionality with lia
+- `inv`: Combined inversion and reduction
+- `equality`: Combine intuition with congruence
 
 #### `defer` (Denote.v:97)
 Transfer proof obligations via homomorphisms.
@@ -136,9 +177,12 @@ Transfer proof obligations via homomorphisms.
 - Core temporal theorems
 
 ### LTL.v (2,803 lines) - LARGEST FILE
-- 240+ theorems
+- 240+ theorems organized by operator
 - Derived operators (◇, □, W, R, M)
-- 11 admitted proofs in Release/StrongRelease section
+- Theorems 38-53: Eventually (◇) properties
+- Theorems 54-90: Always (□) properties
+- Theorems 91-130+: Wait (W) properties
+- Currently 1 incomplete proof (`law_165_alt` at line 1579)
 
 ### Model.v (856 lines)
 - Semantic soundness proofs
@@ -153,8 +197,10 @@ Transfer proof obligations via homomorphisms.
 ### Step.v (651 lines)
 - Computational model
 - Single-step reduction
-- Positive Normal Form encoding
-- Enables model checking
+- Positive Normal Form (PNF) encoding
+- 12 Formula constructors: Top, Bottom, Examine, And, Or, Next, Until, Wait, Always, Eventually, Release, StrongRelease
+- Error types: HitBottom, EndOfTrace, Rejected, Unsupported
+- Enables model checking via `step` function
 
 ## AI Assistant Guidelines
 
@@ -200,16 +246,24 @@ Extraction "ltl.ml" step compile.
 
 ### Build Commands
 ```bash
-make                # Build all
-make clean         # Clean build artifacts
-make install       # Install to Coq library
-grep -r "admit"    # Find incomplete proofs (11 expected)
+make                      # Build all (generates Makefile.coq if needed)
+make clean               # Clean build artifacts (.vo, .vok, .glob files)
+make install             # Install to Coq library
+make fullclean          # Remove Makefile.coq as well
+make -j4                 # Parallel build with 4 cores
+
+# Development helpers
+coqc src/MinBool.v      # Compile single file
+coqchk CDS4LTL.MinBool  # Verify compiled module
+grep -r "Abort"         # Find incomplete proofs (3 expected)
+grep -r "admit"         # Find admitted proofs (should be 0)
 ```
 
 ### Testing & Validation
 - **Type checking:** All proofs verified by Coq
 - **Admitted detection:** Makefile checks for `admit`, `undefined`, `jww`
-- **Completeness:** 96% proven (11/240+ admitted)
+- **Completeness:** ~99% proven (1 incomplete out of 240+)
+- **CI Matrix:** Tests on Coq 8.14-8.19 plus dev version
 
 ## Performance & Optimization
 
@@ -232,8 +286,9 @@ grep -r "admit"    # Find incomplete proofs (11 expected)
 - ✓ Computational model
 
 ### In Progress
-- 11 admitted proofs in Release/StrongRelease
-- Equational reasoning library integration
+- 1 incomplete proof (`law_165_alt` in LTL.v)
+- Equational reasoning library integration (Working.v)
+- Alternative Schneider axiomatization (Bases.v)
 
 ### Future Directions
 1. Complete Release/StrongRelease proofs
@@ -274,7 +329,7 @@ grep -r "admit"    # Find incomplete proofs (11 expected)
 - Don't break module abstraction barriers
 - Don't add external dependencies without strong justification
 - Don't modify axioms without understanding the full impact
-- Don't ignore the 11 admitted proofs - they need completion
+- Don't ignore incomplete proofs - they need completion
 - Don't use classical logic where constructive proofs are possible
 
 ### Quick Reference
@@ -301,6 +356,37 @@ MinBool → Bool → MinLTL → LTL
            ↓
          Step
 ```
+
+## Common Development Workflows
+
+### Proving a New Theorem
+1. Identify the appropriate Facts module based on operators used
+2. Check if a similar theorem exists using `grep` or searching LTL.v
+3. Add theorem with paper reference number if applicable
+4. Try `boolean` first for Boolean properties
+5. Use setoid rewriting for equivalences
+6. Test soundness in Model.v if modifying core logic
+
+### Debugging Failed Proofs
+```coq
+(* Show current proof state *)
+Show.
+
+(* Try automatic tactics in order *)
+Proof. boolean. Qed.           (* Boolean simplification *)
+Proof. now rewrite law_XX. Qed. (* Direct rewriting *)
+Proof. intuition. Qed.          (* Intuitionistic reasoning *)
+
+(* For Model.v proofs *)
+Proof. matches. as_if. reduce. just_math. Qed.
+```
+
+### Adding a New Operator
+1. Define in appropriate module type (MinLTL or LTL)
+2. Add Proper instance for setoid rewriting
+3. Define semantic interpretation in Model.v
+4. Add computational reduction in Step.v
+5. Prove key properties in Facts module
 
 ## Contact & Resources
 
