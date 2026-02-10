@@ -182,7 +182,8 @@ Transfer proof obligations via homomorphisms.
 - Theorems 38-53: Eventually (◇) properties
 - Theorems 54-90: Always (□) properties
 - Theorems 91-130+: Wait (W) properties
-- Currently 1 incomplete proof (`law_165_alt` at line 1579)
+- 14 Admitted proofs: R laws 260-265, M laws 266-269, OLD laws 270-273
+- 1 Abort in Bool.v (`mccune` - documented research challenge)
 
 ### Model.v (856 lines)
 - Semantic soundness proofs
@@ -255,14 +256,14 @@ make -j4                 # Parallel build with 4 cores
 # Development helpers
 coqc src/MinBool.v      # Compile single file
 coqchk CDS4LTL.MinBool  # Verify compiled module
-grep -r "Abort"         # Find incomplete proofs (3 expected)
-grep -r "admit"         # Find admitted proofs (should be 0)
+grep -r "Abort"         # Find incomplete proofs (1 expected: mccune in Bool.v)
+grep -r "Admitted"      # Find admitted proofs (14 expected in LTL.v)
 ```
 
 ### Testing & Validation
 - **Type checking:** All proofs verified by Coq
 - **Admitted detection:** Makefile checks for `admit`, `undefined`, `jww`
-- **Completeness:** ~99% proven (1 incomplete out of 240+)
+- **Completeness:** ~94% proven (14 Admitted out of 240+, concentrated in R/M/OLD sections)
 - **CI Matrix:** Tests on Coq 8.14-8.19 plus dev version
 
 ## Performance & Optimization
@@ -286,7 +287,11 @@ grep -r "admit"         # Find admitted proofs (should be 0)
 - ✓ Computational model
 
 ### In Progress
-- 1 incomplete proof (`law_165_alt` in LTL.v)
+- 14 Admitted proofs in LTL.v:
+  - Release (R) section: laws 260-265 (6 proofs)
+  - Strong Release (M) section: laws 266-269 (4 proofs)
+  - OLD section: laws 270-273 (4 proofs)
+- 1 Abort in Bool.v (`mccune` - documented research challenge)
 - Equational reasoning library integration (Working.v)
 - Alternative Schneider axiomatization (Bases.v)
 
