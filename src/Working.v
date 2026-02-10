@@ -1,10 +1,10 @@
 Set Warnings "-local-declaration".
 
 Require Import
-  Coq.Unicode.Utf8
-  Coq.Program.Program
-  Coq.Classes.Morphisms
-  Coq.Setoids.Setoid
+  Stdlib.Unicode.Utf8
+  Stdlib.Program.Program
+  Stdlib.Classes.Morphisms
+  Stdlib.Setoids.Setoid
   EquationalReasoning
   Bool.
 
@@ -118,7 +118,7 @@ Definition (* 3 *) next_linearity_new p : ◯ p ≈ ¬◯ ¬p :=
     ¬¬◯ p
   ≡⟨⟨ not_not _ ⟩⟩
     ◯ p
-  ∎ equivalent.
+  ∎.
 
 Definition next_linearity_new1 p : ◯ p ≈ ¬◯ ¬p :=
   forward
@@ -127,7 +127,7 @@ Definition next_linearity_new1 p : ◯ p ≈ ¬◯ ¬p :=
     ¬¬◯ p
   ≡⟨ next_not ⟩
     ¬◯ ¬p
-  ∎ equivalent.
+  ∎.
 
 Definition next_linearity_new2 p : ◯ p ≈ ¬◯ ¬p :=
   backward
@@ -136,7 +136,7 @@ Definition next_linearity_new2 p : ◯ p ≈ ¬◯ ¬p :=
     ¬¬◯ p
   ≡⟨ not_not ⟩
     ◯ p
-  ∎ equivalent.
+  ∎.
 
 Theorem (* 3 *) next_linearity p : ◯ p ≈ ¬◯ ¬p.
 Proof.
@@ -252,6 +252,11 @@ Qed.
 
    ------ *)
 
+(* NOTE: The ⇒⟨ ⟩ / ⇐⟨ ⟩ equational reasoning notations with the implies
+   relation fail on Coq 8.19 due to ltac rewriting issues with non-symmetric
+   relations. The ≡⟨ ⟩ notations with equivalent work fine.
+   These definitions are duplicates of and_until_and above. *)
+(*
 Definition and_until_and_new1 {p q r s} :
   (p ∧ r) U (q ∧ s) ⟹ p U q ∧ r U s :=
   begin
@@ -262,7 +267,7 @@ Definition and_until_and_new1 {p q r s} :
     p U q ∧ (p ∧ r) U s
   ⇒⟨ and_proj_r r ⟩
     p U q ∧ r U s
-  ∎ implies.
+  ∎.
 
 Definition and_until_and_new2 {p q r s} :
   (p ∧ r) U (q ∧ s) ⟹ p U q ∧ r U s :=
@@ -274,7 +279,8 @@ Definition and_until_and_new2 {p q r s} :
     (p ∧ r) U q ∧ (p ∧ r) U s
   ⇐⟨ until_left_and ⟩
     (p ∧ r) U (q ∧ s)
-  ∎ implies.
+  ∎.
+*)
 
 Theorem (* NEW *) and_until_or p q r s : (p ∧ r) U (q ∨ s) ⟹ (p U q) ∨ (r U s).
 Proof.

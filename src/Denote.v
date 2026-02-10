@@ -1,8 +1,8 @@
 Set Warnings "-notation-overridden".
 
 Require Import
-  Coq.Unicode.Utf8
-  Coq.Classes.Morphisms
+  Stdlib.Unicode.Utf8
+  Stdlib.Classes.Morphisms
   CDS4LTL.MinLTL
   CDS4LTL.LTL.
 
@@ -90,7 +90,7 @@ Instance implies_Transitive     : Transitive implies := Implies_Transitive.
 Instance equivalent_Equivalence : Equivalence equivalent.
 Proof.
   unfold equivalent.
-  split; repeat intro; intuition;
+  split; repeat intro; intuition auto with *;
   now transitivity y.
 Qed.
 

@@ -1,10 +1,10 @@
 Require Import
-  Coq.Sets.Ensembles
-  Coq.Sets.Finite_sets
-  Coq.Sets.Finite_sets_facts
-  Coq.Classes.Morphisms
-  Coq.Setoids.Setoid
-  Coq.Relations.Relation_Definitions.
+  Stdlib.Sets.Ensembles
+  Stdlib.Sets.Finite_sets
+  Stdlib.Sets.Finite_sets_facts
+  Stdlib.Classes.Morphisms
+  Stdlib.Setoids.Setoid
+  Stdlib.Relations.Relation_Definitions.
 
 #[global]
 Program Instance Same_set_Equivalence {A} : Equivalence (@Same_set A).

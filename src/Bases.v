@@ -1,10 +1,10 @@
 Set Warnings "-local-declaration".
 
 Require Import
-  Coq.Unicode.Utf8
-  Coq.Program.Program
-  Coq.Classes.Morphisms
-  Coq.Setoids.Setoid
+  Stdlib.Unicode.Utf8
+  Stdlib.Program.Program
+  Stdlib.Classes.Morphisms
+  Stdlib.Setoids.Setoid
   Bool.
 
 (***********************************************************************
@@ -16,7 +16,7 @@ Require Import
  *
  * by Warford, Vega and Staley *)
 
-Module Type ScheinderAxioms <: BooleanLogic.
+Module Type SchneiderAxioms <: BooleanLogic.
 
 Include BooleanLogic.
 
@@ -51,4 +51,4 @@ Axiom axiom_3_21e : ∀ p,   □ (p ⇒ ◯ p) ⟹ (p ⇒ □ p).
 Axiom axiom_3_27a : ∀ p q, □ p ⟹ p W q.
 Axiom axiom_3_27b : ∀ p q, p W q ≈ q ∨ (p ∧ ◯ (p W q)).
 
-End ScheinderAxioms.
+End SchneiderAxioms.

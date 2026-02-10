@@ -1,10 +1,10 @@
 Set Warnings "-local-declaration".
 
 Require Import
-  Coq.Unicode.Utf8
-  Coq.Program.Program
-  Coq.Classes.Morphisms
-  Coq.Setoids.Setoid
+  Stdlib.Unicode.Utf8
+  Stdlib.Program.Program
+  Stdlib.Classes.Morphisms
+  Stdlib.Setoids.Setoid
   CDS4LTL.Bool.
 
 (***********************************************************************

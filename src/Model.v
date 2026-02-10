@@ -1,13 +1,13 @@
 Set Warnings "-local-declaration".
 
 Require Import
-  Coq.Program.Program
-  Coq.Unicode.Utf8
-  Coq.micromega.Lia
-  Coq.Sets.Powerset_facts
-  Coq.Sets.Classical_sets
-  Coq.Sets.Ensembles
-  Coq.Classes.Morphisms
+  Stdlib.Program.Program
+  Stdlib.Unicode.Utf8
+  Stdlib.micromega.Lia
+  Stdlib.Sets.Powerset_facts
+  Stdlib.Sets.Classical_sets
+  Stdlib.Sets.Ensembles
+  Stdlib.Classes.Morphisms
   CDS4LTL.Same_set
   CDS4LTL.MinBool
   CDS4LTL.Bool
@@ -651,10 +651,10 @@ Proof.
   split; repeat intro.
   - split; repeat intro.
     + constructor.
-    + now destruct (classic (x ∈ p)); intuition.
+    + now destruct (classic (x ∈ p)); intuition auto with *.
   - inv H; reduce.
     specialize (H2 _ (Full_intro _ x)).
-    inv H2; intuition.
+    inv H2; intuition auto with *.
 Qed.
 
 End ModelMinLTL.
