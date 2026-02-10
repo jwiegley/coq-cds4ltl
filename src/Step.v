@@ -1,8 +1,8 @@
 Require Import
-  Coq.Program.Program
-  Coq.Unicode.Utf8
-  Coq.Classes.Morphisms
-  Coq.Lists.List
+  Stdlib.Program.Program
+  Stdlib.Unicode.Utf8
+  Stdlib.Classes.Morphisms
+  Stdlib.Lists.List
   CDS4LTL.Model.
 
 Open Scope program_scope.
@@ -491,7 +491,69 @@ Proof.
         now firstorder.
 Qed.
 
-(*
+Fixpoint matches (l : Formula) (s : list a) {struct l} : Prop :=
+  match l with
+  | Top    => True
+  | Bottom => False
+
+  | Examine v =>
+    match s with
+    | nil    => matches (v None) s
+    | x :: _ => matches (v (Some x)) s
+    end
+
+  | And p q => matches p s /\ matches q s
+  | Or p q  => matches p s \/ matches q s
+
+  | Next p =>
+    match s with
+    | nil     => matches p nil
+    | x :: xs => matches p xs
+    end
+
+  | Until p q =>
+    let fix go s :=
+        match s with
+        | nil     => matches q s
+        | _ :: xs => matches q s \/ (matches p s /\ go xs)
+        end in go s
+
+  | Wait p q =>
+    let fix go s :=
+        match s with
+        | nil     => matches q s \/ matches p s
+        | _ :: xs => matches q s \/ (matches p s /\ go xs)
+        end in go s
+
+  | Always p =>
+    let fix go s :=
+        match s with
+        | nil     => matches p s
+        | _ :: xs => matches p s /\ go xs
+        end in go s
+
+  | Eventually p =>
+    let fix go s :=
+        match s with
+        | nil     => matches p s
+        | _ :: xs => matches p s \/ go xs
+        end in go s
+
+  | Release p q =>
+    let fix go s :=
+        match s with
+        | nil     => matches q s
+        | _ :: xs => matches q s /\ (matches p s \/ go xs)
+        end in go s
+
+  | StrongRelease p q =>
+    let fix go s :=
+        match s with
+        | nil     => matches q s /\ matches p s
+        | _ :: xs => matches q s /\ (matches p s \/ go xs)
+        end in go s
+  end.
+
 Lemma run_correct (l : Formula) (s : list a) :
  matches l s <-> passes (run l s).
 Proof.
@@ -564,13 +626,12 @@ Proof.
     apply run_strong_release in H.
     now induction s; firstorder.
 Qed.
-*)
 
 End Step.
 
 End LTLStep.
 
-Require Import Coq.Arith.PeanoNat.
+Require Import Stdlib.Arith.PeanoNat.
 
 Module StepExamples.
 
