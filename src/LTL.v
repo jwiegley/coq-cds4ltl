@@ -1,11 +1,11 @@
 Set Warnings "-local-declaration".
 
 Require Import
-  Coq.Unicode.Utf8
-  Coq.Program.Program
-  Coq.micromega.Lia
-  Coq.Classes.Morphisms
-  Coq.Setoids.Setoid
+  Stdlib.Unicode.Utf8
+  Stdlib.Program.Program
+  Stdlib.micromega.Lia
+  Stdlib.Classes.Morphisms
+  Stdlib.Setoids.Setoid
   CDS4LTL.MinLTL.
 
 Module Type LinearTemporalLogicW <: MinimalLinearTemporalLogic.
@@ -1494,7 +1494,6 @@ Qed.
 
 Theorem (* 161 *) law_161 p q : □ ◇ (p ∨ q) ≈ □ ◇ p ∨ □ ◇ q.
 Proof.
-Proof.
   split.
   - assert (A : ◇ (◇ (p ∨ q) ∧ □ ¬p) ⟹ ◇ q).
       rewrite <- (and_proj (◇ q) (◇ ¬p)).
@@ -1567,26 +1566,6 @@ Proof.
     rewrite law_63.
     now rewrite <- law_152 at 1.
 Qed.
-
-Theorem (* 165 *) law_165_alt p q : □ ((p ∨ □ q) ∧ (□ p ∨ q)) ≈ □ p ∨ □ q.
-Proof.
-  split.
-  - remember (□ ((p ∨ □ q) ∧ (□ p ∨ q))) as s.
-    rewrite <- (not_not (□ p ∨ □ q)).
-    rewrite <- (not_not (□ p)).
-    rewrite <- (not_not (□ q)).
-    rewrite <- and_def.
-    admit.
-  - rewrite law_99.
-    rewrite <- (or_idem (□ (p ∨ □ q) ∧ □ (□ p ∨ q))).
-    apply or_respects_implies.
-    + rewrite <- !or_inj.
-      rewrite law_72.
-      now rewrite and_idem.
-    + rewrite <- !or_inj_r.
-      rewrite law_72.
-      now rewrite and_idem.
-Abort.
 
 Theorem (* 165 *) law_165 p q : □ ((p ∨ □ q) ∧ (□ p ∨ q)) ≈ □ p ∨ □ q.
 Proof.
@@ -2720,84 +2699,138 @@ Proof.
   now rewrite next_not.
 Qed.
 
-Theorem law_260 p q r : p R (q ∨ r) ≈ (p R q) ∨ (p R r).
+Theorem law_260 p q r : p R (q ∧ r) ≈ (p R q) ∧ (p R r).
 Proof.
   rewrite !release_def.
-  rewrite not_swap.
-  rewrite !not_or.
-  rewrite !not_not.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite not_and.
+  rewrite until_left_or.
+  now rewrite not_or.
+Qed.
 
-Theorem law_261 p q r : (p ∧ q) R r ≈ (p R r) ∧ (q R r).
+Theorem law_261 p q r : (p ∨ q) R r ≈ (p R r) ∨ (q R r).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite !release_def.
+  rewrite not_or.
+  rewrite until_right_and.
+  now rewrite not_and.
+Qed.
 
 Theorem law_262 p q : ◯ (p R q) ≈ ◯ p R ◯ q.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite !release_def.
+  rewrite next_not.
+  rewrite next_until.
+  now rewrite !next_not.
+Qed.
 
 Theorem law_263 q : □ q ≈ ⊥ R q.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite release_def.
+  rewrite not_false.
+  rewrite always_def.
+  now rewrite evn_def.
+Qed.
 
 Theorem law_264 p q : ¬(p U q) ≈ ¬p R ¬q.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite release_def.
+  now rewrite !not_not.
+Qed.
 
 Theorem law_265 p q : ¬(p R q) ≈ ¬p U ¬q.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite release_def.
+  now rewrite !not_not.
+Qed.
 
 (*** Strong Release M *)
 
 Theorem law_266 p q : p W q ≈ ¬(¬p M ¬q).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite strong_release_def.
+  rewrite <- law_170.
+  now rewrite not_not.
+Qed.
 
 Theorem law_267 p q : p M q ≈ ¬(¬p W ¬q).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite law_266.
+  now rewrite !not_not.
+Qed.
 
 Theorem law_268 p q : p M q ≈ p R q ∧ ◇ p.
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite strong_release_def.
+  rewrite (and_comm p q).
+  split.
+  - (* q U (q ∧ p) ⟹ p R q ∧ ◇ p *)
+    assert (H1 : q U (q ∧ p) ⟹ p R q).
+    { rewrite law_258. apply law_174. }
+    assert (H2 : q U (q ∧ p) ⟹ ◇ p).
+    { transitivity (◇ (q ∧ p)).
+      - apply law_42.
+      - apply eventually_respects_implies. apply and_proj_r. }
+    rewrite <- (and_idem (q U (q ∧ p))).
+    now apply and_respects_implies.
+  - (* p R q ∧ ◇ p ⟹ q U (q ∧ p) *)
+    rewrite law_258.
+    rewrite wait_def.
+    rewrite (and_comm (□ q ∨ q U (q ∧ p)) (◇ p)).
+    rewrite and_or.
+    transitivity (q U (q ∧ p) ∨ q U (q ∧ p)).
+    + apply or_respects_implies.
+      * rewrite (and_comm (◇ p) (□ q)).
+        apply law_88_strong.
+      * apply and_proj_r.
+    + now rewrite or_idem.
+Qed.
 
 Theorem law_269 p q : p M q ≈ p R (q ∧ ◇ p).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite law_268.
+  (* p R q ∧ ◇ p ≈ p R (q ∧ ◇ p) *)
+  rewrite !release_def.
+  (* ¬(¬p U ¬q) ∧ ◇ p ≈ ¬(¬p U ¬(q ∧ ◇ p)) *)
+  rewrite not_and.
+  (* ¬(¬p U ¬q) ∧ ◇ p ≈ ¬(¬p U (¬q ∨ ¬◇ p)) *)
+  rewrite until_left_or.
+  (* ¬(¬p U ¬q) ∧ ◇ p ≈ ¬((¬p U ¬q) ∨ (¬p U ¬◇ p)) *)
+  assert (E : ¬◇ p ≈ □ ¬p).
+  { symmetry. rewrite always_def. now rewrite not_not. }
+  rewrite E.
+  rewrite law_141.
+  rewrite <- E.
+  rewrite not_or.
+  now rewrite not_not.
+Qed.
 
 (*** OLD *)
 
-Theorem law_270 p q r : □ (p ⇒ ¬q ∧ ◯ r) ⟹ p ⇒ ¬(q U r).
-Proof.
-  (* FILL IN HERE *)
-Admitted.
+(* law_270 was removed: □ (p ⇒ ¬q ∧ ◯ r) ⟹ p ⇒ ¬(q U r) is semantically
+   false. Counterexample: p = ⊤, q = ⊥, r = ⊤. The hypothesis □(⊤ ⇒ ⊤ ∧ ◯⊤)
+   holds, but the conclusion ⊤ ⇒ ¬(⊥ U ⊤) fails since ⊥ U ⊤ ≈ ⊤ by
+   until_expand. The correct version is law_130, which uses ◯ p
+   (self-referential induction) rather than an unrelated ◯ r. *)
 
-Theorem law_271 p q r s : □ ((p ⇒ q U r) ∧ (r ⇒ q U s)) ⟹ p ⇒ □ r.
-Proof.
-  (* FILL IN HERE *)
-Admitted.
+(* law_271 was removed: □ ((p ⇒ q U r) ∧ (r ⇒ q U s)) ⟹ p ⇒ □ r is
+   semantically false. Counterexample: p holds only at time 0, r only at
+   time 1, q = s = ⊤. The hypothesis holds, but p ⇒ □ r fails since r
+   doesn't hold at all times. The correct version with the same hypothesis
+   is law_126 (Until catenation), which has the weaker conclusion p ⇒ q U s. *)
+
+(* law_272 was removed: ◇ (p U q) ≉ ◇ p U ◇ q cannot be stated as a
+   universal theorem in the axiomatic framework. With p = q = ⊥, both sides
+   equal ⊥ (via until_false and law_44), so they are equivalent, making the
+   universal ≉ statement inconsistent (it would yield False). The intended
+   claim — that the equivalence does not hold in general — would require a
+   concrete counterexample in the stream model (Model.v), not a universally
+   quantified axiom. *)
 
 Theorem law_273 p q : ¬◇ (¬p ∧ q) ≈ □ (p ∨ ¬q).
 Proof.
-  (* FILL IN HERE *)
-Admitted.
-
-Notation "p ≉ q" := (~ (p ≈ q)) (at level 90, no associativity).
-
-Theorem law_272 p q : ◇ (p U q) ≉ ◇ p U ◇ q.
-Proof.
-  (* FILL IN HERE *)
-Admitted.
+  rewrite always_def.
+  rewrite not_or.
+  now rewrite not_not.
+Qed.
 
 End LinearTemporalLogicFacts.
