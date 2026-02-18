@@ -659,6 +659,30 @@ Proof.
   now apply law_79.
 Qed.
 
+Corollary (* NEW *) next_always_stable p : ◯ □ p ⟹ □ (p ⇒ □ p).
+Proof.
+  rewrite (law_66 (p ⇒ □ p)).
+  rewrite <- (and_idem (◯ □ p)).
+  apply and_respects_implies.
+  - rewrite (law_66 p) at 2.
+    rewrite impl_and.
+    boolean.
+  - apply next_respects_implies.
+    rewrite <- (law_72 p) at 1.
+    apply always_respects_implies.
+    apply or_inj_r.
+Qed.
+
+Theorem (* NEW *) dummett_theorem p : □ (□ (p ⇒ □ p) ⇒ □ p) ⟹ (◇ □ p ⇒ □ p).
+Proof.
+  transitivity (□ (◯ □ p ⇒ □ p)).
+  2: { apply evn_induction. }
+  apply always_respects_implies.
+  apply or_respects_implies; [|reflexivity].
+  apply not_respects_implies; unfold Basics.flip.
+  apply next_always_stable.
+Qed.
+
 Theorem (* NEW *) always_induction_alt p : □ (p ⇒ ◯ p) ∧ p ≈ □ p.
 Proof.
   split.
