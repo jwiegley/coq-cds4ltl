@@ -781,6 +781,7 @@ Proof.
   - unfold next, shift in Hn; simpl in Hn.
     inversion Hn.
 Qed.
+
 Theorem (* NEW *) internal p q : □ (p ⇒ q) ⟹ (◯ p ⇒ ◯ q).
 Proof.
   rewrite <- next_impl.
