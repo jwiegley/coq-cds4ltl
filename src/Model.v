@@ -752,15 +752,12 @@ Proof.
   apply H, H0.
 Qed.
 
-Theorem (* NEW *) impossible p q : (p ⇒ q) ⟹ (◯ p ⇒ ◯ q).
-Proof.
-  rewrite <- next_impl.
-  unfold implies, next, always.
-  repeat intro; reduce.
-  destruct H.
-Abort.
+(* The pointwise implication (p ⇒ q) ⟹ (◯ p ⇒ ◯ q) is NOT valid:
+   knowing ¬p(n) ∨ q(n) at point n does not imply ¬p(n+1) ∨ q(n+1).
+   Counterexample: p = {1}, q = ∅. Then (p ⇒ q) = {n | n ≠ 1} contains 0,
+   but (◯ p ⇒ ◯ q) = {n | n ≠ 0} does not.
 
-(* Without □ this unfolds to:
+   Without □ this unfolds to:
 
      ∀ x, (p x ⇒ q x) ⟹ (◯ p) x ⇒ (◯ q) x
 
@@ -768,6 +765,22 @@ Abort.
 
      ∀ x, (∀ y, p y ⇒ q y) ⟹ (◯ p) x ⇒ (◯ q) x
  *)
+Theorem (* NEW *) impossible_false : ¬(∀ p q, (p ⇒ q) ⟹ (◯ p ⇒ ◯ q)).
+Proof.
+  intro H.
+  specialize (H (Singleton nat 1) (Empty_set nat)).
+  unfold implies in H.
+  specialize (H 0).
+  assert (Hprem : Union nat (Complement nat (Singleton nat 1)) (Empty_set nat) 0).
+  { left. intro Habs. inversion Habs. }
+  specialize (H Hprem); clear Hprem.
+  inversion H as [n Hn | n Hn]; subst; clear H.
+  - apply Hn.
+    unfold next, shift; simpl.
+    exact (In_singleton nat 1).
+  - unfold next, shift in Hn; simpl in Hn.
+    inversion Hn.
+Qed.
 Theorem (* NEW *) internal p q : □ (p ⇒ q) ⟹ (◯ p ⇒ ◯ q).
 Proof.
   rewrite <- next_impl.
