@@ -501,12 +501,25 @@ Qed.
 
 Theorem mccune p q r s : ¬(¬(¬(p ∨ q) ∨ r) ∨ ¬(p ∨ ¬(¬r ∨ ¬(r ∨ s)))) ≈ r.
 Proof.
-  pose proof (huntington (¬r) (¬(p ∨ q) ∨ (¬r ∧ ¬s))).
-  apply not_swap in H.
-  revert H.
-  rewrite !not_or.
-  rewrite !not_and.
+  rewrite (not_or (¬r) (¬(r ∨ s))).
   rewrite !not_not.
-Abort.
+  rewrite and_absorb.
+  rewrite not_or.
+  rewrite !not_not.
+  rewrite not_or.
+  rewrite and_or_r.
+  rewrite (or_comm p r).
+  rewrite and_absorb.
+  rewrite and_or.
+  rewrite (and_comm (¬p ∧ ¬q) p).
+  rewrite <- and_assoc.
+  rewrite absurdity.
+  rewrite false_and.
+  rewrite or_false.
+  rewrite (and_comm (¬p ∧ ¬q) r).
+  rewrite or_comm.
+  rewrite or_absorb.
+  reflexivity.
+Qed.
 
 End BooleanLogicFacts.
