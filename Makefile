@@ -1,4 +1,4 @@
-COQ_MAKEFILE := $(shell command -v coq_makefile 2>/dev/null || echo "rocq makefile")
+COQ_MAKEFILE := rocq makefile
 
 MISSING	 =									\
 	find . \( \( -name foo \) -prune \)					\

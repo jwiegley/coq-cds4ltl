@@ -15,18 +15,13 @@ paper: A Calculational Deductive System for Linear Temporal Logic (CDS4LTL).
 build: [make "-j%{jobs}%" ]
 install: [make "install"]
 depends: [
-  "coq" {(>= "8.14" & < "8.20~") | (= "dev")}
+  "rocq-core" {>= "9.1" & < "9.2~"}
+  "rocq-stdlib" {>= "9.1" & < "9.2~"}
 ]
-
-url {
-  src: "https://github.com/jwiegley/coq-cds4ltl/archive/refs/tags/1.0.0.tar.gz"
-  checksum: "sha256=7a0beafad11ca48775e404cabe25e5790d2c7ea59ef84aadf191a5e2d5b6e76a"
-}
 
 tags: [
   "keyword: temporal logic"
   "category: Mathematics/Logic/Modal logic"
-  "date: 2022-07-23"
   "logpath: CDS4LTL"
 ]
 authors: [

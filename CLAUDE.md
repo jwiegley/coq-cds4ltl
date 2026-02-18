@@ -3,7 +3,7 @@
 ## Project Overview
 
 **Project:** coq-cds4ltl - A Calculational Deductive System for Linear Temporal Logic
-**Language:** Coq 8.14-8.19
+**Language:** Rocq 9.1
 **Domain:** Formal verification of Linear Temporal Logic (LTL)
 **Paper:** "A Calculational Deductive System for Linear Temporal Logic" - Warford, Vega, Staley (ACM Computing Surveys, Vol. 53, No. 3, June 2020)
 **Repository:** https://github.com/jwiegley/coq-cds4ltl
@@ -15,16 +15,16 @@ Formalize the axiomatization of Linear Temporal Logic using minimal axioms (Hunt
 ## Tech Stack & Dependencies
 
 ### Core Requirements
-- **Coq:** 8.14-8.19 (default: 8.19)
+- **Rocq:** 9.1
 - **OCaml:** Required for Coq compilation
-- **Build System:** `coq_makefile` + GNU Make
+- **Build System:** `rocq makefile` + GNU Make
 - **Package Manager:** OPAM or Nix flakes
 
 ### Environment Setup
 
 #### Using Nix (Recommended)
 ```bash
-nix develop                  # Enter development shell with Coq 8.19
+nix develop                  # Enter development shell with Rocq 9.1
 nix build                    # Build the project
 nix flake check             # Run all checks
 ```
@@ -32,23 +32,22 @@ nix flake check             # Run all checks
 #### Using OPAM
 ```bash
 opam switch create coq-cds4ltl 4.14.1
-opam repo add coq-released https://coq.inria.fr/opam/released
-opam install coq.8.19.0
+opam install rocq-prover.9.1.0
 make
 ```
 
-### Coq Standard Library Modules Used
+### Rocq Standard Library Modules Used
 ```coq
-Coq.Unicode.Utf8          (* Unicode notation *)
-Coq.Program.Program       (* Program tactics *)
-Coq.Classes.Morphisms     (* Proper instances *)
-Coq.Setoids.Setoid       (* Setoid rewriting *)
-Coq.Sets.Ensembles       (* Classical set theory *)
-Coq.Sets.Classical_sets  (* Classical set operations *)
-Coq.Sets.Powerset_facts  (* Powerset operations *)
-Coq.Logic.Classical      (* Law of excluded middle *)
-Coq.micromega.Lia        (* Linear arithmetic *)
-Coq.Lists.List           (* List operations - used in Step.v *)
+Stdlib.Unicode.Utf8          (* Unicode notation *)
+Stdlib.Program.Program       (* Program tactics *)
+Stdlib.Classes.Morphisms     (* Proper instances *)
+Stdlib.Setoids.Setoid       (* Setoid rewriting *)
+Stdlib.Sets.Ensembles       (* Classical set theory *)
+Stdlib.Sets.Classical_sets  (* Classical set operations *)
+Stdlib.Sets.Powerset_facts  (* Powerset operations *)
+Stdlib.Logic.Classical      (* Law of excluded middle *)
+Stdlib.micromega.Lia        (* Linear arithmetic *)
+Stdlib.Lists.List           (* List operations - used in Step.v *)
 ```
 
 ### No External Dependencies
@@ -264,7 +263,7 @@ grep -r "Admitted"      # Find admitted proofs (14 expected in LTL.v)
 - **Type checking:** All proofs verified by Coq
 - **Admitted detection:** Makefile checks for `admit`, `undefined`, `jww`
 - **Completeness:** ~94% proven (14 Admitted out of 240+, concentrated in R/M/OLD sections)
-- **CI Matrix:** Tests on Coq 8.14-8.19 plus dev version
+- **CI Matrix:** Builds with Rocq 9.1 via Nix
 
 ## Performance & Optimization
 
@@ -403,7 +402,7 @@ Proof. matches. as_if. reduce. just_math. Qed.
 ## Version History
 
 - **Current:** Active development (20+ recent commits)
-- **Coq Support:** 8.14-8.19
+- **Rocq Support:** 9.1
 - **Last Major Update:** See git log for recent changes
 
 ---
