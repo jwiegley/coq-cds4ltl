@@ -38,7 +38,6 @@ Declare Instance next_respects_implies  : Proper (implies ==> implies) next.
 #[global]
 Declare Instance until_respects_implies : Proper (implies ==> implies ==> implies) until.
 
-Axiom (* 1 *)   next_not   : ∀ p,   ◯ ¬p ≈ ¬◯ p.
 Axiom (* 2 *)   next_impl  : ∀ p q, ◯ (p ⇒ q) ≈ ◯ p ⇒ ◯ q.
 Axiom (* 9 *)   next_until : ∀ p q, ◯ (p U q) ≈ ◯ p U ◯ q.
 
@@ -47,7 +46,6 @@ Axiom (* 11 *)  until_false   : ∀ p,   p U ⊥ ⟹ ⊥.
 Axiom (* NEW *) looped        : ∀ p,   ◯ ¬p U p ⟹ p.
 
 Axiom (* 12 *)  until_left_or  : ∀ p q r, p U (q ∨ r) ≈  (p U q) ∨ (p U r).
-Axiom (* 14 *)  until_left_and : ∀ p q r, p U (q ∧ r) ⟹ (p U q) ∧ (p U r).
 
 Axiom (* NEW *) until_and_until : ∀ p q r s,
   (p U q) ∧ (r U s) ⟹ (p ∧ r) U ((q ∧ r) ∨ (p ∧ s) ∨ (q ∧ s)).
@@ -75,8 +73,41 @@ Program Instance until_respects_equivalent :
 
 (*** 3.1 Next ◯ *)
 
+(** Axiom 1 (Self-dual, ◯ ¬p ≡ ¬◯ p) is derivable from axioms 2, 10, 11.
+    We first derive ◯ ⊥ ≈ ⊥ from the Until axioms, then use axiom 2 to
+    obtain ◯ ¬p ≈ ¬◯ p. *)
+
+Local Lemma next_false_from_until : ◯ ⊥ ≈ ⊥.
+Proof.
+  split.
+  - (* ◯ ⊥ ⟹ ⊥: use ⊤ U ⊥ ≈ ◯(⊤ U ⊥) from until_expand, then until_false *)
+    pose proof (until_expand ⊤ ⊥) as H.
+    rewrite false_or in H.
+    rewrite true_and in H.
+    (* H : ⊤ U ⊥ ≈ ◯ (⊤ U ⊥) *)
+    transitivity (◯ (⊤ U ⊥)).
+    + apply next_respects_implies.
+      apply false_impl.
+    + rewrite <- H.
+      apply until_false.
+  - apply false_impl.
+Qed.
+
+Theorem (* 1, derived *) next_not p : ◯ ¬p ≈ ¬◯ p.
+Proof.
+  (* From axiom 2 with q := ⊥:
+     ◯(p ⇒ ⊥) ≈ ◯ p ⇒ ◯ ⊥
+     i.e., ◯(¬p ∨ ⊥) ≈ ¬(◯ p) ∨ ◯ ⊥
+     Simplifying both sides with or_false and next_false gives
+     ◯(¬p) ≈ ¬(◯ p). *)
+  pose proof (next_impl p ⊥) as H.
+  rewrite or_false in H.
+  rewrite next_false_from_until in H.
+  now rewrite or_false in H.
+Qed.
+
 (**
-(1) Axiom, Self-dual : ◯ ¬p ≡ ¬◯ p
+(1) Derived, Self-dual : ◯ ¬p ≡ ¬◯ p
 (2) Axiom, Distributivity of ◯ over ⟹ : ◯ (p ⇒ q) ≡ ◯ p ⇒ ◯ q
 (3) Linearity : ◯ p ≡ ¬◯ ¬p
 (4) Distributivity of ◯ over ∨ : ◯ (p ∨ q) ≡ ◯ p ∨ ◯ q
@@ -153,7 +184,7 @@ Qed.
 (11) Axiom, Right zero of U : p U false ≡ false
 (12) Axiom, Left distributivity of U over ∨ : p U (q ∨ r) ≡ p U q ∨ p U r
 (13) Axiom, Right distributivity of U over ∨ : p U r ∨ q U r ⇒ (p ∨ q) U r
-(14) Axiom, Left distributivity of U over ∧ : p U (q ∧ r) ⇒ p U q ∧ p U r
+(14) Derived, Left distributivity of U over ∧ : p U (q ∧ r) ⇒ p U q ∧ p U r
 (15) Axiom, Right distributivity of U over ∧ : (p ∧ q) U r ≡ p U r ∧ q U r
 (16) Axiom, U implication ordering: p U q ∧ ¬q U r ⇒ p U r
 (17) Axiom, Right U ∨ ordering: p U (q U r) ⇒ (p ∨ q) U r
@@ -178,6 +209,18 @@ Qed.
 (36) Left absorption of U : p U (p U q) ≡ p U q
 (37) Right absorption of U : (p U q) U q ≡ p U q
 *)
+
+(** Theorem 14 (Left distributivity of U over ∧) is derivable from
+    monotonicity of U (until_respects_implies) and Boolean logic. *)
+Theorem (* 14, derived *) until_left_and p q r :
+  p U (q ∧ r) ⟹ (p U q) ∧ (p U r).
+Proof.
+  rewrite <- and_idem.
+  apply and_respects_implies;
+    apply until_respects_implies; try reflexivity.
+  - apply and_proj.
+  - apply and_proj_r.
+Qed.
 
 Theorem (* NEW *) and_until_and p q r s : (p ∧ r) U (q ∧ s) ⟹ (p U q) ∧ (r U s).
 Proof.
