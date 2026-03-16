@@ -1,0 +1,11 @@
+pre-commit:
+  parallel: true
+  commands:
+    format-check:
+      glob: "src/*.v"
+      run: make format-check
+    lint:
+      glob: "src/*.v"
+      run: make lint
+    nix-build:
+      run: nix build --no-warn-dirty 2>&1

@@ -10,6 +10,7 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
+        rocq = pkgs.rocqPackages_9_1;
 
         mkCds4ltl = rocqPkgs:
           let
@@ -48,21 +49,56 @@
             };
           };
 
+        cds4ltl = mkCds4ltl rocq;
+
       in {
         packages = {
-          coq-cds4ltl_9_1 = mkCds4ltl pkgs.rocqPackages_9_1;
-          default = mkCds4ltl pkgs.rocqPackages_9_1;
+          coq-cds4ltl_9_1 = cds4ltl;
+          default = cds4ltl;
         };
 
-        devShells.default = let
-          rocq = pkgs.rocqPackages_9_1;
-        in pkgs.mkShell {
+        checks = {
+          build = cds4ltl;
+
+          lint = pkgs.runCommand "coq-lint" {} ''
+            ADMITTED=$({ grep -c 'Admitted\.' ${./.}/src/*.v || true; } \
+              | awk -F: '{sum+=$2} END{print sum}')
+            echo "Admitted proofs: $ADMITTED (baseline: 0)"
+            if [ "$ADMITTED" -gt 0 ]; then
+              echo "ERROR: Admitted proofs found (expected 0, got $ADMITTED)"
+              exit 1
+            fi
+            if { grep -rn 'admit\.' ${./.}/src/*.v || true; } | grep -v 'Admitted' | grep -q .; then
+              echo "ERROR: Found bare 'admit' tactic usage"
+              exit 1
+            fi
+            touch $out
+          '';
+
+          whitespace = pkgs.runCommand "whitespace-check" {} ''
+            FAIL=0
+            if grep -rn ' \+$' ${./.}/src/*.v; then
+              echo "ERROR: Trailing whitespace found in .v files"
+              FAIL=1
+            fi
+            TAB=$(printf '\t')
+            if grep -rn "$TAB" ${./.}/src/*.v; then
+              echo "ERROR: Tab characters found in .v files (use spaces)"
+              FAIL=1
+            fi
+            if [ "$FAIL" -ne 0 ]; then exit 1; fi
+            touch $out
+          '';
+        };
+
+        devShells.default = pkgs.mkShell {
           buildInputs = [
             rocq.rocq-core
             rocq.rocq-core.ocamlPackages.ocaml
             rocq.rocq-core.ocamlPackages.findlib
             rocq.stdlib
             pkgs.gnumake
+            pkgs.lefthook
           ];
         };
       });
