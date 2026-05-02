@@ -130,3 +130,38 @@ I haven't proven formal independence results (that would require constructing se
 A standard LTL axiomatization needs only three or four axioms: expansion, induction, and the Next distribution laws. This system has ten. That's a deliberate trade: by including more axioms (all of them semantically valid), we avoid the induction rule entirely and can reason about temporal logic in a purely equational style. The proofs read like algebraic calculations rather than case analyses over trace positions.
 
 The cost is a larger trusted base. The benefit is that 240+ theorems about Eventually, Always, Wait, Release, and Strong Release can all be proved by rewriting chains -- the same style of reasoning used in the CDS4LTL paper itself.
+
+## Where This Diverges from the Paper
+
+This formalization tracks the CDS4LTL paper closely but is not a literal transcription. The deliberate departures:
+
+**1. `looped` substitutes for the paper's two `untilInduction` axioms.**
+
+The paper (Section 3.4) takes two induction-flavoured axioms over Always:
+
+- `□(p ⇒ (◯p ∧ q) ∨ r) ⇒ (p ⇒ □q ∨ p U r)`
+- `□(p ⇒ ◯(p ∨ q)) ⇒ (p ⇒ □p ∨ p U q)`
+
+These are how the paper imports well-foundedness into a system that otherwise has none. Both are stated over `□`, so they live in the Always section, not in the U-only base. In this formalization the well-foundedness role is collapsed into a single axiom over `U`, `looped`: `◯ ¬p U p ⟹ p`. It's strictly weaker on its face but sufficient for everything the paper's induction axioms drive (in particular `law_75_strong` and the Always induction principles `law_55`/`law_56`). I think this is a reasonable trade -- one short equational axiom in MinLTL is easier to reason about than two induction-shaped axioms in LTL, and it keeps the temporal core of the system entirely in `MinLTL.v` -- but it's the most consequential single departure from the paper, so it's worth flagging.
+
+**2. `until_and_until` is not in the paper.**
+
+The paper proves the inter-temporal comparison `(p U q) ∧ (r U s) ⟹ (p ∧ r) U ((q ∧ r) ∨ (p ∧ s) ∨ (q ∧ s))` via induction on Always, going through `law_88_strong`. Without induction in the base layer, this isn't reachable; it has to be assumed. So I assumed it. The semantic proof in `Model.v` confirms it's valid in the stream model, and its only consumers are the proofs of `until_right_and` and `until_impl_order`, plus `always_and_until` upstream.
+
+**3. `not_until` is the axiom; the paper takes `not_wait` instead.**
+
+The paper at line 1842-1844 explicitly notes: "if (notUntil) is taken as the axiom instead of (notWait), we were not able to prove (notWait) as a theorem." This formalization went the other direction: take `not_until` (Axiom 170 in the project's numbering) as primitive, and derive `not_wait` (`law_173`) from it. In practice the two formulations are interderivable in the presence of the rest of the axioms, but the paper's claim suggests this direction may give a slightly stronger primitive. I haven't proved an independence result either way.
+
+**4. Release (R) and Strong Release (M) are project additions.**
+
+The paper at line 836-841 mentions Ben-Ari's Release operator and explicitly disclaims it: "For simplicity, we avoid adding another operator to our system by restricting the LTL binary operators to the more common Until and Wait." Strong Release isn't mentioned at all. This formalization adds both, with `release_def: p R q ≈ ¬(¬p U ¬q)` and `strong_release_def: p M q ≈ q U (p ∧ q)`. Laws 256-269 are entirely Coq-specific. They were added because most modern LTL tooling (SPOT, NuSMV) supports R and M, so a formalization that omits them is harder to interface with practice.
+
+**5. The `OLD` section.**
+
+`law_270`–`law_272` are statements that appear in earlier drafts of the paper or in adjacent literature but are not theorems in this axiom system. I worked out semantic counterexamples for each and left them in `LTL.v:2831-2858` as documentation. `law_273` is a different kind of artefact -- a corollary that doesn't fit cleanly anywhere else.
+
+**6. Axiom count, paper vs. project.**
+
+The paper tallies its Until axioms at 10 (Section 4) and adds Always-induction axioms and `not_wait` for a temporal total of around 13. This formalization carries 10 in `MinLTL` (8 from the paper plus `looped` and `until_and_until`), with `next_not` and `until_left_and` derived rather than primitive. The Boolean base is Huntington-style (3 + 3 supplementary + `and_def`), close to the paper's LADM appendix but not identical.
+
+I haven't proved formal independence results for the axiom set. The reasoning above is meant to be plausibility, not proof.
