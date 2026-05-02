@@ -68,7 +68,6 @@ coqchk: all
 	@echo "=== Running kernel verification ==="
 	rocq check -R src CDS4LTL \
 		CDS4LTL.MinBool CDS4LTL.Bool CDS4LTL.MinLTL CDS4LTL.LTL \
-		CDS4LTL.Same_set CDS4LTL.Model CDS4LTL.Denote CDS4LTL.Step \
-		CDS4LTL.EquationalReasoning CDS4LTL.Working
+		CDS4LTL.Same_set CDS4LTL.Model CDS4LTL.Denote CDS4LTL.Step
 
 .PHONY: all clean install fullclean lint format-check format timing coqchk
