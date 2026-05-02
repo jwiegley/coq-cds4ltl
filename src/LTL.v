@@ -1315,33 +1315,33 @@ Qed.
 Theorem (* 140 *) law_140 p q : p U □ q ⟹ □ (p U q).
 Proof.
   assert (A : □ (p U □ q ⇒ p U q) ≈ ⊤).
-    apply true_impl.
+  { apply true_impl.
     rewrite <- (law_85 (□ q) q p).
-    pose proof (law_76 q).
-    apply impl_implies in H.
-    rewrite <- H.
-    now rewrite !law_64.
+    pose proof (law_76 q) as Hq76.
+    apply impl_implies in Hq76.
+    rewrite <- Hq76.
+    now rewrite !law_64. }
   assert (B : □ (p U □ q ⇒ ◯ (p U □ q)) ≈ ⊤).
-    rewrite next_until.
+  { rewrite next_until.
     rewrite <- (until_absorb_u_or (◯ p)).
     rewrite (or_comm _ (◯ □ q)).
     rewrite <- next_until.
     apply true_impl.
-    pose proof (and_proj (◯ □ q ∨ ◯ (p U □ q)) (q ∨ ◯ (p U □ q))).
-    rewrite <- H.
+    pose proof (and_proj (◯ □ q ∨ ◯ (p U □ q)) (q ∨ ◯ (p U □ q))) as Hproj1.
+    rewrite <- Hproj1.
     rewrite (and_comm _ (q ∨ ◯ (p U □ q))).
     rewrite <- or_and_r.
     rewrite <- law_66.
-    pose proof (and_proj (□ q ∨ ◯ (p U □ q)) (□ q ∨ p)).
-    rewrite <- H0.
+    pose proof (and_proj (□ q ∨ ◯ (p U □ q)) (□ q ∨ p)) as Hproj2.
+    rewrite <- Hproj2.
     rewrite and_comm.
     rewrite <- or_and.
     rewrite <- until_expand.
     boolean.
-    now rewrite law_64.
-  pose proof (law_129 (p U □ q) (p U q)).
+    now rewrite law_64. }
+  pose proof (law_129 (p U □ q) (p U q)) as H129.
   apply impl_implies.
-  rewrite <- H.
+  rewrite <- H129.
   rewrite impl_and.
   rewrite law_99.
   rewrite A.
@@ -1359,9 +1359,9 @@ Qed.
 
 Theorem (* 142 *) law_142 p q r : p U (q ∧ r) ⟹ p U (q U r).
 Proof.
-  pose proof (law_85 (q ∧ r) (q U r) p).
+  pose proof (law_85 (q ∧ r) (q U r) p) as H85.
   apply impl_implies.
-  rewrite <- H.
+  rewrite <- H85.
   rewrite <- until_30.
   boolean.
   now apply law_64.
@@ -1369,9 +1369,9 @@ Qed.
 
 Theorem (* 143 *) law_143 p q r : (p ∧ q) U r ⟹ (p U q) U r.
 Proof.
-  pose proof (law_86 (p ∧ q) (p U q)).
+  pose proof (law_86 (p ∧ q) (p U q)) as H86.
   apply impl_implies.
-  rewrite <- H.
+  rewrite <- H86.
   rewrite <- until_30.
   boolean.
   now apply law_64.
@@ -1595,28 +1595,28 @@ Proof.
   set (r := (p ∨ □ q) ∧ (□ p ∨ q)).
 
   assert (A : r ≈ □ p ∨ □ q ∨ (p ∧ q)).
-    unfold r.
+  { unfold r.
     rewrite or_and_or.
     rewrite 2 law_68.
     rewrite (or_comm _ (□ q)).
     rewrite (and_comm _ (□ q)).
     rewrite or_absorb.
     rewrite (or_comm _ (□ q)).
-    reflexivity.
+    reflexivity. }
 
   assert (B : □ r ∧ ¬□ p ∧ ¬□ q ⟹ ◯ (□ r ∧ ¬□ p ∧ ¬□ q)).
-    rewrite law_66 at 1.
+  { rewrite law_66 at 1.
     rewrite (and_comm r).
     rewrite A at 2.
     rewrite and_assoc.
     rewrite <- (and_assoc _ (¬ □ p)).
     rewrite (and_comm _ (¬ □ p)).
     rewrite <- (not_not (□ p)) at 2.
-      rewrite and_apply.
+    rewrite and_apply.
     rewrite and_assoc.
     rewrite (and_comm _ (¬ □ q)).
     rewrite <- (not_not (□ q)) at 2.
-      rewrite and_apply.
+    rewrite and_apply.
     rewrite <- !and_assoc.
     rewrite and_assoc.
     rewrite (and_assoc (◯ □ r)).
@@ -1639,54 +1639,54 @@ Proof.
     rewrite (and_proj _ q).
     rewrite <- !next_not.
     rewrite <- !next_and.
-    reflexivity.
+    reflexivity. }
 
   assert (C : □ r ∧ ¬□ p ∧ ¬□ q ⟹ □ (□ r ∧ ¬□ p ∧ ¬□ q)).
-    apply impl_implies in B.
+  { apply impl_implies in B.
     apply always_respects_implies in B.
     rewrite always_induction in B.
     rewrite law_64 in B.
     apply impl_implies in B.
-    exact B.
+    exact B. }
 
   assert (D : □ (□ r ∧ ¬□ p ∧ ¬□ q) ⟹ □ p ∧ □ q).
-    rewrite <- law_99.
+  { rewrite <- law_99.
     apply impl_implies.
     rewrite <- law_120.
     apply (proj1 (law_136b _ _)).
     apply and_impl_iff.
-      rewrite not_and.
+    rewrite not_and.
     rewrite !not_not.
     rewrite or_assoc.
     rewrite <- A.
-    now apply law_76.
+    now apply law_76. }
 
   assert (E : □ r ∧ ¬□ p ∧ ¬□ q ⟹ □ p ∧ □ q).
-    rewrite C.
-    now rewrite D.
+  { rewrite C.
+    now rewrite D. }
 
   assert (F : □ p ∨ □ q ⟹ ◯ (□ p ∨ □ q)).
-    rewrite (law_66 p) at 1.
+  { rewrite (law_66 p) at 1.
     rewrite (law_66 q) at 1.
     rewrite (and_comm p).
     rewrite (and_comm q).
     rewrite (and_proj _ p).
     rewrite (and_proj _ q).
-    now rewrite <- next_or.
+    now rewrite <- next_or. }
 
   assert (G : □ (□ p ∨ □ q) ⟹ □ r).
-    apply impl_implies.
+  { apply impl_implies.
     rewrite <- law_120.
     apply (proj1 (law_136b _ _)).
     rewrite A.
     rewrite <- or_assoc.
-    now rewrite <- (or_inj _ (p ∧ q)).
+    now rewrite <- (or_inj _ (p ∧ q)). }
 
   split.
   - apply impl_implies.
     apply contrapositive.
     rewrite not_true.
-      rewrite !not_or.
+    rewrite !not_or.
     rewrite not_not.
     rewrite <- (and_idem (□ r ∧ ¬ □ p ∧ ¬ □ q)).
     rewrite E at 2.
