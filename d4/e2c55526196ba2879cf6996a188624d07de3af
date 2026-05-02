@@ -1,0 +1,23 @@
+src/MinLTL.v
+  b717f2f89a6e5284 182,186,188-189,211-215
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.5",
+  "base_commit_sha": "d4e2c55526196ba2879cf6996a188624d07de3af",
+  "prompts": {
+    "b717f2f89a6e5284": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c7eb30e5-7b63-4197-8ae5-cba415c4a023",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "John Wiegley <johnw@newartisans.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 226,
+      "overriden_lines": 0
+    }
+  }
+}

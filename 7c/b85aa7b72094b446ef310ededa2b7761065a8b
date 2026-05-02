@@ -1,0 +1,23 @@
+CLAUDE.md
+  b717f2f89a6e5284 13-15,47-52,55-56,64-80,87,91,93,95,98-99,110-123,174,177,179-182,184-186,188-207,210-220,269,271-273,276-279,283-286,303-309,312-318,326,329,332-338,400-401,403-404
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.5",
+  "base_commit_sha": "7cb85aa7b72094b446ef310ededa2b7761065a8b",
+  "prompts": {
+    "b717f2f89a6e5284": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c7eb30e5-7b63-4197-8ae5-cba415c4a023",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "John Wiegley <johnw@newartisans.com>",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 143,
+      "overriden_lines": 0
+    }
+  }
+}
