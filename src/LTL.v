@@ -2683,15 +2683,17 @@ Program Instance release_respects_equivalent :
 Program Instance strong_release_respects_equivalent :
   Proper (equivalent ==> equivalent ==> equivalent) strong_release.
 
-(*** Release R *)
+(*** Release R — Coq-specific extension; the CDS4LTL paper deliberately omits R.
+     R is defined via [release_def: p R q ≈ ¬(¬p U ¬q)] (Ben-Ari).
+     Most properties follow by dualization through [law_264]. *)
 
-Theorem law_256 p q : p U q ≈ ¬(¬p R ¬q).
+Theorem (* 256 *) law_256 p q : p U q ≈ ¬(¬p R ¬q).
 Proof.
   rewrite release_def.
   now rewrite !not_not.
 Qed.
 
-Theorem law_257 p q : p W q ≈ q R (q ∨ p).
+Theorem (* 257 *) law_257 p q : p W q ≈ q R (q ∨ p).
 Proof.
   rewrite wait_def, release_def.
   rewrite not_or.
@@ -2703,7 +2705,7 @@ Proof.
   now rewrite !not_not.
 Qed.
 
-Theorem law_258 p q : p R q ≈ q W (q ∧ p).
+Theorem (* 258 *) law_258 p q : p R q ≈ q W (q ∧ p).
 Proof.
   rewrite wait_def, release_def.
   rewrite law_173.
@@ -2712,7 +2714,7 @@ Proof.
   now rewrite and_comm.
 Qed.
 
-Theorem law_259 p q : p R q ≈ q ∧ (p ∨ ◯ (p R q)).
+Theorem (* 259 *) law_259 p q : p R q ≈ q ∧ (p ∨ ◯ (p R q)).
 Proof.
   rewrite !release_def.
   rewrite until_expand at 1.
@@ -2722,7 +2724,7 @@ Proof.
   now rewrite next_not.
 Qed.
 
-Theorem law_260 p q r : p R (q ∧ r) ≈ (p R q) ∧ (p R r).
+Theorem (* 260 *) law_260 p q r : p R (q ∧ r) ≈ (p R q) ∧ (p R r).
 Proof.
   rewrite !release_def.
   rewrite not_and.
@@ -2730,7 +2732,7 @@ Proof.
   now rewrite not_or.
 Qed.
 
-Theorem law_261 p q r : (p ∨ q) R r ≈ (p R r) ∨ (q R r).
+Theorem (* 261 *) law_261 p q r : (p ∨ q) R r ≈ (p R r) ∨ (q R r).
 Proof.
   rewrite !release_def.
   rewrite not_or.
@@ -2738,7 +2740,7 @@ Proof.
   now rewrite not_and.
 Qed.
 
-Theorem law_262 p q : ◯ (p R q) ≈ ◯ p R ◯ q.
+Theorem (* 262 *) law_262 p q : ◯ (p R q) ≈ ◯ p R ◯ q.
 Proof.
   rewrite !release_def.
   rewrite next_not.
@@ -2746,7 +2748,7 @@ Proof.
   now rewrite !next_not.
 Qed.
 
-Theorem law_263 q : □ q ≈ ⊥ R q.
+Theorem (* 263 *) law_263 q : □ q ≈ ⊥ R q.
 Proof.
   rewrite release_def.
   rewrite not_false.
@@ -2754,34 +2756,35 @@ Proof.
   now rewrite evn_def.
 Qed.
 
-Theorem law_264 p q : ¬(p U q) ≈ ¬p R ¬q.
+Theorem (* 264 *) law_264 p q : ¬(p U q) ≈ ¬p R ¬q.
 Proof.
   rewrite release_def.
   now rewrite !not_not.
 Qed.
 
-Theorem law_265 p q : ¬(p R q) ≈ ¬p U ¬q.
+Theorem (* 265 *) law_265 p q : ¬(p R q) ≈ ¬p U ¬q.
 Proof.
   rewrite release_def.
   now rewrite !not_not.
 Qed.
 
-(*** Strong Release M *)
+(*** Strong Release M — Coq-specific extension; not in the CDS4LTL paper.
+     M is defined via [strong_release_def: p M q ≈ q U (p ∧ q)]. *)
 
-Theorem law_266 p q : p W q ≈ ¬(¬p M ¬q).
+Theorem (* 266 *) law_266 p q : p W q ≈ ¬(¬p M ¬q).
 Proof.
   rewrite strong_release_def.
   rewrite <- law_170.
   now rewrite not_not.
 Qed.
 
-Theorem law_267 p q : p M q ≈ ¬(¬p W ¬q).
+Theorem (* 267 *) law_267 p q : p M q ≈ ¬(¬p W ¬q).
 Proof.
   rewrite law_266.
   now rewrite !not_not.
 Qed.
 
-Theorem law_268 p q : p M q ≈ p R q ∧ ◇ p.
+Theorem (* 268 *) law_268 p q : p M q ≈ p R q ∧ ◇ p.
 Proof.
   rewrite strong_release_def.
   rewrite (and_comm p q).
@@ -2808,7 +2811,7 @@ Proof.
     + now rewrite or_idem.
 Qed.
 
-Theorem law_269 p q : p M q ≈ p R (q ∧ ◇ p).
+Theorem (* 269 *) law_269 p q : p M q ≈ p R (q ∧ ◇ p).
 Proof.
   rewrite law_268.
   (* p R q ∧ ◇ p ≈ p R (q ∧ ◇ p) *)
