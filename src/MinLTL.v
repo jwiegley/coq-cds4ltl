@@ -179,14 +179,14 @@ Qed.
 (*** 3.2 Until U *)
 
 (**
-(9) Axiom, Distributivity of ◯ over U : ◯ (p U q) ≡ p U ◯ q
+(9) Axiom, Distributivity of ◯ over U : ◯ (p U q) ≡ ◯ p U ◯ q
 (10) Axiom, Expand of U : p U q ≡ q ∨ (p ∧ ◯ (p U q))
 (11) Axiom, Right zero of U : p U false ≡ false
 (12) Axiom, Left distributivity of U over ∨ : p U (q ∨ r) ≡ p U q ∨ p U r
-(13) Axiom, Right distributivity of U over ∨ : p U r ∨ q U r ⇒ (p ∨ q) U r
+(13) Derived, Right distributivity of U over ∨ : p U r ∨ q U r ⇒ (p ∨ q) U r
 (14) Derived, Left distributivity of U over ∧ : p U (q ∧ r) ⇒ p U q ∧ p U r
-(15) Axiom, Right distributivity of U over ∧ : (p ∧ q) U r ≡ p U r ∧ q U r
-(16) Axiom, U implication ordering: p U q ∧ ¬q U r ⇒ p U r
+(15) Derived, Right distributivity of U over ∧ : (p ∧ q) U r ≡ p U r ∧ q U r
+(16) Derived, U implication ordering: p U q ∧ ¬q U r ⇒ p U r
 (17) Axiom, Right U ∨ ordering: p U (q U r) ⇒ (p ∨ q) U r
 (18) Axiom, Right ∧ U ordering: p U (q ∧ r) ⇒ (p U q) U r
 (19) Right distributivity of U over ⇒ : (p ⇒ q) U r ⇒ (p U r ⇒ q U r)
@@ -208,6 +208,11 @@ Qed.
 (35) Absorption : p U q ∧ (p ∨ q) ≡ p U q
 (36) Left absorption of U : p U (p U q) ≡ p U q
 (37) Right absorption of U : (p U q) U q ≡ p U q
+(170) Axiom, Negation of U : ⊤ U ¬p ∧ ¬(p U q) ≡ ¬q U (¬p ∧ ¬q)
+
+NEW (not in the paper):
+- looped: ◯ ¬p U p ⇒ p   (well-foundedness; load-bearing for law_75_strong)
+- until_and_until: (p U q) ∧ (r U s) ⇒ (p ∧ r) U ((q ∧ r) ∨ (p ∧ s) ∨ (q ∧ s))
 *)
 
 (** Theorem 14 (Left distributivity of U over ∧) is derivable from
