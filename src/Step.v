@@ -28,10 +28,14 @@ Inductive Formula : Type :=
   | Release       (p q : Formula)
   | StrongRelease (p q : Formula).
 
+(* Reasons a [run] can fail.
+
+   - [HitBottom] is generated when [compile] reaches the [Bottom] formula.
+   - [BothFailed]/[LeftFailed]/[RightFailed] are tree wrappers produced by
+     [and_result]/[or_result] when one or both branches fail; they preserve
+     the structure of how the failure propagated through the formula. *)
 Inductive Failed : Type :=
   | HitBottom
-  | EndOfTrace
-  | Rejected    (x : a)
   | BothFailed  (p q : Failed)
   | LeftFailed  (p : Failed)
   | RightFailed (q : Failed).
