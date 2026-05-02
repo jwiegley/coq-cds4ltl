@@ -3,7 +3,6 @@ Set Warnings "-local-declaration".
 Require Import
   Stdlib.Unicode.Utf8
   Stdlib.Program.Program
-  Stdlib.micromega.Lia
   Stdlib.Classes.Morphisms
   Stdlib.Setoids.Setoid
   CDS4LTL.MinLTL.
