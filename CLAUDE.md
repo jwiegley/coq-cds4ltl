@@ -10,7 +10,9 @@
 **License:** BSD-3-Clause
 
 ### Project Goal
-Formalize the axiomatization of Linear Temporal Logic using minimal axioms (Huntington's Boolean axioms + 9 temporal axioms) and prove 240+ theorems. The project provides three semantic models: axiomatic (abstract), denotational (infinite streams), and computational (Positive Normal Form reduction).
+Formalize the axiomatization of Linear Temporal Logic using a small axiom set (Huntington's Boolean axioms + 10 temporal axioms; 8 from the CDS4LTL paper plus 2 project-specific axioms `looped` and `until_and_until`) and prove 240+ theorems. The project provides three semantic models: axiomatic (abstract), denotational (infinite streams via `Ensemble nat`), and computational (Positive Normal Form reduction).
+
+All 240+ theorems are currently proven — there are zero `Admitted`, zero `Abort`, and zero `admit` in the codebase. This invariant is enforced by `make lint` and the Nix flake's `lint` check.
 
 ## Tech Stack & Dependencies
 
@@ -42,13 +44,15 @@ Stdlib.Unicode.Utf8          (* Unicode notation *)
 Stdlib.Program.Program       (* Program tactics *)
 Stdlib.Classes.Morphisms     (* Proper instances *)
 Stdlib.Setoids.Setoid       (* Setoid rewriting *)
-Stdlib.Sets.Ensembles       (* Classical set theory *)
-Stdlib.Sets.Classical_sets  (* Classical set operations *)
-Stdlib.Sets.Powerset_facts  (* Powerset operations *)
-Stdlib.Logic.Classical      (* Law of excluded middle *)
-Stdlib.micromega.Lia        (* Linear arithmetic *)
-Stdlib.Lists.List           (* List operations - used in Step.v *)
+Stdlib.Sets.Ensembles       (* Classical set theory — Model.v, Same_set.v *)
+Stdlib.Sets.Classical_sets  (* Classical set operations — Model.v *)
+Stdlib.Sets.Powerset_facts  (* Powerset operations — Model.v *)
+Stdlib.Logic.Classical      (* Law of excluded middle — Model.v only *)
+Stdlib.micromega.Lia        (* Linear arithmetic — Model.v, Step.v *)
+Stdlib.Lists.List           (* List operations — Step.v *)
 ```
+
+Classical reasoning is confined to `Model.v` (semantic soundness over `Ensemble nat` requires LEM). The axiomatic layer (`MinBool` → `Bool` → `MinLTL` → `LTL`) does not import `Classical`.
 
 ### No External Dependencies
 The project is self-contained, using only Coq's standard library.
@@ -57,38 +61,41 @@ The project is self-contained, using only Coq's standard library.
 
 ```
 src/
-├── MinBool.v      # Minimal Boolean logic (348 lines, Huntington axioms)
-├── Bool.v         # Extended Boolean logic (512 lines, adds AND operator)
-├── MinLTL.v       # Minimal LTL (468 lines, Next + Until + 9 temporal axioms)
-├── LTL.v          # Full LTL (2,803 lines, 240+ theorems with ◇, □, W, R, M)
-├── Model.v        # Semantic soundness proofs (856 lines, infinite streams)
-├── Same_set.v     # Set theory utilities (204 lines)
-├── Denote.v       # Homomorphic abstraction framework (279 lines)
-├── Step.v         # Computational model (651 lines, PNF reduction)
-├── Bases.v        # Alternative Schneider axioms (54 lines, experimental)
-└── Working.v      # Experimental equational reasoning (557 lines)
+├── MinBool.v        # Minimal Boolean logic (348 lines, Huntington's 3 axioms + 3 supplementary)
+├── Bool.v           # Extended Boolean logic (505 lines, adds AND with single axiom; defines `boolean` tactic)
+├── MinLTL.v         # Minimal LTL (516 lines, Next + Until + 10 temporal axioms)
+├── LTL.v            # Full LTL (2,858 lines, 240+ theorems with ◇, □, W, R, M)
+├── Model.v          # Semantic soundness proofs (870 lines, predicates over `Ensemble nat`)
+├── Same_set.v       # Set theory utilities (204 lines)
+├── Denote.v         # Homomorphic abstraction framework (279 lines, 13 module-type axioms)
+└── Step.v           # Computational model (708 lines, PNF reduction)
 
-old/               # Deprecated modules (Syntax.v, CoSyntax.v, Machine.v)
-_CoqProject        # Build configuration
-README.org         # Main documentation
-Makefile          # Build automation
-flake.nix         # Nix reproducible builds
+old/                  # Deprecated modules (Bases, Working, EquationalReasoning, Syntax, CoSyntax, Machine, CoStep, Ext)
+_CoqProject           # Build configuration
+README.org            # Main documentation
+README.md             # GitHub-flavored project README
+README-axioms.md      # In-depth rationale for the axiom set
+Makefile              # Build automation; `make lint` enforces zero Admitted
+flake.nix             # Nix reproducible builds with build/lint/whitespace/coqchk checks
+lefthook.yml          # Pre-commit hooks
 ```
 
 ## Mathematical Foundation
 
 ### Module Hierarchy
 ```
-MinimalBooleanLogic (3 axioms)
+MinimalBooleanLogic (3 Huntington axioms + 3 supplementary)
     ↓
 BooleanLogic (+1 axiom: and_def)
     ↓
-MinimalLinearTemporalLogic (+9 temporal axioms)
+MinimalLinearTemporalLogic (+10 temporal axioms; 2 Proper monotonicity instances)
     ↓
-LinearTemporalLogicW (+3 definitions: ◇, □, W)
+LinearTemporalLogicW (+3 definitions: ◇, □, W as module-type axioms)
     ↓
-LinearTemporalLogic (+2 definitions: R, M)
+LinearTemporalLogic (+2 definitions: R, M as module-type axioms)
 ```
+
+The "+ N temporal axioms" includes the 8 paper axioms (`next_impl`, `next_until`, `until_expand`, `until_false`, `until_left_or`, `until_left_or_order`, `until_right_and_order`, `not_until`) plus 2 project-specific axioms (`looped`, `until_and_until`). Two former axioms (`next_not` = paper Axiom 1, `until_left_and` = paper Axiom 14) are now derived theorems. See `README-axioms.md` for the full rationale.
 
 ### Core Operators
 - **Boolean:** ¬ (not), ∨ (or), ∧ (and), ⇒ (implies), ≈ (equivalent), ⟹ (entails)
@@ -100,17 +107,20 @@ LinearTemporalLogic (+2 definitions: R, M)
    - `or_assoc`: (p ∨ q) ∨ r ≈ p ∨ (q ∨ r)
    - `huntington`: ¬(¬p ∨ q) ∨ ¬(¬p ∨ ¬q) ≈ p
 
-2. **9 temporal axioms** (MinLTL.v):
-   - Axiom 1: `next_not` - ◯ ¬p ≈ ¬◯ p
-   - Axiom 2: `next_impl` - ◯ (p ⇒ q) ≈ ◯ p ⇒ ◯ q
-   - Axiom 9: `next_until` - ◯ (p U q) ≈ ◯ p U ◯ q
-   - Axiom 10: `until_expand` - p U q ≈ q ∨ (p ∧ ◯ (p U q))
-   - Axiom 11: `until_false` - p U ⊥ ⟹ ⊥
-   - Axiom 12: `or_until_distr` - (p ∨ q) U r ⟹ (p U r) ∨ (q U r)
-   - Axiom 14: `until_and_left` - (p ∧ q) U r ⟹ p U r
-   - Axiom 17/18: Until distribution laws
-   - Axiom 170: `not_until` - ¬(p U q) ≈ ¬q U (¬q ∧ ¬p)
-   - Novel axiom: `looped` - ◯ ¬p U p ⟹ p (well-foundedness)
+2. **10 temporal axioms** (MinLTL.v) — 8 from the paper + 2 project-specific:
+   - Axiom 2:   `next_impl`             - ◯ (p ⇒ q) ≈ ◯ p ⇒ ◯ q
+   - Axiom 9:   `next_until`            - ◯ (p U q) ≈ ◯ p U ◯ q
+   - Axiom 10:  `until_expand`          - p U q ≈ q ∨ (p ∧ ◯ (p U q))
+   - Axiom 11:  `until_false`           - p U ⊥ ⟹ ⊥
+   - Axiom 12:  `until_left_or`         - p U (q ∨ r) ≈ p U q ∨ p U r
+   - Axiom 17:  `until_left_or_order`   - p U (q U r) ⟹ (p ∨ q) U r
+   - Axiom 18:  `until_right_and_order` - p U (q ∧ r) ⟹ (p U q) U r
+   - Axiom 170: `not_until`             - ⊤ U ¬p ∧ ¬(p U q) ≈ ¬q U (¬p ∧ ¬q)
+   - NEW:       `looped`                - ◯ ¬p U p ⟹ p   (well-foundedness; load-bearing for `law_75_strong`)
+   - NEW:       `until_and_until`       - (p U q) ∧ (r U s) ⟹ (p ∧ r) U ((q ∧ r) ∨ (p ∧ s) ∨ (q ∧ s))
+   - Plus 2 monotonicity Proper instances: `next_respects_implies`, `until_respects_implies`
+
+   Derived (formerly axioms): `next_not` (Axiom 1), `until_left_and` (Axiom 14).
 
 3. **Boolean extension** (Bool.v):
    - `and_def`: p ∧ q ≈ ¬(¬p ∨ ¬q)
@@ -161,46 +171,53 @@ Transfer proof obligations via homomorphisms.
 ## Key Files & Their Purposes
 
 ### MinBool.v (348 lines)
-- Huntington's 3 axioms for Boolean logic
+- Huntington's 3 axioms for Boolean logic + 3 supplementary axioms
 - Derives basic Boolean theorems
 - Foundation for entire system
+- Defines `one_arg`/`two_arg` tactics for Proper-instance discharge
 
-### Bool.v (512 lines)
-- Adds AND operator with single axiom
-- Proves De Morgan's laws, distributivity
-- Defines `boolean` tactic
+### Bool.v (510 lines)
+- Adds AND operator with a single axiom (`p ∧ q ≈ ¬(¬p ∨ ¬q)`)
+- Proves De Morgan's laws, distributivity, including `mccune` (the McCune-style single Boolean axiom — proven, not aborted)
+- Defines the `boolean` tactic for automated normalization
 
-### MinLTL.v (468 lines)
-- 9 temporal axioms
+### MinLTL.v (516 lines)
+- 10 temporal axioms (8 from paper + `looped` + `until_and_until`)
+- 2 monotonicity Proper instances (`next_respects_implies`, `until_respects_implies`)
 - Minimal temporal logic with Next and Until
-- Core temporal theorems
+- Derives `next_not` (paper Axiom 1) and `until_left_and` (paper Axiom 14) as theorems
 
-### LTL.v (2,803 lines) - LARGEST FILE
-- 240+ theorems organized by operator
-- Derived operators (◇, □, W, R, M)
-- Theorems 38-53: Eventually (◇) properties
-- Theorems 54-90: Always (□) properties
-- Theorems 91-130+: Wait (W) properties
-- 14 Admitted proofs: R laws 260-265, M laws 266-269, OLD laws 270-273
-- 1 Abort in Bool.v (`mccune` - documented research challenge)
+### LTL.v (2,859 lines) — LARGEST FILE
+- 240+ theorems numbered positionally to match the CDS4LTL paper's equation list (`law_n` ≈ n-th paper equation)
+- Derived operators (◇, □, W, R, M) introduced via module-type axioms (`evn_def`, `always_def`, `wait_def`, `release_def`, `strong_release_def`)
+- Section structure:
+  - 3.1 Next ◯, 3.2 Until U  (inherited from MinLTL Facts)
+  - 3.3 Eventually ◇ (laws 38-53)
+  - 3.4-3.6 Always □ (laws 54-90)
+  - 3.7 Wait W (laws 169-254)
+  - **Release R (laws 256-265): Coq-specific extension** — the paper at line 842 deliberately excludes R; defined in Coq via `release_def: p R q ≈ ¬(¬p U ¬q)` (Ben-Ari)
+  - **Strong Release M (laws 266-269): Coq-specific extension** — M is never mentioned in the paper
+  - OLD section (laws 270-273): 270/271/272 documented as removed with semantic counterexamples; 273 proven
+- All proofs `Qed`. No induction (forbidden outside Model.v). No classical logic.
 
-### Model.v (856 lines)
-- Semantic soundness proofs
-- Infinite stream model
-- Only file requiring induction (theorem 170)
+### Model.v (870 lines)
+- Semantic soundness: instantiates every module type up through `LinearTemporalLogic`
+- Predicates encoded as `Ensemble nat` (i.e. `nat -> Prop`); a "trace" is the indicator set of where a predicate holds
+- Only file using induction — `not_until` (Axiom 170) is the sole axiom whose semantic proof needs induction
+- Imports `Stdlib.Logic.Classical`; `Excluded_Middle`, `NNPP`, `not_and_or` are required for the soundness proofs
 
 ### Denote.v (279 lines)
-- Homomorphic abstraction
-- Enables proof reuse across models
-- Uses `defer` tactic
+- Homomorphic abstraction framework: connects an abstract `LinearTemporalLogic` module type to a concrete `Formula` data type
+- Defines the `defer` tactic for transferring proof obligations
+- Contains 13 module-type axioms describing the homomorphism
 
-### Step.v (651 lines)
-- Computational model
-- Single-step reduction
-- Positive Normal Form (PNF) encoding
-- 12 Formula constructors: Top, Bottom, Examine, And, Or, Next, Until, Wait, Always, Eventually, Release, StrongRelease
-- Error types: HitBottom, EndOfTrace, Rejected, Unsupported
-- Enables model checking via `step` function
+### Step.v (~705 lines)
+- Computational model intended for OCaml extraction
+- Self-contained: does not depend on `Model.v` or any other module
+- Inductive `Formula` with 12 constructors: Top, Bottom, Examine, And, Or, Next, Until, Wait, Always, Eventually, Release, StrongRelease
+- `step` reduces a Formula one trace position at a time; `run` consumes a finite list
+- Failure constructors: HitBottom plus tree-wrappers (BothFailed/LeftFailed/RightFailed)
+- Soundness vs. Model.v is currently NOT proven (open issue: connect `passes (run φ s)` to `ModelLTL` semantics)
 
 ## AI Assistant Guidelines
 
@@ -249,21 +266,24 @@ Extraction "ltl.ml" step compile.
 make                      # Build all (generates Makefile.coq if needed)
 make clean               # Clean build artifacts (.vo, .vok, .glob files)
 make install             # Install to Coq library
-make fullclean          # Remove Makefile.coq as well
+make fullclean           # Remove Makefile.coq as well
 make -j4                 # Parallel build with 4 cores
+make lint                # Enforce zero Admitted/admit/undefined/jww
+make format-check        # Verify no trailing whitespace or tabs
+make coqchk              # Run kernel verification on all compiled modules
 
 # Development helpers
-coqc src/MinBool.v      # Compile single file
-coqchk CDS4LTL.MinBool  # Verify compiled module
-grep -r "Abort"         # Find incomplete proofs (1 expected: mccune in Bool.v)
-grep -r "Admitted"      # Find admitted proofs (14 expected in LTL.v)
+coqc src/MinBool.v        # Compile single file
+rocq check CDS4LTL.MinBool # Verify compiled module in the kernel
+grep -r "Abort"           # Should return zero results
+grep -r "Admitted"        # Should return zero results
 ```
 
 ### Testing & Validation
-- **Type checking:** All proofs verified by Coq
-- **Admitted detection:** Makefile checks for `admit`, `undefined`, `jww`
-- **Completeness:** ~94% proven (14 Admitted out of 240+, concentrated in R/M/OLD sections)
-- **CI Matrix:** Builds with Rocq 9.1 via Nix
+- **Type checking:** All proofs verified by Coq's kernel
+- **Admitted detection:** Makefile + flake `lint` check enforce zero `Admitted`/`admit` usage
+- **Completeness:** 100% proven (zero Admitted/Abort across all source files)
+- **CI:** GitHub Actions runs `nix flake check` on Rocq 9.1; lefthook adds local pre-commit checks
 
 ## Performance & Optimization
 
@@ -280,27 +300,22 @@ grep -r "Admitted"      # Find admitted proofs (14 expected in LTL.v)
 ## Current Status & Future Work
 
 ### Completed
-- ✓ Minimal axiomatization
-- ✓ 240+ theorems proven
-- ✓ Semantic soundness
-- ✓ Computational model
-
-### In Progress
-- 14 Admitted proofs in LTL.v:
-  - Release (R) section: laws 260-265 (6 proofs)
-  - Strong Release (M) section: laws 266-269 (4 proofs)
-  - OLD section: laws 270-273 (4 proofs)
-- 1 Abort in Bool.v (`mccune` - documented research challenge)
-- Equational reasoning library integration (Working.v)
-- Alternative Schneider axiomatization (Bases.v)
+- ✓ Minimal axiomatization (10 temporal axioms; reduced from original 12 by deriving `next_not` and `until_left_and`)
+- ✓ 240+ theorems proven (zero `Admitted`)
+- ✓ Semantic soundness (all axioms verified in `Ensemble nat` model)
+- ✓ Computational model (Formula data type with `step`/`run`/`compile`; OCaml extraction-ready)
+- ✓ `mccune` theorem proven (formerly an open challenge)
+- ✓ `EquationalReasoning.v` notation library (`≡⟨⟩` chains)
+- ✓ CI with Nix flake checks (build, lint, whitespace, coqchk)
 
 ### Future Directions
-1. Complete Release/StrongRelease proofs
-2. Constructive foundation (remove Classical dependency)
-3. Extract verified decision procedure
-4. Bi-directional temporal flows
-5. Integration with SPOT tool
-6. Generate proof certificates
+1. **Connect `Step.v` to `Model.v` soundness.** Currently `passes (run φ s)` is verified internally but not against the stream semantics in `Model.v`. Add a `Module Step <: LinearTemporalLogic` instantiation or a denotation function with a soundness lemma.
+2. **Constructive foundation.** Remove `Classical` dependency from `Model.v` (likely requires a different model — decidable predicates over a fixed alphabet).
+3. **Extract verified decision procedure** to OCaml using `Extraction Language OCaml` and `Extraction "ltl.ml" step compile`.
+4. Schneider axiomatization equivalence (`Bases.v`): prove a functor `SchneiderAxioms <-> LinearTemporalLogicW`.
+5. Bi-directional temporal flows (past-time operators `P`, `S`).
+6. Integration with SPOT or other LTL tooling.
+7. Generate proof certificates.
 
 ## Common Pitfalls & Solutions
 
@@ -308,13 +323,19 @@ grep -r "Admitted"      # Find admitted proofs (14 expected in LTL.v)
 **Solution:** Ensure Proper instances are defined for all operators involved.
 
 ### Pitfall: Boolean normalization doesn't terminate
-**Solution:** The `boolean` tactic may loop on certain expressions. Use manual rewrites.
+**Solution:** The `boolean` tactic applies many rewrite rules in `repeat match` and may loop on adversarial inputs. Fall back to manual rewrites if it hangs.
 
 ### Pitfall: Proof script breaks after Coq upgrade
-**Solution:** Check deprecation warnings, especially for `omega` → `lia` migration.
+**Solution:** Check deprecation warnings. The project moved from `Coq.*` to `Stdlib.*` paths in Rocq 9.x.
 
 ### Pitfall: Can't find the right theorem
-**Solution:** Theorems are numbered. Check LTL.v comments for paper references.
+**Solution:** Theorems are numbered to match the CDS4LTL paper. Search for `(* N *)` comments in `LTL.v` and `MinLTL.v`. The paper's section 3 is the primary reference for theorem numbers.
+
+### Pitfall: A proof relies on auto-generated `H`/`H0` hypothesis names
+**Solution:** This is fragile. Use `pose proof X as Hname` and `assert (Hname : ...)` with explicit names. Several long proofs in `LTL.v` (`law_140-144`, `law_165`) and `Model.v` (`not_until`, `until_and_until`) still use auto-naming and are scheduled for hardening.
+
+### Pitfall: An `assert` body is indented but unbraced
+**Solution:** Wrap with `{ ... }`. A misplaced indent silently re-attaches the tactic to the outer goal.
 
 ## Instructions for AI Assistants
 
@@ -376,10 +397,11 @@ MinBool → Bool → MinLTL → LTL
 (* Show current proof state *)
 Show.
 
-(* Try automatic tactics in order *)
-Proof. boolean. Qed.           (* Boolean simplification *)
+(* Try automatic tactics in order — for the axiomatic layer (MinBool/Bool/MinLTL/LTL): *)
+Proof. boolean. Qed.            (* Boolean simplification *)
 Proof. now rewrite law_XX. Qed. (* Direct rewriting *)
-Proof. intuition. Qed.          (* Intuitionistic reasoning *)
+
+(* `intuition` and `firstorder` are NOT used in the axiomatic layer — they are reserved for Model.v. *)
 
 (* For Model.v proofs *)
 Proof. matches. as_if. reduce. just_math. Qed.
