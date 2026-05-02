@@ -2,15 +2,12 @@ Require Import
   Stdlib.Program.Program
   Stdlib.Unicode.Utf8
   Stdlib.Classes.Morphisms
-  Stdlib.Lists.List
-  CDS4LTL.Model.
+  Stdlib.Lists.List.
 
 Open Scope program_scope.
 Open Scope list_scope.
 
 Module LTLStep.
-
-Module Import LTL := LTL.
 
 Section Step.
 
@@ -43,8 +40,6 @@ Inductive Result : Type :=
   | Failure  (e : Failed)
   | Continue (l : Formula)
   | Success.
-
-Open Scope ltl_scope.
 
 Fixpoint negate (l : Formula) : Formula :=
   match l with
@@ -636,7 +631,6 @@ Require Import Stdlib.Arith.PeanoNat.
 Module StepExamples.
 
 Module Import S := LTLStep.
-Import S.LTL.
 
 Import ListNotations.
 
