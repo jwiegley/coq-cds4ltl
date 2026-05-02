@@ -252,9 +252,9 @@ Ltac boolean :=
     | [ |- context G [?P ∨ ⊥] ] => rewrite or_false
     | [ |- context G [¬ ?P ∨ ?P] ] => rewrite (or_comm (¬ P) P)
     | [ |- context G [?P ∨ ¬ ?P] ] => rewrite true_def
+    | [ |- context G [?P ∧ (¬ ?P ∨ ?Q)] ] => rewrite (and_not_absorb P Q)
     | [ |- context G [(¬ ?P ∨ ?Q) ∧ ?P] ] =>
-        rewrite (and_comm (¬ P ∨ Q) P),
-                (and_or P (¬ P) Q), and_def
+        rewrite (and_comm (¬ P ∨ Q) P), (and_not_absorb P Q)
     | [ |- context G [¬ ?P ∧ ?P] ] => rewrite (and_comm (¬ P) P)
     | [ |- context G [?P ∧ ¬ ?P] ] => rewrite (absurdity P)
     | [ |- context G [?P ∨ (?P ∧ ?Q)] ] => rewrite (or_absorb P Q)
@@ -307,11 +307,11 @@ Proof.
   split; intro.
   - rewrite <- H; clear H.
     rewrite and_comm.
-      rewrite or_and.
+    rewrite or_and.
     now boolean.
   - rewrite H; clear H.
     rewrite and_comm.
-      rewrite and_or.
+    rewrite and_or.
     now boolean.
 Qed.
 
