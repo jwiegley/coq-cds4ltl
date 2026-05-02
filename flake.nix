@@ -89,6 +89,22 @@
             if [ "$FAIL" -ne 0 ]; then exit 1; fi
             touch $out
           '';
+
+          coqchk = pkgs.runCommand "coq-coqchk" {
+            buildInputs = [ rocq.rocq-core rocq.stdlib ];
+          } ''
+            CDS4LTL_DIR=$(find ${cds4ltl}/lib -type d -name CDS4LTL | head -n1)
+            if [ -z "$CDS4LTL_DIR" ]; then
+              echo "ERROR: Could not locate CDS4LTL .vo install dir under ${cds4ltl}/lib"
+              exit 1
+            fi
+            cp -r "$CDS4LTL_DIR" ./CDS4LTL
+            rocq check -R ./CDS4LTL CDS4LTL \
+              CDS4LTL.MinBool CDS4LTL.Bool CDS4LTL.MinLTL CDS4LTL.LTL \
+              CDS4LTL.Same_set CDS4LTL.Model CDS4LTL.Denote CDS4LTL.Step \
+              CDS4LTL.EquationalReasoning CDS4LTL.Working
+            touch $out
+          '';
         };
 
         devShells.default = pkgs.mkShell {
